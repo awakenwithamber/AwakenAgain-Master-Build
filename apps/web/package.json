@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "next": "^15.3.0",
+    "posthog-js": "^1.200.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "description": "Amber's Alchemy Apothecary — Next.js + React + TypeScript storefront (scaffold, DRAFT)",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.8.0",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "name": "awakenagain-web",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "port-catalog": "node scripts/port-catalog.mjs",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "version": "0.1.0"
+}
