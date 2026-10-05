@@ -1,5 +1,8 @@
 /**
- * PostHog SERVER-side capture — for authoritative business transitions.
+ * PostHog SERVER-side capture — for recording authoritative business
+ * transitions as observed facts. (The Route Handler + order ledger are the
+ * authority; these events record what was accepted, never claim to be the
+ * authority itself.)
  * SERVER-ONLY: never import this module from a client component (it reads
  * process.env at call time and uses the /capture/ HTTP endpoint directly,
  * no posthog-js dependency).

@@ -20,6 +20,16 @@ import type { ScentSelection as ScentPayload } from '../../types';
  * PostHog is observational only — the cart, order ledger, and database stay
  * authoritative. Status vocabulary: WIRED (code exists) / BLOCKED (waiting
  * on the owner's phc_ key). Analytics is NEVER marked IMPLEMENTED here.
+ *
+ * HARD BOUNDARY (owner 2026-10-05): PostHog = behavioral observation,
+ * funnels, migration comparison, experimentation. Server/database =
+ * authoritative pricing, orders, customers, membership, fulfillment,
+ * business records. A checkout interaction is behavioral; a server-validated
+ * accepted order is authoritative business state recorded as an observed
+ * fact — modeled and named accordingly, never conflated. Behavioral events
+ * read as observations ("customer viewed instructions"); recorded-fact
+ * events read as facts ("server accepted order"), never as the authority
+ * itself. The ledger (or database), not any event, is the authority.
  */
 export const SOURCE_PROPERTY = 'implementation_source' as const;
 export const ANALYTICS_SOURCE = 'nextjs' as const;
@@ -52,7 +62,9 @@ export const ANALYTICS_EVENT_NAMES = {
   orderCompleted: 'order_completed',
   /**
    * Server-owned: the checkout Route Handler accepted and persisted the
-   * order. The authoritative revenue event — PostHog stays observational.
+   * order. This event RECORDS the fact — it is not the authority itself.
+   * The order ledger (later the database) is the authority; this event is
+   * the canonical observed revenue count, PostHog staying observational.
    */
   orderCreated: 'order_created',
 } as const;
@@ -184,6 +196,87 @@ export type ServerEventName = {
     ? K
     : never;
 }[AnalyticsEventName];
+
+/**
+ * Ownership-transfer lifecycle (owner precision 2026-10-05). Order is
+ * exact and binding:
+ *
+ * LEGACY STATIC ACTIVE → NEXT.JS REPLACEMENT BUILT → FEATURE TESTED →
+ * POSTHOG EVENT RECEIVED + VERIFIED → PARITY VERIFIED →
+ * NEXT.JS AUTHORITATIVE → LEGACY FEATURE/EVENT SAFE TO RETIRE
+ *
+ * Ownership transfers ONLY after the Next.js replacement is VERIFIED —
+ * never on code conversion alone. No event may sit beyond FEATURE TESTED
+ * without the owner's phc_ project key installed AND observed event receipt
+ * in PostHog Live Events; the stage-gate regression test
+ * (ownership-transfer.test.ts) enforces this while the key is absent.
+ *
+ * Two dimensions, never conflated: `ownership_stage` tracks how far
+ * ownership has transferred for the event; the PostHog dimension (WIRED /
+ * BLOCKED / receipt VERIFIED / IMPLEMENTED) tracks whether PostHog has
+ * actually observed it. A static counterpart can be LEGACY STATIC ACTIVE
+ * (feature live) while its PostHog status is WIRED — inert without the
+ * key, never IMPLEMENTED.
+ */
+export const OWNERSHIP_STAGE_ORDER = [
+  'legacy_static_active',
+  'nextjs_replacement_built',
+  'feature_tested',
+  'event_received_verified',
+  'parity_verified',
+  'nextjs_authoritative',
+  'legacy_safe_to_retire',
+] as const;
+
+export type OwnershipStage = (typeof OWNERSHIP_STAGE_ORDER)[number];
+
+/** Index of a stage in the lifecycle order — the stage-gate test's yardstick. */
+export function ownershipStageIndex(stage: OwnershipStage): number {
+  return OWNERSHIP_STAGE_ORDER.indexOf(stage);
+}
+
+/**
+ * Per-event ownership stage (2026-10-05 current truth). No phc_ key exists,
+ * so no event sits beyond FEATURE TESTED. `shop_scent_card_clicked` and
+ * `shop_bundle_card_clicked` are taxonomy-reserved names only — their
+ * Next.js emission wiring does not exist yet, so they remain
+ * LEGACY STATIC ACTIVE (the static counterpart is the active
+ * implementation; WIRED, not IMPLEMENTED, on both sides).
+ *
+ * Stage semantics:
+ * - legacy_static_active: transfer not started; Next.js replacement not
+ *   yet built/wired.
+ * - nextjs_replacement_built: emission code wired into the Next.js feature.
+ * - feature_tested: feature exists, emission wired, feature/contract tests
+ *   passing. PostHog receipt still BLOCKED on the owner's key.
+ *
+ * Updating any event beyond feature_tested requires BOTH the key AND
+ * verified event receipt; the stage-gate test fails otherwise.
+ */
+export const OWNERSHIP_STAGES: Record<AnalyticsEventName, OwnershipStage> = {
+  builder_step_viewed: 'feature_tested',
+  ritual_completed: 'feature_tested',
+  base_selected: 'feature_tested',
+  shape_selected: 'feature_tested',
+  scent_selected: 'feature_tested',
+  blend_oil_toggled: 'feature_tested',
+  blend_completed: 'feature_tested',
+  botanical_selected: 'feature_tested',
+  color_selected: 'feature_tested',
+  soap_added_to_cart: 'feature_tested',
+  cart_updated: 'feature_tested',
+  bundle_opened: 'feature_tested',
+  bundle_slot_configured: 'feature_tested',
+  bundle_added_to_cart: 'feature_tested',
+  shop_scent_card_clicked: 'legacy_static_active',
+  shop_bundle_card_clicked: 'legacy_static_active',
+  seasonal_scent_interacted: 'feature_tested',
+  checkout_initiated: 'feature_tested',
+  product_viewed: 'feature_tested',
+  payment_instructions_viewed: 'feature_tested',
+  order_completed: 'feature_tested',
+  order_created: 'feature_tested',
+};
 
 /**
  * Server-owned events still planned for later API phases (§6). Reserved
