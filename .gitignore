@@ -18,6 +18,13 @@ out/
 *.pem
 *.key
 
+# Local order ledger — runtime order records; production uses durable storage
+.orders-ledger.jsonl
+*.orders-ledger.jsonl
+
+# Test artifacts
+.vitest/
+
 # Logs
 logs/
 *.log
