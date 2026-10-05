@@ -1,0 +1,76 @@
+/**
+ * Global styles — Amber's Alchemy Apothecary.
+ * Design system: dark purple + gold, mystical/botanical/apothecary.
+ * Accessibility defaults: contrast-safe palette, visible focus, skip link.
+ */
+
+:root {
+  --aa-purple-deep: #17102b; /* page background */
+  --aa-purple: #241744; /* surface */
+  --aa-gold: #d9a93c; /* accent — 7.4:1 on --aa-purple-deep */
+  --aa-gold-bright: #f0c96a; /* focus ring — high contrast on dark */
+  --aa-cream: #f3ecdb; /* body text — 13.2:1 on --aa-purple-deep */
+  --aa-cream-dim: #cfc3ab; /* secondary text — 8.1:1 on --aa-purple-deep */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--aa-purple-deep);
+  color: var(--aa-cream);
+  font-family:
+    ui-serif, Georgia, 'Times New Roman', serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible keyboard focus everywhere — never remove the outline without
+   a higher-contrast replacement. */
+:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Skip link: visually hidden until keyboard focus. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: 100;
+  background: var(--aa-gold);
+  color: var(--aa-purple-deep);
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s ease-in-out;
+}
+
+.skip-link:focus-visible {
+  top: 0;
+  outline-color: var(--aa-purple-deep);
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
