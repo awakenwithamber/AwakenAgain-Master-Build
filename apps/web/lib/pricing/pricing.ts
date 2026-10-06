@@ -5,6 +5,7 @@
  * All money in integer cents. Nothing hard-codes "$12.08".
  */
 import { SOAP_SHAPES } from '../catalog/shapes';
+import { herbPriceCents } from '../catalog/herbs';
 
 export function toCents(dollars: number): number {
   return Math.round(dollars * 100);
@@ -53,4 +54,83 @@ export function bundleSavingsCents(): number {
 export function bundleSavingsPct(): number {
   const sum = bundleComponentSumCents();
   return Math.round((bundleSavingsCents() / sum) * 1000) / 10;
+}
+
+/* ---------------- Custom formula builders (G2 capsules, G10 tea) ---------------- */
+
+/**
+ * Custom-formula pricing — PROPOSED (pending owner confirmation).
+ *
+ * Model (ported from the legacy #custom-formula flow, ccLivePrice):
+ *   unit price = size base price + Σ per-herb add-on prices.
+ * All values integer cents; the SERVER recomputes authoritatively at
+ * checkout (CLIENT=PREVIEW). Base prices are the legacy variant prices
+ * from the generated product records (LEGACY-SOURCED, owner confirmation
+ * recommended); per-herb add-ons are the legacy per-botanical prices
+ * ($0.17/$0.23/$0.29/$0.39 → integer cents).
+ *
+ * KNOWN TENSIONS (NEEDS VERIFICATION, owner decision):
+ * - custom-herbal-capsules base $33.33 conflicts with the provisional
+ *   "$11.99/oz for custom non-soap remedies" rule (recorded in the product
+ *   record provenance); the per-product newest value wins per owner
+ *   instruction, price still PROPOSED.
+ * - 2-week capsule counts unverified (28 vs 30 capsules in sources).
+ */
+
+export type FormulaKind = 'capsule' | 'tea';
+
+export interface FormulaSizeOption {
+  id: string;
+  name: string;
+  unit: string;
+  /** Integer cents. Server-authoritative. */
+  baseCents: number;
+}
+
+/** Product handles for the two custom-formula products (in the catalog). */
+export const CUSTOM_CAPSULE_HANDLE = 'custom-herbal-capsules';
+export const CUSTOM_TEA_HANDLE = 'custom-tea-blends';
+
+export function formulaKindForHandle(handle: string): FormulaKind | null {
+  if (handle === CUSTOM_CAPSULE_HANDLE) return 'capsule';
+  if (handle === CUSTOM_TEA_HANDLE) return 'tea';
+  return null;
+}
+
+export const CUSTOM_CAPSULE_SIZES: readonly FormulaSizeOption[] = [
+  { id: 'capsule-28', name: 'Two Week — 28 capsules', unit: '28 capsules', baseCents: 3333 },
+  { id: 'capsule-60', name: 'Full Month — 60 capsules', unit: '60 capsules', baseCents: 6000 },
+];
+
+export const CUSTOM_TEA_SIZES: readonly FormulaSizeOption[] = [
+  { id: 'tea-loose-1oz', name: 'Loose Leaf — 1 oz', unit: '1 oz loose leaf', baseCents: 1333 },
+  { id: 'tea-bags-20', name: 'Tea Bags — 20 pack', unit: '20 tea bags', baseCents: 1199 },
+];
+
+export function getFormulaSize(
+  kind: FormulaKind,
+  sizeId: string,
+): FormulaSizeOption | undefined {
+  const table = kind === 'capsule' ? CUSTOM_CAPSULE_SIZES : CUSTOM_TEA_SIZES;
+  return table.find((s) => s.id === sizeId);
+}
+
+/**
+ * Client-preview unit price for a custom formula: size base + per-herb
+ * add-ons, integer cents. The server MUST recompute this identically at
+ * checkout (see priceFormulaCustomization in lib/cart/validation.ts) —
+ * any mismatch rejects the order.
+ */
+export function customFormulaPriceCents(
+  kind: FormulaKind,
+  sizeId: string,
+  herbIds: string[],
+): number {
+  const size = getFormulaSize(kind, sizeId);
+  if (!size) throw new Error(`Unknown formula size: ${sizeId}`);
+  let total = size.baseCents;
+  for (const id of herbIds) {
+    total += herbPriceCents(id);
+  }
+  return total;
 }
