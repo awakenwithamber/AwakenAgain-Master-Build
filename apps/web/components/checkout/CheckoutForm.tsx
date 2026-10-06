@@ -68,6 +68,7 @@ export function CheckoutForm() {
           variant_id: item.variant_id,
           quantity: item.quantity,
           customization: item.customization,
+          formula: item.formula,
           unit_price_cents: item.unit_price_cents,
         })),
         bundle,

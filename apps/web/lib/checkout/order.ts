@@ -10,7 +10,7 @@
  * regression tests and imported by app/api/checkout/route.ts.
  */
 import { getProductByHandle } from '../catalog/products';
-import { BUNDLE_ID, toCents } from '../pricing/pricing';
+import { BUNDLE_ID, formulaKindForHandle, getFormulaSize, toCents } from '../pricing/pricing';
 import {
   sanitizeEmail,
   sanitizePhone,
@@ -19,9 +19,11 @@ import {
 import {
   buildBundleConfiguration,
   priceCustomization,
+  priceFormulaCustomization,
   validateCustomization,
+  validateFormulaCustomization,
 } from '../cart/validation';
-import type { BundleSlot, Customization } from '../../types';
+import type { BundleSlot, Customization, FormulaCustomization } from '../../types';
 
 /**
  * Product handle used by the "Create Your Own Alchemy Soap" builder for
@@ -47,6 +49,29 @@ export function isSoapProduct(productHandle: string): boolean {
   return getProductByHandle(productHandle)?.category === 'Soaps';
 }
 
+/**
+ * Custom-formula products (G2 capsules, G10 tea): fully custom blends are
+ * only valid on these two catalog handles. Without this gate, a formula
+ * could be attached to any product (e.g. a standard capsule variant priced
+ * without its herb add-ons), producing an internally inconsistent order
+ * record. Mirrors the isSoapProduct gate above.
+ */
+export function isFormulaProduct(productHandle: string): boolean {
+  return formulaKindForHandle(productHandle) !== null;
+}
+
+/** Customer-facing title for a formula line: product + size. */
+export function formulaLineTitle(
+  productHandle: string,
+  formula: FormulaCustomization,
+): string {
+  const product = getProductByHandle(productHandle);
+  const base = product?.title ?? productHandle;
+  const kind = formulaKindForHandle(productHandle);
+  const size = kind ? getFormulaSize(kind, formula.size_id) : undefined;
+  return size ? `${base} — ${size.name} (your formula)` : `${base} (your formula)`;
+}
+
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
 /* ------------------------------------------------------------------ */
@@ -56,6 +81,8 @@ export interface CheckoutItemInput {
   variant_id?: string;
   quantity: number;
   customization?: Customization;
+  /** Custom capsule/tea formula — mutually exclusive with customization. */
+  formula?: FormulaCustomization;
   unit_price_cents: number;
 }
 
@@ -80,6 +107,7 @@ export interface OrderLine {
   quantity: number;
   unit_price_cents: number;
   customization?: Customization;
+  formula?: FormulaCustomization;
 }
 
 export interface OrderRecord {
@@ -137,7 +165,7 @@ function priceItem(input: CheckoutItemInput): OrderLine {
   if (typeof input !== 'object' || input === null || Array.isArray(input)) {
     throw new Error('Order item must be an object.');
   }
-  const { product_handle, variant_id, quantity, customization } = input;
+  const { product_handle, variant_id, quantity, customization, formula } = input;
 
   if (!product_handle || typeof product_handle !== 'string') {
     throw new Error('Item is missing product_handle.');
@@ -151,8 +179,44 @@ function priceItem(input: CheckoutItemInput): OrderLine {
 
   let serverUnitCents: number;
   let variantName: string | undefined;
+  let lineTitle: string | undefined;
+  let cleanFormula: FormulaCustomization | undefined;
 
-  if (customization !== undefined) {
+  if (formula !== undefined) {
+    // Custom capsule/tea formula: exact herb IDs persisted; the server
+    // reprices from canonical data (size base + per-herb add-ons).
+    if (variant_id !== undefined || customization !== undefined) {
+      throw new Error(
+        `Item ${product_handle} has a formula plus a variant/customization — these are mutually exclusive.`,
+      );
+    }
+    if (!isFormulaProduct(product_handle)) {
+      throw new Error(
+        `Item ${product_handle} is not a custom-formula product — formulas apply to custom capsules and custom teas only.`,
+      );
+    }
+    const validation = validateFormulaCustomization(product_handle, formula);
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid formula for ${product_handle}: ${validation.errors.join('; ')}`,
+      );
+    }
+    // Sanitize customer free-text before it enters the order record —
+    // the ledger is the order system of record, no markup belongs in it.
+    cleanFormula = {
+      herb_ids: [...formula.herb_ids],
+      size_id: formula.size_id,
+      ...(formula.creation_name
+        ? { creation_name: sanitizePlainText(formula.creation_name, 80) }
+        : {}),
+      ...(formula.intention
+        ? { intention: sanitizePlainText(formula.intention, 120) }
+        : {}),
+      ...(formula.notes ? { notes: sanitizePlainText(formula.notes, 500) } : {}),
+    };
+    serverUnitCents = priceFormulaCustomization(product_handle, cleanFormula);
+    lineTitle = formulaLineTitle(product_handle, cleanFormula);
+  } else if (customization !== undefined) {
     if (variant_id !== undefined) {
       throw new Error(
         `Item ${product_handle} has both a variant and a customization — these are mutually exclusive.`,
@@ -208,12 +272,16 @@ function priceItem(input: CheckoutItemInput): OrderLine {
   const product = getProductByHandle(product_handle);
   return {
     product_handle,
-    title: product?.title ?? (product_handle === CUSTOM_BUILDER_HANDLE ? CUSTOM_BUILDER_TITLE : product_handle),
+    title:
+      lineTitle ??
+      product?.title ??
+      (product_handle === CUSTOM_BUILDER_HANDLE ? CUSTOM_BUILDER_TITLE : product_handle),
     quantity,
     unit_price_cents: serverUnitCents,
     ...(variant_id !== undefined ? { variant_id: String(variant_id) } : {}),
     ...(variantName !== undefined ? { variant_name: variantName } : {}),
     ...(customization !== undefined ? { customization } : {}),
+    ...(cleanFormula !== undefined ? { formula: cleanFormula } : {}),
   };
 }
 

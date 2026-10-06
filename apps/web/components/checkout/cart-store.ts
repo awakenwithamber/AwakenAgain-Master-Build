@@ -17,9 +17,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getShape } from '../../lib/catalog/shapes';
 import { getProductByHandle } from '../../lib/catalog/products';
-import { toCents } from '../../lib/pricing/pricing';
+import {
+  formulaKindForHandle,
+  getFormulaSize,
+  toCents,
+} from '../../lib/pricing/pricing';
+import { priceFormulaCustomization } from '../../lib/cart/validation';
 import { CUSTOM_BUILDER_TITLE } from '../../lib/checkout/order';
-import type { BundleConfiguration, CartItem, Customization } from '../../types';
+import type {
+  BundleConfiguration,
+  CartItem,
+  Customization,
+  FormulaCustomization,
+} from '../../types';
 
 /** Cart storage key — owned exclusively by this module. */
 export const CART_STORAGE_KEY = 'aaa-cart-v1';
@@ -29,8 +39,19 @@ export const CART_STORAGE_KEY = 'aaa-cart-v1';
  * ('custom-alchemy-soap') is not in the product catalog, so it gets its
  * customer-facing name here rather than rendering the raw handle.
  */
-export function cartItemTitle(productHandle: string, variantId?: string): string {
+export function cartItemTitle(
+  productHandle: string,
+  variantId?: string,
+  formula?: FormulaCustomization,
+): string {
   if (productHandle === 'custom-alchemy-soap') return CUSTOM_BUILDER_TITLE;
+  if (formula) {
+    const product = getProductByHandle(productHandle);
+    const base = product?.title ?? productHandle;
+    const kind = formulaKindForHandle(productHandle);
+    const size = kind ? getFormulaSize(kind, formula.size_id) : undefined;
+    return size ? `${base} — ${size.name} (your formula)` : `${base} (your formula)`;
+  }
   const product = getProductByHandle(productHandle);
   const base = product?.title ?? productHandle;
   if (!variantId) return base;
@@ -100,14 +121,24 @@ export function resolveVariantPriceCents(
 
 /**
  * PREVIEW unit price for display. Server recomputes authoritatively.
- * Customized soaps price from the shape table; plain items from variant or
+ * Customized soaps price from the shape table; custom formulas price from
+ * the formula size table + per-herb add-ons; plain items from variant or
  * product price.
  */
 export function previewUnitPriceCents(
   productHandle: string,
   variantId: string | undefined,
   customization: Customization | undefined,
+  formula?: FormulaCustomization,
 ): number | null {
+  if (customization && formula) return null;
+  if (formula) {
+    try {
+      return priceFormulaCustomization(productHandle, formula);
+    } catch {
+      return null;
+    }
+  }
   if (customization) {
     const shape = getShape(customization.shape);
     return shape ? shape.priceCents : null;
@@ -124,6 +155,7 @@ export interface CartStore {
     variantId: string | undefined,
     customization: Customization | undefined,
     quantity: number,
+    formula?: FormulaCustomization,
   ) => boolean;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -152,8 +184,9 @@ export function useCart(): CartStore {
       variantId: string | undefined,
       customization: Customization | undefined,
       quantity: number,
+      formula?: FormulaCustomization,
     ): boolean => {
-      const unit = previewUnitPriceCents(productHandle, variantId, customization);
+      const unit = previewUnitPriceCents(productHandle, variantId, customization, formula);
       if (unit === null || !Number.isInteger(quantity) || quantity < 1) return false;
       const item: CartItem = {
         id: nextCartId(),
@@ -162,6 +195,17 @@ export function useCart(): CartStore {
         unit_price_cents: unit,
         ...(variantId ? { variant_id: variantId } : {}),
         ...(customization ? { customization } : {}),
+        ...(formula
+          ? {
+              formula: {
+                herb_ids: [...formula.herb_ids],
+                size_id: formula.size_id,
+                ...(formula.creation_name ? { creation_name: formula.creation_name } : {}),
+                ...(formula.intention ? { intention: formula.intention } : {}),
+                ...(formula.notes ? { notes: formula.notes } : {}),
+              },
+            }
+          : {}),
       };
       persist({ ...state, items: [...state.items, item] });
       return true;

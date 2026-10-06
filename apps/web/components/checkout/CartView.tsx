@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { getShape } from '../../lib/catalog/shapes';
+import { getHerb } from '../../lib/catalog/herbs';
 import { formatPrice } from '../../lib/pricing/pricing';
 import { track } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
@@ -38,9 +39,12 @@ export function CartView() {
             <ul>
               {items.map((item) => {
                 const custom = item.customization;
+                const formula = item.formula;
                 return (
                   <li key={item.id}>
-                    <strong>{cartItemTitle(item.product_handle, item.variant_id)}</strong>
+                    <strong>
+                      {cartItemTitle(item.product_handle, item.variant_id, formula)}
+                    </strong>
                     {custom ? (
                       <p>
                         <small>
@@ -53,13 +57,25 @@ export function CartView() {
                         </small>
                       </p>
                     ) : null}
+                    {formula ? (
+                      <p>
+                        <small>
+                          {formula.herb_ids
+                            .map((id) => getHerb(id)?.name ?? id)
+                            .join(', ')}
+                          {formula.creation_name
+                            ? ` · “${formula.creation_name}”`
+                            : ''}
+                        </small>
+                      </p>
+                    ) : null}
                     <p>
                       {formatPrice(item.unit_price_cents)} ×{' '}
                       <input
                         type="number"
                         min={1}
                         value={item.quantity}
-                        aria-label={`Quantity for ${cartItemTitle(item.product_handle, item.variant_id)}`}
+                        aria-label={`Quantity for ${cartItemTitle(item.product_handle, item.variant_id, formula)}`}
                         onChange={(e) => {
                           updateQuantity(item.id, Number(e.target.value) || 1);
                           track(ANALYTICS_EVENT_NAMES.cartUpdated, {
