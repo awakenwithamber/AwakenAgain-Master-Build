@@ -35,8 +35,18 @@ export const CANONICAL_ROUTES: CanonicalRoute[] = [
   { path: '/soap-shop', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/soap-builder', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/about', priority: 0.7, changeFrequency: 'monthly' },
+  { path: '/quiz', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/journal', priority: 0.7, changeFrequency: 'weekly' },
+  { path: '/herbal-wisdom', priority: 0.6, changeFrequency: 'monthly' },
+  { path: '/herb-index', priority: 0.6, changeFrequency: 'monthly' },
+  { path: '/faqs', priority: 0.6, changeFrequency: 'monthly' },
+  { path: '/services', priority: 0.7, changeFrequency: 'monthly' },
+  { path: '/legal', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/terms', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/cart', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/checkout', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/contact', priority: 0.6, changeFrequency: 'monthly' },
 ];
 
 /** Absolute canonical URL for a registered path. */

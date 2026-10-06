@@ -303,6 +303,16 @@ describe('checkout route', () => {
     });
   });
 
+  /**
+   * PERMANENT REGRESSION — DO NOT WEAKEN OR REMOVE (owner directive
+   * 2026-10-05). Original bug: a customization attached to a non-soap
+   * product was once charged at the customization's soap price ($5.77
+   * for small-rose) instead of the product's real price — a silent
+   * underpayment that produced internally inconsistent order records
+   * (capsule title + soap price). The server gate (isSoapProduct in
+   * lib/checkout/order.ts) must keep rejecting these; relaxing it
+   * reopens the money leak.
+   */
   it('rejects a customization attached to a non-soap product', async () => {
     // Attack: a $19.77 capsule variant priced at the $5.77 small-rose soap
     // price by attaching a valid soap customization. The record would be

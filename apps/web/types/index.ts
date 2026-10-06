@@ -89,6 +89,49 @@ export interface BotanicalOption {
 }
 
 /* ------------------------------------------------------------------ */
+/* Herbs (custom formula builders)                                       */
+/* ------------------------------------------------------------------ */
+
+/** Formula forms a herb can be used in. Data-driven from the herb catalog. */
+export type HerbUse = 'tea' | 'capsule' | 'balm' | 'serum';
+
+export type HerbCategory =
+  | 'sleep'
+  | 'digestive'
+  | 'spiritual'
+  | 'pain'
+  | 'energy'
+  | 'adaptogen'
+  | 'immune'
+  | 'hormonal'
+  | 'beauty'
+  | 'mushroom'
+  | 'detox'
+  | 'stress'
+  | 'focus'
+  | 'cognitive'
+  | 'mood'
+  | 'emotional';
+
+/**
+ * One botanical from the apothecary encyclopedia, as used by the custom
+ * formula builders. Descriptions are framed as TRADITIONAL USE — not
+ * medical advice. Per-herb add-on price in integer cents (PROPOSED).
+ */
+export interface Herb {
+  id: string;
+  name: string;
+  latin: string;
+  emoji: string;
+  categories: HerbCategory[];
+  uses: HerbUse[];
+  /** Integer cents. Server-authoritative; UI never invents prices. */
+  priceCents: number;
+  traditionalNote: string;
+  traditionalBenefits: string[];
+}
+
+/* ------------------------------------------------------------------ */
 /* Scents                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -152,12 +195,32 @@ export interface BundleSlot extends Customization {
   slot_index: number;
 }
 
+/**
+ * A customer-built herbal formula (capsule or tea builder).
+ *
+ * The §14 order-record rule, extended: exact herb IDs are persisted —
+ * never prose. The server recomputes the price from canonical data
+ * (size base + per-herb add-ons, integer cents); browser values never
+ * determine order totals.
+ */
+export interface FormulaCustomization {
+  /** Exact herb IDs from lib/catalog/herbs.ts, in selection order. */
+  herb_ids: string[];
+  /** Formula size option id (see lib/pricing/pricing.ts). */
+  size_id: string;
+  creation_name?: string;
+  intention?: string;
+  notes?: string;
+}
+
 export interface CartItem {
   id: string;
   product_handle: string;
   variant_id?: string;
   quantity: number;
   customization?: Customization;
+  /** Custom capsule/tea formula — mutually exclusive with customization. */
+  formula?: FormulaCustomization;
   /** Server-computed integer cents. The client never determines totals. */
   unit_price_cents: number;
 }
@@ -194,6 +257,14 @@ export interface SeasonalFeature {
   year: number;
   name: string;
   tagline: string;
+  /**
+   * Confirmation status. 'confirmed' entries are owner-approved and may be
+   * served by getSeasonalFeature(). 'proposed' entries are planning data —
+   * they are NEVER returned by getSeasonalFeature(); use
+   * getProposedSeasonalFeature() for planning/preview. Absent = confirmed
+   * (back-compat with the October 2026 owner-verified entry).
+   */
+  status?: 'confirmed' | 'proposed';
   /**
    * When the seasonal theme follows a curated signature recipe (which may
    * use the owner's full inventory, including finished blends), link it
