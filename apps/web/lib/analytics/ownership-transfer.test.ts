@@ -86,6 +86,187 @@ const DOCUMENTED_ADDITIONS: { name: AnalyticsEventName; rationale: string }[] =
       rationale:
         'Server-owned recorded fact that the checkout Route Handler accepted and persisted the order. The static build has no server-attested order event; this is the canonical observed revenue count (the ledger, not the event, is the authority).',
     },
+    /* ---- Phase 2 additions (23–62): no static counterparts; each is a new
+       Next.js capability with no legacy analytics to preserve ---- */
+    {
+      name: 'order_submitted',
+      rationale:
+        'Durable order-intake endpoint (POST /api/orders) is new in Next.js; the static build relied on the implicit Netlify Forms event. Needed to observe intake attempts before validation.',
+    },
+    {
+      name: 'order_accepted',
+      rationale:
+        'Server-attested acceptance by the intake pipeline. Distinct from order_created (checkout payment-instruction flow): different endpoint, different action, no double count.',
+    },
+    {
+      name: 'order_rejected',
+      rationale:
+        'Intake-pipeline rejection observability (validation vs persistence stage). No static equivalent; the static build had no explicit intake contract.',
+    },
+    {
+      name: 'contact_submitted',
+      rationale:
+        'Contact pipeline is new as an explicit API contract (POST /api/contact); the static build posted to form-relay without observable submission events.',
+    },
+    {
+      name: 'contact_accepted',
+      rationale: 'Server-attested contact message persistence. No static equivalent.',
+    },
+    {
+      name: 'contact_rejected',
+      rationale:
+        'Contact rejection/spam-filter observability. No static equivalent.',
+    },
+    {
+      name: 'quiz_started',
+      rationale:
+        'Herbal Allies Quiz is rebuilt as a Next.js client island (G6); the static quiz had no typed event contract to preserve.',
+    },
+    {
+      name: 'quiz_step_completed',
+      rationale: 'Quiz funnel step observability for the rebuilt quiz.',
+    },
+    {
+      name: 'quiz_completed',
+      rationale: 'Quiz completion observability for the rebuilt quiz.',
+    },
+    {
+      name: 'quiz_lead_captured',
+      rationale:
+        'Server-attested lead capture (consent-gated). The static quiz lead flow had no server-attested event.',
+    },
+    {
+      name: 'review_list_viewed',
+      rationale:
+        'Reviews system is rebuilt (G4); the static build had no typed review events.',
+    },
+    {
+      name: 'review_submitted',
+      rationale: 'Review submission observability for the rebuilt reviews flow.',
+    },
+    {
+      name: 'newsletter_form_viewed',
+      rationale: 'Newsletter signup rebuilt as a typed component (G15).',
+    },
+    {
+      name: 'newsletter_subscribed',
+      rationale: 'Server-attested newsletter subscription. No static equivalent.',
+    },
+    {
+      name: 'article_viewed',
+      rationale:
+        'Content routes (G7) are new Next.js routes; the static build served this content from SPA anchors with no per-article events.',
+    },
+    {
+      name: 'search_performed',
+      rationale:
+        'Catalog search rebuilt as a typed component (G16); lengths only, never raw health text.',
+    },
+    {
+      name: 'content_page_viewed',
+      rationale: 'Generic content-route observability for the new G7 routes.',
+    },
+    {
+      name: 'formula_builder_started',
+      rationale:
+        'Custom capsule formula builder is new in Next.js (G2); the static #custom-formula had no typed event contract.',
+    },
+    {
+      name: 'formula_builder_step_viewed',
+      rationale: 'Formula builder funnel observability.',
+    },
+    {
+      name: 'formula_herb_selected',
+      rationale: 'Herb selection observability (exact herb IDs only, never PII).',
+    },
+    {
+      name: 'formula_herb_removed',
+      rationale: 'Herb removal observability for the formula builder.',
+    },
+    {
+      name: 'formula_safety_flag_shown',
+      rationale:
+        'Safety-flag exposure observability — measures how often the conservative safety module intervenes.',
+    },
+    {
+      name: 'formula_blend_completed',
+      rationale: 'Formula blend completion observability.',
+    },
+    {
+      name: 'formula_added_to_cart',
+      rationale: 'Custom formula add-to-cart observability (money-path adjacent).',
+    },
+    {
+      name: 'tea_builder_started',
+      rationale: 'Tea builder is new in Next.js (G10).',
+    },
+    {
+      name: 'tea_builder_step_viewed',
+      rationale: 'Tea builder funnel observability.',
+    },
+    {
+      name: 'tea_herb_selected',
+      rationale: 'Tea botanical selection observability.',
+    },
+    {
+      name: 'tea_herb_removed',
+      rationale: 'Tea botanical removal observability.',
+    },
+    {
+      name: 'tea_safety_flag_shown',
+      rationale: 'Tea safety-flag exposure observability.',
+    },
+    {
+      name: 'tea_blend_completed',
+      rationale: 'Tea blend completion observability.',
+    },
+    {
+      name: 'tea_added_to_cart',
+      rationale: 'Custom tea add-to-cart observability.',
+    },
+    {
+      name: 'grimoire_subscribe_started',
+      rationale:
+        'Grimoire subscription flow is rebuilt Cash App/Venmo-native (G1); the legacy NML/Stripe checkout is SUPERSEDED and its events are not preserved.',
+    },
+    {
+      name: 'subscription_created',
+      rationale:
+        'Server-attested subscription record creation (pending_payment). No static equivalent exists.',
+    },
+    {
+      name: 'otp_requested',
+      rationale:
+        'Grimoire OTP gating is new (G8); the static build had no working OTP flow.',
+    },
+    {
+      name: 'otp_verified',
+      rationale: 'OTP verification observability for the new gate.',
+    },
+    {
+      name: 'email_job_queued',
+      rationale:
+        'Email jobs are new provider-neutral contracts (G9); the static build had no observable job queue.',
+    },
+    {
+      name: 'chat_opened',
+      rationale:
+        'Lunna chat is new as a typed component (G11); the static widget had no typed event contract.',
+    },
+    {
+      name: 'chat_message_sent',
+      rationale:
+        'Chat engagement observability — message length + provider only, never message content.',
+    },
+    {
+      name: 'admin_viewed',
+      rationale:
+        'Admin dashboard is new (G12); section-only observability for operations.',
+    },
+    {
+      name: 'pwa_installed',
+      rationale: 'PWA installability observability (G14).',
+    },
   ];
 
 describe('ownership lifecycle order is exact (owner 2026-10-05)', () => {
@@ -103,8 +284,8 @@ describe('ownership lifecycle order is exact (owner 2026-10-05)', () => {
 
   it('every event has exactly one ownership stage; the record covers all 22', () => {
     const names = Object.values(ANALYTICS_EVENT_NAMES) as AnalyticsEventName[];
-    expect(names).toHaveLength(22);
-    expect(Object.keys(OWNERSHIP_STAGES)).toHaveLength(22);
+    expect(names).toHaveLength(62);
+    expect(Object.keys(OWNERSHIP_STAGES)).toHaveLength(62);
     for (const name of names) {
       const stage = OWNERSHIP_STAGES[name];
       expect(
@@ -201,7 +382,7 @@ describe('static↔Next.js name parity — no silent renames', () => {
     // A rename would appear as a static name missing from the Next.js
     // taxonomy — already covered above. This pins the additions list so a
     // rename cannot hide behind it.
-    expect(DOCUMENTED_ADDITIONS).toHaveLength(3);
+    expect(DOCUMENTED_ADDITIONS).toHaveLength(43);
     const staticSet = new Set<string>(STATIC_EVENT_NAMES);
     for (const a of DOCUMENTED_ADDITIONS) {
       expect(staticSet.has(a.name)).toBe(false);

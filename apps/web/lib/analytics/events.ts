@@ -67,6 +67,91 @@ export const ANALYTICS_EVENT_NAMES = {
    * the canonical observed revenue count, PostHog staying observational.
    */
   orderCreated: 'order_created',
+  /* ---- Phase 2 additions (23–62): order intake (G3), contact (G5) ---- */
+  /** Server: durable order-intake endpoint received a submission. */
+  orderSubmitted: 'order_submitted',
+  /** Server: order-intake pipeline accepted + persisted the order. Distinct from order_created (checkout endpoint's recorded fact) — different action, different endpoint, no double count. */
+  orderAccepted: 'order_accepted',
+  /** Server: order-intake pipeline rejected the submission (validation/persistence). */
+  orderRejected: 'order_rejected',
+  /** Server: contact endpoint received a submission. */
+  contactSubmitted: 'contact_submitted',
+  /** Server: contact message validated + persisted. */
+  contactAccepted: 'contact_accepted',
+  /** Server: contact submission rejected (validation/spam). PII-free. */
+  contactRejected: 'contact_rejected',
+  /* ---- Phase 2 additions: quiz (G6), reviews (G4), content (G7), newsletter (G15), search (G16) ---- */
+  /** Client: Herbal Allies Quiz started. */
+  quizStarted: 'quiz_started',
+  /** Client: quiz step completed. */
+  quizStepCompleted: 'quiz_step_completed',
+  /** Client: quiz completed, recommendations shown. */
+  quizCompleted: 'quiz_completed',
+  /** Server: quiz lead captured (consent-gated). */
+  quizLeadCaptured: 'quiz_lead_captured',
+  /** Client: review list viewed. */
+  reviewListViewed: 'review_list_viewed',
+  /** Client: review submitted (enters moderation queue). */
+  reviewSubmitted: 'review_submitted',
+  /** Client: newsletter signup form viewed. */
+  newsletterFormViewed: 'newsletter_form_viewed',
+  /** Server: newsletter subscription recorded. */
+  newsletterSubscribed: 'newsletter_subscribed',
+  /** Client: article/content page viewed. */
+  articleViewed: 'article_viewed',
+  /** Client: search performed (lengths only, never raw health text). */
+  searchPerformed: 'search_performed',
+  /** Client: generic content page viewed. */
+  contentPageViewed: 'content_page_viewed',
+  /* ---- Phase 2 additions: custom formula + tea builders (G2, G10) ---- */
+  /** Client: custom capsule formula builder started. */
+  formulaBuilderStarted: 'formula_builder_started',
+  /** Client: formula builder step viewed. */
+  formulaBuilderStepViewed: 'formula_builder_step_viewed',
+  /** Client: herb selected in formula builder (exact herb IDs only). */
+  formulaHerbSelected: 'formula_herb_selected',
+  /** Client: herb removed in formula builder. */
+  formulaHerbRemoved: 'formula_herb_removed',
+  /** Client: safety flag shown in formula builder. */
+  formulaSafetyFlagShown: 'formula_safety_flag_shown',
+  /** Client: formula blend completed. */
+  formulaBlendCompleted: 'formula_blend_completed',
+  /** Client: custom formula added to cart. */
+  formulaAddedToCart: 'formula_added_to_cart',
+  /** Client: tea builder started. */
+  teaBuilderStarted: 'tea_builder_started',
+  /** Client: tea builder step viewed. */
+  teaBuilderStepViewed: 'tea_builder_step_viewed',
+  /** Client: herb selected in tea builder. */
+  teaHerbSelected: 'tea_herb_selected',
+  /** Client: herb removed in tea builder. */
+  teaHerbRemoved: 'tea_herb_removed',
+  /** Client: safety flag shown in tea builder. */
+  teaSafetyFlagShown: 'tea_safety_flag_shown',
+  /** Client: tea blend completed. */
+  teaBlendCompleted: 'tea_blend_completed',
+  /** Client: custom tea added to cart. */
+  teaAddedToCart: 'tea_added_to_cart',
+  /* ---- Phase 2 additions: Grimoire (G1, G8), email jobs (G9) ---- */
+  /** Client: Grimoire subscribe flow started. */
+  grimoireSubscribeStarted: 'grimoire_subscribe_started',
+  /** Server: subscription record created (pending_payment). */
+  subscriptionCreated: 'subscription_created',
+  /** Server: OTP code requested. */
+  otpRequested: 'otp_requested',
+  /** Server: OTP code verified. */
+  otpVerified: 'otp_verified',
+  /** Server: email job queued (logging-only provider; no real sends). */
+  emailJobQueued: 'email_job_queued',
+  /* ---- Phase 2 additions: platform (G11, G12, G14) ---- */
+  /** Client: Lunna chat opened. */
+  chatOpened: 'chat_opened',
+  /** Client: chat message sent (length + provider only, never content). */
+  chatMessageSent: 'chat_message_sent',
+  /** Client: admin section viewed (section only). */
+  adminViewed: 'admin_viewed',
+  /** Client: PWA installed. */
+  pwaInstalled: 'pwa_installed',
 } as const;
 
 export type AnalyticsEventName =
@@ -139,6 +224,91 @@ export interface AnalyticsEventProperties {
    * source of truth; this event is observational.
    */
   order_created: { order_id: string; total_cents: number; item_count: number };
+  /* ---- Phase 2: order intake (G3) + contact (G5) — server-owned, PII-free ---- */
+  order_submitted: { attempt_id: string; item_count_claimed: number };
+  order_accepted: { order_id: string; total_cents: number; item_count: number };
+  order_rejected: {
+    attempt_id: string;
+    stage: 'validation' | 'persistence';
+    error_count: number;
+  };
+  contact_submitted: { attempt_id: string };
+  contact_accepted: { message_id: string; topic: string };
+  contact_rejected: {
+    attempt_id: string;
+    stage: 'validation' | 'persistence' | 'spam_filtered';
+    error_count: number;
+  };
+  /* ---- Phase 2: quiz (G6), reviews (G4), content (G7), newsletter (G15), search (G16) ---- */
+  quiz_started: Record<string, never>;
+  quiz_step_completed: { step: number; step_name: string; concern_id?: string };
+  quiz_completed: { concern_id: string; form_id: string };
+  quiz_lead_captured: { concern_id: string; form_id: string };
+  review_list_viewed: { product_handle: string; approved_review_count: number };
+  review_submitted: { product_handle: string; rating: number };
+  newsletter_form_viewed: { placement: string };
+  newsletter_subscribed: { placement: string };
+  article_viewed: { slug: string; section: string };
+  search_performed: { query_length: number; result_count: number };
+  content_page_viewed: { path: string };
+  /* ---- Phase 2: custom formula + tea builders (G2, G10) — herb_ids are ingredient IDs only ---- */
+  formula_builder_started: Record<string, never>;
+  formula_builder_step_viewed: { step: number; step_name: string };
+  formula_herb_selected: { herb_id: string; herb_count: number };
+  formula_herb_removed: { herb_id: string; herb_count: number };
+  formula_safety_flag_shown: {
+    flag_count: number;
+    max_severity: string;
+    unknown_pair_count: number;
+  };
+  formula_blend_completed: {
+    herb_ids: string[];
+    herb_count: number;
+    size_id: string;
+  };
+  formula_added_to_cart: {
+    size_id: string;
+    herb_ids: string[];
+    herb_count: number;
+    unit_price_cents: number;
+    quantity: number;
+  };
+  tea_builder_started: Record<string, never>;
+  tea_builder_step_viewed: { step: number; step_name: string };
+  tea_herb_selected: { herb_id: string; herb_count: number };
+  tea_herb_removed: { herb_id: string; herb_count: number };
+  tea_safety_flag_shown: {
+    flag_count: number;
+    max_severity: string;
+    unknown_pair_count: number;
+  };
+  tea_blend_completed: { herb_ids: string[]; herb_count: number; size_id: string };
+  tea_added_to_cart: {
+    size_id: string;
+    herb_ids: string[];
+    herb_count: number;
+    unit_price_cents: number;
+    quantity: number;
+  };
+  /* ---- Phase 2: Grimoire (G1, G8) + email jobs (G9) ---- */
+  grimoire_subscribe_started: { plan_id: string; price_cents: number };
+  subscription_created: {
+    subscription_id: string;
+    status: 'pending_payment';
+    plan_id: string;
+    price_cents: number;
+  };
+  otp_requested: { request_id: string; purpose: 'grimoire_gate' };
+  otp_verified: { request_id: string; purpose: 'grimoire_gate' };
+  email_job_queued: {
+    job_id: string;
+    template: 'purchase_confirmation' | 'weekly_promo' | 'unsubscribe_confirmation' | 'review_reminder';
+  };
+  /* ---- Phase 2: platform (G11, G12, G14) — content never captured ---- */
+  chat_opened: { surface: 'widget' };
+  chat_message_sent: { message_length: number; provider_id: string };
+  admin_viewed: { section: string };
+  pwa_installed: Record<string, never>;
 }
 
 /** Compile-time-checked properties for an event name. */
@@ -188,6 +358,51 @@ export const EVENT_OWNERSHIP = {
   payment_instructions_viewed: 'client',
   order_completed: 'client',
   order_created: 'server',
+  /* Phase 2: order intake (G3) + contact (G5) — all server-owned */
+  order_submitted: 'server',
+  order_accepted: 'server',
+  order_rejected: 'server',
+  contact_submitted: 'server',
+  contact_accepted: 'server',
+  contact_rejected: 'server',
+  /* Phase 2: quiz/reviews/content/newsletter/search (G6, G4, G7, G15, G16) */
+  quiz_started: 'client',
+  quiz_step_completed: 'client',
+  quiz_completed: 'client',
+  quiz_lead_captured: 'server',
+  review_list_viewed: 'client',
+  review_submitted: 'client',
+  newsletter_form_viewed: 'client',
+  newsletter_subscribed: 'server',
+  article_viewed: 'client',
+  search_performed: 'client',
+  content_page_viewed: 'client',
+  /* Phase 2: custom formula + tea builders (G2, G10) — all client-owned */
+  formula_builder_started: 'client',
+  formula_builder_step_viewed: 'client',
+  formula_herb_selected: 'client',
+  formula_herb_removed: 'client',
+  formula_safety_flag_shown: 'client',
+  formula_blend_completed: 'client',
+  formula_added_to_cart: 'client',
+  tea_builder_started: 'client',
+  tea_builder_step_viewed: 'client',
+  tea_herb_selected: 'client',
+  tea_herb_removed: 'client',
+  tea_safety_flag_shown: 'client',
+  tea_blend_completed: 'client',
+  tea_added_to_cart: 'client',
+  /* Phase 2: Grimoire (G1, G8) + email jobs (G9) */
+  grimoire_subscribe_started: 'client',
+  subscription_created: 'server',
+  otp_requested: 'server',
+  otp_verified: 'server',
+  email_job_queued: 'server',
+  /* Phase 2: platform (G11, G12, G14) */
+  chat_opened: 'client',
+  chat_message_sent: 'client',
+  admin_viewed: 'client',
+  pwa_installed: 'client',
 } satisfies Record<AnalyticsEventName, EventOwner>;
 
 /** Event names the server-side capturer may emit (compile-time enforced). */
@@ -276,6 +491,47 @@ export const OWNERSHIP_STAGES: Record<AnalyticsEventName, OwnershipStage> = {
   payment_instructions_viewed: 'feature_tested',
   order_completed: 'feature_tested',
   order_created: 'feature_tested',
+  /* Phase 2 additions (23–62): all wired in Next.js, receipt BLOCKED on the owner's key */
+  order_submitted: 'feature_tested',
+  order_accepted: 'feature_tested',
+  order_rejected: 'feature_tested',
+  contact_submitted: 'feature_tested',
+  contact_accepted: 'feature_tested',
+  contact_rejected: 'feature_tested',
+  quiz_started: 'feature_tested',
+  quiz_step_completed: 'feature_tested',
+  quiz_completed: 'feature_tested',
+  quiz_lead_captured: 'feature_tested',
+  review_list_viewed: 'feature_tested',
+  review_submitted: 'feature_tested',
+  newsletter_form_viewed: 'feature_tested',
+  newsletter_subscribed: 'feature_tested',
+  article_viewed: 'feature_tested',
+  search_performed: 'feature_tested',
+  content_page_viewed: 'feature_tested',
+  formula_builder_started: 'feature_tested',
+  formula_builder_step_viewed: 'feature_tested',
+  formula_herb_selected: 'feature_tested',
+  formula_herb_removed: 'feature_tested',
+  formula_safety_flag_shown: 'feature_tested',
+  formula_blend_completed: 'feature_tested',
+  formula_added_to_cart: 'feature_tested',
+  tea_builder_started: 'feature_tested',
+  tea_builder_step_viewed: 'feature_tested',
+  tea_herb_selected: 'feature_tested',
+  tea_herb_removed: 'feature_tested',
+  tea_safety_flag_shown: 'feature_tested',
+  tea_blend_completed: 'feature_tested',
+  tea_added_to_cart: 'feature_tested',
+  grimoire_subscribe_started: 'feature_tested',
+  subscription_created: 'feature_tested',
+  otp_requested: 'feature_tested',
+  otp_verified: 'feature_tested',
+  email_job_queued: 'feature_tested',
+  chat_opened: 'feature_tested',
+  chat_message_sent: 'feature_tested',
+  admin_viewed: 'feature_tested',
+  pwa_installed: 'feature_tested',
 };
 
 /**
@@ -301,8 +557,11 @@ if (_collisionCheck.length > 0) {
   throw new Error(`Analytics ownership collision: ${(_collisionCheck as string[]).join(', ')}`);
 }
 
-/** The 22-event count is a contract — bump deliberately, not accidentally. */
-const EVENT_COUNT = 22;
+/** The 62-event count is a contract — bump deliberately, not accidentally.
+ * 19 (original) + 3 (Phase 1: product_viewed, payment_instructions_viewed,
+ * order_created) + 40 (Phase 2: G1/G2/G4/G5/G6/G7/G8/G9/G10/G11/G12/G14/G15/G16).
+ * Traceability for every addition lives in docs/migration/POSTHOG_EVENT_MAP.md. */
+const EVENT_COUNT = 62;
 const _countCheck: Record<AnalyticsEventName, true> = {
   builder_step_viewed: true,
   ritual_completed: true,
@@ -326,7 +585,48 @@ const _countCheck: Record<AnalyticsEventName, true> = {
   payment_instructions_viewed: true,
   order_completed: true,
   order_created: true,
+  /* Phase 2 (23–62) */
+  order_submitted: true,
+  order_accepted: true,
+  order_rejected: true,
+  contact_submitted: true,
+  contact_accepted: true,
+  contact_rejected: true,
+  quiz_started: true,
+  quiz_step_completed: true,
+  quiz_completed: true,
+  quiz_lead_captured: true,
+  review_list_viewed: true,
+  review_submitted: true,
+  newsletter_form_viewed: true,
+  newsletter_subscribed: true,
+  article_viewed: true,
+  search_performed: true,
+  content_page_viewed: true,
+  formula_builder_started: true,
+  formula_builder_step_viewed: true,
+  formula_herb_selected: true,
+  formula_herb_removed: true,
+  formula_safety_flag_shown: true,
+  formula_blend_completed: true,
+  formula_added_to_cart: true,
+  tea_builder_started: true,
+  tea_builder_step_viewed: true,
+  tea_herb_selected: true,
+  tea_herb_removed: true,
+  tea_safety_flag_shown: true,
+  tea_blend_completed: true,
+  tea_added_to_cart: true,
+  grimoire_subscribe_started: true,
+  subscription_created: true,
+  otp_requested: true,
+  otp_verified: true,
+  email_job_queued: true,
+  chat_opened: true,
+  chat_message_sent: true,
+  admin_viewed: true,
+  pwa_installed: true,
 };
 if (Object.keys(_countCheck).length !== EVENT_COUNT) {
-  throw new Error('Analytics taxonomy drift: expected 22 events');
+  throw new Error('Analytics taxonomy drift: expected 62 events');
 }
