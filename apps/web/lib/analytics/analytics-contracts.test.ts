@@ -93,6 +93,47 @@ const SAMPLES: { [K in AnalyticsEventName]: AnalyticsEventProperties[K] } = {
   payment_instructions_viewed: { order_id: 'AWK-TEST-0001' },
   order_completed: { order_id: 'AWK-TEST-0001', total_cents: 3577, item_count: 5 },
   order_created: { order_id: 'AWK-TEST-0001', total_cents: 3577, item_count: 5 },
+  /* Phase 2 (23–62) — representative PII-free samples */
+  order_submitted: { attempt_id: 'ATTEMPT-TEST-0001', item_count_claimed: 2 },
+  order_accepted: { order_id: 'AWK-TEST-0001', total_cents: 1977, item_count: 1 },
+  order_rejected: { attempt_id: 'ATTEMPT-TEST-0002', stage: 'validation', error_count: 1 },
+  contact_submitted: { attempt_id: 'ATTEMPT-TEST-0003' },
+  contact_accepted: { message_id: 'MSG-TEST-0001', topic: 'order-question' },
+  contact_rejected: { attempt_id: 'ATTEMPT-TEST-0004', stage: 'spam_filtered', error_count: 1 },
+  quiz_started: {},
+  quiz_step_completed: { step: 2, step_name: 'concern', concern_id: 'sleep' },
+  quiz_completed: { concern_id: 'sleep', form_id: 'capsules' },
+  quiz_lead_captured: { concern_id: 'sleep', form_id: 'capsules' },
+  review_list_viewed: { product_handle: 'lavender-soap', approved_review_count: 0 },
+  review_submitted: { product_handle: 'lavender-soap', rating: 5 },
+  newsletter_form_viewed: { placement: 'footer' },
+  newsletter_subscribed: { placement: 'footer' },
+  article_viewed: { slug: 'lavender-101', section: 'herbal-wisdom' },
+  search_performed: { query_length: 8, result_count: 3 },
+  content_page_viewed: { path: '/faqs' },
+  formula_builder_started: {},
+  formula_builder_step_viewed: { step: 2, step_name: 'herbs' },
+  formula_herb_selected: { herb_id: 'ashwagandha', herb_count: 3 },
+  formula_herb_removed: { herb_id: 'ashwagandha', herb_count: 2 },
+  formula_safety_flag_shown: { flag_count: 1, max_severity: 'review', unknown_pair_count: 1 },
+  formula_blend_completed: { herb_ids: ['ashwagandha', 'rhodiola'], herb_count: 2, size_id: '30-day' },
+  formula_added_to_cart: { size_id: '30-day', herb_ids: ['ashwagandha'], herb_count: 1, unit_price_cents: 4777, quantity: 1 },
+  tea_builder_started: {},
+  tea_builder_step_viewed: { step: 2, step_name: 'botanicals' },
+  tea_herb_selected: { herb_id: 'chamomile', herb_count: 2 },
+  tea_herb_removed: { herb_id: 'chamomile', herb_count: 1 },
+  tea_safety_flag_shown: { flag_count: 0, max_severity: 'none', unknown_pair_count: 0 },
+  tea_blend_completed: { herb_ids: ['chamomile', 'mint'], herb_count: 2, size_id: '2oz' },
+  tea_added_to_cart: { size_id: '2oz', herb_ids: ['chamomile'], herb_count: 1, unit_price_cents: 1199, quantity: 1 },
+  grimoire_subscribe_started: { plan_id: 'grimoire-monthly', price_cents: 777 },
+  subscription_created: { subscription_id: 'SUB-TEST-0001', status: 'pending_payment', plan_id: 'grimoire-monthly', price_cents: 777 },
+  otp_requested: { request_id: 'REQ-TEST-0001', purpose: 'grimoire_gate' },
+  otp_verified: { request_id: 'REQ-TEST-0001', purpose: 'grimoire_gate' },
+  email_job_queued: { job_id: 'JOB-TEST-0001', template: 'purchase_confirmation' },
+  chat_opened: { surface: 'widget' },
+  chat_message_sent: { message_length: 42, provider_id: 'canned-preview' },
+  admin_viewed: { section: 'orders' },
+  pwa_installed: {},
 };
 
 describe('implementation-source tagging (migration)', () => {
@@ -105,7 +146,7 @@ describe('implementation-source tagging (migration)', () => {
 
   it('every event payload carries implementation_source=nextjs', () => {
     const names = Object.values(ANALYTICS_EVENT_NAMES) as AnalyticsEventName[];
-    expect(names).toHaveLength(22);
+    expect(names).toHaveLength(62);
     for (const name of names) {
       const payload = buildEventPayload(SAMPLES[name] as never) as Record<
         string,

@@ -2,7 +2,7 @@
  * REGRESSION SUITE — §19: PostHog event contracts.
  *
  * Laws under test:
- * - The 22-event typed taxonomy is a contract: count, names, and property
+ * - The 62-event typed taxonomy is a contract: count, names, and property
  *   schemas must only change deliberately.
  * - Every event carries exactly one owner ('client' | 'server') — no
  *   duplicates across the client/server boundary (§6).
@@ -20,15 +20,15 @@ import {
 } from './events';
 import { isPostHogLive, track, trackOnce } from './posthog';
 
-describe('22-event typed taxonomy (migration baseline)', () => {
-  it('contains exactly 22 events', () => {
-    expect(Object.keys(ANALYTICS_EVENT_NAMES)).toHaveLength(22);
-    expect(Object.values(ANALYTICS_EVENT_NAMES)).toHaveLength(22);
+describe('62-event typed taxonomy (migration baseline + Phase 2)', () => {
+  it('contains exactly 62 events', () => {
+    expect(Object.keys(ANALYTICS_EVENT_NAMES)).toHaveLength(62);
+    expect(Object.values(ANALYTICS_EVENT_NAMES)).toHaveLength(62);
   });
 
   it('event names are unique snake_case strings', () => {
     const values = Object.values(ANALYTICS_EVENT_NAMES);
-    expect(new Set(values).size).toBe(22);
+    expect(new Set(values).size).toBe(62);
     for (const v of values) {
       expect(v).toMatch(/^[a-z]+(_[a-z]+)*$/);
     }
@@ -69,20 +69,22 @@ describe('22-event typed taxonomy (migration baseline)', () => {
 describe('client/server ownership — no duplicates (§6)', () => {
   it('every event has exactly one owner', () => {
     const names = Object.values(ANALYTICS_EVENT_NAMES) as AnalyticsEventName[];
-    expect(Object.keys(EVENT_OWNERSHIP)).toHaveLength(22);
+    expect(Object.keys(EVENT_OWNERSHIP)).toHaveLength(62);
     for (const name of names) {
       expect(['client', 'server']).toContain(EVENT_OWNERSHIP[name]);
     }
   });
 
-  it('21 events are client-owned (interactions); order_created is server-owned', () => {
+  it('49 events are client-owned (interactions); 13 are server-owned (authoritative transitions)', () => {
     // CLIENT owns customer interactions (only the browser observes them);
     // SERVER owns authoritative business transitions (only the server can
-    // attest them). order_created is the first server-owned event, emitted
-    // exactly once by POST /api/checkout after the order is persisted.
+    // attest them). Server-owned: order_created, order_submitted,
+    // order_accepted, order_rejected, contact_submitted, contact_accepted,
+    // contact_rejected, quiz_lead_captured, newsletter_subscribed,
+    // subscription_created, otp_requested, otp_verified, email_job_queued.
     const owners = Object.values(EVENT_OWNERSHIP);
-    expect(owners.filter((o) => o === 'client')).toHaveLength(21);
-    expect(owners.filter((o) => o === 'server')).toHaveLength(1);
+    expect(owners.filter((o) => o === 'client')).toHaveLength(49);
+    expect(owners.filter((o) => o === 'server')).toHaveLength(13);
     expect(EVENT_OWNERSHIP.order_created).toBe('server');
     expect(EVENT_OWNERSHIP.order_completed).toBe('client');
   });

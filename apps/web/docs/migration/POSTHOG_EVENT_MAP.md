@@ -165,7 +165,7 @@ See [POSTHOG_KEY.md](../../POSTHOG_KEY.md): paste the `phc_` key into `NEXT_PUBL
 
 | Item | Location |
 |---|---|
-| Taxonomy (22 events, ownership, ownership stages, planned server events) | `lib/analytics/events.ts` |
+| Taxonomy (62 events: 19 + 3 + 40, ownership, ownership stages, planned server events) | `lib/analytics/events.ts` |
 | Client tracker (inert without key, source stamping, dedupe) | `lib/analytics/posthog.ts` |
 | Server capture (`order_created`) | `lib/analytics/posthog-server.ts` |
 | Next.js client entry point | `app/instrumentation-client.ts` |
@@ -175,3 +175,54 @@ See [POSTHOG_KEY.md](../../POSTHOG_KEY.md): paste the `phc_` key into `NEXT_PUBL
 | Ownership-transfer stage gate + static↔Next.js name parity | `lib/analytics/ownership-transfer.test.ts` |
 | Evidence-based checkpoint metrics | `docs/migration/CHECKPOINT_METRICS.md` |
 | Static baseline | `../soap-shop-build/assets/POSTHOG_EVENTS.md`, `../soap-shop-build/assets/posthog-tracking.js` |
+
+---
+
+## 7. Phase 2 additions (events 23–62) — traceability
+
+All 40 events merged into the central taxonomy (`lib/analytics/events.ts`); per-module interim files retained as documentation. All WIRED, receipt BLOCKED on the owner's `phc_` key. No static counterparts exist for any of them (all are new Next.js capabilities); no duplicates were introduced.
+
+| # | Event | Owner | Reason added | Legacy/static equivalent | Business purpose |
+|---|---|---|---|---|---|
+| 23 | `order_submitted` | server | Durable intake endpoint is new; observe attempts before validation | none (Netlify Forms implicit event) | Intake funnel entry |
+| 24 | `order_accepted` | server | Server-attested intake acceptance; distinct from `order_created` (different endpoint/action) | none | Canonical intake acceptance count |
+| 25 | `order_rejected` | server | Intake rejection observability (validation vs persistence) | none | Intake failure triage |
+| 26 | `contact_submitted` | server | Explicit contact API contract is new | none (form-relay had no events) | Contact funnel entry |
+| 27 | `contact_accepted` | server | Server-attested message persistence | none | Contact completion count |
+| 28 | `contact_rejected` | server | Rejection/spam-filter observability, PII-free | none | Abuse/failure triage |
+| 29 | `quiz_started` | client | Quiz rebuilt as Next.js island (G6) | none (no typed contract) | Lead-gen funnel entry |
+| 30 | `quiz_step_completed` | client | Quiz funnel steps | none | Drop-off analysis |
+| 31 | `quiz_completed` | client | Quiz completion | none | Lead-gen conversion |
+| 32 | `quiz_lead_captured` | server | Consent-gated lead attestation | none | Verified lead count |
+| 33 | `review_list_viewed` | client | Reviews rebuilt (G4) | none | Social-proof engagement |
+| 34 | `review_submitted` | client | Review submission (→ moderation) | none | Review velocity |
+| 35 | `newsletter_form_viewed` | client | Footer signup rebuilt (G15) | none | List-growth funnel |
+| 36 | `newsletter_subscribed` | server | Server-attested subscription | none | Verified subscriber count |
+| 37 | `article_viewed` | client | Content routes are new Next.js routes (G7) | none (SPA anchors) | Content engagement |
+| 38 | `search_performed` | client | Search rebuilt (G16); lengths only | none | Search usage |
+| 39 | `content_page_viewed` | client | Generic content-route observability | none | Content engagement |
+| 40 | `formula_builder_started` | client | Capsule builder is new (G2) | none (no typed contract) | Builder funnel entry |
+| 41 | `formula_builder_step_viewed` | client | Builder funnel steps | none | Drop-off analysis |
+| 42 | `formula_herb_selected` | client | Herb selection (IDs only) | none | Configuration behavior |
+| 43 | `formula_herb_removed` | client | Herb removal | none | Configuration behavior |
+| 44 | `formula_safety_flag_shown` | client | Safety-module intervention exposure | none | Safety UX measurement |
+| 45 | `formula_blend_completed` | client | Blend completion | none | Builder completion |
+| 46 | `formula_added_to_cart` | client | Custom formula cart adds | none | Money-path adjacent |
+| 47 | `tea_builder_started` | client | Tea builder is new (G10) | none | Builder funnel entry |
+| 48 | `tea_builder_step_viewed` | client | Tea funnel steps | none | Drop-off analysis |
+| 49 | `tea_herb_selected` | client | Botanical selection | none | Configuration behavior |
+| 50 | `tea_herb_removed` | client | Botanical removal | none | Configuration behavior |
+| 51 | `tea_safety_flag_shown` | client | Safety exposure | none | Safety UX measurement |
+| 52 | `tea_blend_completed` | client | Tea completion | none | Builder completion |
+| 53 | `tea_added_to_cart` | client | Custom tea cart adds | none | Money-path adjacent |
+| 54 | `grimoire_subscribe_started` | client | Grimoire flow rebuilt Cash App/Venmo-native (G1) | none (NML/Stripe SUPERSEDED, not preserved) | Subscription funnel entry |
+| 55 | `subscription_created` | server | Server-attested subscription record | none | Verified subscription count |
+| 56 | `otp_requested` | server | OTP gating is new (G8) | none (no working OTP flow) | Gate usage |
+| 57 | `otp_verified` | server | OTP verification | none | Gate conversion |
+| 58 | `email_job_queued` | server | Email jobs are new contracts (G9) | none | Comms observability |
+| 59 | `chat_opened` | client | Lunna chat rebuilt (G11) | none (no typed contract) | Concierge engagement |
+| 60 | `chat_message_sent` | client | Chat engagement (length+provider only) | none | Concierge usage |
+| 61 | `admin_viewed` | client | Admin dashboard is new (G12) | none | Operations observability |
+| 62 | `pwa_installed` | client | PWA installability (G14) | none | Install measurement |
+
+**Duplicate review (Phase 2):** `order_accepted` vs `order_created` — different endpoints (`/api/orders` vs `/api/checkout`), different actions (intake acceptance vs payment-instruction flow acceptance); documented as complementary, not duplicates. `newsletter_subscribed`/`quiz_lead_captured` are server attestations of client-initiated flows — no client-side twins exist. No consolidation needed.
