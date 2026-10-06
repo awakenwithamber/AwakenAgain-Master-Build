@@ -22,12 +22,17 @@ import {
   BUNDLE_PRICE_CENTS,
   BUNDLE_SLOT_SHAPES,
   bundleSavingsCents,
+  customFormulaPriceCents,
+  formulaKindForHandle,
+  getFormulaSize,
 } from '../pricing/pricing';
+import { getHerb } from '../catalog/herbs';
 import type {
   BundleConfiguration,
   BundleSlot,
   CartItem,
   Customization,
+  FormulaCustomization,
   OrderConfiguration,
   ScentSelection,
   ValidationResult,
@@ -203,6 +208,106 @@ export function buildBundleConfiguration(slots: BundleSlot[]): BundleConfigurati
 
 import { getProductByHandle } from '../catalog/products';
 
+/* ------------------------------------------------------------------ */
+/* Custom formulas (G2 capsules, G10 tea)                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Validate a custom formula: product must be a formula product, size must
+ * exist for its kind, herb IDs must exist and be usable in the form
+ * (data-driven via Herb.uses), no duplicates, at least 1 herb.
+ * Formulas and soap customizations are mutually exclusive (enforced in
+ * buildOrderConfiguration) — a formula can never be priced as a soap.
+ */
+export function validateFormulaCustomization(
+  productHandle: string,
+  f: FormulaCustomization,
+): ValidationResult {
+  const errors: string[] = [];
+  if (!f || typeof f !== 'object') {
+    return { valid: false, errors: ['Formula customization must be an object.'] };
+  }
+  const kind = formulaKindForHandle(productHandle);
+  if (!kind) {
+    errors.push(`Product ${productHandle} is not a custom-formula product.`);
+    return { valid: false, errors };
+  }
+  if (!getFormulaSize(kind, f.size_id)) {
+    errors.push(`Unknown formula size: ${f.size_id} for ${kind}.`);
+  }
+  if (!Array.isArray(f.herb_ids) || f.herb_ids.length < 1) {
+    errors.push('Formula requires at least 1 botanical.');
+  } else {
+    const seen = new Set<string>();
+    for (const id of f.herb_ids) {
+      if (seen.has(id)) errors.push(`Duplicate herb in formula: ${id}`);
+      seen.add(id);
+      const herb = getHerb(id);
+      if (!herb) {
+        errors.push(`Unknown herb: ${id}`);
+      } else if (!herb.uses.includes(kind)) {
+        errors.push(`Herb "${herb.name}" is not usable in ${kind} form.`);
+      }
+    }
+  }
+  for (const [field, max] of [
+    ['creation_name', 80],
+    ['intention', 120],
+    ['notes', 500],
+  ] as const) {
+    const v = f[field];
+    if (v !== undefined && (typeof v !== 'string' || v.length > max)) {
+      errors.push(`Formula field ${field} exceeds ${max} characters.`);
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Server-computed unit price for a custom formula: size base + per-herb
+ * add-ons, integer cents. Mirrors customFormulaPriceCents (client preview)
+ * — any drift between the two fails closed at checkout.
+ */
+export function priceFormulaCustomization(
+  productHandle: string,
+  f: FormulaCustomization,
+): number {
+  const kind = formulaKindForHandle(productHandle);
+  if (!kind) throw new Error(`Not a custom-formula product: ${productHandle}`);
+  const validation = validateFormulaCustomization(productHandle, f);
+  if (!validation.valid) {
+    throw new Error(`Invalid formula: ${validation.errors.join('; ')}`);
+  }
+  return customFormulaPriceCents(kind, f.size_id, f.herb_ids);
+}
+
+export function buildFormulaCartItem(
+  productHandle: string,
+  formula: FormulaCustomization,
+  quantity: number,
+): CartItem {
+  const validation = validateFormulaCustomization(productHandle, formula);
+  if (!validation.valid) {
+    throw new Error(`Invalid formula: ${validation.errors.join('; ')}`);
+  }
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    throw new Error(`Invalid quantity: ${quantity}`);
+  }
+  return {
+    id: nextId('cart'),
+    product_handle: productHandle,
+    quantity,
+    formula: {
+      herb_ids: [...formula.herb_ids],
+      size_id: formula.size_id,
+      ...(formula.creation_name ? { creation_name: formula.creation_name } : {}),
+      ...(formula.intention ? { intention: formula.intention } : {}),
+      ...(formula.notes ? { notes: formula.notes } : {}),
+    },
+    unit_price_cents: priceFormulaCustomization(productHandle, formula),
+  };
+}
+
 /**
  * Assemble the authoritative order payload. Totals are recomputed here —
  * never trusted from client input.
@@ -223,7 +328,13 @@ export function buildOrderConfiguration(
       throw new Error('Order item must be an object.');
     }
     let unit: number;
-    if (item.customization) {
+    if (item.customization && item.formula) {
+      throw new Error(
+        `Item ${item.id} has both a customization and a formula — these are mutually exclusive.`,
+      );
+    } else if (item.formula) {
+      unit = priceFormulaCustomization(item.product_handle, item.formula);
+    } else if (item.customization) {
       unit = priceCustomization(item.customization);
     } else {
       const product = getProductByHandle(item.product_handle);

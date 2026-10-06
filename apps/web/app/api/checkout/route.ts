@@ -17,34 +17,31 @@
  * here and by the regression tests).
  */
 import { NextResponse } from 'next/server';
-import { appendFileSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import {
   CASH_APP_HANDLE,
   VENMO_HANDLE,
   validateAndBuildOrder,
   type OrderRecord,
 } from '../../../lib/checkout/order';
+import { createOrderStore } from '../../../lib/orders/store';
 import {
   captureServerEventSoon,
   resolveServerDistinctId,
 } from '../../../lib/analytics/posthog-server';
 import { ANALYTICS_EVENT_NAMES } from '../../../lib/analytics/events';
 
-function ledgerPath(): string {
-  return (
-    process.env.ORDERS_LEDGER_PATH ?? join(process.cwd(), '.orders-ledger.jsonl')
-  );
-}
-
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
 }
 
-function persistOrder(record: OrderRecord): void {
-  const path = ledgerPath();
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, `${JSON.stringify(record)}\n`, 'utf8');
+/**
+ * Durable persistence through the provider-neutral store interface
+ * (lib/orders/store.ts) — the same contract the order-intake pipeline
+ * (POST /api/orders) uses. Local JSONL today; a future implementation
+ * satisfies the same interface without touching this handler.
+ */
+function persistOrder(record: OrderRecord) {
+  return createOrderStore().append(record);
 }
 
 function paymentInstructions() {
@@ -77,7 +74,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    persistOrder(record);
+    await persistOrder(record);
   } catch (err) {
     return fail(
       [
