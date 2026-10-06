@@ -21,6 +21,10 @@ SAFE TO REMOVE only after VERIFIED, per the migration directive.
 | Legacy SPA routes (`index.html` + netlify.toml) | App Router pages + `redirects()` | Catalog, deployment decision | PROPOSED (not yet built) |
 | `jsdom` dependency | removed | — | SUPERSEDED — safe to drop (incompatible with target runtimes) |
 | `npm-publish.yml` | removed | — | SUPERSEDED — supply-chain footgun, do not carry |
+| `#custom-formula` static flow (`custom-creations.js`: herb grid, search, `ccSafetyCheck` checkbox, `ccLivePrice`) | `app/custom-formula/page.tsx` + `components/builder/FormulaBuilder.tsx` (kind=capsule) + `lib/catalog/herbs.ts` (306 botanicals) + `lib/custom-formula/{safety,formula}.ts` + formula pricing in `lib/pricing/pricing.ts` + `FormulaCustomization` in `lib/cart/validation.ts` + server branch in `lib/checkout/order.ts` | `lib/catalog`, `lib/pricing`, `lib/cart`, `lib/checkout`, `lib/analytics` | PROPOSED (built 2026-10-05, workstream 3; 99 new tests green; pricing PROPOSED pending owner confirmation) |
+| Tea builder (static stubs only — merged into custom-formula) | `app/custom-formula/tea/page.tsx` + `FormulaBuilder` (kind=tea) + shared `components/builder/shared/*` primitives | same as above | PROPOSED (built 2026-10-05, workstream 3) |
+| Builder CSS duplicated per builder | `components/builder/shared/builder-styles.ts` (BUILDER_CSS extracted verbatim; SoapBuilder imports it; FORMULA_BUILDER_CSS extends it) | — | PROPOSED (2026-10-05, workstream 3; soap ritual visually unchanged) |
+| Formula builder analytics (none in legacy) | `lib/analytics/builders-events.ts` (14 events, `implementation_source: 'nextjs'`, client-owned, full traceability) — SEPARATE from the 22-event canonical taxonomy; coordinator merges | `lib/analytics/posthog.ts` (init reuse) | PROPOSED — WIRED, never IMPLEMENTED (receipt BLOCKED on owner's phc_ key) |
 
 ## Verification record (2026-10-05, scaffold stage)
 - `npx tsc --noEmit` — PASS, zero errors
@@ -159,3 +163,30 @@ No clear Next.js destination yet; NOT invented here:
 - `npm run build` — **PASSES for my scope** (verified in an isolated /tmp copy excluding `app/api`, which the checkout worker owns): middleware bundles (34.5 kB), `/sitemap.xml` + `/robots.txt` generated, `/soap-shop` prerenders static. **In the live workspace the build is currently RED because of `app/api/checkout/route.ts` (checkout worker's in-progress file):** `Type error: Route "app/api/checkout/route.ts" does not match the required types — "validateAndBuildOrder" is not a valid Route export field.` Fix for that worker: move `validateAndBuildOrder` to `lib/` (unexported helper or lib module) — route files may only export HTTP method handlers.
 - PostHog status: taxonomy intact, still BLOCKED on `phc_` key — never marked IMPLEMENTED.
 - Earlier transient: `next build` once failed requiring `.next/server/middleware-manifest.json` (file existed; `require` succeeded seconds later) — environment filesystem race, not a code defect; clean rebuild proceeded past it.
+
+---
+
+## Phase 2 consolidation (coordinator, 2026-10-06 ~00:30 MDT)
+
+All 5 workstreams complete. Gaps closed: G1–G16 (G17 held for owner decision).
+
+### Verification (final)
+- `npm test` — **556 passed / 3 skipped / 0 failed** (52 files)
+- `npx tsc --noEmit` — clean, 0 errors
+- `npm run build` — green, 121/121 static pages
+- Payment purity: no stripe/shopify/paypal/square in app source (tests that enforce the ban excluded)
+- No `$AmberPatten92`; no `$55` as a price; brand exact everywhere (ban-tests excluded)
+
+### Coordinator-applied changes (beyond workstream reports)
+1. **PostHog taxonomy merged 22 → 62**: all 40 Phase 2 events merged into `lib/analytics/events.ts` (names, ownership, property schemas, OWNERSHIP_STAGES, count contract). 9 contract tests + 2 module guards updated to assert the merge (presence + ownership agreement) instead of disjointness. Interim `lib/analytics/analytics-bridge.ts` deleted per WS1's design; `app/api/orders` + `app/api/contact` now use canonical `captureServerEventSoon`.
+2. **LegacyAnchorRedirect mounted** in `app/layout.tsx` (was coordinator-blocked).
+3. **CONVERSION_MAP.md** gap table rewritten with Phase 2 statuses; **CHECKPOINT_METRICS.md** created; **POSTHOG_EVENT_MAP.md** extended with events 23–62 traceability.
+4. **Resolved**: /api/checkout vs /api/orders split — KEEP BOTH (checkout = customer purchase flow with payment instructions; orders = generic durable-intake contract; one shared validator + store; client calls only /api/checkout).
+
+### Regressions found & fixed during consolidation
+- ContactForm server-import violation (fixed by WS1); sibling test syntax errors (fixed by owners); PII-regex false positive (fixed by owner); central-merge test fallout (9 files, fixed by coordinator).
+
+### NOT done
+- **GitHub push BLOCKED**: MCP `push_files` requires interactive approval; approval timed out in this session. All Phase 2 work is staged locally at `~/workspace/awakenagain-migration/nextjs-app/` (maps to `apps/web/`), verified and ready. Baseline remains `d2a02ea`.
+- Vercel preview: blocked on owner org auth (no workaround attempted).
+- PostHog receipt: BLOCKED on owner's `phc_` key (both implementations WIRED, never IMPLEMENTED).

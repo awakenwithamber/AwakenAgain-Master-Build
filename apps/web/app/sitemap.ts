@@ -10,6 +10,8 @@ import type { MetadataRoute } from 'next';
 import { siteUrl } from '../lib/seo/config';
 import { CANONICAL_ROUTES, canonicalUrl } from '../lib/seo/routes';
 import { PRODUCTS } from '../lib/catalog/products';
+import { JOURNAL_ARTICLES } from '../lib/content/journal';
+import { HERB_INDEX } from '../lib/content/herbs';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
@@ -26,5 +28,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));
-  return [...staticRoutes, ...productRoutes];
+  const journalRoutes: MetadataRoute.Sitemap = JOURNAL_ARTICLES.map((a) => ({
+    url: canonicalUrl(`/journal/${a.slug}`, base),
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+  const herbRoutes: MetadataRoute.Sitemap = HERB_INDEX.map((h) => ({
+    url: canonicalUrl(`/herbal-library/${h.slug}`, base),
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }));
+  return [...staticRoutes, ...productRoutes, ...journalRoutes, ...herbRoutes];
 }
