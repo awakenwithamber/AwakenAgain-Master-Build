@@ -1,12 +1,16 @@
 /**
- * /faqs — frequently asked questions (G7).
+ * /faqs — frequently asked questions (workstream G).
  *
- * Server-rendered from lib/content/faqs.ts. Answers grounded in
- * owner-verified facts; unverified items carry honest markers.
+ * Server page: metadata + layout; the interactive accordion lives in
+ * FaqAccordion.tsx (client). Content is the owner-verified lib/content/faqs
+ * set — answers grounded in verified facts, unverified items honestly
+ * marked.
  */
 import type { Metadata } from 'next';
-import { FAQS } from '../../lib/content/faqs';
+import { SiteHeader } from '../../components/shop/SiteHeader';
+import { FaqAccordion } from './FaqAccordion';
 import { BRAND_NAME } from '../../lib/seo/config';
+import styles from './faq.module.css';
 
 export const metadata: Metadata = {
   title: 'FAQs',
@@ -15,25 +19,19 @@ export const metadata: Metadata = {
 
 export default function FaqsPage() {
   return (
-    <main id="main-content" className="page content-page">
-      <h1>Frequently Asked Questions</h1>
-      <div className="faq-list">
-        {FAQS.map((faq) => (
-          <details key={faq.question} className="faq-item">
-            <summary>
-              {faq.question}
-              {faq.source === 'needs-verification' && (
-                <span className="faq-nv-badge"> — details being confirmed</span>
-              )}
-            </summary>
-            <div className="faq-answer">
-              {faq.answer.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
-          </details>
-        ))}
-      </div>
-    </main>
+    <>
+      <SiteHeader />
+      <main id="main-content" className={styles.faqMain}>
+        <p className="section-ornament" aria-hidden="true">
+          ✦
+        </p>
+        <h1>Frequently Asked Questions</h1>
+        <p className={styles.faqLede}>
+          Answers grounded in the apothecary&apos;s verified practices. Where
+          a detail is still being confirmed, we say so honestly.
+        </p>
+        <FaqAccordion />
+      </main>
+    </>
   );
 }
