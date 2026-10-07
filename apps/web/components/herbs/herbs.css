@@ -1,0 +1,390 @@
+/**
+ * Workstream E — Herb system styles (Amber's Alchemy Apothecary).
+ *
+ * Imported site-wide by <BotanicalCardHost/> (mounted in the root layout),
+ * so .aa-herb-chip pills render correctly on every route without each
+ * consumer importing styles itself.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant:ital,wght@0,500;0,600;1,500&display=swap');
+
+/* ------------------------------------------------------------------ */
+/* Herb chip — dark-purple/gold pill (HerbChip.tsx contract classes)   */
+/* ------------------------------------------------------------------ */
+.aa-herb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Cormorant', Georgia, serif;
+  font-weight: 600;
+  color: #f3ecdb;
+  background: linear-gradient(145deg, #2e1c38, #1e1128);
+  border: 1px solid rgba(184, 148, 90, 0.55);
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.aa-herb-chip--sm {
+  font-size: 0.9rem;
+  padding: 0.3rem 0.8rem;
+}
+.aa-herb-chip--md {
+  font-size: 1.05rem;
+  padding: 0.5rem 1.1rem;
+}
+.aa-herb-chip::before {
+  content: '🌿';
+  font-size: 0.85em;
+}
+.aa-herb-chip:hover {
+  transform: translateY(-1px);
+  border-color: #d9a93c;
+  box-shadow: 0 4px 14px rgba(184, 148, 90, 0.35);
+}
+.aa-herb-chip:focus-visible {
+  outline: 3px solid #f0c96a;
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Botanical index-card modal                                          */
+/* ------------------------------------------------------------------ */
+@keyframes bicSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes bicFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.aa-botanical-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(14, 8, 22, 0.78);
+  backdrop-filter: blur(4px);
+  animation: bicFadeIn 0.2s ease-out;
+}
+
+.aa-botanical-card {
+  position: relative;
+  width: min(430px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: linear-gradient(145deg, #2e1c38, #1e1128, #2a1535);
+  border: 1px solid rgba(184, 148, 90, 0.45);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(184, 148, 90, 0.12);
+  animation: bicSlideIn 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.aa-botanical-header {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+}
+.aa-botanical-header img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* bottom fade from the illustration into the card body */
+.aa-botanical-header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 72px;
+  background: linear-gradient(to bottom, transparent, #2a1535 88%, #2a1535);
+  pointer-events: none;
+}
+
+.aa-botanical-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(184, 148, 90, 0.6);
+  background: rgba(30, 17, 40, 0.85);
+  color: #f0c96a;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.aa-botanical-close:hover {
+  transform: scale(1.08);
+  background: rgba(46, 28, 56, 0.95);
+}
+
+.aa-botanical-body {
+  padding: 0.25rem 1.5rem 1.5rem;
+}
+.aa-botanical-emoji {
+  font-size: 1.6rem;
+  margin-bottom: 0.25rem;
+}
+.aa-botanical-name {
+  font-family: 'Cinzel Decorative', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f3ecdb;
+  margin: 0 0 0.15rem;
+  line-height: 1.25;
+}
+.aa-botanical-latin {
+  font-family: 'Cormorant', Georgia, serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: #b8945a;
+  margin: 0 0 0.9rem;
+}
+.aa-botanical-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.aa-botanical-cat {
+  font-family: 'Cormorant', Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #f0c96a;
+  border: 1px solid rgba(184, 148, 90, 0.45);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+.aa-botanical-section-title {
+  font-family: 'Cinzel Decorative', Georgia, serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b8945a;
+  margin: 0 0 0.4rem;
+}
+.aa-botanical-props {
+  color: #f3ecdb;
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0 0 1rem;
+}
+.aa-botanical-evidence-note {
+  color: #cfc3ab;
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.5;
+  border-top: 1px solid rgba(184, 148, 90, 0.25);
+  padding-top: 0.75rem;
+  margin: 0;
+}
+.aa-botanical-library-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #f0c96a;
+  font-family: 'Cormorant', Georgia, serif;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Herb Explorer                                                       */
+/* ------------------------------------------------------------------ */
+.aa-explorer {
+  max-width: 880px;
+  margin: 0 auto;
+}
+.aa-explorer-form {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+.aa-explorer-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.85rem 1.1rem;
+  font-size: 1.05rem;
+  color: #f3ecdb;
+  background: rgba(30, 17, 40, 0.8);
+  border: 1px solid rgba(184, 148, 90, 0.5);
+  border-radius: 12px;
+}
+.aa-explorer-input::placeholder {
+  color: #8f8268;
+}
+.aa-explorer-button {
+  padding: 0.85rem 1.6rem;
+  font-family: 'Cormorant', Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #1e1128;
+  background: linear-gradient(145deg, #f0c96a, #d9a93c);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+.aa-explorer-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(217, 169, 60, 0.4);
+}
+.aa-explorer-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 1.5rem;
+}
+.aa-explorer-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-family: 'Cormorant', Georgia, serif;
+  font-weight: 600;
+  color: #f3ecdb;
+  background: rgba(46, 28, 56, 0.7);
+  border: 1px solid rgba(184, 148, 90, 0.45);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.aa-explorer-quick-btn:hover,
+.aa-explorer-quick-btn[aria-pressed='true'] {
+  border-color: #d9a93c;
+  background: rgba(46, 28, 56, 1);
+  box-shadow: 0 3px 10px rgba(184, 148, 90, 0.25);
+}
+.aa-explorer-status {
+  color: #cfc3ab;
+  font-style: italic;
+  margin: 0 0 1rem;
+}
+.aa-explorer-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.aa-explorer-card {
+  background: linear-gradient(145deg, #2e1c38, #1e1128);
+  border: 1px solid rgba(184, 148, 90, 0.4);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  color: #f3ecdb;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+.aa-explorer-card:hover {
+  transform: translateY(-3px);
+  border-color: #d9a93c;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+.aa-explorer-card-img {
+  height: 120px;
+  overflow: hidden;
+}
+.aa-explorer-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.aa-explorer-card-body {
+  padding: 0.75rem 0.9rem 0.9rem;
+}
+.aa-explorer-card-name {
+  font-family: 'Cinzel Decorative', Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.1rem;
+}
+.aa-explorer-card-latin {
+  font-family: 'Cormorant', Georgia, serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #b8945a;
+  margin: 0 0 0.4rem;
+}
+.aa-explorer-card-cats {
+  font-size: 0.8rem;
+  color: #cfc3ab;
+  margin: 0;
+}
+.aa-explorer-empty {
+  color: #cfc3ab;
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------ */
+/* Herbal library hero                                                 */
+/* ------------------------------------------------------------------ */
+.aa-herb-hero {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(184, 148, 90, 0.45);
+  margin: 1rem 0 1.5rem;
+  max-height: 340px;
+}
+.aa-herb-hero img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+}
+.aa-herb-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 90px;
+  background: linear-gradient(to bottom, transparent, rgba(30, 17, 40, 0.9));
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile                                                              */
+/* ------------------------------------------------------------------ */
+@media (max-width: 640px) {
+  .aa-explorer-form {
+    flex-direction: column;
+  }
+  .aa-explorer-button {
+    width: 100%;
+  }
+  .aa-botanical-header {
+    min-height: 200px;
+  }
+  .aa-botanical-card {
+    width: 100%;
+  }
+}
