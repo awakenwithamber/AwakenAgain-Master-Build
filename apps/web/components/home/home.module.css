@@ -1,0 +1,936 @@
+/**
+ * Homepage-scoped styles — Amber's Alchemy Apothecary.
+ *
+ * Implements the Netlify design language (plum + amethyst + gold,
+ * Cinzel Decorative display / EB Garamond body) for the rebuild's
+ * homepage sections. Scoped to components/home via CSS modules —
+ * the shared design tokens live in app/globals.css (workstream A).
+ */
+
+.section {
+  padding: 4.5rem 1.25rem;
+  position: relative;
+}
+
+.paneBg {
+  background-color: #1a0f2e;
+  background-image: url('/images/textures/apothecary-shelf.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.paneBg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 17, 40, 0.78);
+  pointer-events: none;
+}
+
+.paneInner {
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.ornament {
+  text-align: center;
+  color: var(--aa-gold);
+  letter-spacing: 0.35em;
+  font-size: 0.95rem;
+  margin-bottom: 1.25rem;
+  user-select: none;
+}
+
+.sectionTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  color: var(--aa-cream);
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin: 0 0 1rem;
+  font-weight: 500;
+}
+
+.sectionSub {
+  text-align: center;
+  color: var(--aa-cream-dim);
+  font-size: 1.08rem;
+  max-width: 46rem;
+  margin: 0 auto 2.75rem;
+  line-height: 1.7;
+}
+
+/* ---------- Buttons ---------- */
+.btnPrimary,
+.btnSecondary {
+  display: inline-block;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  padding: 0.9rem 1.9rem;
+  border-radius: 30px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+  border: none;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: #150b26;
+  box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(140, 106, 59, 0.5);
+}
+
+.btnSecondary {
+  background: transparent;
+  color: var(--aa-cream);
+  border: 1px solid rgba(243, 236, 219, 0.55);
+}
+
+.btnSecondary:hover {
+  background: rgba(243, 236, 219, 0.1);
+  transform: translateY(-2px);
+}
+
+.btnPrimary:focus-visible,
+.btnSecondary:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 3px;
+}
+
+/* ---------- 1. Consult banner ---------- */
+.consultBanner {
+  background: linear-gradient(135deg, #2a1a40 0%, #6e4b7e 100%);
+  color: var(--aa-cream);
+  padding: 0.85rem 1rem;
+  position: relative;
+  text-align: center;
+  z-index: 5;
+}
+
+.consultBanner p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.consultBanner a {
+  color: var(--aa-gold-bright);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.consultBanner a:hover {
+  color: #fff;
+}
+
+.consultDismiss {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 1px solid rgba(243, 236, 219, 0.4);
+  color: var(--aa-cream);
+  border-radius: 50%;
+  width: 1.9rem;
+  height: 1.9rem;
+  line-height: 1;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.consultDismiss:hover {
+  background: rgba(243, 236, 219, 0.15);
+}
+
+.consultDismiss:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 2px;
+}
+
+/* ---------- 2. Hero ---------- */
+.hero {
+  min-height: 88vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: #150b26;
+  background-image: url('/images/hero-background.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  padding: 5rem 1.25rem 4rem;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(21, 11, 38, 0.72) 0%,
+    rgba(21, 11, 38, 0.55) 55%,
+    rgba(21, 11, 38, 0.88) 100%
+  );
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  max-width: 52rem;
+}
+
+.heroEyebrow {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  color: var(--aa-gold);
+  letter-spacing: 0.18em;
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
+  margin-bottom: 1.5rem;
+}
+
+.heroTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: clamp(2.2rem, 6.5vw, 4rem);
+  color: var(--aa-cream);
+  line-height: 1.2;
+  margin: 0 0 1.5rem;
+  font-weight: 500;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+}
+
+.heroSub {
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  color: var(--aa-cream-dim);
+  line-height: 1.7;
+  margin: 0 auto 2.5rem;
+  max-width: 40rem;
+}
+
+.heroCtas {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+
+.heroTrust {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0 0 3rem;
+  padding: 0;
+}
+
+.heroTrust li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--aa-cream);
+  font-family: 'Cormorant Garamond', 'EB Garamond', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+}
+
+.heroTrust li::before {
+  content: '✦';
+  color: var(--aa-gold);
+}
+
+.scrollHint {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--aa-gold);
+  font-size: 1.75rem;
+  text-decoration: none;
+  animation: hintBounce 2.2s ease-in-out infinite;
+  z-index: 1;
+  padding: 0.5rem 1rem;
+}
+
+.scrollHint:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+@keyframes hintBounce {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(10px);
+  }
+}
+
+/* ---------- 3. Welcome video ---------- */
+.videoContext {
+  text-align: center;
+  color: var(--aa-cream);
+  font-size: 1.12rem;
+  line-height: 1.75;
+  max-width: 48rem;
+  margin: 0 auto 2.5rem;
+}
+
+.videoFrame {
+  max-width: 56rem;
+  margin: 0 auto;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(10, 6, 20, 0.6);
+  background: #0e0818;
+  position: relative;
+}
+
+.videoFrame iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+
+.muteToggle {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  background: rgba(21, 11, 38, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  color: var(--aa-cream);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: inherit;
+  backdrop-filter: blur(4px);
+}
+
+.muteToggle:hover {
+  background: rgba(42, 26, 64, 0.95);
+}
+
+.muteToggle:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 2px;
+}
+
+.videoCaption {
+  text-align: center;
+  color: var(--aa-cream-dim);
+  font-family: 'Cormorant Garamond', 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  margin: 1.5rem 0 0;
+}
+
+/* ---------- 4. Goal cards ---------- */
+.goalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.goalCard {
+  background: linear-gradient(145deg, #2e1c38, #1e1128);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.goalCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(110, 75, 126, 0.45);
+}
+
+.goalEmoji {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.goalBadge {
+  font-family: 'Cinzel', serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #150b26;
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+}
+
+.goalTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.2rem;
+  color: var(--aa-cream);
+  margin: 0;
+  font-weight: 500;
+}
+
+.goalCopy {
+  color: var(--aa-cream-dim);
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0;
+  flex: 1;
+}
+
+.goalLink {
+  color: var(--aa-gold-bright);
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.5);
+  padding-bottom: 2px;
+}
+
+.goalLink:hover {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+.goalLink:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ---------- 5. Product cards ---------- */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 1.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.productCard {
+  background: #1d1330;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  position: relative;
+}
+
+.productCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 36px rgba(110, 75, 126, 0.55);
+}
+
+.productImageWrap {
+  aspect-ratio: 4 / 3;
+  background: radial-gradient(circle at 50% 40%, #2e1c38, #150b26);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.productImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.22s ease;
+}
+
+.productCard:hover .productImage {
+  transform: scale(1.08);
+}
+
+.productImageFallback {
+  font-size: 3.5rem;
+  opacity: 0.85;
+}
+
+.productBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  flex: 1;
+}
+
+.productBadge {
+  align-self: flex-start;
+  font-family: 'Cinzel', serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--aa-gold-bright);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+}
+
+.productName {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.productName a {
+  color: var(--aa-cream);
+  text-decoration: none;
+}
+
+.productName a:hover {
+  color: var(--aa-gold-bright);
+}
+
+.productName a:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.productBenefit {
+  color: var(--aa-gold-bright);
+  font-family: 'Cormorant Garamond', 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.productDesc {
+  color: var(--aa-cream-dim);
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.herbChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.whyItWorks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid rgba(212, 175, 55, 0.25);
+  padding-top: 0.8rem;
+}
+
+.whyItWorks li {
+  font-size: 0.92rem;
+  color: var(--aa-cream-dim);
+  line-height: 1.6;
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.whyItWorks li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: var(--aa-gold);
+  font-size: 0.75rem;
+  top: 0.25rem;
+}
+
+.whyItWorks strong {
+  color: var(--aa-cream);
+  font-weight: 600;
+}
+
+.productFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 0.8rem;
+}
+
+.productPrice {
+  font-family: 'Cinzel', serif;
+  font-size: 1.25rem;
+  color: var(--aa-cream);
+}
+
+.addButton {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: #150b26;
+  border: none;
+  border-radius: 30px;
+  padding: 0.65rem 1.5rem;
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.addButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(140, 106, 59, 0.45);
+}
+
+.addButton:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.addButton:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 3px;
+}
+
+.addError {
+  color: #f0a0a0;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ---------- 6. How made ---------- */
+.stepGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: step;
+}
+
+.step {
+  text-align: center;
+  padding: 2rem 1.25rem;
+  background: rgba(21, 11, 38, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 14px;
+  counter-increment: step;
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: #150b26;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.stepNumber::before {
+  content: counter(step);
+}
+
+.stepTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.15rem;
+  color: var(--aa-cream);
+  margin: 0 0 0.6rem;
+  font-weight: 500;
+}
+
+.stepCopy {
+  color: var(--aa-cream-dim);
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ---------- 7. Trust stats ---------- */
+.trustGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trustStat {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.trustValue {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+  color: var(--aa-gold);
+  margin-bottom: 0.6rem;
+}
+
+.trustLabel {
+  font-family: 'Cinzel', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--aa-cream);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.trustCopy {
+  color: var(--aa-cream-dim);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- 8. Reviews ---------- */
+.reviewsSection {
+  text-align: center;
+}
+
+.reviewsCtas {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 1.75rem 0 2.5rem;
+}
+
+.reviewsList {
+  max-width: 52rem;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.reviewFormWrap {
+  max-width: 44rem;
+  margin: 0 auto;
+  text-align: left;
+  background: rgba(21, 11, 38, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  padding: 2rem;
+}
+
+.reviewFormTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.2rem;
+  color: var(--aa-cream);
+  margin: 0 0 1rem;
+  font-weight: 500;
+}
+
+/* ---------- 9. Learn ---------- */
+.learnGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.75rem;
+}
+
+.learnCard {
+  background: linear-gradient(145deg, #2e1c38, #1e1128);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.learnCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(110, 75, 126, 0.45);
+}
+
+.learnIcon {
+  font-size: 2.75rem;
+  margin-bottom: 1rem;
+}
+
+.learnTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.35rem;
+  color: var(--aa-cream);
+  margin: 0 0 0.8rem;
+  font-weight: 500;
+}
+
+.learnCopy {
+  color: var(--aa-cream-dim);
+  font-size: 1.02rem;
+  line-height: 1.7;
+  margin: 0 0 1.5rem;
+}
+
+/* ---------- 10. Guide signup ---------- */
+.guideBox {
+  max-width: 46rem;
+  margin: 0 auto;
+  text-align: center;
+  background: rgba(21, 11, 38, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 16px;
+  padding: 3rem 2.5rem;
+}
+
+.guideEmoji {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.guideTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  color: var(--aa-cream);
+  margin: 0 0 1rem;
+  font-weight: 500;
+}
+
+.guideCopy {
+  color: var(--aa-cream-dim);
+  font-size: 1.08rem;
+  line-height: 1.7;
+  margin: 0 0 2rem;
+}
+
+.guideForm {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.guideInput {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 30px;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  background: rgba(21, 11, 38, 0.8);
+  color: var(--aa-cream);
+  min-width: 16rem;
+  flex: 1 1 auto;
+  max-width: 24rem;
+}
+
+.guideInput::placeholder {
+  color: rgba(207, 195, 171, 0.65);
+}
+
+.guideInput:focus-visible {
+  outline: 3px solid var(--aa-gold-bright);
+  outline-offset: 2px;
+}
+
+.guideConsent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 30rem;
+  margin: 1rem auto 0;
+  text-align: left;
+  color: var(--aa-cream-dim);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.guideConsent input {
+  margin-top: 0.25rem;
+  accent-color: #d4af37;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+}
+
+.guideStatus {
+  margin: 1.25rem 0 0;
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+.guideSuccess {
+  color: var(--aa-gold-bright);
+}
+
+.guideError {
+  color: #f0a0a0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .stepGrid,
+  .trustGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .learnGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 3.25rem 1rem;
+  }
+
+  .hero {
+    padding: 4rem 1rem 3.5rem;
+    min-height: 78vh;
+  }
+
+  .goalGrid,
+  .productGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stepGrid,
+  .trustGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .guideBox {
+    padding: 2.25rem 1.5rem;
+  }
+
+  .guideForm {
+    flex-direction: column;
+  }
+
+  .guideInput {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollHint {
+    animation: none;
+  }
+}

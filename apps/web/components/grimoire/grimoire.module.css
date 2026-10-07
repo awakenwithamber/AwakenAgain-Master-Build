@@ -1,0 +1,680 @@
+/**
+ * WORKSTREAM D — Living Grimoire book styles (CSS module).
+ *
+ * Leather-bound book, handcrafted parchment pages, 3D page-turn animation.
+ * The book interior deliberately does NOT use the purple site theme — it is
+ * deep browns (#3a2415 / #5a3a22) and parchment (#f4e8d0 / #e5d5b5).
+ */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stage                                                               */
+/* ------------------------------------------------------------------ */
+
+.stage {
+  padding: clamp(16px, 4vw, 48px) clamp(12px, 4vw, 48px) 64px;
+  background:
+    radial-gradient(1200px 500px at 50% -8%, rgba(122, 82, 44, 0.35), transparent 70%),
+    linear-gradient(180deg, #1d1008 0%, #140b05 100%);
+  border-radius: 18px;
+  margin: clamp(8px, 2vw, 24px);
+  outline: none;
+}
+
+.stage:focus-visible {
+  box-shadow: 0 0 0 3px rgba(212, 175, 105, 0.6);
+}
+
+.eyebrow {
+  text-align: center;
+  color: #c9a05f;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-size: 13px;
+  margin: 0 0 14px;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.ribbonRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.ribbonBtn {
+  font-family: 'Caveat', 'Segoe Script', cursive;
+  font-size: 21px;
+  font-weight: 600;
+  color: #3a2415;
+  background: linear-gradient(180deg, #e9d3a3 0%, #d9b878 60%, #cfa964 100%);
+  border: 1px solid #8a6a35;
+  border-radius: 999px;
+  padding: 8px 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ribbonBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.ribbonBtn:focus-visible {
+  outline: 3px solid #f4e8d0;
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Book                                                                */
+/* ------------------------------------------------------------------ */
+
+.bookScene {
+  perspective: 2400px;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 12px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.book {
+  position: relative;
+  flex: 1 1 auto;
+  max-width: 980px;
+  min-width: 0;
+  background:
+    radial-gradient(140% 120% at 50% 0%, #5a3a22 0%, #4a2c18 45%, #3a2415 100%);
+  border-radius: 12px;
+  padding: clamp(10px, 2vw, 18px);
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.55),
+    inset 0 2px 6px rgba(255, 220, 160, 0.12),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Tooled border on the leather */
+.book::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2px solid rgba(212, 175, 105, 0.35);
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 3px rgba(30, 18, 8, 0.55),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+  z-index: 25;
+}
+
+.spread {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  min-height: clamp(480px, 62vh, 640px);
+}
+
+/* ------------------------------------------------------------------ */
+/* Parchment pages                                                     */
+/* ------------------------------------------------------------------ */
+
+.pageSlot {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+
+.page {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  background:
+    linear-gradient(165deg, #f8eed8 0%, #f4e8d0 35%, #ecdcb8 75%, #e5d5b5 100%);
+  color: #2a1a10;
+  padding: clamp(20px, 3.4vw, 38px) clamp(18px, 3vw, 34px) 44px;
+  overflow: hidden;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+/* Aged-paper vignette */
+.page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 46px rgba(120, 80, 30, 0.2);
+}
+
+.pageLeft {
+  border-radius: 6px 2px 2px 6px;
+  box-shadow: inset -22px 0 34px -20px rgba(60, 35, 10, 0.5);
+}
+
+.pageRight {
+  border-radius: 2px 6px 6px 2px;
+  box-shadow: inset 22px 0 34px -20px rgba(60, 35, 10, 0.5);
+}
+
+/* ------------------------------------------------------------------ */
+/* Handwritten typography                                              */
+/* ------------------------------------------------------------------ */
+
+.hand {
+  font-family: 'Caveat', 'Segoe Script', 'Comic Sans MS', cursive;
+  color: #2a1a10;
+}
+
+.handTitle {
+  composes: hand;
+  font-size: clamp(38px, 6vw, 58px);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  margin: 0.4em 0 0.2em;
+}
+
+.handHeading {
+  composes: hand;
+  font-size: 30px;
+  font-weight: 700;
+  margin: 1em 0 0.3em;
+  border-bottom: 1px solid rgba(120, 80, 30, 0.35);
+  padding-bottom: 2px;
+}
+
+.handBody {
+  composes: hand;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 0.4em 0;
+}
+
+.handList {
+  composes: hand;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.55;
+  margin: 0.3em 0 0.6em;
+  padding-left: 1.1em;
+}
+
+.handList li {
+  margin-bottom: 0.25em;
+}
+
+.handList li::marker {
+  content: '❧ ';
+  color: #7a4a1e;
+}
+
+.quote {
+  composes: hand;
+  font-size: 24px;
+  font-style: italic;
+  text-align: center;
+  color: #4a2c14;
+  margin: 1.2em auto;
+  max-width: 26em;
+}
+
+.attribution {
+  composes: hand;
+  font-size: 20px;
+  text-align: center;
+  color: #6a4520;
+  margin-top: -0.6em;
+}
+
+.dropcap::first-letter {
+  font-size: 2.6em;
+  font-weight: 700;
+  float: left;
+  line-height: 0.9;
+  padding-right: 0.12em;
+  color: #5a2f10;
+}
+
+.latin {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 19px;
+  color: #5a3a1c;
+  text-align: center;
+  margin: 0.1em 0 0.4em;
+}
+
+.categoryRow {
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7a5426;
+  margin-bottom: 0.8em;
+}
+
+.footnote {
+  font-family: Georgia, serif;
+  font-size: 13.5px;
+  font-style: italic;
+  color: #6a4a26;
+  border-top: 1px dashed rgba(120, 80, 30, 0.4);
+  padding-top: 8px;
+  margin-top: 1em;
+}
+
+.pageNum {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 14px;
+  color: #8a6a3a;
+}
+
+.herbName {
+  font-size: clamp(40px, 6.4vw, 60px);
+  font-weight: 700;
+  text-align: center;
+  margin: 0.15em 0 0;
+  line-height: 1.05;
+}
+
+.illustration {
+  display: block;
+  width: min(100%, 340px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  margin: 0 auto 0.6em;
+  border: 6px solid #e9d9b8;
+  outline: 2px solid #8a6a35;
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(60, 35, 10, 0.35);
+  background: #e5d5b5;
+}
+
+.allyRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0.4em 0 0.8em;
+}
+
+.entryLink {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  color: #5a3a1c;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.entryLink:hover {
+  color: #3a2415;
+}
+
+/* ------------------------------------------------------------------ */
+/* Index page                                                          */
+/* ------------------------------------------------------------------ */
+
+.indexSearch {
+  width: 100%;
+  font-family: 'Caveat', cursive;
+  font-size: 21px;
+  color: #2a1a10;
+  background: rgba(255, 252, 244, 0.55);
+  border: 1px solid rgba(120, 80, 30, 0.45);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin: 0.4em 0 0.8em;
+}
+
+.indexSearch::placeholder {
+  color: #9a7a4a;
+}
+
+.indexSearch:focus-visible {
+  outline: 3px solid rgba(122, 74, 30, 0.5);
+  outline-offset: 1px;
+}
+
+.concernBlock {
+  margin-bottom: 0.9em;
+}
+
+.concernName {
+  composes: hand;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 0.2em;
+}
+
+.concernHerbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.concernHerbBtn {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  color: #3a2415;
+  background: rgba(255, 252, 244, 0.5);
+  border: 1px solid rgba(120, 80, 30, 0.5);
+  border-radius: 999px;
+  padding: 4px 14px;
+  cursor: pointer;
+}
+
+.concernHerbBtn:hover {
+  background: #fffdf6;
+}
+
+.concernHerbBtn:focus-visible {
+  outline: 3px solid rgba(122, 74, 30, 0.55);
+  outline-offset: 1px;
+}
+
+.noMatch {
+  composes: hand;
+  font-size: 21px;
+  color: #6a4520;
+}
+
+/* ------------------------------------------------------------------ */
+/* Cover                                                               */
+/* ------------------------------------------------------------------ */
+
+.cover {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  transform-origin: left center;
+  background:
+    radial-gradient(130% 110% at 50% 0%, #64401f 0%, #4a2c18 50%, #33200f 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.55);
+}
+
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 3px double rgba(212, 175, 105, 0.55);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.coverOpening {
+  animation: coverOpen 0.65s ease-in forwards;
+}
+
+@keyframes coverOpen {
+  to {
+    transform: rotateY(-155deg);
+  }
+}
+
+.coverInner {
+  max-width: 26em;
+}
+
+.coverBrand {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #d9b878;
+  margin: 0 0 1em;
+}
+
+.coverTitle {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(38px, 7vw, 64px);
+  font-weight: 600;
+  line-height: 1.12;
+  color: #f0d9a8;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 22px rgba(212, 175, 105, 0.35);
+  margin: 0 0 0.4em;
+}
+
+.coverRule {
+  color: #d9b878;
+  letter-spacing: 0.6em;
+  margin-bottom: 1em;
+}
+
+.coverSub {
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+  color: #e6c98f;
+  margin: 0 0 1.4em;
+}
+
+.openBtn {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: #2a1a10;
+  background: linear-gradient(180deg, #e9d3a3 0%, #cfa964 100%);
+  border: 1px solid #8a6a35;
+  border-radius: 999px;
+  padding: 12px 34px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.openBtn:hover {
+  transform: translateY(-1px);
+}
+
+.openBtn:focus-visible {
+  outline: 3px solid #f4e8d0;
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Page-turn sheet                                                     */
+/* ------------------------------------------------------------------ */
+
+.sheet {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.sheetRight {
+  left: 50%;
+  width: 50%;
+  transform-origin: left center;
+}
+
+.sheetLeft {
+  left: 0;
+  width: 50%;
+  transform-origin: right center;
+}
+
+.sheetFull {
+  left: 0;
+  width: 100%;
+  transform-origin: left center;
+}
+
+.sheetFullBack {
+  transform-origin: right center;
+}
+
+.sheetFwd {
+  animation: turnFwd 0.6s ease-in-out forwards;
+}
+
+.sheetBack {
+  animation: turnBack 0.6s ease-in-out forwards;
+}
+
+@keyframes turnFwd {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-180deg);
+  }
+}
+
+@keyframes turnBack {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  display: flex;
+}
+
+.face .pageSlot {
+  flex: 1 1 auto;
+}
+
+.faceBack {
+  transform: rotateY(180deg);
+}
+
+/* ------------------------------------------------------------------ */
+/* Navigation                                                          */
+/* ------------------------------------------------------------------ */
+
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.navBtn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid #8a6a35;
+  background: linear-gradient(180deg, #e9d3a3 0%, #cfa964 100%);
+  color: #3a2415;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.navBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.navBtn:focus-visible {
+  outline: 3px solid #f4e8d0;
+  outline-offset: 2px;
+}
+
+.pageStatus {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  color: #c9a05f;
+  letter-spacing: 0.1em;
+  min-width: 9em;
+  text-align: center;
+}
+
+.edgeZone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 11%;
+  z-index: 15;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.edgeZoneLeft {
+  left: 0;
+}
+
+.edgeZoneRight {
+  right: 0;
+}
+
+.edgeZone:focus-visible {
+  outline: 3px solid rgba(212, 175, 105, 0.7);
+  outline-offset: -3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive: single page on small screens                            */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 899px) {
+  .spread {
+    min-height: 68vh;
+  }
+
+  .page {
+    font-size: 17px;
+    padding: 20px 18px 42px;
+  }
+
+  .handBody {
+    font-size: 20px;
+  }
+
+  .illustration {
+    width: min(100%, 260px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheetFwd,
+  .sheetBack,
+  .coverOpening {
+    animation-duration: 0.01s;
+  }
+}
