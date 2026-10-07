@@ -19,6 +19,7 @@ import { track } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import type { SeasonalFeature } from '../../types';
 import { blendReadout, type ScentPath } from './state';
+import styles from './SoapBuilderModal.module.css';
 
 export interface ScentStepProps {
   scentPath: ScentPath;
@@ -78,27 +79,27 @@ export function ScentStep({
       {seasonal?.recipe_id && (
         <button
           type="button"
-          className="seasonal-card"
+          className={styles.seasonalCard}
           onClick={() => {
             onSeasonalSelect();
             onSignatureSelect(seasonal.recipe_id as string);
           }}
         >
-          <span className="seasonal-badge">{seasonal.tagline}</span>
-          <span className="p-name">{seasonal.name}</span>
-          <span className="p-sub">{seasonal.copy}</span>
-          <span className="honesty-note">
+          <span className={styles.seasonalBadge}>{seasonal.tagline}</span>
+          <span className={styles.seasonalName}>{seasonal.name}</span>
+          <span className={styles.seasonalCopy}>{seasonal.copy}</span>
+          <span className={styles.honestyNote}>
             {seasonal.copyRule}
             {seasonal.safetyNote ? ` ${seasonal.safetyNote}` : ''}
           </span>
         </button>
       )}
 
-      <div className="tabs" role="tablist" aria-label="Scent paths">
+      <div className={styles.pathTabs} role="tablist" aria-label="Scent paths">
         <button
           type="button"
           role="tab"
-          className="tab"
+          className={styles.pathTab}
           aria-selected={scentPath === 'signature'}
           onClick={() => onPathChange('signature')}
         >
@@ -107,7 +108,7 @@ export function ScentStep({
         <button
           type="button"
           role="tab"
-          className="tab"
+          className={styles.pathTab}
           aria-selected={scentPath === 'blend'}
           onClick={() => onPathChange('blend')}
         >
@@ -117,49 +118,50 @@ export function ScentStep({
 
       {scentPath === 'signature' ? (
         <div>
-          <p className="blend-hint proposed-note">
+          <p className={styles.proposedNote}>
             A <strong>proposed collection</strong> — these 13 recipes are under
             review and not yet final. One tap, fully composed.
           </p>
-          <div className={compact ? 'pick-grid compact' : 'pick-grid'}>
+          <div className={compact ? styles.cardGrid : `${styles.cardGrid} ${styles.cardGridScent}`}>
             {SIGNATURE_SCENTS.map((r, i) => (
               <button
                 key={r.id}
                 type="button"
-                className="pick scent"
+                className={styles.card}
                 aria-pressed={signatureId === r.id}
                 onClick={() => onSignatureSelect(r.id)}
               >
                 <span
-                  className="swatch-mini"
+                  className={styles.scentSwatch}
                   aria-hidden="true"
                   style={{
                     background: `linear-gradient(135deg, ${r.palette[0] ?? '#6B4E9B'}, ${r.palette[1] ?? '#2E7D5B'})`,
                   }}
                 />
-                <span className="p-name">
+                <span className={styles.cardName}>
                   {i + 1}. {r.name}
                 </span>
-                <span className="p-sub">{r.oils.join(', ')}</span>
-                <span className="p-sens">{r.sensory}</span>
+                <span className={styles.scentOils}>{r.oils.join(', ')}</span>
+                <span className={styles.scentSensory}>{r.sensory}</span>
                 {isMeaningfulSafety(r.safety) && (
-                  <span className="p-safety">Note: {r.safety}</span>
+                  <span className={styles.scentSafety}>Note: {r.safety}</span>
                 )}
+                <span className={styles.checkBadge} aria-hidden="true">✓</span>
               </button>
             ))}
           </div>
-          <p className="honesty-note">
+          <p className={styles.honestyNote}>
             Scent is invisible — swatches are illustrated placeholders
             (MISSING_ASSET). Photography is never faked for scent.
           </p>
         </div>
       ) : (
         <div>
-          <p className="blend-hint">
+          <p className={styles.blendHint}>
             Select 1–{MAX_BLEND_OILS} essential oils from the soap-appropriate
             list. Three oils is the magic number — your blend is complete!
           </p>
-          <div role="group" aria-label="Blendable oils">
+          <div className={styles.oilChips} role="group" aria-label="Blendable oils">
             {BLENDABLE_OILS.map((o) => {
               const on = blendOils.includes(o.id);
               const disabled = !on && blendOils.length >= MAX_BLEND_OILS;
@@ -167,25 +169,25 @@ export function ScentStep({
                 <button
                   key={o.id}
                   type="button"
-                  className="oil-chip"
+                  className={styles.oilChip}
                   aria-pressed={on}
                   disabled={disabled}
                   onClick={() => handleToggleOil(o.id)}
                 >
-                  <span className="dot" aria-hidden="true" />
+                  <span className={styles.oilDot} aria-hidden="true" />
                   {o.name}
                 </button>
               );
             })}
           </div>
-          <div className="blend-display" aria-live="polite">
+          <div className={styles.blendDisplay} aria-live="polite">
             <h4>Your Alchemy Blend</h4>
             {blendOils.length === 0 ? (
-              <p className="blend-hint">Choose your first oil above.</p>
+              <p className={styles.blendHint}>Choose your first oil above.</p>
             ) : (
               <>
-                <p className="oils">{readout.names.join(' + ')}</p>
-                <p className="tags">{readout.tags.join(' • ')}</p>
+                <p className={styles.blendOils}>{readout.names.join(' + ')}</p>
+                <p className={styles.blendTags}>{readout.tags.join(' • ')}</p>
               </>
             )}
           </div>

@@ -68,6 +68,7 @@ import {
   type SlotState,
   type SlotTheme,
 } from './state';
+import styles from './SoapBuilderModal.module.css';
 
 export interface BundleConfiguratorProps {
   /** Theme from the completed ritual — applied to all 5 slots on mount. */
@@ -228,19 +229,19 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
   };
 
   return (
-    <section aria-label="Alchemy Soap Collection configurator" className="bundle-config">
-      <h3>Your Collection — one of each design</h3>
-      <p className="blend-hint">
+    <section aria-label="Alchemy Soap Collection configurator" className={styles.bundleConfig}>
+      <h3 className={styles.summaryTitle}>Your Collection — one of each design</h3>
+      <p className={styles.blendHint}>
         The theme from your ritual was applied to all five bars. Edit any bar
         individually — each one is uniquely yours.
       </p>
-      <div className="bundle-actions">
-        <button type="button" className="btn ghost" onClick={applyTheme}>
+      <div className={styles.bundleActions}>
+        <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={applyTheme}>
           Apply this theme to all 5
         </button>
       </div>
 
-      <div className="slot-grid">
+      <div className={styles.slotGrid}>
         {slots.map((slot, i) => {
           const shape = getShape(BUNDLE_SLOT_SHAPES[slot.slot_index] ?? '');
           const isEditing = editingIndex === i;
@@ -249,7 +250,7 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
               ? blendReadout(slot.scent.oils)
               : null;
           return (
-            <article key={slot.slot_index} className="slot" aria-label={`Bar ${i + 1}: ${shape?.name ?? ''}`}>
+            <article key={slot.slot_index} className={styles.slot} aria-label={`Bar ${i + 1}: ${shape?.name ?? ''}`}>
               <h4>
                 Bar {i + 1} — {shape?.name} · {shape?.weightOz} oz
               </h4>
@@ -261,7 +262,7 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
                   <p>
                     <strong>Scent:</strong> {scentLabel(slot.scent)}
                     {readout && readout.tags.length > 0 && (
-                      <span className="tags"> · {readout.tags.join(' • ')}</span>
+                      <span className={styles.tags}> · {readout.tags.join(' • ')}</span>
                     )}
                   </p>
                   <p>
@@ -271,12 +272,12 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
                   <p>
                     <strong>Color:</strong> {colorLabel(slot.color)}
                   </p>
-                  <button type="button" onClick={() => setEditingIndex(i)}>
+                  <button type="button" className={styles.slotBtn} onClick={() => setEditingIndex(i)}>
                     Edit this bar
                   </button>
                 </div>
               ) : (
-                <div className="slot-editor">
+                <div className={styles.slotEditor}>
                   <label>
                     Base
                     <select
@@ -359,7 +360,7 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
                       <option value="__custom__">Custom color…</option>
                     </select>
                   </label>
-                  <label className="custom-color-row">
+                  <label className={styles.customColorRow}>
                     <input
                       type="color"
                       value={customHex}
@@ -376,13 +377,13 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
                     <span>Custom dye {customHex.toUpperCase()}</span>
                   </label>
                   {!colorAllowedForBase(slot.base, 'natural-clear') && (
-                    <p className="blend-hint">
+                    <p className={styles.blendHint}>
                       Natural / Clear is hidden for this bar — it needs the
                       translucent glycerin base.
                     </p>
                   )}
 
-                  <button type="button" onClick={() => doneEditing(i)}>
+                  <button type="button" className={styles.slotBtn} onClick={() => doneEditing(i)}>
                     Done
                   </button>
                 </div>
@@ -393,34 +394,34 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
       </div>
 
       {error && (
-        <p role="alert" className="form-error">
+        <p role="alert" className={styles.formError}>
           {error}
         </p>
       )}
 
-      <div className="bundle-totals" aria-live="polite">
-        <p className="price-row">
-          <span className="struck">{formatPrice(componentSum)}</span>{' '}
-          <strong className="bundle-price">{formatPrice(bundlePrice)}</strong>{' '}
-          <span className="save-badge">
+      <div className={styles.bundleTotals} aria-live="polite">
+        <p className={styles.priceRow}>
+          <span className={styles.struck}>{formatPrice(componentSum)}</span>{' '}
+          <strong className={styles.bundlePrice}>{formatPrice(bundlePrice)}</strong>{' '}
+          <span className={styles.saveBadge}>
             Save {formatPrice(savings)} ({savingsPct}%)
           </span>
         </p>
-        <p className="blend-hint">
+        <p className={styles.blendHint}>
           Priced separately {formatPrice(componentSum)} · Collection{' '}
           {formatPrice(bundlePrice)} — genuine savings, computed from current
           prices.
         </p>
       </div>
 
-      <div className="bundle-actions">
-        <button type="button" className="btn" onClick={addToCart}>
+      <div className={styles.bundleActions}>
+        <button type="button" className={styles.btn} onClick={addToCart}>
           Add Collection to Cart
         </button>
       </div>
 
       {added && (
-        <p role="status" className="cart-confirm">
+        <p role="status" className={styles.addedNote}>
           ✨ Your collection is in your cart —{' '}
           <a href="/cart">review your cart</a> or{' '}
           <a href="/checkout">head to checkout</a>.
@@ -428,10 +429,10 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
       )}
 
       {result && (
-        <details className="payload">
+        <details className={styles.payload}>
           <summary>Order payload (what the maker receives)</summary>
           <pre>{JSON.stringify(result.order, null, 2)}</pre>
-          <p className="hint">
+          <p className={styles.hint}>
             Totals are recomputed server-side at checkout — the browser never
             sets the final price.
           </p>

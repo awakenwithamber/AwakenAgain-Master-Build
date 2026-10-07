@@ -1,0 +1,272 @@
+/**
+ * Shop page styles — Amber's Alchemy Apothecary (workstream G).
+ * Page-specific styling for the shop index; global tokens come from
+ * app/globals.css (workstream A — do not duplicate here).
+ */
+
+.shopMain {
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+}
+
+.shopHero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.shopHero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.5vw, 2.9rem);
+  color: var(--parchment);
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.shopHero p {
+  color: var(--text-muted);
+  max-width: 44rem;
+  margin: 0 auto;
+  font-size: 1.08rem;
+}
+
+/* ---- Ritual bundles (top of shop, spec §7) ---- */
+
+.bundleSection {
+  margin-bottom: 3.5rem;
+}
+
+.bundleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.bundleCard {
+  position: relative;
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    border-color var(--transition);
+}
+
+.bundleCard:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    0 12px 36px rgba(110, 75, 126, 0.45),
+    0 4px 24px rgba(10, 6, 20, 0.6);
+  border-color: var(--brass-lt);
+}
+
+.bundleImage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--plum-mid), var(--plum-deep));
+}
+
+.bundleImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.imageFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  color: var(--brass);
+  background: linear-gradient(135deg, var(--plum-mid), var(--plum-deep));
+}
+
+.bundleBody {
+  padding: 1.25rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.bundleBody h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--parchment);
+  margin: 0 0 0.6rem;
+  line-height: 1.35;
+}
+
+.bundleChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.benefitChip {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--brass-lt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  background: rgba(110, 75, 126, 0.18);
+}
+
+.bundleDesc {
+  color: var(--text-body);
+  font-size: 0.98rem;
+  margin: 0 0 0.75rem;
+  flex: 1;
+}
+
+.bundleSavings {
+  color: var(--sage);
+  font-size: 0.92rem;
+  margin: 0 0 1rem;
+}
+
+.bundleFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+/* ---- Shop by Goal ---- */
+
+.goalSection {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.goalGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.75rem;
+}
+
+.goalButton {
+  font-family: var(--font-accent);
+  font-size: 1rem;
+  color: var(--parchment);
+  background: linear-gradient(135deg, var(--plum-mid), var(--plum-deep));
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.65rem 1.35rem;
+  cursor: pointer;
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition),
+    color var(--transition);
+}
+
+.goalButton:hover {
+  transform: translateY(-2px);
+  border-color: var(--brass);
+  color: var(--brass-lt);
+  box-shadow: 0 6px 18px rgba(110, 75, 126, 0.4);
+}
+
+.goalButton[aria-pressed='true'] {
+  background: linear-gradient(135deg, var(--brass), var(--brass-lt));
+  color: var(--plum-dark);
+  border-color: var(--brass-lt);
+  font-weight: 600;
+}
+
+/* ---- Category filter pills ---- */
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin: 0 0 2.25rem;
+}
+
+.filterPill {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  transition:
+    color var(--transition),
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.filterPill:hover {
+  color: var(--brass-lt);
+  border-color: var(--brass);
+}
+
+.filterPill[aria-pressed='true'] {
+  color: var(--plum-dark);
+  background: linear-gradient(135deg, var(--brass), var(--brass-lt));
+  border-color: var(--brass-lt);
+}
+
+/* ---- Product grid ---- */
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: 1.75rem;
+}
+
+.filterNote {
+  text-align: center;
+  color: var(--text-muted);
+  margin: 0 0 1.5rem;
+  font-style: italic;
+  font-family: var(--font-accent);
+}
+
+.emptyResult {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 3rem 1rem;
+  grid-column: 1 / -1;
+}
+
+/* ---- Add-to-cart button state ---- */
+
+.addedNote {
+  color: var(--sage);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cardCtaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+  }
+}
