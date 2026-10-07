@@ -5,9 +5,9 @@ import type { Metadata } from 'next';
 import { CheckoutForm } from '../../components/checkout/CheckoutForm';
 
 export const metadata: Metadata = {
-  title: 'Checkout',
+  title: 'Secure Checkout',
   description:
-    "Check out at Amber's Alchemy Apothecary — payment by Cash App or Venmo.",
+    "Secure checkout at Amber's Alchemy Apothecary — payment by Cash App or Venmo.",
 };
 
 export default function CheckoutPage() {

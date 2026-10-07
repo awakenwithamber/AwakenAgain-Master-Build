@@ -12,6 +12,7 @@
 
 import { useState } from 'react';
 import { formatPrice } from '../../lib/pricing/pricing';
+import { CASH_APP_HANDLE, VENMO_HANDLE } from '../../lib/checkout/order';
 import { track, trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { SiteHeader } from '../shop/SiteHeader';
@@ -238,9 +239,54 @@ export function CheckoutForm() {
             </section>
 
             {formError ? <p role="alert">{formError}</p> : null}
-            <button type="button" onClick={placeOrder} disabled={submitting}>
-              {submitting ? 'Placing your order…' : 'Place order'}
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={placeOrder}
+              disabled={submitting}
+            >
+              {submitting ? 'Placing your order…' : '✦ Proceed to Secure Checkout'}
             </button>
+            <section
+              aria-label="Pay directly with Venmo or Cash App"
+              style={{
+                border: '1px solid var(--brass)',
+                borderRadius: '0.75rem',
+                padding: '1.25rem 1.5rem',
+                marginTop: '1.75rem',
+                background: 'rgba(42, 26, 64, 0.55)',
+              }}
+            >
+              <h2
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  color: 'var(--brass-lt)',
+                  fontSize: '1.1rem',
+                  margin: '0 0 0.5rem',
+                }}
+              >
+                ✦ Or Pay Directly
+              </h2>
+              <p style={{ margin: '0 0 0.75rem' }}>
+                Prefer to pay first and have us match your order? Send your
+                order total to either of these:
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 0.75rem' }}>
+                <li style={{ marginBottom: '0.5rem' }}>
+                  <strong>Venmo:</strong> {VENMO_HANDLE}
+                </li>
+                <li>
+                  <strong>Cash App:</strong> {CASH_APP_HANDLE}
+                </li>
+              </ul>
+              <p style={{ margin: 0 }}>
+                <small>
+                  After payment, Amber will confirm your order via email.
+                  Please include your name (and order ID if you have one) in
+                  your payment note so we can match it.
+                </small>
+              </p>
+            </section>
             <p>
               <small>
                 Payment is by Cash App or Venmo — you&apos;ll get the payment

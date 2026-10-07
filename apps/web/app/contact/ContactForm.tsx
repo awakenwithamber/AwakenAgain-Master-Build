@@ -280,7 +280,7 @@ export function ContactForm() {
           fontFamily: 'inherit',
         }}
       >
-        {submitting ? 'Sending…' : 'Send message ✨'}
+        {submitting ? 'Sending…' : 'Send Message ✦'}
       </button>
       <p
         style={{

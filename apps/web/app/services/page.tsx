@@ -1,58 +1,49 @@
 /**
- * /services — services & readings (G7).
+ * /services — Healing Services (workstream G).
  *
- * Server-rendered from lib/content/services.ts (catalog-sourced titles and
- * prices). Booking mechanics are NOT published in the source — every
- * service carries an honest NEEDS_VERIFICATION marker instead of invented
- * booking flows, prices, or timelines.
+ * Spec §7: service cards (image, name, desc, $price, "Book This Service ✦"
+ * → addToCart). Titles/prices are catalog-sourced so they never drift from
+ * the shop; booking mechanics are not yet published, so each card says so
+ * honestly rather than inventing a booking flow.
  */
 import type { Metadata } from 'next';
+import { SiteHeader } from '../../components/shop/SiteHeader';
+import { ServiceCard } from '../../components/services/ServiceCard';
 import { SERVICES } from '../../lib/content/services';
-import { formatPrice, toCents } from '../../lib/pricing/pricing';
-import { BRAND_EMAIL, BRAND_NAME, BRAND_PHONE_DISPLAY, BRAND_PHONE_TEL } from '../../lib/seo/config';
+import { BRAND_NAME } from '../../lib/seo/config';
+import styles from './services.module.css';
 
 export const metadata: Metadata = {
-  title: 'Services & Readings',
-  description: `Consultations, readings, and rituals from ${BRAND_NAME}. Booking details being confirmed.`,
+  title: 'Healing Services',
+  description: `Healing services, consultations, and readings from ${BRAND_NAME} — book directly from the apothecary.`,
 };
 
 export default function ServicesPage() {
   return (
-    <main id="main-content" className="page content-page">
-      <h1>Services & Readings</h1>
-      <p className="page-lede">
-        Personal guidance from the apothecary — consultations, readings, and
-        energy work. Booking details for each service are being confirmed
-        (marked below); in the meantime, every service can be arranged
-        personally by email or phone.
-      </p>
-      <ul className="services-list">
-        {SERVICES.map((s) => (
-          <li key={s.handle} className="service-card">
-            <h2>{s.title}</h2>
-            <p className="service-category">{s.category}</p>
-            {s.price !== null && (
-              <p className="service-price">
-                {formatPrice(toCents(s.price))}{' '}
-                <span className="service-price-note">
-                  (shop listing price; service delivery details to be confirmed)
-                </span>
-              </p>
-            )}
-            {s.shortDescription && <p>{s.shortDescription}</p>}
-            <p className="service-booking-nv" role="note">
-              ⚠ Booking details to be confirmed — NEEDS VERIFICATION
-              <br />
-              {s.bookingNote}
-            </p>
-          </li>
-        ))}
-      </ul>
-      <p className="services-contact">
-        Ready to book? <a href={`mailto:${BRAND_EMAIL}`}>{BRAND_EMAIL}</a> ·{' '}
-        <a href={BRAND_PHONE_TEL}>{BRAND_PHONE_DISPLAY}</a> — {BRAND_NAME} reads
-        every message.
-      </p>
-    </main>
+    <>
+      <SiteHeader />
+      <main id="main-content" className={styles.servicesMain}>
+        <div className={styles.servicesHero}>
+          <p className="section-ornament" aria-hidden="true">
+            ✦
+          </p>
+          <h1>Healing Services</h1>
+          <p>
+            Personal guidance from the apothecary — consultations, readings,
+            and energy work with Amber. Choose a service to begin; booking
+            details are confirmed with you personally after booking.
+          </p>
+        </div>
+        <div className={styles.serviceGrid}>
+          {SERVICES.map((service) => (
+            <ServiceCard key={service.handle} service={service} />
+          ))}
+        </div>
+        <p className={styles.servicesContact}>
+          Prefer to talk first? <a href="/contact">Contact Amber</a> — every
+          message is read personally.
+        </p>
+      </main>
+    </>
   );
 }

@@ -94,6 +94,62 @@ export default function ContactPage() {
         </section>
 
         <ContactForm />
+
+        <section
+          aria-label="Connect with Amber"
+          style={{
+            border: '1px solid var(--aa-gold)',
+            borderRadius: '0.75rem',
+            padding: '1.25rem',
+            margin: '2rem 0 0',
+            background: 'var(--aa-purple)',
+          }}
+        >
+          <h2
+            style={{
+              color: 'var(--aa-gold-bright)',
+              fontSize: '1rem',
+              marginTop: 0,
+            }}
+          >
+            Connect With Amber
+          </h2>
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: '0.5rem 0 0',
+              color: 'var(--aa-cream)',
+            }}
+          >
+            <li style={{ marginBottom: '0.6rem' }}>
+              📧{' '}
+              <a
+                href="mailto:awaken@consultant.com"
+                style={{ color: 'var(--aa-gold-bright)' }}
+              >
+                awaken@consultant.com
+              </a>
+            </li>
+            <li style={{ marginBottom: '0.6rem' }}>
+              📘 Facebook — follow Awaken With Amber for rituals, drops, and
+              live sessions.
+            </li>
+            <li style={{ marginBottom: '0.6rem' }}>
+              📸 @awakenwithamber — daily apothecary notes on Instagram.
+            </li>
+            <li>
+              📅{' '}
+              <a
+                href="mailto:awaken@consultant.com?subject=Free%20Consultation%20Request"
+                style={{ color: 'var(--aa-gold-bright)' }}
+              >
+                Book a Free Consultation
+              </a>{' '}
+              — write to arrange a time with Amber.
+            </li>
+          </ul>
+        </section>
       </main>
     </>
   );
