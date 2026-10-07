@@ -1,0 +1,160 @@
+/**
+ * Journal styles — Amber's Alchemy Apothecary (workstream G).
+ * Tokens come from app/globals.css (workstream A).
+ */
+
+.journalMain {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 5rem;
+}
+
+.journalMain h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  color: var(--parchment);
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.journalLede {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 44rem;
+  margin: 0 auto 2.5rem;
+}
+
+.journalHeroImage {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 0 0 2rem;
+  aspect-ratio: 21 / 9;
+  background: linear-gradient(135deg, var(--plum-mid), var(--plum-deep));
+}
+
+.journalHeroImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.journalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1.75rem;
+}
+
+.journalCard {
+  position: relative;
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    border-color var(--transition);
+}
+
+.journalCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 36px rgba(110, 75, 126, 0.45);
+  border-color: var(--brass);
+}
+
+.journalCardImage {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--plum-mid), var(--plum-deep));
+}
+
+.journalCardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.journalCardBody {
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+
+.journalCardBody h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--parchment);
+  margin: 0.5rem 0 0.6rem;
+  line-height: 1.4;
+}
+
+.journalCardBody h2 a {
+  color: inherit;
+}
+
+.journalTag {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--plum-dark);
+  background: linear-gradient(135deg, var(--brass), var(--brass-lt));
+  border-radius: 20px;
+  padding: 0.2rem 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.journalExcerpt {
+  color: var(--text-body);
+  font-size: 0.98rem;
+  margin: 0 0 0.75rem;
+}
+
+.journalWisdom {
+  font-family: var(--font-accent);
+  font-style: italic;
+  color: var(--brass-lt);
+  margin: 0 0 0.75rem;
+}
+
+.journalHerbs {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ---- Article page ---- */
+
+.articleMain {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 5rem;
+}
+
+.articleMain h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  color: var(--parchment);
+  letter-spacing: 0.04em;
+  margin: 0.75rem 0 1.5rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.articleMain p {
+  color: var(--text-body);
+  line-height: 1.8;
+  margin: 0 0 1.25rem;
+}
+
+.articleNote {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-style: italic;
+}

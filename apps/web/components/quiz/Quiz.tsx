@@ -12,6 +12,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   QUIZ_CONCERNS,
   QUIZ_FORMS,
@@ -109,7 +110,7 @@ export default function Quiz() {
     <section className="quiz" aria-label={`${BRAND_NAME} Herbal Allies Quiz`}>
       {phase === 'intro' && (
         <div className="quiz-intro">
-          <h2>🌿 Find Your Herbal Allies</h2>
+          <h2>✦ Find My Remedy ✦</h2>
           <p>
             Not sure where to begin? Answer two questions and discover the
             herbal allies best suited to your body right now.
@@ -239,9 +240,14 @@ export default function Quiz() {
             Educational only — these suggestions are not medical advice and are
             not intended to diagnose, treat, cure, or prevent any disease.
           </p>
-          <button className="btn-secondary" onClick={restart}>
-            Start Over
-          </button>
+          <div className="quiz-actions">
+            <Link href="/custom-formula" className="btn-primary">
+              Build My Custom Blend ⚗️
+            </Link>
+            <button className="btn-secondary" onClick={restart}>
+              Start Over
+            </button>
+          </div>
         </div>
       )}
     </section>

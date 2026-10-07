@@ -8,8 +8,8 @@ import Quiz from '../../components/quiz/Quiz';
 import { BRAND_NAME } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
-  title: 'Herbal Allies Quiz',
-  description: `Find your herbal allies — answer two questions and discover the botanicals suited to you. ${BRAND_NAME}.`,
+  title: 'Find My Remedy',
+  description: `Find My Remedy — answer two questions and discover the herbal allies suited to you. ${BRAND_NAME}.`,
 };
 
 export default function QuizPage() {
