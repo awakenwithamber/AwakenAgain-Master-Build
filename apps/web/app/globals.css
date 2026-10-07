@@ -1,16 +1,47 @@
 /**
  * Global styles — Amber's Alchemy Apothecary.
- * Design system: dark purple + gold, mystical/botanical/apothecary.
- * Accessibility defaults: contrast-safe palette, visible focus, skip link.
+ *
+ * WORKSTREAM A (design system + atmosphere) owns this file.
+ * Design tokens below are EXACT from the Netlify source-of-truth audit
+ * (spec §3). Other workstreams: use these tokens / shared classes; put
+ * page-specific styling in CSS modules or component-scoped styles.
+ *
+ * Legacy --aa-* tokens are kept as aliases so existing components keep
+ * working; new code should use the spec --plum-*/--brass/* names.
  */
 
 :root {
-  --aa-purple-deep: #17102b; /* page background */
-  --aa-purple: #241744; /* surface */
-  --aa-gold: #d9a93c; /* accent — 7.4:1 on --aa-purple-deep */
-  --aa-gold-bright: #f0c96a; /* focus ring — high contrast on dark */
-  --aa-cream: #f3ecdb; /* body text — 13.2:1 on --aa-purple-deep */
-  --aa-cream-dim: #cfc3ab; /* secondary text — 8.1:1 on --aa-purple-deep */
+  /* --- Spec §3 design tokens (exact) --- */
+  --plum-deep: #1f1336;
+  --plum-dark: #150b26;
+  --plum-mid: #2a1a40;
+  --amethyst: #6e4b7e;
+  --amethyst-lt: #9b72b0;
+  --brass: #d4af37;
+  --brass-lt: #e6c766;
+  --gold: #d4af37;
+  --gold-light: #e6c766;
+  --parchment: #f4e8d0;
+  --parchment-dk: #e5d5b5;
+  --sage: #7a8b6f;
+  --text-body: #f4e8d0;
+  --text-muted: #c8b79a;
+  --border: rgba(212, 175, 55, 0.28);
+  --shadow: 0 4px 24px rgba(10, 6, 20, 0.6);
+  --radius: 8px;
+  --radius-lg: 14px;
+  --transition: 0.22s ease;
+  --font-display: 'Cinzel Decorative', 'Cinzel', serif;
+  --font-body: 'EB Garamond', Georgia, serif;
+  --font-accent: 'EB Garamond', 'Cormorant Garamond', serif;
+
+  /* --- Legacy aliases (contact page, SiteNotice, older components) --- */
+  --aa-purple-deep: var(--plum-dark);
+  --aa-purple: var(--plum-mid);
+  --aa-gold: #d9a93c;
+  --aa-gold-bright: var(--brass-lt);
+  --aa-cream: var(--parchment);
+  --aa-cream-dim: var(--text-muted);
 }
 
 *,
@@ -21,22 +52,56 @@
 
 html {
   scroll-behavior: smooth;
+  font-size: 113%;
 }
 
 body {
   margin: 0;
-  background: var(--aa-purple-deep);
-  color: var(--aa-cream);
-  font-family:
-    ui-serif, Georgia, 'Times New Roman', serif;
-  line-height: 1.6;
+  background: var(--plum-dark);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--brass-lt);
+  transition: color var(--transition);
+}
+
+a:hover {
+  color: var(--parchment);
+}
+
+/* Custom thin scrollbar — 6px, amethyst thumb (spec §8). */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--plum-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--amethyst);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--amethyst-lt);
+}
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--amethyst) var(--plum-dark);
 }
 
 /* Visible keyboard focus everywhere — never remove the outline without
    a higher-contrast replacement. */
 :focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid var(--brass-lt);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -47,8 +112,8 @@ body {
   left: 1rem;
   top: -100px;
   z-index: 100;
-  background: var(--aa-gold);
-  color: var(--aa-purple-deep);
+  background: var(--brass);
+  color: var(--plum-dark);
   font-weight: 700;
   padding: 0.75rem 1.25rem;
   border-radius: 0 0 8px 8px;
@@ -58,7 +123,784 @@ body {
 
 .skip-link:focus-visible {
   top: 0;
-  outline-color: var(--aa-purple-deep);
+  outline-color: var(--plum-dark);
+}
+
+/* ------------------------------------------------------------------ */
+/* Texture pane — apothecary-shelf background with plum overlay (::after) */
+/* ------------------------------------------------------------------ */
+.pane-bg {
+  position: relative;
+  background: url('/images/textures/apothecary-shelf.jpg') center / cover
+    no-repeat;
+}
+
+.pane-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 17, 40, 0.78);
+  pointer-events: none;
+}
+
+.pane-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero pane — hero-background.png with a ::before overlay layer. */
+.hero-bg {
+  position: relative;
+  background: url('/images/hero-background.png') center / cover no-repeat;
+}
+
+.hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(21, 11, 38, 0.55) 0%,
+    rgba(21, 11, 38, 0.25) 45%,
+    rgba(21, 11, 38, 0.75) 100%
+  );
+  pointer-events: none;
+}
+
+.hero-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons (spec §3)                                                   */
+/* ------------------------------------------------------------------ */
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  border-radius: 30px;
+  padding: 0.85rem 1.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    background var(--transition),
+    color var(--transition);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: var(--plum-dark);
+  border: none;
+  box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(140, 106, 59, 0.5);
+  color: var(--plum-dark);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--parchment);
+  border: 1px solid rgba(244, 232, 208, 0.45);
+}
+
+.btn-secondary:hover {
+  border-color: var(--brass-lt);
+  color: var(--brass-lt);
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--parchment);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  border-color: var(--brass);
+  color: var(--brass-lt);
+}
+
+/* ------------------------------------------------------------------ */
+/* Section chrome (spec §3)                                            */
+/* ------------------------------------------------------------------ */
+.section-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--brass);
+  font-size: 1rem;
+  margin: 0 0 1.25rem;
+  letter-spacing: 0.3em;
+}
+
+.section-ornament::before,
+.section-ornament::after {
+  content: '';
+  height: 1px;
+  width: min(220px, 28vw);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.55),
+    transparent
+  );
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  color: var(--parchment);
+  text-align: center;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  margin: 0 0 1rem;
+  font-weight: 500;
+}
+
+.section-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 46rem;
+  margin: 0 auto 2.5rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Product cards (spec §3)                                             */
+/* ------------------------------------------------------------------ */
+.product-card {
+  position: relative;
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    border-color var(--transition);
+}
+
+.product-card::after {
+  /* Radial amethyst sheen on hover */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(155, 114, 176, 0.28),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity var(--transition);
+  pointer-events: none;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    0 12px 36px rgba(110, 75, 126, 0.45),
+    0 4px 24px rgba(10, 6, 20, 0.6);
+  border-color: var(--brass-lt);
+}
+
+.product-card:hover::after {
+  opacity: 1;
+}
+
+.product-card-image {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition);
+}
+
+.product-card:hover .product-card-image img {
+  transform: scale(1.08);
+}
+
+.product-card-body {
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+
+.product-card-badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--plum-dark);
+  background: linear-gradient(135deg, var(--brass), var(--brass-lt));
+  border-radius: 20px;
+  padding: 0.2rem 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.product-card-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--parchment);
+  margin: 0 0 0.35rem;
+  line-height: 1.4;
+}
+
+.product-card-reviews {
+  font-size: 0.88rem;
+  color: var(--brass-lt);
+  margin-bottom: 0.5rem;
+}
+
+.product-card-benefit {
+  font-family: var(--font-accent);
+  font-style: italic;
+  color: var(--brass-lt);
+  margin: 0 0 0.5rem;
+}
+
+.product-card-who {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.product-card-desc {
+  font-size: 0.98rem;
+  color: var(--text-body);
+  margin: 0 0 0.75rem;
+}
+
+.product-card-herbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+.product-card-why {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--brass);
+}
+
+.product-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.product-card-price {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--brass-lt);
+}
+
+/* ------------------------------------------------------------------ */
+/* Herb chips — dark-purple/gold pill, clickable (spec §3)              */
+/* ------------------------------------------------------------------ */
+.aa-herb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-accent);
+  font-size: 0.88rem;
+  color: var(--parchment);
+  background: linear-gradient(135deg, var(--plum-mid), var(--plum-deep));
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  cursor: pointer;
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+.aa-herb-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--brass);
+  box-shadow: 0 4px 14px rgba(110, 75, 126, 0.5);
+  color: var(--brass-lt);
+}
+
+.aa-herb-chip--sm {
+  font-size: 0.78rem;
+  padding: 0.22rem 0.65rem;
+}
+
+.aa-herb-chip--md {
+  font-size: 0.95rem;
+  padding: 0.4rem 1.05rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header (spec §4 nav)                                                */
+/* ------------------------------------------------------------------ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background: rgba(21, 11, 38, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header-inner {
+  max-width: 88rem;
+  margin: 0 auto;
+  padding: 0.7rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.site-brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.site-brand-eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  color: var(--brass);
+}
+
+.site-brand-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  color: var(--parchment);
+}
+
+.site-brand:hover .site-brand-name {
+  color: var(--brass-lt);
+}
+
+.site-nav {
+  flex: 1;
+}
+
+.site-nav > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem 1rem;
+}
+
+.site-nav a,
+.site-nav .nav-drop-btn {
+  font-family: var(--font-accent);
+  font-size: 0.98rem;
+  color: var(--text-body);
+  text-decoration: none;
+  padding: 0.4rem 0.2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.site-nav a:hover,
+.site-nav .nav-drop-btn:hover {
+  color: var(--brass-lt);
+}
+
+.nav-drop {
+  position: relative;
+}
+
+.nav-drop-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: -0.75rem;
+  min-width: 14rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+  background: var(--plum-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.nav-drop-menu a {
+  display: block;
+  padding: 0.55rem 1.1rem;
+  white-space: nowrap;
+}
+
+.nav-drop-menu a:hover {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-left: auto;
+}
+
+.nav-accent-btn {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--plum-dark);
+  background: linear-gradient(135deg, var(--brass), var(--brass-lt));
+  border: none;
+  border-radius: 30px;
+  padding: 0.55rem 1.15rem;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition);
+  white-space: nowrap;
+}
+
+.nav-accent-btn:hover {
+  transform: translateY(-2px);
+  color: var(--plum-dark);
+  box-shadow: 0 8px 24px rgba(140, 106, 59, 0.5);
+}
+
+.nav-checkout {
+  font-family: var(--font-accent);
+  font-size: 0.95rem;
+  color: var(--brass-lt);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-checkout:hover {
+  color: var(--parchment);
+}
+
+.nav-cart {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 1.05rem;
+  color: var(--text-body);
+  text-decoration: none;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  transition:
+    border-color var(--transition),
+    color var(--transition);
+}
+
+.nav-cart:hover {
+  border-color: var(--brass);
+  color: var(--brass-lt);
+}
+
+.nav-cart-count {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  background: var(--brass);
+  color: var(--plum-dark);
+  border-radius: 999px;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3rem;
+}
+
+.nav-music-slot {
+  display: inline-flex;
+  align-items: center;
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--parchment);
+  font-size: 1.35rem;
+  line-height: 1;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+}
+
+.hamburger:hover {
+  border-color: var(--brass);
+  color: var(--brass-lt);
+}
+
+.mobile-nav-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1a0f24;
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.5rem 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.mobile-nav-panel.open {
+  display: block;
+}
+
+.mobile-nav-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mobile-nav-panel a,
+.mobile-nav-panel .nav-drop-btn {
+  display: block;
+  font-family: var(--font-accent);
+  font-size: 1.05rem;
+  color: var(--text-body);
+  text-decoration: none;
+  padding: 0.55rem 0;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mobile-nav-panel a:hover,
+.mobile-nav-panel .nav-drop-btn:hover {
+  color: var(--brass-lt);
+}
+
+.mobile-nav-panel .nav-sub {
+  padding-left: 1.25rem;
+}
+
+.mobile-nav-panel .nav-accent-btn {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 0.7rem 1.2rem;
+}
+
+@media (max-width: 1100px) {
+  .site-nav {
+    display: none;
+  }
+
+  .hamburger {
+    display: inline-block;
+  }
+}
+
+@media (max-width: 768px) {
+  .site-brand-eyebrow {
+    font-size: 0.55rem;
+    letter-spacing: 0.16em;
+  }
+
+  .site-brand-name {
+    font-size: 0.82rem; /* spec: brand shrinks to ~13px */
+  }
+
+  .header-search {
+    display: none;
+  }
+
+  .nav-accent-btn {
+    display: none;
+  }
+
+  .site-header-inner {
+    padding: 0.6rem 1rem;
+    gap: 0.85rem;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer (design-system restyle)                                      */
+/* ------------------------------------------------------------------ */
+.site-footer {
+  background: linear-gradient(180deg, var(--plum-deep), #100a1e);
+  border-top: 1px solid var(--border);
+  padding: 3rem 1.25rem 1.5rem;
+}
+
+.site-footer-inner {
+  max-width: 88rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 2rem;
+}
+
+.footer-col h3 {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--brass-lt);
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.footer-col p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.6;
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-col li {
+  margin-bottom: 0.45rem;
+}
+
+.footer-col a {
+  color: var(--text-body);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.footer-col a:hover {
+  color: var(--brass-lt);
+}
+
+.footer-payments strong {
+  color: var(--brass-lt);
+  font-weight: 600;
+}
+
+.site-footer-base {
+  max-width: 88rem;
+  margin: 2.5rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.site-footer-base p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Keyframes (spec §8)                                                 */
+/* ------------------------------------------------------------------ */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes faqFadeIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 60rem;
+  }
+}
+
+@keyframes productHighlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(212, 175, 55, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+  }
+}
+
+/* Botanical card entrance: scale .88→1, translateY 20px→0, spring. */
+@keyframes bicSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(155, 114, 176, 0.5);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 14px rgba(155, 114, 176, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(155, 114, 176, 0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* Respect users who prefer reduced motion. */

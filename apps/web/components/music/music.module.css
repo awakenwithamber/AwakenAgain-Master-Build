@@ -1,0 +1,193 @@
+/**
+ * WORKSTREAM B — music gate + nav controls.
+ * Scoped via CSS Modules; never touches app/globals.css.
+ * Token refs use the Netlify token names (--brass, --parchment, …) with
+ * fallbacks to this app's --aa-* tokens, then to the Netlify hex values.
+ */
+
+/* ------------------------------ entry gate ------------------------------ */
+
+.gateOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 6, 20, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: musicGateFadeIn 0.5s ease both;
+}
+
+.gateLeaving {
+  animation: musicGateFadeOut 0.4s ease both;
+}
+
+@keyframes musicGateFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes musicGateFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.gateDialog {
+  text-align: center;
+  max-width: 34rem;
+  width: 100%;
+  background: rgba(31, 19, 54, 0.92);
+  border: 1px solid var(--brass, var(--aa-gold, #d4af37));
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 4px 24px rgba(10, 6, 20, 0.6);
+}
+
+.gateOrnament {
+  color: var(--brass, var(--aa-gold, #d4af37));
+  letter-spacing: 0.5em;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.gateTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  color: var(--parchment, var(--aa-cream, #f4e8d0));
+  letter-spacing: 0.04em;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  margin: 0 0 1rem;
+}
+
+.gateSub {
+  color: var(--text-muted, var(--aa-cream-dim, #c8b79a));
+  line-height: 1.75;
+  margin: 0 0 1.75rem;
+}
+
+.gateActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.gatePrimary {
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: #150b26;
+  border: none;
+  border-radius: 30px;
+  padding: 0.85rem 1.75rem;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.gatePrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(140, 106, 59, 0.5);
+}
+
+.gateGhost {
+  background: transparent;
+  color: var(--parchment, var(--aa-cream, #f4e8d0));
+  border: 1px solid var(--parchment, var(--aa-cream, #f4e8d0));
+  border-radius: 30px;
+  padding: 0.85rem 1.75rem;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: border-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+}
+
+.gateGhost:hover {
+  border-color: var(--brass-light, var(--aa-gold-bright, #e6c766));
+  color: var(--brass-light, var(--aa-gold-bright, #e6c766));
+  transform: translateY(-2px);
+}
+
+.gateNote {
+  color: var(--text-muted, var(--aa-cream-dim, #c8b79a));
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ----------------------------- nav controls ----------------------------- */
+
+.controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.toggle {
+  background: transparent;
+  border: 1px solid var(--brass, var(--aa-gold, #d4af37));
+  color: var(--parchment, var(--aa-cream, #f4e8d0));
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.22s ease, color 0.22s ease;
+}
+
+.toggle.playing {
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: #150b26;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.slider {
+  width: 90px;
+  max-width: 100%;
+  accent-color: var(--brass, var(--aa-gold, #d4af37));
+  cursor: pointer;
+}
+
+/* Compact on small screens so the hamburger layout never breaks. */
+@media (max-width: 640px) {
+  .controls {
+    gap: 0.35rem;
+  }
+
+  .toggle {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.7rem;
+  }
+
+  .slider {
+    width: 60px;
+  }
+
+  .gateDialog {
+    padding: 2rem 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gateOverlay,
+  .gateLeaving {
+    animation: none;
+  }
+}
