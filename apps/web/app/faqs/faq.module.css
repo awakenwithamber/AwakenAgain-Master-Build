@@ -1,0 +1,118 @@
+/**
+ * FAQ accordion styles — Amber's Alchemy Apothecary (workstream G).
+ *
+ * faqFadeIn keyframe is the design-system animation from the Netlify
+ * source-of-truth audit (§8); scoped here since globals.css is owned by
+ * workstream A.
+ */
+
+.faqMain {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 5rem;
+}
+
+.faqMain h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  color: var(--parchment);
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.faqLede {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 42rem;
+  margin: 0 auto 2.5rem;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faqItem {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+
+.faqItem:hover {
+  border-color: var(--brass);
+}
+
+.faqQuestion {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 1.1rem 1.35rem;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  letter-spacing: 0.03em;
+  color: var(--parchment);
+}
+
+.faqQuestion:hover {
+  color: var(--brass-lt);
+}
+
+.faqQuestion:focus-visible {
+  outline: 2px solid var(--brass-lt);
+  outline-offset: -2px;
+}
+
+.faqChevron {
+  flex-shrink: 0;
+  color: var(--brass);
+  font-size: 1.1rem;
+  transition: transform var(--transition);
+}
+
+.faqQuestion[aria-expanded='true'] .faqChevron {
+  transform: rotate(45deg);
+}
+
+.faqAnswer {
+  padding: 0 1.35rem 1.35rem;
+  color: var(--text-body);
+  line-height: 1.75;
+  animation: faqFadeIn 0.3s ease both;
+}
+
+.faqAnswer p {
+  margin: 0 0 0.75rem;
+}
+
+.faqAnswer p:last-child {
+  margin-bottom: 0;
+}
+
+.faqNvBadge {
+  font-size: 0.78rem;
+  color: var(--amethyst-lt);
+  font-style: italic;
+  margin-left: 0.6rem;
+}
+
+@keyframes faqFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
