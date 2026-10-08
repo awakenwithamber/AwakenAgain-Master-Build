@@ -51,7 +51,7 @@
 .sectionTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1.6rem, 4vw, 2.4rem);
-  color: #f4e8d0;
+  color: #d4af37;
   text-align: center;
   letter-spacing: 0.04em;
   margin: 0 0 1rem;
@@ -60,7 +60,7 @@
 
 .sectionSub {
   text-align: center;
-  color: #c8b79a;
+  color: #b08d2a;
   font-size: 1.08rem;
   max-width: 46rem;
   margin: 0 auto 2.75rem;
@@ -83,7 +83,7 @@
 }
 
 .btnPrimary {
-  background: linear-gradient(135deg, #d4af37, #e6c766);
+  background: linear-gradient(135deg, #d4af37, #d4af37);
   color: #150b26;
   box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
 }
@@ -383,7 +383,7 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #150b26;
-  background: linear-gradient(135deg, #d4af37, #e6c766);
+  background: linear-gradient(135deg, #d4af37, #d4af37);
   border-radius: 999px;
   padding: 0.3rem 0.9rem;
 }
@@ -589,7 +589,7 @@
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
-  background: linear-gradient(135deg, #d4af37, #e6c766);
+  background: linear-gradient(135deg, #d4af37, #d4af37);
   color: #150b26;
   border: none;
   border-radius: 30px;
@@ -646,7 +646,7 @@
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #d4af37, #e6c766);
+  background: linear-gradient(135deg, #d4af37, #d4af37);
   color: #150b26;
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.25rem;
@@ -994,13 +994,13 @@
 .grimoirePromoTitle {
   font-family: 'Cinzel', serif;
   font-size: 1.15rem;
-  color: #f4e8d0;
+  color: #d4af37;
   margin: 0 0 0.75rem;
   letter-spacing: 0.03em;
 }
 
 .grimoirePromoCopy {
-  color: #c8b79a;
+  color: #b08d2a;
   font-size: 1rem;
   line-height: 1.65;
   margin: 0;

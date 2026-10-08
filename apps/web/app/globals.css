@@ -18,14 +18,14 @@
   --amethyst: #6e4b7e;
   --amethyst-lt: #9b72b0;
   --brass: #d4af37;
-  --brass-lt: #e6c766;
+  --brass-lt: #d4af37;
   --gold: #d4af37;
-  --gold-light: #e6c766;
-  --parchment: #f4e8d0;
-  --parchment-dk: #e5d5b5;
+  --gold-light: #d4af37;
+  --parchment: #d4af37;
+  --parchment-dk: #c39a2b;
   --sage: #7a8b6f;
-  --text-body: #f4e8d0;
-  --text-muted: #c8b79a;
+  --text-body: #d4af37;
+  --text-muted: #b08d2a;
   --border: rgba(212, 175, 55, 0.28);
   --shadow: 0 4px 24px rgba(10, 6, 20, 0.6);
   --radius: 8px;
@@ -38,10 +38,10 @@
   /* --- Legacy aliases (contact page, SiteNotice, older components) --- */
   --aa-purple-deep: var(--plum-dark);
   --aa-purple: var(--plum-mid);
-  --aa-gold: #d9a93c;
-  --aa-gold-bright: var(--brass-lt);
-  --aa-cream: var(--parchment);
-  --aa-cream-dim: var(--text-muted);
+  --aa-gold: #d4af37;
+  --aa-gold-bright: #d4af37;
+  --aa-cream: #d4af37;
+  --aa-cream-dim: #b08d2a;
 }
 
 *,
@@ -53,10 +53,12 @@
 html {
   scroll-behavior: smooth;
   font-size: 113%;
+  background: #150b26;
 }
 
 body {
   margin: 0;
+  background: #150b26;
   background: var(--plum-dark);
   color: var(--text-body);
   font-family: var(--font-body);
@@ -195,7 +197,7 @@ html {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #d4af37, #e6c766);
+  background: linear-gradient(135deg, #d4af37, #d4af37);
   color: var(--plum-dark);
   border: none;
   box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
@@ -752,7 +754,7 @@ html {
   background-color: #100a1e;
   border-top: 1px solid rgba(212, 175, 55, 0.28);
   padding: 3rem 1.25rem 1.5rem;
-  color: #f4e8d0;
+  color: #d4af37;
 }
 
 .site-footer-inner {
@@ -767,14 +769,14 @@ html {
   font-family: var(--font-display);
   font-size: 0.95rem;
   letter-spacing: 0.1em;
-  color: #e6c766;
+  color: #d4af37;
   margin: 0 0 1rem;
   font-weight: 600;
 }
 
 .footer-col p {
   font-size: 0.95rem;
-  color: #c8b79a;
+  color: #b08d2a;
   margin: 0 0 0.75rem;
   line-height: 1.6;
 }
@@ -790,17 +792,17 @@ html {
 }
 
 .footer-col a {
-  color: #f4e8d0;
+  color: #d4af37;
   text-decoration: none;
   font-size: 0.95rem;
 }
 
 .footer-col a:hover {
-  color: #e6c766;
+  color: #d4af37;
 }
 
 .footer-payments strong {
-  color: #e6c766;
+  color: #d4af37;
   font-weight: 600;
 }
 
@@ -814,7 +816,7 @@ html {
 
 .site-footer-base p {
   font-size: 0.85rem;
-  color: #c8b79a;
+  color: #b08d2a;
   margin: 0 0 0.5rem;
 }
 
@@ -823,7 +825,7 @@ html {
 .site-footer input[type="text"] {
   background-color: #1a0f2e;
   border: 1px solid rgba(212, 175, 55, 0.35);
-  color: #f4e8d0;
+  color: #d4af37;
   padding: 0.6rem 0.9rem;
   border-radius: 0.4rem;
   font-size: 0.95rem;

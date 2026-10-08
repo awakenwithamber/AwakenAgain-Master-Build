@@ -12,8 +12,7 @@ export function FooterBanner() {
       aria-label="Amber's Alchemy Apothecary — Awaken, Heal, Align, Create. Ancient Wisdom, Modern Magic, A Kinder World."
       style={{
         width: '100%',
-        aspectRatio: '5 / 1',
-        minHeight: '120px',
+        height: 'clamp(90px, 10vw, 160px)',
         backgroundImage: "url('/images/banners/brand-banner.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
