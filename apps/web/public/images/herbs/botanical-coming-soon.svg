@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Botanical illustration in preparation">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#2a1a40"/>
+      <stop offset="100%" stop-color="#150b26"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <g fill="none" stroke="#d9a93c" stroke-width="1.5" opacity="0.55">
+    <path d="M200 250 C 200 180, 200 120, 200 60"/>
+    <path d="M200 210 C 170 195, 150 175, 145 150 C 170 155, 190 175, 200 210"/>
+    <path d="M200 210 C 230 195, 250 175, 255 150 C 230 155, 210 175, 200 210"/>
+    <path d="M200 170 C 175 160, 160 145, 158 125 C 178 130, 195 145, 200 170"/>
+    <path d="M200 170 C 225 160, 240 145, 242 125 C 222 130, 205 145, 200 170"/>
+    <path d="M200 130 C 185 122, 175 112, 174 100 C 188 104, 197 114, 200 130"/>
+    <path d="M200 130 C 215 122, 225 112, 226 100 C 212 104, 203 114, 200 130"/>
+  </g>
+  <g fill="#d9a93c" opacity="0.8">
+    <circle cx="200" cy="55" r="4"/>
+    <circle cx="188" cy="70" r="2.5"/>
+    <circle cx="212" cy="70" r="2.5"/>
+  </g>
+  <text x="200" y="275" text-anchor="middle" fill="#c8b79a" font-family="Georgia, serif" font-size="13" font-style="italic">Botanical illustration in preparation</text>
+</svg>

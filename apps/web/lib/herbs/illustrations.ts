@@ -331,6 +331,23 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "ziziphus": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-jujube_cd730436.jpg",
 };
 
+/**
+ * Local fallback for botanical illustrations.
+ *
+ * The CDN URLs in BOTANICAL_ILLUSTRATIONS (manuscdn.com, cloudfront.net)
+ * returned 403 for all sampled URLs as of 2026-10-08 — the CDN hotlinks are
+ * dead. Until 313 proper botanical illustrations are created, herb pages
+ * show this honest "in preparation" placeholder instead of broken images.
+ * The mapping above is preserved for reference.
+ */
+const BOTANICAL_FALLBACK = '/images/herbs/botanical-coming-soon.svg';
+
 export function illustrationFor(slug: string): string | undefined {
-  return BOTANICAL_ILLUSTRATIONS[slug];
+  const url = BOTANICAL_ILLUSTRATIONS[slug];
+  // Dead CDN check: all manuscdn/cloudfront hotlinks 403 as of 2026-10-08.
+  // Return the local fallback instead of a broken image.
+  if (url && (url.includes('manuscdn.com') || url.includes('cloudfront.net'))) {
+    return BOTANICAL_FALLBACK;
+  }
+  return url ?? BOTANICAL_FALLBACK;
 }
