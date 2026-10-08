@@ -940,3 +940,27 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Metallic Gold Text ---------- */
+/* Rich metallic gold — gradient sheen, not flat yellow. */
+:root {
+  --gold-metallic: linear-gradient(135deg, #aa771c 0%, #d4af37 22%, #fcf6ba 40%, #d4af37 58%, #bf953f 78%, #aa771c 100%);
+}
+
+h1, h2, h3,
+.heroTitle, .sectionTitle, .goalTitle, .productName,
+.footer-col h3, .dialogTitle, .stepHeading {
+  background: #d4af37;
+  background: var(--gold-metallic);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Keep gradient text readable when selected */
+h1::selection, h2::selection, h3::selection {
+  -webkit-text-fill-color: #d4af37;
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.3);
+}

@@ -52,6 +52,10 @@
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1.6rem, 4vw, 2.4rem);
   color: #d4af37;
+  background: linear-gradient(135deg, #aa771c 0%, #d4af37 22%, #fcf6ba 40%, #d4af37 58%, #bf953f 78%, #aa771c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-align: center;
   letter-spacing: 0.04em;
   margin: 0 0 1rem;
@@ -206,11 +210,16 @@
 .heroTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(2.2rem, 6.5vw, 4rem);
-  color: var(--aa-cream);
+  color: #d4af37;
+  background: linear-gradient(135deg, #aa771c 0%, #d4af37 22%, #fcf6ba 40%, #d4af37 58%, #bf953f 78%, #aa771c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   line-height: 1.2;
   margin: 0 0 1.5rem;
   font-weight: 500;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+  text-shadow: none;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.6));
 }
 
 .heroSub {
