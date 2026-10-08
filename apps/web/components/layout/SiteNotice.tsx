@@ -21,10 +21,10 @@ const DISMISS_KEY = 'aa-renewal-notice-dismissed';
 
 const STYLES = `
 .aa-site-notice {
-  background: linear-gradient(180deg, #1d1335 0%, var(--aa-purple) 100%);
+  background: linear-gradient(180deg, #1d1335 0%, #2a1a40 100%);
   border-top: 1px solid rgba(217, 169, 60, 0.6);
   border-bottom: 1px solid rgba(217, 169, 60, 0.6);
-  color: var(--aa-cream);
+  color: #f4e8d0;
   padding: 0.6rem 1.25rem;
 }
 .aa-site-notice__inner {
@@ -51,13 +51,13 @@ const STYLES = `
   line-height: 1.5;
 }
 .aa-site-notice__brand {
-  color: var(--aa-gold-bright);
+  color: #e6c766;
   font-weight: 700;
 }
 .aa-site-notice__dismiss {
   background: transparent;
   border: 1px solid rgba(217, 169, 60, 0.7);
-  color: var(--aa-gold-bright);
+  color: #e6c766;
   font-size: 0.8rem;
   font-family: inherit;
   padding: 0.3rem 0.85rem;

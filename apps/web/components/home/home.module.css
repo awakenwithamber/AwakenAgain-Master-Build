@@ -10,6 +10,7 @@
 .section {
   padding: 4.5rem 1.25rem;
   position: relative;
+  background-color: #150b26;
 }
 
 .paneBg {
@@ -40,7 +41,7 @@
 
 .ornament {
   text-align: center;
-  color: var(--aa-gold);
+  color: #d9a93c;
   letter-spacing: 0.35em;
   font-size: 0.95rem;
   margin-bottom: 1.25rem;
@@ -50,7 +51,7 @@
 .sectionTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1.6rem, 4vw, 2.4rem);
-  color: var(--aa-cream);
+  color: #f4e8d0;
   text-align: center;
   letter-spacing: 0.04em;
   margin: 0 0 1rem;
@@ -59,7 +60,7 @@
 
 .sectionSub {
   text-align: center;
-  color: var(--aa-cream-dim);
+  color: #c8b79a;
   font-size: 1.08rem;
   max-width: 46rem;
   margin: 0 auto 2.75rem;
