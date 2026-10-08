@@ -95,7 +95,7 @@
 
 .btnSecondary {
   background: transparent;
-  color: var(--aa-cream);
+  color: #d4af37;
   border: 1px solid rgba(243, 236, 219, 0.55);
 }
 
@@ -106,14 +106,14 @@
 
 .btnPrimary:focus-visible,
 .btnSecondary:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 3px;
 }
 
 /* ---------- 1. Consult banner ---------- */
 .consultBanner {
   background: linear-gradient(135deg, #2a1a40 0%, #6e4b7e 100%);
-  color: var(--aa-cream);
+  color: #d4af37;
   padding: 0.85rem 1rem;
   position: relative;
   text-align: center;
@@ -126,7 +126,7 @@
 }
 
 .consultBanner a {
-  color: var(--aa-gold-bright);
+  color: #d4af37;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -143,7 +143,7 @@
   transform: translateY(-50%);
   background: transparent;
   border: 1px solid rgba(243, 236, 219, 0.4);
-  color: var(--aa-cream);
+  color: #d4af37;
   border-radius: 50%;
   width: 1.9rem;
   height: 1.9rem;
@@ -157,7 +157,7 @@
 }
 
 .consultDismiss:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 2px;
 }
 
@@ -197,7 +197,7 @@
 
 .heroEyebrow {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
-  color: var(--aa-gold);
+  color: #d4af37;
   letter-spacing: 0.18em;
   font-size: clamp(0.8rem, 2.5vw, 1rem);
   margin-bottom: 1.5rem;
@@ -215,7 +215,7 @@
 
 .heroSub {
   font-size: clamp(1.1rem, 3vw, 1.35rem);
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   line-height: 1.7;
   margin: 0 auto 2.5rem;
   max-width: 40rem;
@@ -243,7 +243,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--aa-cream);
+  color: #d4af37;
   font-family: 'Cormorant Garamond', 'EB Garamond', serif;
   font-size: 1.1rem;
   letter-spacing: 0.05em;
@@ -251,7 +251,7 @@
 
 .heroTrust li::before {
   content: '✦';
-  color: var(--aa-gold);
+  color: #d4af37;
 }
 
 .scrollHint {
@@ -259,7 +259,7 @@
   bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
-  color: var(--aa-gold);
+  color: #d4af37;
   font-size: 1.75rem;
   text-decoration: none;
   animation: hintBounce 2.2s ease-in-out infinite;
@@ -268,7 +268,7 @@
 }
 
 .scrollHint:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -286,7 +286,7 @@
 /* ---------- 3. Welcome video ---------- */
 .videoContext {
   text-align: center;
-  color: var(--aa-cream);
+  color: #d4af37;
   font-size: 1.12rem;
   line-height: 1.75;
   max-width: 48rem;
@@ -317,7 +317,7 @@
   right: 0.9rem;
   background: rgba(21, 11, 38, 0.85);
   border: 1px solid rgba(212, 175, 55, 0.55);
-  color: var(--aa-cream);
+  color: #d4af37;
   border-radius: 999px;
   padding: 0.45rem 1rem;
   font-size: 0.88rem;
@@ -331,13 +331,13 @@
 }
 
 .muteToggle:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 2px;
 }
 
 .videoCaption {
   text-align: center;
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-family: 'Cormorant Garamond', 'EB Garamond', serif;
   font-style: italic;
   font-size: 1.15rem;
@@ -391,13 +391,13 @@
 .goalTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.2rem;
-  color: var(--aa-cream);
+  color: #d4af37;
   margin: 0;
   font-weight: 500;
 }
 
 .goalCopy {
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-size: 1rem;
   line-height: 1.65;
   margin: 0;
@@ -405,7 +405,7 @@
 }
 
 .goalLink {
-  color: var(--aa-gold-bright);
+  color: #d4af37;
   font-family: 'Cinzel', serif;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
@@ -420,7 +420,7 @@
 }
 
 .goalLink:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -490,7 +490,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--aa-gold-bright);
+  color: #d4af37;
   border: 1px solid rgba(212, 175, 55, 0.5);
   border-radius: 999px;
   padding: 0.25rem 0.85rem;
@@ -504,22 +504,22 @@
 }
 
 .productName a {
-  color: var(--aa-cream);
+  color: #d4af37;
   text-decoration: none;
 }
 
 .productName a:hover {
-  color: var(--aa-gold-bright);
+  color: #d4af37;
 }
 
 .productName a:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 3px;
   border-radius: 4px;
 }
 
 .productBenefit {
-  color: var(--aa-gold-bright);
+  color: #d4af37;
   font-family: 'Cormorant Garamond', 'EB Garamond', serif;
   font-style: italic;
   font-size: 1.1rem;
@@ -528,7 +528,7 @@
 }
 
 .productDesc {
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-size: 1rem;
   line-height: 1.65;
   margin: 0;
@@ -550,7 +550,7 @@
 
 .whyItWorks li {
   font-size: 0.92rem;
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   line-height: 1.6;
   padding-left: 1.2rem;
   position: relative;
@@ -560,13 +560,13 @@
   content: '✦';
   position: absolute;
   left: 0;
-  color: var(--aa-gold);
+  color: #d4af37;
   font-size: 0.75rem;
   top: 0.25rem;
 }
 
 .whyItWorks strong {
-  color: var(--aa-cream);
+  color: #d4af37;
   font-weight: 600;
 }
 
@@ -582,7 +582,7 @@
 .productPrice {
   font-family: 'Cinzel', serif;
   font-size: 1.25rem;
-  color: var(--aa-cream);
+  color: #d4af37;
 }
 
 .addButton {
@@ -609,7 +609,7 @@
 }
 
 .addButton:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 3px;
 }
 
@@ -660,13 +660,13 @@
 .stepTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.15rem;
-  color: var(--aa-cream);
+  color: #d4af37;
   margin: 0 0 0.6rem;
   font-weight: 500;
 }
 
 .stepCopy {
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-size: 1rem;
   line-height: 1.65;
   margin: 0;
@@ -690,7 +690,7 @@
 .trustValue {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1.6rem, 3.5vw, 2.3rem);
-  color: var(--aa-gold);
+  color: #d4af37;
   margin-bottom: 0.6rem;
 }
 
@@ -698,13 +698,13 @@
   font-family: 'Cinzel', serif;
   font-size: 0.95rem;
   letter-spacing: 0.1em;
-  color: var(--aa-cream);
+  color: #d4af37;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
 }
 
 .trustCopy {
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;
@@ -742,7 +742,7 @@
 .reviewFormTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.2rem;
-  color: var(--aa-cream);
+  color: #d4af37;
   margin: 0 0 1rem;
   font-weight: 500;
 }
@@ -776,13 +776,13 @@
 .learnTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: 1.35rem;
-  color: var(--aa-cream);
+  color: #d4af37;
   margin: 0 0 0.8rem;
   font-weight: 500;
 }
 
 .learnCopy {
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-size: 1.02rem;
   line-height: 1.7;
   margin: 0 0 1.5rem;
@@ -807,13 +807,13 @@
 .guideTitle {
   font-family: 'Cinzel Decorative', 'Cinzel', serif;
   font-size: clamp(1.5rem, 4vw, 2.1rem);
-  color: var(--aa-cream);
+  color: #d4af37;
   margin: 0 0 1rem;
   font-weight: 500;
 }
 
 .guideCopy {
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-size: 1.08rem;
   line-height: 1.7;
   margin: 0 0 2rem;
@@ -833,7 +833,7 @@
   border-radius: 30px;
   border: 1px solid rgba(212, 175, 55, 0.5);
   background: rgba(21, 11, 38, 0.8);
-  color: var(--aa-cream);
+  color: #d4af37;
   min-width: 16rem;
   flex: 1 1 auto;
   max-width: 24rem;
@@ -844,7 +844,7 @@
 }
 
 .guideInput:focus-visible {
-  outline: 3px solid var(--aa-gold-bright);
+  outline: 3px solid #d4af37;
   outline-offset: 2px;
 }
 
@@ -855,7 +855,7 @@
   max-width: 30rem;
   margin: 1rem auto 0;
   text-align: left;
-  color: var(--aa-cream-dim);
+  color: #b08d2a;
   font-size: 0.9rem;
   line-height: 1.55;
   cursor: pointer;
@@ -876,7 +876,7 @@
 }
 
 .guideSuccess {
-  color: var(--aa-gold-bright);
+  color: #d4af37;
 }
 
 .guideError {
