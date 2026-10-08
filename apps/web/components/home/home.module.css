@@ -930,6 +930,45 @@
   }
 }
 
+/* ---------- Ambient Section Backgrounds ---------- */
+/* Amber's artwork as subtle section backdrops — dark overlay preserves readability. */
+.bgApothecaryBottles,
+.bgAlchemySymbols,
+.bgRitualBowl {
+  position: relative;
+}
+
+.bgApothecaryBottles::before,
+.bgAlchemySymbols::before,
+.bgRitualBowl::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.bgApothecaryBottles::before {
+  background-image: url('/images/banners/apothecary-bottles.jpg');
+}
+
+.bgAlchemySymbols::before {
+  background-image: url('/images/banners/alchemy-symbols.jpg');
+}
+
+.bgRitualBowl::before {
+  background-image: url('/images/banners/ritual-bowl.jpg');
+}
+
+.bgApothecaryBottles > *,
+.bgAlchemySymbols > *,
+.bgRitualBowl > * {
+  position: relative;
+  z-index: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scrollHint {
     animation: none;

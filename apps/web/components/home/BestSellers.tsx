@@ -21,7 +21,7 @@ export function BestSellers() {
   }
 
   return (
-    <section className={styles.section} aria-labelledby="best-sellers-heading">
+    <section className={`${styles.section} ${styles.bgApothecaryBottles}`} aria-labelledby="best-sellers-heading">
       <div className={styles.container}>
         <div className={styles.ornament} aria-hidden="true">
           ✦ ─────────────── ✦

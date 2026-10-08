@@ -22,7 +22,7 @@ const RESOURCES = [
 
 export function LearnSection() {
   return (
-    <section className={styles.section} aria-labelledby="learn-heading">
+    <section className={`${styles.section} ${styles.bgAlchemySymbols}`} aria-labelledby="learn-heading">
       <div className={styles.container}>
         <div className={styles.ornament} aria-hidden="true">
           ✦ ─────────────── ✦

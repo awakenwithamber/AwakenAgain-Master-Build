@@ -10,7 +10,7 @@ import styles from './home.module.css';
 export function GrimoirePromo() {
   return (
     <section
-      className={`${styles.section} ${styles.paneBg}`}
+      className={`${styles.section} ${styles.paneBg} ${styles.bgRitualBowl}`}
       aria-labelledby="grimoire-promo-heading"
     >
       <div className={`${styles.paneInner} ${styles.container}`}>

@@ -4,6 +4,7 @@ import { OrganizationJsonLd } from '../components/seo/JsonLd';
 import { SiteNotice } from '../components/layout/SiteNotice';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import { FooterBanner } from '../components/layout/FooterBanner';
 import { BRAND_NAME, siteUrl } from '../lib/seo/config';
 import { LegacyAnchorRedirect } from '../components/seo/LegacyAnchorRedirect';
 import { MusicGate } from '../components/music/MusicGate';
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Shared chrome — workstream 2 (customer content) owns nav/footer. */}
         <Header />
         {children}
+        <FooterBanner />
         <Footer />
         {/* Botanical index-card modal host (workstream E) — listens for aa:open-botanical-card. */}
         <BotanicalCardHost />
