@@ -26,8 +26,17 @@ export function MusicGate() {
   const primaryRef = useRef<HTMLButtonElement>(null);
   const dismissedRef = useRef(false);
 
-  // No persistence by design: the gate appears on every page load.
+  // Remember dismissal for the session: the gate appears once per visit,
+  // not on every page navigation.
   useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem('aa-music-gate-dismissed') === '1') {
+        dismissedRef.current = true;
+        return;
+      }
+    } catch {
+      // Storage unavailable — show the gate.
+    }
     const timer = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
@@ -35,6 +44,11 @@ export function MusicGate() {
   const dismiss = useCallback(() => {
     if (dismissedRef.current) return;
     dismissedRef.current = true;
+    try {
+      window.sessionStorage.setItem('aa-music-gate-dismissed', '1');
+    } catch {
+      // Storage unavailable — dismiss for this view only.
+    }
     setLeaving(true);
     setTimeout(() => setVisible(false), DISMISS_MS);
   }, []);
