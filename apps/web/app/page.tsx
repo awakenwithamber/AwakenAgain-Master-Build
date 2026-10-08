@@ -20,6 +20,7 @@ import { HowMade } from '../components/home/HowMade';
 import { TrustStats } from '../components/home/TrustStats';
 import { ReviewsSection } from '../components/home/ReviewsSection';
 import { LearnSection } from '../components/home/LearnSection';
+import { GrimoirePromo } from '../components/home/GrimoirePromo';
 import { GuideSignup } from '../components/home/GuideSignup';
 import { BRAND_NAME } from '../lib/seo/config';
 
@@ -43,6 +44,7 @@ export default function HomePage() {
         <TrustStats />
         <ReviewsSection />
         <LearnSection />
+        <GrimoirePromo />
         <GuideSignup />
       </main>
     </>

@@ -31,6 +31,7 @@ const NAV_LINKS = [
   { href: '/shop', label: 'Shop Remedies' },
   { href: '/custom-formula', label: 'Create Remedy' },
   { href: '/soap-shop', label: 'Soaps' },
+  { href: '/grimoire', label: 'Grimoire' },
   { href: '/services', label: 'Services' },
   { href: '/about', label: 'About Amber' },
   { href: '/faqs', label: 'FAQs' },

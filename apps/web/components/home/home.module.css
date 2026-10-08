@@ -935,3 +935,43 @@
     animation: none;
   }
 }
+
+/* ---------- Grimoire Promo ---------- */
+.grimoirePromoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 0 0 2.5rem;
+}
+
+.grimoirePromoCard {
+  background: rgba(42, 26, 64, 0.6);
+  border: 1px solid rgba(217, 169, 60, 0.35);
+  border-radius: 0.75rem;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+}
+
+.grimoirePromoTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  color: #f4e8d0;
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.grimoirePromoCopy {
+  color: #c8b79a;
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .grimoirePromoGrid {
+    grid-template-columns: 1fr;
+    max-width: 32rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
