@@ -34,6 +34,7 @@ const NAV_LINKS = [
   { href: '/grimoire', label: 'Grimoire' },
   { href: '/services', label: 'Services' },
   { href: '/about', label: 'About Amber' },
+  { href: '/support', label: 'Support' },
   { href: '/faqs', label: 'FAQs' },
   { href: '/contact', label: 'Contact' },
 ];

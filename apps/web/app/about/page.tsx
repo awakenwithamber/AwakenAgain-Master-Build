@@ -101,6 +101,52 @@ export default function AboutPage() {
             </ul>
           </section>
 
+          <section aria-label="Contact" id="professional-services">
+            <h2>Professional Services — Work with Amber</h2>
+            <p>
+              Beyond the apothecary, Amber brings deep expertise in
+              technology, AI, and business systems. Available for consulting,
+              training, and project work:
+            </p>
+            <ul>
+              <li>
+                <strong>AI Training & Automation</strong> — practical AI
+                training for teams and individuals; custom automation systems
+                and multi-agent architectures that handle real operational
+                work.
+              </li>
+              <li>
+                <strong>Enterprise Systems Development</strong> — full-stack
+                development, systems integration, and technical architecture
+                for growing businesses.
+              </li>
+              <li>
+                <strong>Operations Strategy</strong> — workflow design,
+                process optimization, and operational systems for small
+                businesses and startups.
+              </li>
+              <li>
+                <strong>Digital Marketing Architecture</strong> — marketing
+                systems, SEO/AEO strategy, and content operations built for
+                sustainable growth.
+              </li>
+              <li>
+                <strong>Botanical & CBD Consulting</strong> — herbal product
+                formulation guidance, botanical education, and CBD product
+                knowledge for businesses entering the wellness space.
+              </li>
+              <li>
+                <strong>Research & Analysis</strong> — deep-dive research,
+                competitive analysis, and evidence-based reporting across
+                technology, business, and natural products.
+              </li>
+            </ul>
+            <p>
+              For project inquiries, reach out directly — every message is
+              read personally.
+            </p>
+          </section>
+
           <section aria-label="Contact">
             <h2>Contact</h2>
             <address>
