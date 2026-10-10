@@ -39,9 +39,9 @@ export default function TermsPage() {
 
       <h2>Shipping & fulfillment</h2>
       <p>
-        Shipping is free on orders over $100, and free on orders over $75 for
-        Living Grimoire subscribers. Orders are handcrafted and typically
-        ship within 3–5 business days where operationally accurate. You will
+        Shipping is free on orders over $45, and always free for Living
+        Grimoire subscribers. Orders are handcrafted and typically ship
+        within 3–5 business days where operationally accurate. You will
         be notified if a delay affects your order.
       </p>
 
