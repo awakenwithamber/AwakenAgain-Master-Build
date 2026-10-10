@@ -44,7 +44,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A source of omega-3 fatty acids for general nutritional support.",
-  "extended_description": "Wild-Caught Omega-3 Fish Oil provides omega-3 fatty acids as part of a balanced nutrition routine. Omega-3 fatty acids are foundational dietary fats that play a nutritional role in a balanced diet, and this simple daily softgel-style routine makes them easy to include alongside balanced meals. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Wild-Caught Omega-3 Fish Oil provides omega-3 fatty acids as part of a balanced nutrition routine. Omega-3 fatty acids are foundational dietary fats that play a nutritional role in a balanced diet, and this simple daily softgel-style routine makes them easy to include alongside balanced meals. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Wild-Caught Omega-3 Fish Oil",
