@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A feel-good botanical blend for positive mood, emotional resilience, and everyday stress support.",
-  "extended_description": "Happy Pill Capsules combine traditionally uplifting botanicals to support a positive mood, emotional resilience, and a brighter everyday wellness routine. St. John's Wort and rhodiola are joined by saffron, mimosa bark, and schisandra — botanicals with a long history of traditional use for emotional well-being — chosen to support steadiness through everyday stress. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Happy Pill Capsules combine traditionally uplifting botanicals to support a positive mood, emotional resilience, and a brighter everyday wellness routine. St. John's Wort and rhodiola are joined by saffron, mimosa bark, and schisandra — botanicals with a long history of traditional use for emotional well-being — chosen to support steadiness through everyday stress. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "St. John's Wort",
