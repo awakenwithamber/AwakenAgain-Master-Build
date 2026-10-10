@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A calming botanical blend for relaxation, emotional balance, and everyday stress support.",
-  "extended_description": "Chill Pill Capsules are crafted with traditionally calming botanicals and adaptogens to support relaxation, a grounded mood, and a calm response to everyday stress. This blend brings together time-honored nervine herbs such as passionflower, lemon balm, and valerian with adaptogenic botanicals like ashwagandha and holy basil, traditionally used in herbal practice to support the body's ability to stay steady through daily demands. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Chill Pill Capsules are crafted with traditionally calming botanicals and adaptogens to support relaxation, a grounded mood, and a calm response to everyday stress. This blend brings together time-honored nervine herbs such as passionflower, lemon balm, and valerian with adaptogenic botanicals like ashwagandha and holy basil, traditionally used in herbal practice to support the body's ability to stay steady through daily demands. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Ashwagandha",
