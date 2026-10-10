@@ -53,6 +53,54 @@ export function CheckoutForm() {
   const preview = previewCartTotals(items, bundle, isSubscriber);
   const empty = items.length === 0 && !bundle;
 
+  const [stripeSubmitting, setStripeSubmitting] = useState(false);
+
+  const payWithStripe = async () => {
+    setFormError(null);
+    if (!name.trim() || !email.trim()) {
+      setFormError('Please provide your name and email so we can confirm your order.');
+      return;
+    }
+    setStripeSubmitting(true);
+    track(ANALYTICS_EVENT_NAMES.checkoutInitiated, {});
+    try {
+      const payload = {
+        items: items.map((item: CartItem) => ({
+          product_handle: item.product_handle,
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          customization: item.customization,
+          formula: item.formula,
+          unit_price_cents: item.unit_price_cents,
+        })),
+        bundle,
+        customer: { name: name.trim(), email: email.trim(), phone: phone.trim(), notes: notes.trim() },
+        is_subscriber: isSubscriber,
+        client_total_cents: preview.totalCents,
+      };
+      const res = await fetch('/api/checkout/stripe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json()) as { ok: boolean; checkout_url?: string; errors?: string[] };
+      if (res.ok && data.ok && data.checkout_url) {
+        // Redirect to Stripe-hosted checkout (includes Link, Apple Pay, Google Pay).
+        clear();
+        window.location.href = data.checkout_url;
+      } else {
+        setFormError(
+          data.errors?.join(' ') ??
+            'Card checkout is not available right now. Please use Cash App or Venmo.',
+        );
+      }
+    } catch {
+      setFormError('Could not reach the checkout server. Please try again.');
+    } finally {
+      setStripeSubmitting(false);
+    }
+  };
+
   const placeOrder = async () => {
     setFormError(null);
     setResult(null);
@@ -223,7 +271,7 @@ export function CheckoutForm() {
                   checked={isSubscriber}
                   onChange={(e) => setIsSubscriber(e.target.checked)}
                 />
-                I&apos;m a Living Grimoire subscriber ($75 free-shipping threshold)
+                I&apos;m a Living Grimoire subscriber (always free shipping)
               </label>
               <p>
                 <small>
@@ -242,10 +290,19 @@ export function CheckoutForm() {
             <button
               type="button"
               className="btn-primary"
-              onClick={placeOrder}
-              disabled={submitting}
+              onClick={payWithStripe}
+              disabled={submitting || stripeSubmitting || empty}
+              style={{ marginBottom: '0.75rem' }}
             >
-              {submitting ? 'Placing your order…' : '✦ Proceed to Secure Checkout'}
+              {stripeSubmitting ? 'Redirecting to secure card checkout…' : '💳 Pay with Card (Stripe Link, Apple Pay, Google Pay)'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={placeOrder}
+              disabled={submitting || stripeSubmitting}
+            >
+              {submitting ? 'Placing your order…' : '✦ Pay with Cash App / Venmo'}
             </button>
             <section
               aria-label="Pay directly with Venmo or Cash App"
