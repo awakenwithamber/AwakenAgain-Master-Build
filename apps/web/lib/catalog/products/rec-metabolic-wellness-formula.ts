@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A botanical blend supporting normal metabolic wellness and steady everyday energy.",
-  "extended_description": "Metabolic Wellness Formula is designed to complement balanced meals, movement, hydration, and other healthy routines that support normal metabolic function and steady energy. The blend features kitchen-garden botanicals with a long history of traditional use in wellness routines — including cinnamon, fenugreek, ginger, and turmeric — alongside mineral-rich botanicals that complement a balanced nutrition routine. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Metabolic Wellness Formula is designed to complement balanced meals, movement, hydration, and other healthy routines that support normal metabolic function and steady energy. The blend features kitchen-garden botanicals with a long history of traditional use in wellness routines — including cinnamon, fenugreek, ginger, and turmeric — alongside mineral-rich botanicals that complement a balanced nutrition routine. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Cinnamon",
