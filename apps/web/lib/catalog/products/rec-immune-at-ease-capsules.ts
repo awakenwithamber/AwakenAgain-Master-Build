@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A botanical shield for everyday resilience, seasonal support, and deep immune nourishment.",
-  "extended_description": "Immune-At-Ease brings together classic immune-supportive botanicals in one protective daily formula. It is designed for steady resilience, not harsh stimulation — botanicals such as elderberry, astragalus, echinacea, reishi, and andrographis, long used in herbal traditions to support the body's natural defenses through seasonal shifts, stress, and everyday exposure. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Immune-At-Ease brings together classic immune-supportive botanicals in one protective daily formula. It is designed for steady resilience, not harsh stimulation — botanicals such as elderberry, astragalus, echinacea, reishi, and andrographis, long used in herbal traditions to support the body's natural defenses through seasonal shifts, stress, and everyday exposure. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Elderberry",
