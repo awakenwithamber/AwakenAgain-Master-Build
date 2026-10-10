@@ -9,6 +9,7 @@ import { BRAND_NAME, siteUrl, SITE_KEYWORDS } from '../lib/seo/config';
 import { LegacyAnchorRedirect } from '../components/seo/LegacyAnchorRedirect';
 import { MusicGate } from '../components/music/MusicGate';
 import { BotanicalCardHost } from '../components/herbs/BotanicalCardHost';
+import { GaiaWidget } from '../components/chat/GaiaWidget';
 
 const base = siteUrl();
 
@@ -74,6 +75,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Footer />
         {/* Botanical index-card modal host (workstream E) — listens for aa:open-botanical-card. */}
         <BotanicalCardHost />
+        {/* Gaia chatbot — popup intro + lower-right button (owner directive 2026-10-10). */}
+        <GaiaWidget />
         {/* Legacy SPA anchor → route bridge (client-side; fragments never reach the server). */}
         <LegacyAnchorRedirect />
         <OrganizationJsonLd />
