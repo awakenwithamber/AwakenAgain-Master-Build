@@ -1,5 +1,5 @@
 /**
- * Lunna AI chat Route Handler (G11) — provider-neutral contract.
+ * Gaia AI chat Route Handler (G11) — provider-neutral contract.
  *
  * POST /api/ai/chat { messages: [{ role, content }] } →
  *   { ok: true, reply, provider_id, provider_binding_needs_verification, disclaimer }
