@@ -1,5 +1,5 @@
 /**
- * Tests — Lunna chat provider contract (G11).
+ * Tests — Gaia chat provider contract (G11).
  * Laws: diagnosis/treatment/cure intents always refuse; EVERY reply carries
  * the disclaimer; provider is the canned preview with binding marked
  * NEEDS_VERIFICATION; request validation rejects malformed payloads.
@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CannedPreviewProvider,
-  LUNNA_DISCLAIMER,
+  GAIA_DISCLAIMER,
   getChatProvider,
   isRefusalIntent,
   validateChatRequest,
@@ -50,7 +50,7 @@ describe('canned preview provider', () => {
 
   it('every response carries the disclaimer and preview flags', async () => {
     const r = await provider.respond([{ role: 'user', content: 'hi' }]);
-    expect(r.disclaimer).toBe(LUNNA_DISCLAIMER);
+    expect(r.disclaimer).toBe(GAIA_DISCLAIMER);
     expect(r.provider_id).toBe('canned-preview');
     expect(r.provider_binding_needs_verification).toBe(true);
   });
