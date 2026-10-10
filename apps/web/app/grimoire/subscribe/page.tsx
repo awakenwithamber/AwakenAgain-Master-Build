@@ -4,9 +4,9 @@ import { SubscribeForm } from '../../../components/grimoire/SubscribeForm';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
-  title: `Join the Living Grimoire — ${BRAND_NAME}`,
+  title: `The Living Grimoire - Book of Light — ${BRAND_NAME}`,
   description:
-    'Join the Living Grimoire for $7.77/month: 10% storewide discount, monthly articles and rituals, exclusive recipes, and early access. Pay with Cash App or Venmo.',
+    'Get full access to The Living Grimoire - Book of Light for $8.88, or join for $7.77/month with new chapters every other month: 10% storewide discount, monthly articles and rituals, exclusive recipes, and early access.',
 };
 
 /**
@@ -18,11 +18,16 @@ export default function GrimoireSubscribePage() {
     <>
       <SiteHeader />
       <main id="main-content">
-        <h1>Living Grimoire Subscription</h1>
+        <h1>The Living Grimoire - Book of Light</h1>
         <p>
-          <strong>Amber&apos;s Alchemy Apothecary</strong> — the Living Grimoire is the
-          membership heart of the apothecary: botanical knowledge, rituals, recipes, and a
-          10% subscriber discount on every order.
+          <strong>Amber&apos;s Family Grimoire</strong> — a book made by the women
+          in my family, passed down from mother to daughter through generations.
+          A book of true magic, healing, recipes, spells, and more.
+        </p>
+        <p>
+          <strong>Full access: $8.88</strong> — or join the subscription for{' '}
+          <strong>$7.77/month</strong> with new chapters every other month, plus
+          10% off storewide, monthly articles and rituals, and exclusive recipes.
         </p>
         <SubscribeForm />
       </main>
