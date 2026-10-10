@@ -1,5 +1,5 @@
 /**
- * Lunna AI chat — provider-neutral contract (G11).
+ * Gaia AI chat — provider-neutral contract (G11).
  *
  * The provider decision is genuinely OPEN and marked NEEDS VERIFICATION
  * (CONVERSION_MAP §8 row 97: the legacy Vercel AI Gateway binding is
@@ -8,7 +8,7 @@
  * shipped now is a safe canned-response preview.
  *
  * HARD GUARDRAILS (owner compliance, CONVERSION_MAP §14 row 115):
- * - Lunna NEVER diagnoses, treats, cures, or prescribes. Any message that
+ * - Gaia NEVER diagnoses, treats, cures, or prescribes. Any message that
  *   asks for diagnosis/treatment/cure/dosage-for-a-condition gets the
  *   refusal path — always.
  * - Scope is conservative herbal education (traditional uses, general
@@ -39,8 +39,8 @@ export interface ChatProvider {
   respond(messages: ChatMessage[]): Promise<ChatResponse>;
 }
 
-export const LUNNA_DISCLAIMER =
-  'Lunna is a concierge preview for Amber\u2019s Alchemy Apothecary — herbal education ' +
+export const GAIA_DISCLAIMER =
+  'Gaia is a concierge preview for Amber\u2019s Alchemy Apothecary — herbal education ' +
   'only, not medical advice. Herbal products complement but never replace professional ' +
   'medical guidance. If you have a health concern, please talk to a qualified professional.';
 
@@ -140,7 +140,7 @@ const TOPIC_REPLIES: TopicReply[] = [
 ];
 
 const DEFAULT_REPLY =
-  'Welcome to the apothecary! I\u2019m Lunna, your concierge preview — I can help you ' +
+  'Welcome to the apothecary! I\u2019m Gaia, your concierge preview — I can help you ' +
   'explore botanicals, find a soap or scent, learn about the custom soap builder, or ' +
   'answer questions about shipping and the shop. What are you curious about today?';
 
@@ -162,7 +162,7 @@ export class CannedPreviewProvider implements ChatProvider {
     return {
       reply,
       provider_id: this.id,
-      disclaimer: LUNNA_DISCLAIMER,
+      disclaimer: GAIA_DISCLAIMER,
       provider_binding_needs_verification: true,
     };
   }
