@@ -7,6 +7,7 @@
  */
 import Link from 'next/link';
 import NewsletterSignup from './NewsletterSignup';
+import { MessageAmber } from './MessageAmber';
 import {
   BRAND_EMAIL,
   BRAND_NAME,
@@ -46,7 +47,8 @@ export default function Footer() {
             Grimoire — made in small batches in Salt Lake City, Utah.
           </p>
           <p className="footer-payments">
-            Payments: Cash App <strong>$AmberPatten347</strong> · Venmo{' '}
+            Payments: Card, Klarna, Afterpay, Apple Pay, Google Pay via Stripe ·
+            Cash App <strong>$AmberPatten347</strong> · Venmo{' '}
             <strong>@AwakenwithAmber</strong>
           </p>
         </div>
@@ -86,11 +88,16 @@ export default function Footer() {
             <a href={`mailto:${BRAND_EMAIL}`}>{BRAND_EMAIL}</a>
             <br />
             <a href={BRAND_PHONE_TEL}>{BRAND_PHONE_DISPLAY}</a>
+            <br />
+            <a href="tel:+18018196795">801-819-6795</a>
           </p>
         </div>
         <div className="footer-col footer-newsletter">
           <h3>Stay in the Circle</h3>
           <NewsletterSignup placement="footer" />
+        </div>
+        <div className="footer-col footer-message">
+          <MessageAmber />
         </div>
       </div>
       <div className="site-footer-base">
