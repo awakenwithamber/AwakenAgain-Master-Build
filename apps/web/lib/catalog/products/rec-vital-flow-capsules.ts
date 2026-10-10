@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A gentle belly-balancing blend for flow, comfort, and feeling lighter after meals.",
-  "extended_description": "Vital Flow supports the digestive rhythm with warming, soothing, and gently moving botanicals. Ginger, fennel, and peppermint — classic carminative herbs — join dandelion root and milk thistle in a formula for digestive comfort and ease after meals, helping bring the belly back into ease so the whole body can exhale. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Vital Flow supports the digestive rhythm with warming, soothing, and gently moving botanicals. Ginger, fennel, and peppermint — classic carminative herbs — join dandelion root and milk thistle in a formula for digestive comfort and ease after meals, helping bring the belly back into ease so the whole body can exhale. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Ginger",
