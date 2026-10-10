@@ -13,7 +13,7 @@ export function FooterBanner() {
       style={{
         width: '100%',
         height: 'clamp(90px, 10vw, 160px)',
-        backgroundImage: "url('/images/banners/brand-banner.jpg')",
+        backgroundImage: "url('/images/brand/brand-banner.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
