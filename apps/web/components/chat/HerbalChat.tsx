@@ -1,5 +1,5 @@
 /**
- * Lunna — herbal concierge chat widget, UI shell (G11).
+ * Gaia — herbal concierge chat widget, UI shell (G11).
  *
  * Honest "concierge preview" labeling throughout: this is a UI shell over
  * the canned-preview provider until the owner picks a real AI provider
@@ -16,7 +16,7 @@ import {
   trackPlatformEvent,
   trackPlatformEventOnce,
 } from '../../lib/analytics/platform-events';
-import { LUNNA_DISCLAIMER } from '../../lib/ai/chat-provider';
+import { GAIA_DISCLAIMER } from '../../lib/ai/chat-provider';
 
 interface ChatBubble {
   role: 'user' | 'assistant';
@@ -65,21 +65,21 @@ export function HerbalChat() {
       });
       const data = (await res.json()) as ChatApiResponse;
       if (!res.ok || !data.ok || !data.reply) {
-        setError(data.errors?.[0] ?? 'Lunna is unavailable right now — please try again later.');
+        setError(data.errors?.[0] ?? 'Gaia is unavailable right now — please try again later.');
       } else {
         setMessages([...next, { role: 'assistant', content: data.reply }]);
       }
     } catch {
-      setError('Lunna is unavailable right now — please try again later.');
+      setError('Gaia is unavailable right now — please try again later.');
     } finally {
       setTyping(false);
     }
   }
 
   return (
-    <section aria-label="Lunna — herbal concierge preview" className="herbal-chat">
+    <section aria-label="Gaia — herbal concierge preview" className="herbal-chat">
       <header>
-        <h2>Lunna</h2>
+        <h2>Gaia</h2>
         <p>
           <strong>Concierge preview</strong> — herbal education and shop
           guidance. Not a general AI yet; provider choice pending.
@@ -96,13 +96,13 @@ export function HerbalChat() {
         <ol>
           {messages.map((m, i) => (
             <li key={i} className={m.role === 'user' ? 'chat-user' : 'chat-lunna'}>
-              <strong>{m.role === 'user' ? 'You' : 'Lunna'}:</strong> {m.content}
+              <strong>{m.role === 'user' ? 'You' : 'Gaia'}:</strong> {m.content}
             </li>
           ))}
         </ol>
         {typing && (
           <p className="chat-typing" role="status">
-            Lunna is thinking…
+            Gaia is thinking…
           </p>
         )}
         {error && (
@@ -113,7 +113,7 @@ export function HerbalChat() {
       </div>
 
       <form
-        aria-label="Message Lunna"
+        aria-label="Message Gaia"
         onSubmit={(e) => {
           e.preventDefault();
           void send();
@@ -138,7 +138,7 @@ export function HerbalChat() {
       </form>
 
       <footer>
-        <small>{LUNNA_DISCLAIMER}</small>
+        <small>{GAIA_DISCLAIMER}</small>
       </footer>
     </section>
   );
