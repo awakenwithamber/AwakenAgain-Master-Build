@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A botanical blend supporting the body's normal elimination and antioxidant pathways.",
-  "extended_description": "Environmental Wellness Support combines botanicals traditionally used in general wellness routines to support normal liver, digestive, antioxidant, and elimination functions. Dandelion, nettle, burdock, ginger, and turmeric — greens and roots with a long history of traditional use — support the body's everyday pathways alongside hydration and balanced nutrition. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Environmental Wellness Support combines botanicals traditionally used in general wellness routines to support normal liver, digestive, antioxidant, and elimination functions. Dandelion, nettle, burdock, ginger, and turmeric — greens and roots with a long history of traditional use — support the body's everyday pathways alongside hydration and balanced nutrition. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Dandelion",
