@@ -129,7 +129,7 @@ export function CartView() {
                 checked={isSubscriber}
                 onChange={(e) => setIsSubscriber(e.target.checked)}
               />
-              I&apos;m a Living Grimoire subscriber ($75 free-shipping threshold)
+              I&apos;m a Living Grimoire subscriber (always free shipping)
             </label>
 
             <section aria-label="Order summary (preview)">
