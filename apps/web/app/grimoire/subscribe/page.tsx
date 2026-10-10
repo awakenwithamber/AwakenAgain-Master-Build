@@ -20,7 +20,7 @@ export default function GrimoireSubscribePage() {
       <main id="main-content">
         <h1>The Living Grimoire - Book of Light</h1>
         <p>
-          <strong>Amber&apos;s Family Grimoire</strong> — a book made by the women
+          <strong>Amber&apos;s Family Grimoire</strong> — a book, handmade by the women
           in my family, passed down from mother to daughter through generations.
           A book of true magic, healing, recipes, spells, and more.
         </p>
