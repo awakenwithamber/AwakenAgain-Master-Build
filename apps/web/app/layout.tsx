@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { OrganizationJsonLd } from '../components/seo/JsonLd';
 import { SiteNotice } from '../components/layout/SiteNotice';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import { FooterBanner } from '../components/layout/FooterBanner';
-import { BRAND_NAME, siteUrl } from '../lib/seo/config';
+import { BRAND_NAME, siteUrl, SITE_KEYWORDS } from '../lib/seo/config';
 import { LegacyAnchorRedirect } from '../components/seo/LegacyAnchorRedirect';
 import { MusicGate } from '../components/music/MusicGate';
 import { BotanicalCardHost } from '../components/herbs/BotanicalCardHost';
@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   },
   description:
     "Amber's Alchemy Apothecary — handcrafted botanical soaps, capsules, balms, and the Living Grimoire. AwakenAgain.com.",
+  keywords: [...SITE_KEYWORDS],
   alternates: {
     canonical: '/',
   },
@@ -37,6 +38,13 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     images: ['/images/brand/social-preview-og.jpg'],
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#150b26',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
