@@ -23,7 +23,6 @@ import { BRAND_NAME } from '../../lib/seo/config';
 const LEARN_LINKS = [
   { href: '/herbal-library', label: 'Articles & Guides' },
   { href: '/herb-index', label: 'Herb Encyclopedia' },
-  { href: '/herbal-wisdom', label: 'Ingredient Library' },
 ];
 
 const NAV_LINKS = [
@@ -31,7 +30,7 @@ const NAV_LINKS = [
   { href: '/shop', label: 'Shop Remedies' },
   { href: '/custom-formula', label: 'Create Remedy' },
   { href: '/soap-shop', label: 'Soaps' },
-  { href: '/grimoire', label: 'Grimoire' },
+  { href: '/grimoire', label: 'Living Grimoire of Light & Magic' },
   { href: '/services', label: 'Services' },
   { href: '/about', label: 'About Amber' },
   { href: '/support', label: 'Support' },
