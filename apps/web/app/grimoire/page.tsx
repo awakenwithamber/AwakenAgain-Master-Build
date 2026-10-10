@@ -8,9 +8,9 @@ import type { Metadata } from 'next';
 import { GrimoireBook } from '../../components/grimoire/GrimoireBook';
 
 export const metadata: Metadata = {
-  title: 'The Living Grimoire of Herbs',
+  title: 'The Living Grimoire of Light & Magic',
   description:
-    "Open the Living Grimoire — a handmade-style book of herbal wisdom, traditional uses, and botanical illustrations from Amber's Alchemy Apothecary.",
+    "Open the Living Grimoire of Light & Magic — a handmade-style book of herbal wisdom, traditional uses, rituals, and botanical illustrations from Amber's Alchemy Apothecary.",
 };
 
 export default function GrimoirePage() {
