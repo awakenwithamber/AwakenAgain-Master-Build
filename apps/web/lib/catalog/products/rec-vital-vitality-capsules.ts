@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "Clean, grounded energy for the days you need to feel bright, focused, and fully online.",
-  "extended_description": "Vital Vitality is a botanical boost for stamina, clarity, and daily momentum. Built with adaptogenic herbs traditionally used for energy resilience and focus, this blend helps you feel awake without feeling wired — candle flame, not lightning strike. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Vital Vitality is a botanical boost for stamina, clarity, and daily momentum. Built with adaptogenic herbs traditionally used for energy resilience and focus, this blend helps you feel awake without feeling wired — candle flame, not lightning strike. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Rhodiola",
