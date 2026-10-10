@@ -294,7 +294,7 @@ export function CheckoutForm() {
               disabled={submitting || stripeSubmitting || empty}
               style={{ marginBottom: '0.75rem' }}
             >
-              {stripeSubmitting ? 'Redirecting to secure card checkout…' : '💳 Pay with Card (Stripe Link, Apple Pay, Google Pay)'}
+              {stripeSubmitting ? 'Redirecting to secure checkout…' : '💳 Pay with Card, Klarna, Afterpay (Stripe Link, Apple Pay, Google Pay)'}
             </button>
             <button
               type="button"
