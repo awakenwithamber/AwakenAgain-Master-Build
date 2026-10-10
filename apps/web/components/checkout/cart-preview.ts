@@ -4,8 +4,8 @@
  * checkout (CLIENT=PREVIEW, SERVER=AUTHORITY). These functions mirror the
  * server rule deterministically in integer cents.
  *
- * Shipping rule (owner-confirmed 2026-10-05): free at $100+ general,
- * $75+ for Living Grimoire subscribers. Below threshold there is no
+ * Shipping rule (owner-confirmed 2026-10-10): free at $45+ general,
+ * always free for Living Grimoire subscribers. Below threshold there is no
  * flat rate established in source — shipping is confirmed with the
  * customer before fulfillment and NOT added to the order total.
  * Status vocabulary: FREE / TO_BE_CONFIRMED.
