@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A botanical blend supporting normal menstrual-cycle wellness, comfort, and steady daily energy.",
-  "extended_description": "Sacred Balance Capsules combine botanicals traditionally used to support normal menstrual-cycle wellness, everyday comfort, and steady energy. Holy basil, fenugreek, nettle, sage, and chamomile — nourishing greens and traditional women's wellness herbs — are joined by saffron, lemon balm, and lavender in a daily ritual for feeling steady and supported through the month. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Sacred Balance Capsules combine botanicals traditionally used to support normal menstrual-cycle wellness, everyday comfort, and steady energy. Holy basil, fenugreek, nettle, sage, and chamomile — nourishing greens and traditional women's wellness herbs — are joined by saffron, lemon balm, and lavender in a daily ritual for feeling steady and supported through the month. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Holy Basil",
