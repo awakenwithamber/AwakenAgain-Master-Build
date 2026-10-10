@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A bitter and aromatic botanical blend for short-term digestive wellness routines.",
-  "extended_description": "Seasonal Gut Reset is a short-term bitter and aromatic botanical blend intended to support normal digestion and digestive comfort as part of a seasonal wellness routine. Clove, garlic, ginger, oregano, and fennel — pungent, warming botanicals with a long history of traditional digestive use — bring the classic bitter-and-aromatic profile that herbal tradition turns to for periodic digestive support. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Seasonal Gut Reset is a short-term bitter and aromatic botanical blend intended to support normal digestion and digestive comfort as part of a seasonal wellness routine. Clove, garlic, ginger, oregano, and fennel — pungent, warming botanicals with a long history of traditional digestive use — bring the classic bitter-and-aromatic profile that herbal tradition turns to for periodic digestive support. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Clove",
