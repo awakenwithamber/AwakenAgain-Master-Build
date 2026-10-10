@@ -24,6 +24,22 @@ const nextConfig = {
       },
     ];
   },
+  // Site audit 2026-10-10: Herb Encyclopedia + Ingredient Library consolidated
+  // into /herb-index per owner instruction.
+  async redirects() {
+    return [
+      {
+        source: '/herbal-wisdom',
+        destination: '/herb-index',
+        permanent: true,
+      },
+      {
+        source: '/herbal-wisdom/:path*',
+        destination: '/herb-index',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
