@@ -129,7 +129,9 @@ export interface OrderRecord {
   free_shipping_threshold_cents: number;
   total_cents: number;
   is_subscriber_asserted: boolean;
-  payment_method: 'cash_app_or_venmo';
+  payment_method: 'cash_app_or_venmo' | 'stripe';
+  /** Order lifecycle — 'pending_payment' until payment confirmed. */
+  status?: 'pending_payment' | 'paid' | 'cancelled';
 }
 
 /* ------------------------------------------------------------------ */
@@ -148,8 +150,8 @@ export interface OrderRecord {
 export const CASH_APP_HANDLE = '$AmberPatten347';
 export const VENMO_HANDLE = '@AwakenwithAmber';
 
-export const FREE_SHIPPING_GENERAL_CENTS = 10000;
-export const FREE_SHIPPING_SUBSCRIBER_CENTS = 7500;
+export const FREE_SHIPPING_GENERAL_CENTS = 4500;
+export const FREE_SHIPPING_SUBSCRIBER_CENTS = 0;
 
 function generateOrderId(): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
