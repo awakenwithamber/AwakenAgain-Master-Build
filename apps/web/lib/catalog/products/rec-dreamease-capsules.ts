@@ -66,7 +66,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A moonlit capsule ritual for deep rest, a quiet mind, and mornings that feel softer.",
-  "extended_description": "DreamEase is crafted for the person whose body is tired but whose mind will not hush. This calming botanical blend supports relaxation, nighttime nervous-system ease, and restorative sleep. It centers on classic bedtime nervines — valerian root, passionflower, chamomile, lavender, and lemon balm — botanicals long used in herbal tradition to help quiet a racing mind and ease the transition into rest. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "DreamEase is crafted for the person whose body is tired but whose mind will not hush. This calming botanical blend supports relaxation, nighttime nervous-system ease, and restorative sleep. It centers on classic bedtime nervines — valerian root, passionflower, chamomile, lavender, and lemon balm — botanicals long used in herbal tradition to help quiet a racing mind and ease the transition into rest. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Valerian Root",
