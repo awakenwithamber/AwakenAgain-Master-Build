@@ -45,13 +45,23 @@ export function OrganizationJsonLd() {
           url: base,
           email: BRAND_EMAIL,
           telephone: BRAND_PHONE_JSONLD,
+          description:
+            "Amber's Alchemy Apothecary — handcrafted botanical apothecary offering small-batch herbal capsules, artisan soaps, salves, balms, custom remedies, and the Living Grimoire of Light & Magic. Spiritual wellness, herbal education, and soul-centered living.",
+          knowsAbout: [
+            'Herbalism', 'Botanical medicine', 'Spiritual awakening',
+            'Empath protection', 'Light magic', 'Ritual', 'Sustainable living',
+            'Natural skincare', 'Energy cleansing', 'Soul healing',
+          ],
         },
         {
           '@type': 'WebSite',
           '@id': `${base}/#website`,
           url: base,
           name: BRAND_NAME,
+          description:
+            'Handcrafted botanical apothecary, herbal education, and spiritual wellness — Awaken Again.',
           publisher: { '@id': `${base}/#organization` },
+          inLanguage: 'en-US',
         },
       ],
     },
