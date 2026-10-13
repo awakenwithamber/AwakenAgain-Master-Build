@@ -23,11 +23,21 @@ export interface CartPreview {
   itemsTotalCents: number;
   bundleTotalCents: number;
   subtotalCents: number;
+  /** 10% subscriber discount as CLAIMED by the checkbox (server verifies). */
+  subscriberDiscountCents: number;
   shippingCents: number;
   shippingStatus: ShippingStatus;
   freeShippingThresholdCents: number;
   totalCents: number;
 }
+
+/**
+ * Mirror of the server rule (lib/checkout/order.ts): the membership fee
+ * itself is exempt from the 10% subscriber discount.
+ */
+const SUBSCRIBER_DISCOUNT_EXEMPT_HANDLES: readonly string[] = [
+  'grimoire-subscription',
+];
 
 export function previewCartTotals(
   items: CartItem[],
@@ -40,6 +50,23 @@ export function previewCartTotals(
   );
   const bundleTotalCents = bundle ? BUNDLE_PRICE_CENTS : 0;
   const subtotalCents = itemsTotalCents + bundleTotalCents;
+  // When the subscriber box is checked, the PREVIEW applies the 10%
+  // discount as a claim (rounded per the codebase convention,
+  // Math.round(cents * 0.9)). The server verifies the claim against the
+  // subscription ledger at checkout and recomputes authoritatively — an
+  // unverified claim is priced standard there, never blocked.
+  const discountableCents =
+    items.reduce(
+      (sum, item) =>
+        sum +
+        (SUBSCRIBER_DISCOUNT_EXEMPT_HANDLES.includes(item.product_handle)
+          ? 0
+          : item.unit_price_cents * item.quantity),
+      0,
+    ) + bundleTotalCents;
+  const subscriberDiscountCents = isSubscriber
+    ? discountableCents - Math.round(discountableCents * 0.9)
+    : 0;
   const freeShippingThresholdCents = isSubscriber
     ? FREE_SHIPPING_SUBSCRIBER_CENTS
     : FREE_SHIPPING_GENERAL_CENTS;
@@ -49,9 +76,10 @@ export function previewCartTotals(
     itemsTotalCents,
     bundleTotalCents,
     subtotalCents,
+    subscriberDiscountCents,
     shippingCents: 0,
     shippingStatus,
     freeShippingThresholdCents,
-    totalCents: subtotalCents,
+    totalCents: subtotalCents - subscriberDiscountCents,
   };
 }

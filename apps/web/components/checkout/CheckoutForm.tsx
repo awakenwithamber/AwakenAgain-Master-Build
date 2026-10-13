@@ -31,6 +31,8 @@ interface OrderResponse {
   order_id?: string;
   total_cents?: number;
   subtotal_cents?: number;
+  subscriber_discount_cents?: number;
+  is_subscriber_verified?: boolean;
   shipping_status?: string;
   payment?: PaymentInstructions;
   message?: string;
@@ -180,6 +182,12 @@ export function CheckoutForm() {
               <strong>Venmo:</strong> {result.payment?.venmo}
             </li>
           </ul>
+          {(result.subscriber_discount_cents ?? 0) > 0 ? (
+            <p>
+              Living Grimoire subscriber discount (10%): −
+              {formatPrice(result.subscriber_discount_cents ?? 0)}
+            </p>
+          ) : null}
           <p>
             Amount: <strong>{formatPrice(result.total_cents ?? 0)}</strong>
           </p>
@@ -224,6 +232,16 @@ export function CheckoutForm() {
                 {bundle ? <li>The Alchemy Soap Collection (5 soaps)</li> : null}
               </ul>
               <p>Subtotal: {formatPrice(preview.subtotalCents)}</p>
+              {preview.subscriberDiscountCents > 0 ? (
+                <p>
+                  Living Grimoire subscriber discount (10%): −
+                  {formatPrice(preview.subscriberDiscountCents)}{' '}
+                  <small>
+                    (applied when your membership is confirmed — the server
+                    verifies subscriber status when you place your order)
+                  </small>
+                </p>
+              ) : null}
               <p>
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
@@ -277,9 +295,10 @@ export function CheckoutForm() {
               </label>
               <p>
                 <small>
-                  Subscriber status is self-reported at checkout; membership
-                  verification is not yet built (NEEDS_VERIFICATION). Subscriber
-                  discount pricing is applied after membership is confirmed.
+                  We verify subscriber status against our membership records
+                  when you place your order. Free shipping and the 10%
+                  subscriber discount apply once your membership payment has
+                  been confirmed by Amber.
                 </small>
               </p>
               <label>

@@ -141,6 +141,16 @@ export function CartView() {
             <section aria-label="Order summary (preview)" className="cart-summary">
               <h2>Summary — preview</h2>
               <p>Subtotal: {formatPrice(preview.subtotalCents)}</p>
+              {preview.subscriberDiscountCents > 0 ? (
+                <p>
+                  Living Grimoire subscriber discount (10%): −
+                  {formatPrice(preview.subscriberDiscountCents)}{' '}
+                  <small>
+                    (applied when your membership is confirmed — verified at
+                    checkout)
+                  </small>
+                </p>
+              ) : null}
               <p>
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'

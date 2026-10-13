@@ -148,7 +148,8 @@ function verifyCodeHash(code: string, stored: string): boolean {
 /**
  * Issue an OTP code for the Grimoire gate. Returns the request descriptor;
  * the plaintext code is returned once for the delivery step (email/SMS —
- * provider UNDECIDED; currently logged, never sent — see lib/jobs/email).
+ * provider UNDECIDED). The code is never logged and never sent back to
+ * the client in a response.
  */
 export async function requestOtp(
   store: OtpStore,

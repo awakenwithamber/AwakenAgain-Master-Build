@@ -2,9 +2,8 @@
  * Grimoire OTP Route Handler (G8) — subscriber content gate.
  *
  * POST { action: 'request', email } → issues a 6-digit code (code delivery
- *  provider is UNDECIDED — currently the code is logged server-side for
- *  preview only; NEVER sent in the response), emits server-owned
- *  `otp_requested`.
+ *  provider is UNDECIDED — the code is never logged and never sent in the
+ *  response), emits server-owned `otp_requested`.
  * POST { action: 'verify', request_id, code } → single-use verification;
  *  on success issues a 24h session token, emits server-owned `otp_verified`.
  * GET ?token= → session validity (for the GrimoireGate component).
@@ -67,12 +66,13 @@ export async function POST(request: Request) {
       return fail([err instanceof Error ? err.message : 'Could not issue a code.']);
     }
 
-    // DEV/PREVIEW ONLY: no delivery provider is bound yet, so the code is
-    // logged server-side for manual verification. The code is NEVER
-    // returned in the response and NEVER included in analytics.
+    // The code is NEVER logged, NEVER returned in the response, and NEVER
+    // included in analytics — only the fact of issuance is logged. No
+    // delivery provider is bound yet (UNDECIDED), so until one is, an
+    // issued code cannot reach the customer through any channel here.
     console.info(
-      `[grimoire-otp] PREVIEW code for request ${result.request.request_id} ` +
-        `(deliver via email provider once bound): ${result.code}`,
+      `[grimoire-otp] code issued for request ${result.request.request_id} ` +
+        `(delivery provider not yet bound).`,
     );
 
     captureGrimoireServerEvent(
