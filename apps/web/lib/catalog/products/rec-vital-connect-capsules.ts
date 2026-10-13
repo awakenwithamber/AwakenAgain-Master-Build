@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "An adaptogenic botanical blend supporting everyday vitality, resilience, and emotional well-being.",
-  "extended_description": "Vital Connect Capsules are crafted with adaptogenic botanicals selected to support everyday vitality, resilience, and emotional well-being. Maca root, vitex, ashwagandha, holy basil, and shatavari — traditional roots and herbs long used in women's and general wellness practice — work together as a daily ritual for feeling steady, supported, and connected to your own rhythm. Individual experiences vary. Free shipping on orders of $100 or more ($75 or more for Living Grimoire subscribers).",
+  "extended_description": "Vital Connect Capsules are crafted with adaptogenic botanicals selected to support everyday vitality, resilience, and emotional well-being. Maca root, vitex, ashwagandha, holy basil, and shatavari — traditional roots and herbs long used in women's and general wellness practice — work together as a daily ritual for feeling steady, supported, and connected to your own rhythm. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
   "featured_ingredients": [
     {
       "name": "Maca Root",

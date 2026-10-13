@@ -14,8 +14,8 @@ import { BUNDLE_PRICE_CENTS } from '../../lib/pricing/pricing';
 import type { CartItem } from '../../types';
 import type { StoredBundle } from './cart-store';
 
-export const FREE_SHIPPING_GENERAL_CENTS = 10000;
-export const FREE_SHIPPING_SUBSCRIBER_CENTS = 7500;
+export const FREE_SHIPPING_GENERAL_CENTS = 4500;
+export const FREE_SHIPPING_SUBSCRIBER_CENTS = 0;
 
 export type ShippingStatus = 'FREE' | 'TO_BE_CONFIRMED';
 
