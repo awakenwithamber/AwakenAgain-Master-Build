@@ -124,11 +124,21 @@ export interface OrderRecord {
     savings_cents: number;
   } | null;
   subtotal_cents: number;
+  /** 10% Living Grimoire subscriber discount — VERIFIED subscribers only. */
+  subscriber_discount_cents: number;
   shipping_cents: number;
   shipping_status: 'FREE' | 'TO_BE_CONFIRMED';
   free_shipping_threshold_cents: number;
   total_cents: number;
+  /** The client claimed subscriber status (body.is_subscriber === true). */
   is_subscriber_asserted: boolean;
+  /**
+   * The claim was verified server-side against the subscription ledger
+   * (lib/subscriptions/entitlement). Benefits (subscriber shipping
+   * threshold + discount) apply ONLY when this is true — the asserted
+   * boolean alone never grants them.
+   */
+  is_subscriber_verified: boolean;
   payment_method: 'cash_app_or_venmo';
   /** Order lifecycle — 'pending_payment' until payment confirmed. */
   status?: 'pending_payment' | 'paid' | 'cancelled';
@@ -152,6 +162,36 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
 
 export const FREE_SHIPPING_GENERAL_CENTS = 4500;
 export const FREE_SHIPPING_SUBSCRIBER_CENTS = 0;
+
+/**
+ * The advertised Living Grimoire subscriber discount: 10% off, storewide.
+ * Rounding follows the codebase convention (lib/catalog/shapes.ts):
+ * the discounted price is Math.round(cents * 0.9).
+ *
+ * The membership fee itself is exempt — the grimoire-subscription catalog
+ * record states the 10% benefit "applies to storewide product purchases"
+ * and there is "no subscriber discount on the membership fee".
+ */
+export const SUBSCRIBER_DISCOUNT_EXEMPT_HANDLES: readonly string[] = [
+  'grimoire-subscription',
+];
+
+/** Price after the 10% subscriber discount, rounded to the cent. */
+export function subscriberDiscountedCents(cents: number): number {
+  return Math.round(cents * 0.9);
+}
+
+export interface ValidateOrderOptions {
+  /**
+   * Server-verified subscriber entitlement for the order email. The
+   * checkout route computes this from the subscription ledger
+   * (lib/subscriptions/entitlement — latest record for the email must be
+   * 'active', i.e. owner-confirmed). Defaults to false: an unverified
+   * claim receives standard shipping pricing and no discount, without
+   * blocking the order.
+   */
+  isSubscriberVerified?: boolean;
+}
 
 function generateOrderId(): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -303,8 +343,18 @@ function priceBundle(input: CheckoutBundleInput): OrderRecord['bundle'] {
 /**
  * Validate + price an entire checkout payload. Throws on any problem.
  * Exported for the regression tests (no HTTP needed).
+ *
+ * Subscriber benefits: body.is_subscriber is a CLAIM, never proof. The
+ * subscriber shipping threshold and the 10% discount apply only when the
+ * caller passes options.isSubscriberVerified (computed server-side from
+ * the subscription ledger). An unverified claim is priced standard —
+ * never an error — because the client preview legitimately shows the
+ * claimed benefits and the server recomputes authoritatively.
  */
-export function validateAndBuildOrder(body: unknown): OrderRecord {
+export function validateAndBuildOrder(
+  body: unknown,
+  options: ValidateOrderOptions = {},
+): OrderRecord {
   if (!isRecord(body)) throw new Error('Request body must be a JSON object.');
 
   const items = body.items;
@@ -334,7 +384,11 @@ export function validateAndBuildOrder(body: unknown): OrderRecord {
   }
   const notes = sanitizePlainText(customer.notes, 1000);
 
-  const isSubscriber = body.is_subscriber === true;
+  // The checkbox is a claim the server verifies (see header note). The
+  // bare boolean by itself grants NOTHING.
+  const isSubscriberAsserted = body.is_subscriber === true;
+  const isSubscriberVerified =
+    isSubscriberAsserted && options.isSubscriberVerified === true;
 
   const lines: OrderLine[] = items.map((item) =>
     priceItem(item as CheckoutItemInput),
@@ -356,13 +410,45 @@ export function validateAndBuildOrder(body: unknown): OrderRecord {
   const bundleTotal = bundle ? bundle.price_cents : 0;
   const subtotalCents = subtotal + bundleTotal;
 
-  const threshold = isSubscriber
+  // Subscriber discount — VERIFIED subscribers only. The discountable
+  // base excludes the membership fee itself (see the exempt-handles note
+  // above); the bundle is a storewide product purchase and is included.
+  const discountableCents =
+    lines.reduce(
+      (sum, line) =>
+        sum +
+        (SUBSCRIBER_DISCOUNT_EXEMPT_HANDLES.includes(line.product_handle)
+          ? 0
+          : line.unit_price_cents * line.quantity),
+      0,
+    ) + bundleTotal;
+  const claimedDiscountCents =
+    discountableCents - subscriberDiscountedCents(discountableCents);
+  const subscriberDiscountCents = isSubscriberVerified
+    ? claimedDiscountCents
+    : 0;
+
+  const threshold = isSubscriberVerified
     ? FREE_SHIPPING_SUBSCRIBER_CENTS
     : FREE_SHIPPING_GENERAL_CENTS;
   const shippingStatus = subtotalCents >= threshold ? 'FREE' : 'TO_BE_CONFIRMED';
-  const totalCents = subtotalCents; // shipping is never added — see shipping rule
+  // Shipping is never added to the total — see shipping rule. The total
+  // is the subtotal minus any VERIFIED subscriber discount.
+  const totalCents = subtotalCents - subscriberDiscountCents;
 
-  if (body.client_total_cents !== totalCents) {
+  // Total check. Without a subscriber claim the client total must equal
+  // the server total exactly (tamper rejection, unchanged). With a claim,
+  // the client preview legitimately shows one of two server-computable
+  // figures — the standard total or the claimed-subscriber total — so both
+  // are accepted; the RECORDED total is always the server's own figure for
+  // the verification outcome. Any other client total is still rejected.
+  const standardTotalCents = subtotalCents;
+  const claimedSubscriberTotalCents = subtotalCents - claimedDiscountCents;
+  const totalMatches = isSubscriberAsserted
+    ? body.client_total_cents === standardTotalCents ||
+      body.client_total_cents === claimedSubscriberTotalCents
+    : body.client_total_cents === standardTotalCents;
+  if (!totalMatches) {
     throw new Error(
       `Total mismatch: client claimed ${String(body.client_total_cents)}, server computes ${totalCents}.`,
     );
@@ -382,11 +468,13 @@ export function validateAndBuildOrder(body: unknown): OrderRecord {
     items: lines,
     bundle,
     subtotal_cents: subtotalCents,
+    subscriber_discount_cents: subscriberDiscountCents,
     shipping_cents: 0,
     shipping_status: shippingStatus,
     free_shipping_threshold_cents: threshold,
     total_cents: totalCents,
-    is_subscriber_asserted: isSubscriber,
+    is_subscriber_asserted: isSubscriberAsserted,
+    is_subscriber_verified: isSubscriberVerified,
     payment_method: 'cash_app_or_venmo',
   };
 }

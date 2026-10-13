@@ -6,6 +6,12 @@
  * Any client-supplied total or unit price that mismatches the server
  * computation is REJECTED.
  *
+ * Subscriber benefits (free shipping with no minimum + the 10% storewide
+ * discount) are NEVER granted on the client's is_subscriber boolean alone:
+ * the claim is verified here against the subscription ledger
+ * (lib/subscriptions/entitlement) before pricing. An unverified claim is
+ * priced standard and does not block the order.
+ *
  * On success: an order record is created with a generated order ID and
  * appended to the local JSONL ledger (reversible; production persistence is
  * Supabase — UNDECIDED, NEEDS VERIFICATION). Payment instructions return
@@ -24,6 +30,7 @@ import {
   type OrderRecord,
 } from '../../../lib/checkout/order';
 import { createOrderStore } from '../../../lib/orders/store';
+import { isEntitledSubscriber } from '../../../lib/subscriptions/entitlement';
 import {
   captureServerEventSoon,
   resolveServerDistinctId,
@@ -32,6 +39,23 @@ import { ANALYTICS_EVENT_NAMES } from '../../../lib/analytics/events';
 
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+/**
+ * Subscriber entitlement for this order: the client checkbox is only a
+ * claim — benefits require a server-held subscription record for the
+ * order email with an entitled status (lib/subscriptions/entitlement).
+ * Read from the raw body because validateAndBuildOrder owns sanitization;
+ * the lookup normalizes (trim + lowercase) the same way.
+ */
+function verifySubscriberClaim(body: unknown): boolean {
+  if (!isRecord(body) || body.is_subscriber !== true) return false;
+  const customer = isRecord(body.customer) ? body.customer : undefined;
+  return isEntitledSubscriber(customer?.email);
 }
 
 /**
@@ -68,7 +92,9 @@ export async function POST(request: Request) {
 
   let record: OrderRecord;
   try {
-    record = validateAndBuildOrder(body);
+    record = validateAndBuildOrder(body, {
+      isSubscriberVerified: verifySubscriberClaim(body),
+    });
   } catch (err) {
     return fail([err instanceof Error ? err.message : 'Invalid order.']);
   }
@@ -110,6 +136,8 @@ export async function POST(request: Request) {
     ok: true,
     order_id: record.order_id,
     subtotal_cents: record.subtotal_cents,
+    subscriber_discount_cents: record.subscriber_discount_cents,
+    is_subscriber_verified: record.is_subscriber_verified,
     shipping_status: record.shipping_status,
     total_cents: record.total_cents,
     payment: paymentInstructions(),

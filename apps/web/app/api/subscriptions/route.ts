@@ -23,8 +23,9 @@
  */
 import { NextResponse } from 'next/server';
 import { appendFileSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { CASH_APP_HANDLE, VENMO_HANDLE } from '../../../lib/checkout/order';
+import { subscriptionsLedgerPath } from '../../../lib/subscriptions/entitlement';
 import {
   captureGrimoireServerEvent,
   GRIMOIRE_ANALYTICS_EVENT_NAMES,
@@ -37,11 +38,9 @@ import {
   type SubscriptionRecord,
 } from '../../../lib/subscriptions/subscriptions';
 
+/** Ledger path — shared with the entitlement lookup (single source of truth). */
 function ledgerPath(): string {
-  return (
-    process.env.SUBSCRIPTIONS_LEDGER_PATH ??
-    join(process.cwd(), '.subscriptions-ledger.jsonl')
-  );
+  return subscriptionsLedgerPath();
 }
 
 function fail(errors: string[], status = 422) {
