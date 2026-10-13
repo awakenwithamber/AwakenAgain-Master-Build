@@ -141,10 +141,10 @@ export const RECORD: Product = {
     },
     {
       "file": "/images/products/eucalyptus-mint-spa-renewal-soap.webp",
-      "role": "fallback",
-      "status": "placeholder_fallback",
+      "role": "primary",
+      "status": "mapped_photo",
       "provenance": "products/IMAGE_MAP.md (2026-10-04); merged catalog image_manifest.csv (2026-09-27)",
-      "note": "Catalog-safe generated fallback per baseline image_verification."
+      "note": "Deployed storefront primary. Verified 2026-10-13: pixel-identical to owner upload 20259_223_k5ey.png, the owner-designated AI-enhanced Medium Rose regeneration (manifest asset_medrose_eucalyptus_mint, AI_ENHANCED_PRODUCT_IMAGE, not a documentary photo). Corrects the former 'placeholder_fallback' registration."
     }
   ],
   "short_description": "A cool, spa-bright bar that wakes the breath, clears the mood, and refreshes tired skin.",

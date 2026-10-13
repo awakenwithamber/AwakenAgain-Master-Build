@@ -51,18 +51,19 @@ export const RECORD: Product = {
   ],
   "images": [
     {
-      "src": "~/workspace/user/files/17291_1_etho.webp",
-      "alt": "DreamEase natural sleep support capsules in amber jar",
-      "role": "primary",
-      "asset_status": "MAPPED",
-      "note": "IMAGE_MAP.md maps this upload to dreamease-capsules: 'DreamEase capsules jar (product photo)'. Not yet confirmed as the live site asset; field marked NEEDS_VERIFICATION."
-    },
-    {
       "src": "/images/products/dreamease-capsules.webp",
       "alt": "DreamEase natural sleep support capsules in amber jar",
-      "role": "fallback",
-      "asset_status": "MISSING_ASSET",
-      "note": "Baseline catalog 'photo' status with 'catalog-safe generated fallback' verification; treated as placeholder until confirmed."
+      "role": "primary",
+      "status": "mapped_photo",
+      "asset_status": "MAPPED",
+      "note": "Deployed product photo. Verified 2026-10-13: pixel-identical to owner upload ~/workspace/user/files/17291_1_etho.webp, which IMAGE_MAP.md maps to dreamease-capsules as 'DreamEase capsules jar (product photo)'. Registered in lib/media/image-manifest.ts as asset_product_dreamease_capsules (OWNER_UPLOADED)."
+    },
+    {
+      "src": "~/workspace/user/files/17291_1_etho.webp",
+      "alt": "DreamEase natural sleep support capsules in amber jar",
+      "role": "source",
+      "asset_status": "MAPPED",
+      "note": "Owner-upload source of the deployed primary image (provenance trail; not itself served by the app)."
     }
   ],
   "short_description": "A moonlit capsule ritual for deep rest, a quiet mind, and mornings that feel softer.",

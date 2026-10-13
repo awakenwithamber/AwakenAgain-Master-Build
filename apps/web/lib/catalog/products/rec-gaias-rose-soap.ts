@@ -139,10 +139,10 @@ export const RECORD: Product = {
     },
     {
       "file": "/images/products/gaias-rose-soap.webp",
-      "role": "fallback",
-      "status": "placeholder_fallback",
+      "role": "primary",
+      "status": "mapped_photo",
       "provenance": "products/IMAGE_MAP.md (2026-10-04); merged catalog image_manifest.csv (2026-09-27)",
-      "note": "Catalog-safe generated fallback per baseline image_verification."
+      "note": "Deployed storefront primary. Verified 2026-10-13: pixel-identical to the gallery file 17297_5_ncac.webp above (owner-supplied, AI-styled artwork — not a verified documentary photo; manifest asset_product_gaias_rose_soap). Corrects the former 'placeholder_fallback / catalog-safe generated fallback' registration."
     }
   ],
   "short_description": "A romantic rose-and-hibiscus bar for goddess skin and heart-opening showers.",

@@ -132,10 +132,10 @@ export const RECORD: Product = {
     },
     {
       "file": "/images/products/lavender-fairy-dream-soap.webp",
-      "role": "fallback",
-      "status": "placeholder_fallback",
+      "role": "primary",
+      "status": "mapped_photo",
       "provenance": "products/IMAGE_MAP.md (2026-10-04); merged catalog image_manifest.csv (2026-09-27)",
-      "note": "Catalog-safe generated fallback per baseline image_verification."
+      "note": "Deployed storefront primary. Verified 2026-10-13: pixel-identical to the lifestyle file 15936_29_wrls.webp above (owner-supplied lifestyle artwork — a digital illustration, not a photograph; manifest asset_product_lavender_fairy_dream_soap). Corrects the former 'placeholder_fallback' registration."
     }
   ],
   "short_description": "A dreamy lavender bar for soft skin, calmer energy, and fairy-bath luxury.",
