@@ -256,11 +256,11 @@ describe('checkout route', () => {
     expect(badEmail.status).toBe(422);
   });
 
-  it('applies the subscriber free-shipping threshold honestly', () => {
+  it('applies subscriber benefits only when the claim is server-verified', () => {
     // Owner decision 2026-10-10: general free shipping at $45;
     // Living Grimoire subscribers get free shipping with no minimum.
     // $19.77 order: below the $45 general threshold, so general shipping
-    // is confirmed later, while a subscriber ships free.
+    // is confirmed later, while a VERIFIED subscriber ships free.
     const item = {
       product_handle: 'chill-pill-capsules',
       variant_id: 'chill-pill-capsules-2wk',
@@ -274,16 +274,49 @@ describe('checkout route', () => {
       client_total_cents: 1977,
     });
     expect(general.shipping_status).toBe('TO_BE_CONFIRMED');
-    const subscriber = validateAndBuildOrder({
+
+    // A bare is_subscriber claim (no server verification) grants NOTHING:
+    // standard shipping treatment, no discount — but the order is not
+    // blocked, whether the client claimed the standard total or the
+    // discounted preview total (the server recomputes authoritatively).
+    const unverified = validateAndBuildOrder({
       items: [{ ...item }],
       customer: CUSTOMER,
       is_subscriber: true,
       client_total_cents: 1977,
     });
+    expect(unverified.shipping_status).toBe('TO_BE_CONFIRMED');
+    expect(unverified.subscriber_discount_cents).toBe(0);
+    expect(unverified.total_cents).toBe(1977);
+    expect(unverified.is_subscriber_asserted).toBe(true);
+    expect(unverified.is_subscriber_verified).toBe(false);
+    const unverifiedDiscountedClaim = validateAndBuildOrder({
+      items: [{ ...item }],
+      customer: CUSTOMER,
+      is_subscriber: true,
+      client_total_cents: 1779, // round(1977 * 0.9) — the claimed preview total
+    });
+    expect(unverifiedDiscountedClaim.total_cents).toBe(1977);
+    expect(unverifiedDiscountedClaim.shipping_status).toBe('TO_BE_CONFIRMED');
+
+    // Verified subscriber: free shipping with no minimum + the advertised
+    // 10% discount. 1977 - round(1977 * 0.9) = 198 discount → 1779 total.
+    const subscriber = validateAndBuildOrder(
+      {
+        items: [{ ...item }],
+        customer: CUSTOMER,
+        is_subscriber: true,
+        client_total_cents: 1779,
+      },
+      { isSubscriberVerified: true },
+    );
     expect(subscriber.shipping_status).toBe('FREE');
     expect(subscriber.shipping_cents).toBe(0);
     // shipping is never added to the total — no flat rate exists in source
-    expect(subscriber.total_cents).toBe(1977);
+    expect(subscriber.subscriber_discount_cents).toBe(198);
+    expect(subscriber.total_cents).toBe(1779);
+    expect(subscriber.is_subscriber_verified).toBe(true);
+    expect(subscriber.free_shipping_threshold_cents).toBe(0);
   });
 
   it('stores exact oil IDs in the order record, never "custom scent"', () => {
