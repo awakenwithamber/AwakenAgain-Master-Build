@@ -7,7 +7,7 @@
  * page-specific styling in CSS modules or component-scoped styles.
  *
  * Legacy --aa-* tokens are kept as aliases so existing components keep
- * working; new code should use the spec --plum-*/--brass/* names.
+ * working; new code should use the spec token names (plum and brass families).
  */
 
 :root {
