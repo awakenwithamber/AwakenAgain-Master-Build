@@ -85,6 +85,7 @@ function real(
     shapeId?: string;
     slotKey?: string;
     stagedFrom?: string;
+    deployed?: boolean;
     notes?: string;
   } = {},
 ): ImageAssetEntry {
@@ -97,7 +98,7 @@ function real(
     shapeId: opts.shapeId,
     slotKey: opts.slotKey,
     stagedFrom: opts.stagedFrom,
-    deployed: false,
+    deployed: opts.deployed ?? false,
     notes: opts.notes,
   };
 }
@@ -248,7 +249,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   // — Owner-supplied formula-specific image (v3 IMAGE_MANIFEST, hand-mapped) —
   real(
     'asset_medrose_eucalyptus_mint',
-    '/images/soaps/eucalyptus-mint-spa-renewal-soap-medium-rose.png',
+    '/images/products/eucalyptus-mint-spa-renewal-soap.webp',
     'eucalyptus-mint-spa-renewal-soap — Medium Rose variant, 3 oz, $8.77 — regenerated green Medium Rose with visible mint/eucalyptus leaf inclusions, rose form retained',
     'AI_ENHANCED_PRODUCT_IMAGE',
     {
@@ -256,8 +257,182 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
       shapeId: 'medium-rose',
       slotKey: 'eucalyptus-mint-spa-renewal-soap',
       stagedFrom: `${STAGE_UPLOADS}/20259_223_k5ey.png`,
+      deployed: true,
       notes:
-        'Owner-designated storefront primary for the Eucalyptus+Mint Medium Rose variant only (image_id img_medrose_eucalyptus_mint). The boxed Medium Rose photo is ARCHIVED_SOURCE. Formula-specific: do not use for other formulas\' Medium Rose variants.',
+        'Owner-designated storefront primary for the Eucalyptus+Mint Medium Rose variant only (image_id img_medrose_eucalyptus_mint). The boxed Medium Rose photo is ARCHIVED_SOURCE. Formula-specific: do not use for other formulas\' Medium Rose variants. Path corrected 2026-10-13: the deployed file is the products-path webp (pixel-verified identical to the 20259_223_k5ey.png regeneration); the former /images/soaps/…medium-rose.png path was never deployed.',
+    },
+  ),
+
+  // — Deployed product assets (verified against public/ 2026-10-13) —
+  // Registered in the image-coverage truth table (audit-2026-10-13). Each
+  // deployed file below was viewed and, where an owner-upload source exists,
+  // pixel-verified identical to it. These entries replace MISSING_ASSET slots
+  // that falsely claimed the imagery was missing or not yet staged.
+  real(
+    'asset_product_dreamease_capsules',
+    '/images/products/dreamease-capsules.webp',
+    'DreamEase Capsules — hand holding an open amber jar labeled "Amber\'s Alchemy DREAMEASE Capsules — Natural Sleep Support", capsules visible',
+    'OWNER_UPLOADED',
+    {
+      slotKey: 'dreamease-capsules',
+      stagedFrom: `${STAGE_UPLOADS}/17291_1_etho.webp`,
+      deployed: true,
+      notes:
+        'Owner-supplied product photo: pixel-verified 2026-10-13 as identical to uploads/17291_1_etho.webp, which IMAGE_MAP.md maps to dreamease-capsules as "DreamEase capsules jar (product photo)". Replaces the former MISSING_ASSET slot that pointed at a never-staged dreamease-capsules-photo.webp path.',
+    },
+  ),
+  real(
+    'asset_product_gaias_rose_soap',
+    '/images/products/gaias-rose-soap.webp',
+    'Gaia\'s Rose Soap — red floral round double-layer soap (clear red botanical top over white base), candlelit apothecary styling',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'gaias-rose-soap',
+      stagedFrom: `${STAGE_UPLOADS}/17297_5_ncac.webp`,
+      deployed: true,
+      notes:
+        'Pixel-verified 2026-10-13 as identical to owner upload 17297_5_ncac.webp (IMAGE_MAP gallery for this product). AI-styled artwork supplied by the owner — not verified as a documentary photo. Second gallery upload 17300_8_ckj3.webp (red rose soap) exists in uploads but is NOT deployed.',
+    },
+  ),
+  real(
+    'asset_product_lavender_fairy_dream_soap',
+    '/images/products/lavender-fairy-dream-soap.webp',
+    'Lavender Fairy Dream Soap — painterly illustration of a soap bar with lavender sprigs, bubbles and a crescent moon',
+    'ILLUSTRATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'lavender-fairy-dream-soap',
+      stagedFrom: `${STAGE_UPLOADS}/15936_29_wrls.webp`,
+      deployed: true,
+      notes:
+        'Pixel-verified 2026-10-13 as identical to owner upload 15936_29_wrls.webp (IMAGE_MAP: soap-category lifestyle art mapped to this formula). Digital illustration, not a photograph.',
+    },
+  ),
+  real(
+    'asset_product_alchemy_tea_blend',
+    '/images/products/alchemy-tea-blend.webp',
+    'Alchemy Tea Blend — AI-generated marketing graphic: labeled clamp-lid tea jar with baked-in caption text and steeping instructions',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'alchemy-tea-blend',
+      deployed: true,
+      notes:
+        'Generated graphic with text baked in; not product photography. Registered 2026-10-13 (previously an unregistered file: the product record carried images: []).',
+    },
+  ),
+  real(
+    'asset_product_chill_pill_capsules',
+    '/images/products/chill-pill-capsules.webp',
+    'Chill Pill Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Chill Pill',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'chill-pill-capsules',
+      deployed: true,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+    },
+  ),
+  real(
+    'asset_product_happy_pill_capsules',
+    '/images/products/happy-pill-capsules.webp',
+    'Happy Pill Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Happy Pill',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'happy-pill-capsules',
+      deployed: true,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+    },
+  ),
+  real(
+    'asset_product_immune_at_ease_capsules',
+    '/images/products/immune-at-ease-capsules.webp',
+    'Immune-At-Ease Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'immune-at-ease-capsules',
+      deployed: true,
+      notes:
+        'Generated graphic; not product photography. Registered 2026-10-13. FLAW: the baked-in caption is garbled and reads "Immune-At-Ease Ultimate Pain Bolowing" — regenerate or replace before relying on this image.',
+    },
+  ),
+  real(
+    'asset_product_sacred_balance_capsules',
+    '/images/products/sacred-balance-capsules.webp',
+    'Sacred Balance Capsules — AI-generated marketing graphic: amber jar labeled "Sacred Balance — Hormone Balancing Formula"',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'sacred-balance-capsules',
+      deployed: true,
+      notes:
+        'Generated graphic; not product photography. Registered 2026-10-13. FLAW: the baked-in caption below the jar is the Vital Connect product description — wrong-product text inside this image. Regenerate or replace; do not treat the caption as describing Sacred Balance.',
+    },
+  ),
+  real(
+    'asset_product_vital_connect_capsules',
+    '/images/products/vital-connect-capsules.webp',
+    'Vital Connect Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Vital Connect',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'vital-connect-capsules',
+      deployed: true,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+    },
+  ),
+  real(
+    'asset_product_vital_flow_capsules',
+    '/images/products/vital-flow-capsules.webp',
+    'Vital Flow Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Vital Flow',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'vital-flow-capsules',
+      deployed: true,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+    },
+  ),
+  real(
+    'asset_product_vital_vitality_capsules',
+    '/images/products/vital-vitality-capsules.webp',
+    'Vital Vitality Capsules — AI-generated marketing graphic: amber jar labeled "Vital Vitality Vitamins" with baked-in caption text',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'vital-vitality-capsules',
+      deployed: true,
+      notes:
+        'Generated graphic; not product photography. Registered 2026-10-13. Minor flaw: the jar label inside the image says "Vital Vitality Vitamins" while the product is Vital Vitality Capsules.',
+    },
+  ),
+  real(
+    'asset_product_grimoire_subscription',
+    '/images/products/grimoire-subscription.webp',
+    'Living Grimoire Subscription — digital illustration of an open botanical grimoire under a moon-phase arch',
+    'ILLUSTRATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'grimoire-subscription',
+      deployed: true,
+      notes:
+        'Illustration for a digital product; not a photograph. Registered 2026-10-13. A different photo-style grimoire image serves this handle on /services (/images/services/grimoire-subscription.webp).',
+    },
+  ),
+  real(
+    'asset_product_full_soap_collection',
+    '/images/products/full-soap-collection.webp',
+    'Full Soap Collection (superseded) — AI-generated lineup of FIVE double-layer soaps on a candlelit apothecary table',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'full-soap-collection',
+      deployed: true,
+      notes:
+        'Product SUPERSEDED by soap-style-collection-5; excluded from the shop grid and rendered nowhere in the shop flow. FLAW: the image shows five bars while the catalog record alt text claims "all nine botanical bars" — flagged in the truth table; do not use this image to depict a nine-bar collection.',
     },
   ),
 
@@ -270,6 +445,12 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
 function productSlots(): ImageAssetEntry[] {
   // One honest slot per catalog product with no staged real photo.
   // slotKey = catalog handle; path = canonical product-image path.
+  // Note (2026-10-13 truth table): for many handles below, a designed
+  // placeholder-card file ("Product photography in progress" baked into the
+  // image) is deployed at this exact path and is what shop cards render; the
+  // MISSING_ASSET here refers to the absent product PHOTO, not an absent file.
+  // Handles whose deployed files are real imagery are registered as real
+  // entries above and no longer appear here.
   const rows: Array<[handle: string, label: string, slot: string, notes?: string]> = [
     ['radiance-renewal-balm', 'Radiance Renewal Botanical Balm', 'Product photo slot — botanical balm', 'No real product photo on file.'],
     ['radiance-support-capsules', 'Radiance Support Capsules', 'Product photo slot — capsules in amber jar'],
@@ -277,23 +458,14 @@ function productSlots(): ImageAssetEntry[] {
     ['soothe-restore-botanical-balm', 'Soothe & Restore Botanical Balm', 'Product photo slot — balm jar with herbs', 'Dangling reference: "Amber\'s Alchemy Apothecary Balm Ritual.png" does not exist in uploads — do not render.'],
     ['gentle-detox-ritual', 'Gentle Detox Ritual Bundle', 'Bundle photo slot'],
     ['focus-clarity-ritual', 'Focus & Clarity Ritual Bundle', 'Bundle photo slot'],
-    ['full-soap-collection', 'Full Soap Collection (9-bar)', 'Bundle photo slot', 'Record SUPERSEDED by soap-style-collection-5.'],
     ['stress-relief-ritual', 'Stress Relief Ritual Bundle', 'Bundle photo slot'],
-    ['chill-pill-capsules', 'Chill Pill Capsules', 'Product photo slot — capsules in amber jar'],
     ['environmental-wellness-support', 'Environmental Wellness Support', 'Product photo slot — capsules'],
-    ['happy-pill-capsules', 'Happy Pill Capsules', 'Product photo slot — capsules in amber jar'],
-    ['immune-at-ease-capsules', 'Immune-At-Ease Capsules', 'Product photo slot — capsules in amber jar'],
     ['metabolic-wellness-formula', 'Metabolic Wellness Formula', 'Product photo slot — capsules'],
-    ['sacred-balance-capsules', 'Sacred Balance Capsules', 'Product photo slot — capsules in amber jar'],
     ['seasonal-gut-reset', 'Seasonal Gut Reset', 'Product photo slot — capsules'],
-    ['vital-connect-capsules', 'Vital Connect Capsules', 'Product photo slot — capsules in amber jar'],
-    ['vital-flow-capsules', 'Vital Flow Capsules', 'Product photo slot — capsules in amber jar'],
-    ['vital-vitality-capsules', 'Vital Vitality Capsules', 'Product photo slot — capsules in amber jar'],
     ['wild-caught-omega-3-fish-oil', 'Wild-Caught Omega-3 Fish Oil', 'Product photo slot — supplement bottle', 'EXPLICITLY no stock-bottle substitution per catalog note.'],
     ['custom-herbal-capsules', 'Custom Herbal Capsules', 'Product photo slot — consultation/service'],
     ['custom-remedy-consultation', 'Custom Remedy Consultation', 'Service visual slot'],
     ['personalized-herbal-protocols', 'Personalized Herbal Protocols', 'Service visual slot'],
-    ['grimoire-subscription', 'Living Grimoire Subscription', 'Digital product visual slot'],
     ['tarot-readings', 'Tarot Readings', 'Service visual slot'],
     ['energy-work', 'Energy Work', 'Service visual slot', 'Legacy association images/elements-metaphysics.webp is UNVERIFIED — do not render as representative.'],
     ['home-aura-space-cleansing', 'Home / Aura / Space Cleansing', 'Service visual slot', 'Legacy association unverified.'],
@@ -305,13 +477,10 @@ function productSlots(): ImageAssetEntry[] {
     ['citrus-goddess-glow-soap', 'Citrus Goddess Glow Soap', 'Formula photo slot — shape references staged', 'No formula-specific photo; 5 shape crops registered above.'],
     ['custom-botanical-soap', 'Custom Botanical Soap', 'Builder visual slot', '6 of 8 v3 "mapped_photo" files do not exist — do not render v3 file list. Use staged shape crops.'],
     ['fresh-mountain-air-soap', 'Fresh Mountain Air Soap', 'Formula photo slot — shape references staged'],
-    ['gaias-rose-soap', "Gaia's Rose Soap", 'Formula gallery slot', 'Owner-supplied mapped gallery files exist in uploads (17297_5_ncac.webp, 17300_8_ckj3.webp) — not yet staged.'],
-    ['lavender-fairy-dream-soap', 'Lavender Fairy Dream Soap', 'Formula lifestyle-art slot', 'Owner-supplied mapped file exists in uploads (15936_29_wrls.webp) — not yet staged.'],
     ['orange-lily-goddess-soap', 'Orange Lily Goddess Soap', 'Formula photo slot — shape references staged'],
     ['sacred-forest-ritual-soap', 'Sacred Forest Ritual Soap', 'Formula photo slot — shape references staged'],
     ['sunlit-garden-bloom-soap', 'Sunlit Garden Bloom Soap', 'Formula photo slot — shape references staged'],
     ['warm-cinnamon-comfort-soap', 'Warm Cinnamon Comfort Soap', 'Formula photo slot — shape references staged'],
-    ['alchemy-tea-blend', 'Alchemy Tea Blend', 'Product photo slot — tea'],
     ['custom-tea-blends', 'Custom Tea Blends', 'Product photo slot — tea'],
     ['soap-style-collection-5', 'The Alchemy Soap Collection', 'Bundle photo slot — 5-style set', 'No bundle photography on file; the old collage is archive-only (superseded prices baked in). Bundle price $35.77.'],
   ];
@@ -417,17 +586,10 @@ function builderSlots(): ImageAssetEntry[] {
       },
     ),
   );
-  // Dreamease owner-supplied jar photo: exists in uploads, not yet staged for the app.
-  entries.push(
-    missing(
-      'slot_product_dreamease_capsules_photo',
-      '/images/products/dreamease-capsules-photo.webp',
-      'DreamEase Capsules — owner-supplied jar photo (MAPPED in v3, exists in uploads as 17291_1_etho.webp, not yet staged)',
-      'Photo coming soon — DreamEase Capsules',
-      'Product photo slot — capsules in amber jar',
-      { slotKey: 'dreamease-capsules', notes: 'Real owner-supplied photo exists at ~/workspace/user/files/17291_1_etho.webp; stage into public/ to promote this slot to a real entry.' },
-    ),
-  );
+  // DreamEase: the former MISSING_ASSET slot here claimed the owner-supplied
+  // jar photo was "not yet staged". Verified 2026-10-13: it is deployed at
+  // /images/products/dreamease-capsules.webp and registered above as
+  // asset_product_dreamease_capsules (OWNER_UPLOADED).
   return entries;
 }
 
