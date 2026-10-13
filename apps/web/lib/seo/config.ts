@@ -14,11 +14,11 @@ export const BRAND_NAME = "Amber's Alchemy Apothecary";
 
 /** Owner-verified contact details (MEMORY.md: CONTACT IDENTITY VERIFIED 2026-10-04). */
 export const BRAND_EMAIL = 'awaken@consultant.com';
-export const BRAND_PHONE_DISPLAY = '(801) 414-8984';
+export const BRAND_PHONE_DISPLAY = '(801) 819-6795';
 /** JSON-LD / structured-data telephone format. */
-export const BRAND_PHONE_JSONLD = '+1-801-414-8984';
+export const BRAND_PHONE_JSONLD = '+1-801-819-6795';
 /** tel: link target for UI. */
-export const BRAND_PHONE_TEL = 'tel:+18014148984';
+export const BRAND_PHONE_TEL = 'tel:+18018196795';
 
 /**
  * Canonical site base URL. Override per environment with

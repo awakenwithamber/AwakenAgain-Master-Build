@@ -3,7 +3,7 @@
  *
  * Columns: shop, learn, services, legal, contact. Newsletter signup (G15)
  * embedded. Contact identity per owner verification: awaken@consultant.com,
- * (801) 414-8984. Payments: Cash App + Venmo only — stated plainly.
+ * (801) 819-6795. Payments: Cash App + Venmo only — stated plainly.
  */
 import Link from 'next/link';
 import NewsletterSignup from './NewsletterSignup';
@@ -89,7 +89,7 @@ export default function Footer() {
             <br />
             <a href={BRAND_PHONE_TEL}>{BRAND_PHONE_DISPLAY}</a>
             <br />
-            <a href="tel:+18018196795">801-819-6795</a>
+            <a href="tel:+18014148984">(801) 414-8984</a>
           </p>
         </div>
         <div className="footer-col footer-newsletter">
