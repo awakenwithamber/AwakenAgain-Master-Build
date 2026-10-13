@@ -4,7 +4,7 @@
  * The exact business name "Amber's Alchemy Apothecary" must appear in
  * Organization, WebSite, and Product structured data — never shortened to
  * "Amber's Alchemy". Contact identity must match the verified values
- * (telephone "+1-801-414-8984", email awaken@consultant.com).
+ * (telephone "+1-801-819-6795", email awaken@consultant.com).
  *
  * Note: written with React.createElement (no JSX) because this repo's
  * vitest transform does not parse JSX in .tsx test files.
@@ -38,7 +38,7 @@ describe('OrganizationJsonLd', () => {
 
   it('carries the verified telephone and email', () => {
     expect(html).toContain(BRAND_PHONE_JSONLD);
-    expect(BRAND_PHONE_JSONLD).toBe('+1-801-414-8984');
+    expect(BRAND_PHONE_JSONLD).toBe('+1-801-819-6795');
     expect(html).toContain(BRAND_EMAIL);
   });
 

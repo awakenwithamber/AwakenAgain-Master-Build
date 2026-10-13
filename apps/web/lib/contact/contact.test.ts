@@ -36,7 +36,7 @@ process.env.CONTACT_MESSAGES_PATH = MESSAGES;
 const VALID_INPUT = {
   name: 'Test Customer',
   email: 'Test@Example.COM',
-  phone: '(801) 414-8984',
+  phone: '(801) 819-6795',
   topic: 'order-question',
   message: 'Hello — I have a question about my recent order, please.',
 };
@@ -52,7 +52,7 @@ describe('validateContactMessage', () => {
     expect(record.message_id).toMatch(/^MSG-\d{8}-[A-Z0-9]{6}$/);
     expect(record.record_version).toBe(1);
     expect(record.email).toBe('test@example.com');
-    expect(record.phone).toBe('8014148984'); // no '+' in input → digits only
+    expect(record.phone).toBe('8018196795'); // no '+' in input → digits only
     expect(record.topic).toBe('order-question');
     expect(record.topic_label).toBe(
       CONTACT_TOPICS.find((t) => t.id === 'order-question')?.label,

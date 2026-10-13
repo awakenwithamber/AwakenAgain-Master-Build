@@ -65,9 +65,9 @@ describe('sanitizeEmail', () => {
 
 describe('sanitizePhone', () => {
   it('normalizes common formatting, keeps leading +', () => {
-    expect(sanitizePhone('(801) 414-8984')).toBe('8014148984');
-    expect(sanitizePhone('+1 801-414-8984')).toBe('+18014148984');
-    expect(sanitizePhone('801.414.8984')).toBe('8014148984');
+    expect(sanitizePhone('(801) 819-6795')).toBe('8018196795');
+    expect(sanitizePhone('+1 801-819-6795')).toBe('+18018196795');
+    expect(sanitizePhone('801.819.6795')).toBe('8018196795');
   });
 
   it('rejects too-short, too-long, and non-numeric input', () => {
