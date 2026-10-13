@@ -54,8 +54,8 @@ export const RECORD: Product = {
       "src": "/images/products/sacred-balance-capsules.webp",
       "alt": "Sacred Balance hormone support capsules in amber jar",
       "role": "primary",
-      "asset_status": "MISSING_ASSET",
-      "note": "Mapped in baseline as 'catalog-safe generated fallback' placeholder; no real product photography on file."
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Deployed image is an AI-generated marketing graphic (amber jar labeled 'Sacred Balance', caption text baked in), registered in lib/media/image-manifest.ts as GENERATED_PRODUCT_REPRESENTATION — not a documentary product photo. No real product photography on file. Corrected 2026-10-13. FLAW: the graphic's baked-in caption describes Vital Connect, a different product — regenerate or replace the image."
     }
   ],
   "short_description": "A botanical blend supporting normal menstrual-cycle wellness, comfort, and steady daily energy.",

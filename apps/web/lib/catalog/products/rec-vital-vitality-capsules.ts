@@ -54,8 +54,8 @@ export const RECORD: Product = {
       "src": "/images/products/vital-vitality-capsules.webp",
       "alt": "Vital Vitality natural energy and focus capsules in amber jar",
       "role": "primary",
-      "asset_status": "MISSING_ASSET",
-      "note": "Mapped in baseline as 'catalog-safe generated fallback' placeholder; no real product photography on file."
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Deployed image is an AI-generated marketing graphic (labeled amber jar, caption text baked in), registered in lib/media/image-manifest.ts as GENERATED_PRODUCT_REPRESENTATION — not a documentary product photo. No real product photography on file. Corrected 2026-10-13. Note: the jar label inside the graphic reads 'Vital Vitality Vitamins'."
     }
   ],
   "short_description": "Clean, grounded energy for the days you need to feel bright, focused, and fully online.",

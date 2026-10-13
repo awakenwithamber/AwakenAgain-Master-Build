@@ -41,7 +41,15 @@ export const RECORD: Product = {
     "wellness tea",
     "handmade"
   ],
-  "images": [],
+  "images": [
+    {
+      "src": "/images/products/alchemy-tea-blend.webp",
+      "alt": "Alchemy Tea Blend herbal tea in a labeled clamp-lid jar",
+      "role": "primary",
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Deployed image is an AI-generated marketing graphic (labeled tea jar, caption text baked in), registered in lib/media/image-manifest.ts as GENERATED_PRODUCT_REPRESENTATION — not a documentary product photo. No real product photography on file. Registered 2026-10-13: this record previously carried images: [] while the file rendered on shop cards."
+    }
+  ],
   "short_description": "A warm cup of botanical magic for body, mind, and spirit.",
   "extended_description": "Alchemy Tea Blend is a handcrafted herbal infusion for slowing down, sipping deeply, and turning an ordinary moment into a little ceremony. Steep it when you want nourishment, softness, and a reminder that wellness can taste like magic. Handcrafted in small batches from a seasonal loose-leaf herb selection.",
   "featured_ingredients": [

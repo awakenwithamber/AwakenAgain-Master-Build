@@ -54,8 +54,8 @@ export const RECORD: Product = {
       "src": "/images/products/happy-pill-capsules.webp",
       "alt": "Happy Pill mood boosting herbal capsules in amber jar",
       "role": "primary",
-      "asset_status": "MISSING_ASSET",
-      "note": "Mapped in baseline as 'catalog-safe generated fallback' placeholder; no real product photography on file."
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Deployed image is an AI-generated marketing graphic (labeled amber jar, caption text baked in), registered in lib/media/image-manifest.ts as GENERATED_PRODUCT_REPRESENTATION — not a documentary product photo. No real product photography on file. Corrected 2026-10-13: the asset exists and renders; it is a generated representation, not a MISSING_ASSET."
     }
   ],
   "short_description": "A feel-good botanical blend for positive mood, emotional resilience, and everyday stress support.",
