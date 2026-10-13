@@ -3,7 +3,7 @@
  *
  * Rendered in app/layout.tsx so every route gets it. Conveys an honest
  * status: the storefront is being lovingly renewed, while the shop, soap
- * builder, and checkout are fully working. Deliberately calm styling
+ * builder, and checkout are open for orders. Deliberately calm styling
  * (dark purple + gold) — never alarming.
  *
  * Client component only because it is dismissible; the notice itself
@@ -116,7 +116,7 @@ export function SiteNotice() {
           ),
           ' is being lovingly rebuilt \u2014 some pages are still getting a ' +
             'fresh coat of paint, but the shop, soap builder, and checkout ' +
-            'are fully working.',
+            'are open for orders.',
         ),
         createElement('span', {
           className: 'aa-site-notice__flourish',

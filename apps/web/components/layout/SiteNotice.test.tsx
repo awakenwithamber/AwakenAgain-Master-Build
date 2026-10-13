@@ -50,8 +50,9 @@ describe('SiteNotice', () => {
     expect(html).not.toMatch(/broken|down for maintenance|unavailable|error/i);
   });
 
-  it('confirms shopping is working', () => {
-    expect(html).toMatch(/checkout.*fully working|fully working/i);
+  it('confirms shopping is open', () => {
+    expect(html).toMatch(/checkout.*open for orders|open for orders/i);
+    expect(html).not.toMatch(/fully working/i);
   });
 
   it('contains no emoji', () => {
