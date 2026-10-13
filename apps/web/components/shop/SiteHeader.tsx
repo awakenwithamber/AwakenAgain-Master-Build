@@ -1,12 +1,12 @@
 /** Minimal storefront header — server component. */
 export function SiteHeader() {
   return (
-    <header>
-      <nav aria-label="Storefront">
-        <p>
+    <header className="storefront-header">
+      <nav aria-label="Storefront" className="storefront-nav">
+        <p className="storefront-brand">
           <strong>Amber&apos;s Alchemy Apothecary</strong>
         </p>
-        <ul>
+        <ul className="storefront-links">
           <li>
             <a href="/shop">Shop</a>
           </li>

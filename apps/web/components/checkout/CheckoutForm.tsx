@@ -17,7 +17,7 @@ import { track, trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { SiteHeader } from '../shop/SiteHeader';
 import { useCart, cartItemTitle } from './cart-store';
-import { previewCartTotals } from './cart-preview';
+import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 import type { CartItem } from '../../types';
 
 interface PaymentInstructions {
@@ -227,8 +227,10 @@ export function CheckoutForm() {
               <p>
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
-                  ? `Free (over ${formatPrice(preview.freeShippingThresholdCents)})`
-                  : 'To be confirmed — no shipping charge added to this order; we confirm with you before fulfillment.'}
+                  ? isSubscriber
+                    ? 'Free — Living Grimoire subscribers always ship free.'
+                    : `Free — shipping is free on orders of ${formatPrice(preview.freeShippingThresholdCents)} or more.`
+                  : `To be confirmed — no shipping charge is added to this order; we confirm the shipping cost with you before fulfillment. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire subscribers.`}
               </p>
               <p>
                 <strong>Total: {formatPrice(preview.totalCents)}</strong> (preview —

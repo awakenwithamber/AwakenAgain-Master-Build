@@ -87,15 +87,71 @@ function readCart(): CartState {
   }
 }
 
+/** Same-tab cart-change notification (cross-tab changes arrive via 'storage'). */
+const CART_UPDATED_EVENT = 'aaa-cart-updated';
+
 function writeCart(state: CartState): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state));
+  // Every useCart() instance holds its own React state; notify them all so
+  // chrome like the header badge reflects a change immediately instead of
+  // only after the next navigation. The writing instance already has the
+  // new state — re-reading the just-written value is equivalent for it.
+  try {
+    window.dispatchEvent(new Event(CART_UPDATED_EVENT));
+  } catch {
+    // Non-fatal: notification is best-effort.
+  }
 }
 
 let cartIdCounter = 0;
 function nextCartId(): string {
   cartIdCounter += 1;
   return `cart_${Date.now().toString(36)}_${cartIdCounter}`;
+}
+
+/** Deterministic stringify (sorted object keys) for line-identity checks. */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value) ?? 'null';
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{${entries
+    .map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`)
+    .join(',')}}`;
+}
+
+/**
+ * Identity of a cart line for merging: same product, same variant, and a
+ * deeply-equal customization / formula. Two lines with the same key are the
+ * same purchasable thing and must merge into ONE line with summed quantity;
+ * any difference (another variant, another soap configuration, another
+ * formula) stays a separate line.
+ */
+export function cartLineKey(
+  item: Pick<CartItem, 'product_handle' | 'variant_id' | 'customization' | 'formula'>,
+): string {
+  return stableStringify({
+    product_handle: item.product_handle,
+    variant_id: item.variant_id ?? null,
+    customization: item.customization ?? null,
+    formula: item.formula ?? null,
+  });
+}
+
+/** Pure add-with-merge (exported for tests). Never mutates the input list. */
+export function addItemToCart(items: CartItem[], item: CartItem): CartItem[] {
+  const key = cartLineKey(item);
+  const idx = items.findIndex((i) => cartLineKey(i) === key);
+  if (idx === -1) return [...items, item];
+  return items.map((i, n) =>
+    n === idx ? { ...i, quantity: i.quantity + item.quantity } : i,
+  );
 }
 
 /** Find a variant by variant_id, name, or sku — deterministic, data-driven. */
@@ -169,8 +225,17 @@ export function useCart(): CartStore {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setState(readCart());
+    const sync = () => setState(readCart());
+    sync();
     setLoaded(true);
+    // Keep every mounted useCart() instance (header badge, product cards,
+    // cart view) in step with writes from any other instance or tab.
+    window.addEventListener(CART_UPDATED_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
   }, []);
 
   const persist = useCallback((next: CartState) => {
@@ -207,7 +272,7 @@ export function useCart(): CartStore {
             }
           : {}),
       };
-      persist({ ...state, items: [...state.items, item] });
+      persist({ ...state, items: addItemToCart(state.items, item) });
       return true;
     },
     [state, persist],

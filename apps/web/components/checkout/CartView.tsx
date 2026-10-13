@@ -13,7 +13,7 @@ import { track } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { SiteHeader } from '../shop/SiteHeader';
 import { useCart, cartItemTitle } from './cart-store';
-import { previewCartTotals } from './cart-preview';
+import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 
 export function CartView() {
   const { items, bundle, loaded, removeItem, updateQuantity, setBundle, clear } =
@@ -28,7 +28,7 @@ export function CartView() {
   return (
     <>
       <SiteHeader />
-      <main>
+      <main className="cart-main">
         <h1>Your Cart</h1>
         {empty ? (
           <p>
@@ -36,12 +36,12 @@ export function CartView() {
           </p>
         ) : (
           <>
-            <ul>
+            <ul className="cart-items">
               {items.map((item) => {
                 const custom = item.customization;
                 const formula = item.formula;
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} className="cart-item">
                     <strong>
                       {cartItemTitle(item.product_handle, item.variant_id, formula)}
                     </strong>
@@ -73,6 +73,7 @@ export function CartView() {
                       {formatPrice(item.unit_price_cents)} ×{' '}
                       <input
                         type="number"
+                        className="cart-qty-input"
                         min={1}
                         value={item.quantity}
                         aria-label={`Quantity for ${cartItemTitle(item.product_handle, item.variant_id, formula)}`}
@@ -88,6 +89,7 @@ export function CartView() {
                       = {formatPrice(item.unit_price_cents * item.quantity)}
                       <button
                         type="button"
+                        className="cart-btn"
                         onClick={() => {
                           removeItem(item.id);
                           track(ANALYTICS_EVENT_NAMES.cartUpdated, {
@@ -103,7 +105,7 @@ export function CartView() {
                 );
               })}
               {bundle ? (
-                <li>
+                <li className="cart-item">
                   <strong>The Alchemy Soap Collection</strong>
                   <p>
                     <small>
@@ -115,7 +117,11 @@ export function CartView() {
                   </p>
                   <p>
                     {formatPrice(preview.bundleTotalCents)}{' '}
-                    <button type="button" onClick={() => setBundle(null)}>
+                    <button
+                      type="button"
+                      className="cart-btn"
+                      onClick={() => setBundle(null)}
+                    >
                       Remove bundle
                     </button>
                   </p>
@@ -123,7 +129,7 @@ export function CartView() {
               ) : null}
             </ul>
 
-            <label>
+            <label className="cart-subscriber">
               <input
                 type="checkbox"
                 checked={isSubscriber}
@@ -132,14 +138,16 @@ export function CartView() {
               I&apos;m a Living Grimoire subscriber (always free shipping)
             </label>
 
-            <section aria-label="Order summary (preview)">
+            <section aria-label="Order summary (preview)" className="cart-summary">
               <h2>Summary — preview</h2>
               <p>Subtotal: {formatPrice(preview.subtotalCents)}</p>
               <p>
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
-                  ? `Free (over ${formatPrice(preview.freeShippingThresholdCents)})`
-                  : 'To be confirmed — no shipping charge added to this order; we confirm with you before fulfillment.'}
+                  ? isSubscriber
+                    ? 'Free — Living Grimoire subscribers always ship free.'
+                    : `Free — shipping is free on orders of ${formatPrice(preview.freeShippingThresholdCents)} or more.`
+                  : `To be confirmed — no shipping charge is added to this order; we confirm the shipping cost with you before fulfillment. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire subscribers.`}
               </p>
               <p>
                 <strong>Total (preview): {formatPrice(preview.totalCents)}</strong>
@@ -153,10 +161,12 @@ export function CartView() {
             </section>
 
             <p>
-              <a href="/checkout">Proceed to checkout</a>
+              <a href="/checkout" className="btn-primary">
+                Proceed to checkout
+              </a>
             </p>
             <p>
-              <button type="button" onClick={clear}>
+              <button type="button" className="cart-btn" onClick={clear}>
                 Clear cart
               </button>
             </p>

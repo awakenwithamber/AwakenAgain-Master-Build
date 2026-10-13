@@ -537,7 +537,7 @@ export function GrimoireBook() {
                   <br />
                   Grimoire
                   <br />
-                  of Herbs
+                  Book of Light
                 </h2>
                 <p className={styles.coverRule} aria-hidden="true">
                   ✦ ✦ ✦
