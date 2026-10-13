@@ -129,7 +129,7 @@ export interface OrderRecord {
   free_shipping_threshold_cents: number;
   total_cents: number;
   is_subscriber_asserted: boolean;
-  payment_method: 'cash_app_or_venmo' | 'stripe';
+  payment_method: 'cash_app_or_venmo';
   /** Order lifecycle — 'pending_payment' until payment confirmed. */
   status?: 'pending_payment' | 'paid' | 'cancelled';
 }

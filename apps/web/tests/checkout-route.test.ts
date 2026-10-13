@@ -97,8 +97,8 @@ describe('checkout route', () => {
     expect(json.ok).toBe(true);
     expect(json.order_id).toMatch(/^AWK-\d{8}-[A-Z0-9]{6}$/);
     expect(json.total_cents).toBe(1177 * 2 + 1977 + 3577);
-    // $79.08 < $100 general free-shipping threshold — shipping confirmed later
-    expect(json.shipping_status).toBe('TO_BE_CONFIRMED');
+    // $79.08 >= $45 general free-shipping threshold (owner decision 2026-10-10)
+    expect(json.shipping_status).toBe('FREE');
 
     const payment = json.payment as Record<string, string>;
     expect(payment.cash_app).toBe('$AmberPatten347');
@@ -257,29 +257,33 @@ describe('checkout route', () => {
   });
 
   it('applies the subscriber free-shipping threshold honestly', () => {
-    // $99.98 order: below the $100 general threshold, above the $75 subscriber one.
+    // Owner decision 2026-10-10: general free shipping at $45;
+    // Living Grimoire subscribers get free shipping with no minimum.
+    // $19.77 order: below the $45 general threshold, so general shipping
+    // is confirmed later, while a subscriber ships free.
     const item = {
-      product_handle: 'stress-relief-ritual',
-      quantity: 2,
-      unit_price_cents: 4999,
+      product_handle: 'chill-pill-capsules',
+      variant_id: 'chill-pill-capsules-2wk',
+      quantity: 1,
+      unit_price_cents: 1977,
     };
     const general = validateAndBuildOrder({
       items: [{ ...item }],
       customer: CUSTOMER,
       is_subscriber: false,
-      client_total_cents: 9998,
+      client_total_cents: 1977,
     });
     expect(general.shipping_status).toBe('TO_BE_CONFIRMED');
     const subscriber = validateAndBuildOrder({
       items: [{ ...item }],
       customer: CUSTOMER,
       is_subscriber: true,
-      client_total_cents: 9998,
+      client_total_cents: 1977,
     });
     expect(subscriber.shipping_status).toBe('FREE');
     expect(subscriber.shipping_cents).toBe(0);
     // shipping is never added to the total — no flat rate exists in source
-    expect(subscriber.total_cents).toBe(9998);
+    expect(subscriber.total_cents).toBe(1977);
   });
 
   it('stores exact oil IDs in the order record, never "custom scent"', () => {
@@ -460,14 +464,14 @@ describe('checkout route', () => {
       customer: {
         name: '  <b>Amber</b> Patten  ',
         email: 'Amber@Example.COM',
-        phone: '(801) 414-8984',
+        phone: '(801) 819-6795',
         notes: 'x'.repeat(2000),
       },
       client_total_cents: 2354,
     });
     expect(record.customer.name).toBe('Amber Patten');
     expect(record.customer.email).toBe('amber@example.com');
-    expect(record.customer.phone).toBe('8014148984');
+    expect(record.customer.phone).toBe('8018196795');
     expect(record.customer.notes).toHaveLength(1000);
   });
 
