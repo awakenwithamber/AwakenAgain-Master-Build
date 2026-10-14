@@ -1,9 +1,10 @@
 /**
- * /checkout/success — Stripe payment confirmation page.
+ * /checkout/success — order confirmation page.
  *
- * Shown after Stripe redirects back from a successful card payment.
- * The webhook (/api/webhooks/stripe) is the payment source of truth;
- * this page confirms to the customer and clears any residual cart state.
+ * A general "order confirmed" landing page. Payment on this site is by
+ * Cash App / Venmo or by an emailed Bookipi card invoice, and Amber
+ * confirms every order personally — so this page simply thanks the
+ * customer and points them to their email for confirmation.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -11,17 +12,11 @@ import { SiteHeader } from '../../../components/shop/SiteHeader';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
-  title: 'Payment Successful',
-  description: `Your payment to ${BRAND_NAME} was successful.`,
+  title: 'Order Confirmed',
+  description: `Your order with ${BRAND_NAME} is confirmed.`,
 };
 
-export default async function CheckoutSuccessPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ session_id?: string }>;
-}) {
-  const { session_id } = await searchParams;
-
+export default function CheckoutSuccessPage() {
   return (
     <>
       <SiteHeader />
@@ -48,23 +43,13 @@ export default async function CheckoutSuccessPage({
             margin: '0 0 1.5rem',
           }}
         >
-          Payment Successful
+          Order Confirmed
         </h1>
         <p style={{ fontSize: '1.1rem', lineHeight: 1.7, margin: '0 0 1rem' }}>
-          Thank you! Your card payment has been received. Amber will confirm
-          your order personally via email before fulfillment.
+          Thank you! Your order is in. Amber will confirm it personally via
+          email before fulfillment — and if you chose to pay by card, your
+          secure Bookipi invoice will arrive by email shortly.
         </p>
-        {session_id ? (
-          <p
-            style={{
-              fontSize: '0.9rem',
-              color: '#b08d2a',
-              margin: '0 0 2rem',
-            }}
-          >
-            Reference: {session_id.slice(0, 24)}…
-          </p>
-        ) : null}
         <div
           style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
         >

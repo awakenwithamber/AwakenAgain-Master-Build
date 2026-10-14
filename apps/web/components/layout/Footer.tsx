@@ -3,7 +3,8 @@
  *
  * Columns: shop, learn, services, legal, contact. Newsletter signup (G15)
  * embedded. Contact identity per owner verification: awaken@consultant.com,
- * (801) 819-6795. Payments: Cash App + Venmo only — stated plainly.
+ * (801) 819-6795. Payments: Cash App, Venmo, or card by emailed Bookipi
+ * invoice — stated plainly.
  */
 import Link from 'next/link';
 import NewsletterSignup from './NewsletterSignup';
@@ -47,9 +48,9 @@ export default function Footer() {
             Grimoire — made in small batches in Salt Lake City, Utah.
           </p>
           <p className="footer-payments">
-            Payments: Card, Klarna, Afterpay, Apple Pay, Google Pay via Stripe ·
-            Cash App <strong>$AmberPatten347</strong> · Venmo{' '}
-            <strong>@AwakenwithAmber</strong>
+            Payments: Cash App <strong>$AmberPatten347</strong> · Venmo{' '}
+            <strong>@AwakenwithAmber</strong> · or pay by card with an emailed
+            Bookipi invoice
           </p>
         </div>
         <nav className="footer-col" aria-label="Shop">

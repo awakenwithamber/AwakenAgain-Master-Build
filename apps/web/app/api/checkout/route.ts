@@ -14,9 +14,12 @@
  *
  * On success: an order record is created with a generated order ID and
  * appended to the local JSONL ledger (reversible; production persistence is
- * Supabase — UNDECIDED, NEEDS VERIFICATION). Payment instructions return
- * Cash App + Venmo ONLY, per the owner's payment directive. No other payment
- * provider appears in code, imports, or copy anywhere in this app.
+ * Supabase — UNDECIDED, NEEDS VERIFICATION). Payment follows the owner's
+ * final decision (2026-10-13): Cash App + Venmo handles, or — when the
+ * customer chose to pay by card — an emailed Bookipi invoice (Bookipi has
+ * no public API; the owner sends the invoice from her own account and the
+ * order waits under the same owner-confirmation gate). The response
+ * instructions always match the method recorded on the order.
  *
  * NOTE: only HTTP handlers and route config may be exported from a route
  * module — validateAndBuildOrder lives in lib/checkout/order.ts (imported
@@ -68,8 +71,29 @@ function persistOrder(record: OrderRecord) {
   return createOrderStore().append(record);
 }
 
-function paymentInstructions() {
+/**
+ * Payment instructions for the method recorded on the order. The
+ * Cash App / Venmo shape is unchanged from the original flow. The card
+ * shape carries NO handles: the customer will be emailed a secure
+ * Bookipi invoice referencing this order, at the email they ordered
+ * with, and the order is prepared once that invoice is paid.
+ */
+function paymentInstructions(record: OrderRecord) {
+  if (record.payment_method === 'bookipi_card_invoice') {
+    return {
+      method: record.payment_method,
+      order_id: record.order_id,
+      invoice_email: record.customer.email,
+      note:
+        'You chose to pay by card. We will email you a secure Bookipi ' +
+        'invoice for this order — just follow the link in that email to ' +
+        'pay by credit or debit card. Your order is prepared once the ' +
+        'invoice is paid, and Amber confirms every order personally ' +
+        'before fulfillment.',
+    };
+  }
   return {
+    method: record.payment_method,
     cash_app: CASH_APP_HANDLE,
     venmo: VENMO_HANDLE,
     note:
@@ -140,6 +164,7 @@ export async function POST(request: Request) {
     is_subscriber_verified: record.is_subscriber_verified,
     shipping_status: record.shipping_status,
     total_cents: record.total_cents,
-    payment: paymentInstructions(),
+    payment_method: record.payment_method,
+    payment: paymentInstructions(record),
   });
 }

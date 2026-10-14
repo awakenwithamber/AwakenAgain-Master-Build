@@ -97,6 +97,8 @@ export interface CheckoutRequestBody {
   customer: { name: string; email: string; phone?: string; notes?: string };
   is_subscriber?: boolean;
   client_total_cents: number;
+  /** Optional — defaults to 'cash_app_or_venmo' when absent. */
+  payment_method?: PaymentMethod;
 }
 
 export interface OrderLine {
@@ -139,7 +141,7 @@ export interface OrderRecord {
    * boolean alone never grants them.
    */
   is_subscriber_verified: boolean;
-  payment_method: 'cash_app_or_venmo';
+  payment_method: PaymentMethod;
   /** Order lifecycle — 'pending_payment' until payment confirmed. */
   status?: 'pending_payment' | 'paid' | 'cancelled';
 }
@@ -159,6 +161,37 @@ export interface OrderRecord {
  */
 export const CASH_APP_HANDLE = '$AmberPatten347';
 export const VENMO_HANDLE = '@AwakenwithAmber';
+
+/**
+ * How an order is paid (owner decision, final, 2026-10-13):
+ * - 'cash_app_or_venmo' — the customer sends payment to the handles above
+ *   after ordering (the default; existing clients unchanged).
+ * - 'bookipi_card_invoice' — card payment via a Bookipi invoice the owner
+ *   emails from her own Bookipi account after the order is placed. Bookipi
+ *   has no public API or webhooks: nothing is charged at checkout, the
+ *   order record carries the choice, and fulfillment waits for the paid
+ *   invoice under the same owner-confirmation gate as every other order.
+ * Any other value is rejected.
+ */
+export type PaymentMethod = 'cash_app_or_venmo' | 'bookipi_card_invoice';
+
+export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'cash_app_or_venmo';
+
+export const PAYMENT_METHODS: readonly PaymentMethod[] = [
+  'cash_app_or_venmo',
+  'bookipi_card_invoice',
+];
+
+/** Validate the optional payment_method field; absent means the default. */
+export function parsePaymentMethod(raw: unknown): PaymentMethod {
+  if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
+  if (raw === 'cash_app_or_venmo' || raw === 'bookipi_card_invoice') {
+    return raw;
+  }
+  throw new Error(
+    `Unknown payment method: ${String(raw)}. Choose Cash App or Venmo, or card by emailed invoice.`,
+  );
+}
 
 export const FREE_SHIPPING_GENERAL_CENTS = 4500;
 export const FREE_SHIPPING_SUBSCRIBER_CENTS = 0;
@@ -384,6 +417,12 @@ export function validateAndBuildOrder(
   }
   const notes = sanitizePlainText(customer.notes, 1000);
 
+  // Payment method: the client's choice, validated against the two
+  // supported rails; absent means the Cash App / Venmo default. The
+  // choice never affects pricing — subscriber benefits compute
+  // identically for both methods.
+  const paymentMethod = parsePaymentMethod(body.payment_method);
+
   // The checkbox is a claim the server verifies (see header note). The
   // bare boolean by itself grants NOTHING.
   const isSubscriberAsserted = body.is_subscriber === true;
@@ -475,6 +514,6 @@ export function validateAndBuildOrder(
     total_cents: totalCents,
     is_subscriber_asserted: isSubscriberAsserted,
     is_subscriber_verified: isSubscriberVerified,
-    payment_method: 'cash_app_or_venmo',
+    payment_method: paymentMethod,
   };
 }

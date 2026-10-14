@@ -72,7 +72,7 @@ export interface OrderReviewEntry {
   subtotal_cents: number;
   total_cents: number;
   shipping_status: 'FREE' | 'TO_BE_CONFIRMED';
-  payment_method: 'cash_app_or_venmo';
+  payment_method: 'cash_app_or_venmo' | 'bookipi_card_invoice';
   /** Fulfillment triage state — 'pending_review' until the admin flow (G12) confirms. */
   review_status: 'pending_review';
 }

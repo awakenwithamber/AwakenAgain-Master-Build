@@ -1,8 +1,8 @@
 /**
- * /checkout/cancel — Stripe payment cancelled page.
+ * /checkout/cancel — checkout cancelled page.
  *
- * Shown when the customer cancels out of Stripe Checkout.
- * Their cart is preserved (we only clear on successful redirect).
+ * Shown when a customer backs out of checkout before completing it.
+ * Their cart is preserved (we only clear it after an order is placed).
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
   title: 'Checkout Cancelled',
-  description: `Your card checkout at ${BRAND_NAME} was cancelled. Your cart is still saved.`,
+  description: `Your checkout at ${BRAND_NAME} was cancelled. Your cart is still saved.`,
 };
 
 export default async function CheckoutCancelPage({
@@ -50,8 +50,9 @@ export default async function CheckoutCancelPage({
           Checkout Cancelled
         </h1>
         <p style={{ fontSize: '1.1rem', lineHeight: 1.7, margin: '0 0 2rem' }}>
-          No worries — your card was not charged and your cart is still saved.
-          You can try again or pay with Cash App / Venmo instead.
+          No worries — nothing was charged and your cart is still saved. You
+          can try again whenever you&apos;re ready — pay with Cash App or
+          Venmo, or by card with an emailed Bookipi invoice.
         </p>
         <div
           style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}

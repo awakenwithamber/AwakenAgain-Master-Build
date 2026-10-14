@@ -2,7 +2,7 @@
  * /support — Support the Apothecary (donations).
  *
  * A donation option for supporters of this founder-led small business.
- * Payments via Cash App / Venmo only (no Stripe). Donations to a
+ * Donations via Cash App / Venmo only. Donations to a
  * for-profit LLC are NOT tax-deductible — stated clearly.
  */
 import type { Metadata } from 'next';
