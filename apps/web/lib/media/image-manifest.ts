@@ -229,9 +229,11 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
+      slotKey: 'soap-style-collection-5',
       stagedFrom: `${STAGE_SOAP_BUILDER}/soap-lineup-5.png`,
+      deployed: true,
       notes:
-        'Replaces 15316_227_zkei.jpg, the old collage with superseded prices/sizes baked in. No text or prices in this image.',
+        'Replaces 15316_227_zkei.jpg, the old collage with superseded prices/sizes baked in. No text or prices in this image. Deployed at public/images/soap/soap-lineup-5.png (verified on disk 2026-10-13) and registered 2026-10-13 as the Alchemy Soap Collection\'s primary representation — the product record (rec-soap-style-collection-5.ts) now points at this file; it is a generated representation, never bundle photography.',
     },
   ),
   real(
@@ -356,7 +358,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
       slotKey: 'immune-at-ease-capsules',
       deployed: true,
       notes:
-        'Generated graphic; not product photography. Registered 2026-10-13. FLAW: the baked-in caption is garbled and reads "Immune-At-Ease Ultimate Pain Bolowing" — regenerate or replace before relying on this image.',
+        'Generated graphic; not product photography. Registered 2026-10-13. Regenerated 2026-10-13 at the owner\'s direction (the original caption was garbled); replacement label and caption verified word-for-word.',
     },
   ),
   real(
@@ -369,7 +371,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
       slotKey: 'sacred-balance-capsules',
       deployed: true,
       notes:
-        'Generated graphic; not product photography. Registered 2026-10-13. FLAW: the baked-in caption below the jar is the Vital Connect product description — wrong-product text inside this image. Regenerate or replace; do not treat the caption as describing Sacred Balance.',
+        'Generated graphic; not product photography. Registered 2026-10-13. Regenerated 2026-10-13 at the owner\'s direction (caption-only edit; jar and scene preserved): the original caption described Vital Connect; the replacement caption describes Sacred Balance and was verified word-for-word.',
     },
   ),
   real(
@@ -406,7 +408,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
       slotKey: 'vital-vitality-capsules',
       deployed: true,
       notes:
-        'Generated graphic; not product photography. Registered 2026-10-13. Minor flaw: the jar label inside the image says "Vital Vitality Vitamins" while the product is Vital Vitality Capsules.',
+        'Generated graphic; not product photography. Registered 2026-10-13. Regenerated 2026-10-13 at the owner\'s direction: the original jar label read "Vital Vitality Vitamins"; the replacement reads "Vital Vitality Capsules", verified word-for-word.',
     },
   ),
   real(
@@ -432,7 +434,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
       slotKey: 'full-soap-collection',
       deployed: true,
       notes:
-        'Product SUPERSEDED by soap-style-collection-5; excluded from the shop grid and rendered nowhere in the shop flow. FLAW: the image shows five bars while the catalog record alt text claims "all nine botanical bars" — flagged in the truth table; do not use this image to depict a nine-bar collection.',
+        'Product SUPERSEDED by soap-style-collection-5; excluded from the shop grid and rendered nowhere in the shop flow. The image shows five bars; the catalog record alt text was corrected 2026-10-13 to describe the artwork accurately (the collection itself gathered nine bars). Do not use this image to depict a nine-bar collection.',
     },
   ),
 
@@ -482,7 +484,7 @@ function productSlots(): ImageAssetEntry[] {
     ['sunlit-garden-bloom-soap', 'Sunlit Garden Bloom Soap', 'Formula photo slot — shape references staged'],
     ['warm-cinnamon-comfort-soap', 'Warm Cinnamon Comfort Soap', 'Formula photo slot — shape references staged'],
     ['custom-tea-blends', 'Custom Tea Blends', 'Product photo slot — tea'],
-    ['soap-style-collection-5', 'The Alchemy Soap Collection', 'Bundle photo slot — 5-style set', 'No bundle photography on file; the old collage is archive-only (superseded prices baked in). Bundle price $35.77.'],
+    ['soap-style-collection-5', 'The Alchemy Soap Collection', 'Bundle photo slot — 5-style set', 'No bundle photography on file at this canonical path, and no file exists here (cards fall back gracefully). The collection\'s deployed representation is the generated five-bar lineup registered separately as asset_soap_lineup_5 (/images/soap/soap-lineup-5.png). The old collage is archive-only (superseded prices baked in). Bundle price $35.77.'],
   ];
   return rows.map(([handle, label, slot, notes]) =>
     missing(
