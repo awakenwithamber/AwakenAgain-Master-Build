@@ -19,6 +19,7 @@ import {
   toCents,
 } from '../../lib/pricing/pricing';
 import { useCart } from '../checkout/cart-store';
+import { getProductDisplayImage } from '../../lib/media/product-image';
 import type { Product } from '../../types';
 import styles from './shop.module.css';
 
@@ -51,6 +52,12 @@ export function RitualBundleCard({ product }: { product: Product }) {
   const chips = benefitChips(product);
   const hasPrice = typeof product.price === 'number';
   const isAlchemyCollection = product.handle === BUNDLE_ID;
+  // Registered primary image wins — this is what puts the Alchemy Soap
+  // Collection's deployed five-bar lineup (/images/soap/soap-lineup-5.png)
+  // on its card; everything unregistered keeps the canonical path.
+  const imageSrc =
+    getProductDisplayImage(product)?.src ??
+    `/images/products/${product.handle}.webp`;
 
   const beginRitual = () => {
     const ok = addItem(product.handle, undefined, undefined, 1);
@@ -69,7 +76,7 @@ export function RitualBundleCard({ product }: { product: Product }) {
           </div>
         ) : (
           <img
-            src={`/images/products/${product.handle}.webp`}
+            src={imageSrc}
             alt={product.title}
             loading="lazy"
             onError={() => setImageFailed(true)}

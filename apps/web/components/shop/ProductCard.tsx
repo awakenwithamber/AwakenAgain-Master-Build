@@ -7,9 +7,11 @@
  * short desc → key-botanical HerbChips → "Why This Works" herb list → price
  * + Add button.
  *
- * Images: /images/products/<slug>.webp (workstream H populates); graceful
- * onError fallback to a monogram tile. Prices display as-is from the
- * catalog — this component never computes or alters pricing.
+ * Images: the product's registered primary image when the image registry
+ * and the catalog record agree on a deployed file (lib/media/product-
+ * image.ts); otherwise /images/products/<slug>.webp (workstream H
+ * populates); graceful onError fallback to a monogram tile. Prices display
+ * as-is from the catalog — this component never computes or alters pricing.
  */
 'use client';
 
@@ -18,6 +20,7 @@ import { HerbChip } from '../herbs/HerbChip';
 import { PriceDisplay } from '../catalog/PriceDisplay';
 import { toCents } from '../../lib/pricing/pricing';
 import { useCart } from '../checkout/cart-store';
+import { getProductDisplayImage } from '../../lib/media/product-image';
 import type { Product } from '../../types';
 import styles from './shop.module.css';
 
@@ -114,6 +117,11 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
 
   const hasPrice = typeof product.price === 'number';
   const icon = CATEGORY_ICONS[product.category] ?? '🌿';
+  // Registered primary image (registry + record agreement) wins; the
+  // canonical path is the fallback for everything not yet registered.
+  const imageSrc =
+    getProductDisplayImage(product)?.src ??
+    `/images/products/${product.handle}.webp`;
 
   const handleAdd = () => {
     const ok = addItem(product.handle, undefined, undefined, 1);
@@ -132,7 +140,7 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
           </div>
         ) : (
           <img
-            src={`/images/products/${product.handle}.webp`}
+            src={imageSrc}
             alt={product.title}
             loading="lazy"
             onError={() => setImageFailed(true)}

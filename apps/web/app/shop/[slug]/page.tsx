@@ -20,6 +20,10 @@ import {
   BUNDLE_NAME,
   bundleComponentSumCents,
 } from '../../../lib/pricing/pricing';
+import {
+  getProductDisplayImage,
+  type ProductDisplayImage,
+} from '../../../lib/media/product-image';
 import type { Product } from '../../../types';
 
 export function generateStaticParams() {
@@ -51,7 +55,15 @@ export async function generateMetadata({
 const SUPERSEDED_BUNDLE_HANDLE = 'full-soap-collection';
 const ALCHEMY_BUNDLE_HANDLE = 'soap-style-collection-5';
 
-function provenanceNote(product: Product): string {
+function provenanceNote(
+  product: Product,
+  displayImage: ProductDisplayImage | null,
+): string {
+  // A verified documentary photo of the actual product is rendered above;
+  // say exactly that (only DreamEase qualifies as of the 2026-10-13 audit).
+  if (displayImage?.documentaryPhoto) {
+    return "Product photography: the maker's own photo of this product, shown above.";
+  }
   const images = (product.images ?? []) as Array<Record<string, unknown>>;
   if (images.length === 0) return 'Product photography in progress.';
   const hasPlaceholder = images.some(
@@ -70,7 +82,7 @@ function PriceBlock({ product }: { product: Product }) {
       <p>
         <strong>Pricing not yet established.</strong> Please contact Amber for
         current pricing: <a href="mailto:awaken@consultant.com">awaken@consultant.com</a>{' '}
-        or <a href="tel:+18014148984">(801) 414-8984</a>.
+        or <a href="tel:+18018196795">(801) 819-6795</a>.
       </p>
     );
   }
@@ -127,6 +139,10 @@ export default async function ProductPage({
     Record<string, unknown>
   >;
   const warnings = product.warnings as unknown;
+  // Renders only when the image registry and the product record agree on a
+  // deployed image for this product (see lib/media/product-image.ts);
+  // generated/styled artwork carries an honest representation caption.
+  const displayImage = getProductDisplayImage(product);
 
   return (
     <>
@@ -146,6 +162,17 @@ export default async function ProductPage({
           <SavingsDisplay componentSumCents={bundleComponentSumCents()} />
         ) : null}
 
+        {displayImage ? (
+          <figure>
+            <img src={displayImage.src} alt={displayImage.alt} />
+            {displayImage.caption ? (
+              <figcaption>
+                <small>{displayImage.caption}</small>
+              </figcaption>
+            ) : null}
+          </figure>
+        ) : null}
+
         {product.extended_description ?? product.short_description ? (
           <section aria-label="Description">
             <p>{product.extended_description ?? product.short_description}</p>
@@ -162,7 +189,7 @@ export default async function ProductPage({
             made by hand.
           </p>
           <p>
-            <small>{provenanceNote(product)}</small>
+            <small>{provenanceNote(product, displayImage)}</small>
           </p>
         </section>
 
