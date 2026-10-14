@@ -39,10 +39,11 @@ export const RECORD: Product = {
   ],
   "images": [
     {
-      "src": null,
+      "src": "/images/soap/soap-lineup-5.png",
+      "alt": "The Alchemy Soap Collection — the five double-layer soap styles in a row: small red rose, larger green rose, purple wave rectangle, green floral round, red plain rectangle (illustrated representation)",
       "role": "primary",
-      "asset_status": "MISSING_ASSET",
-      "note": "No bundle photography on file; collage image 15316_227_zkei.jpg carries superseded prices and is archive-only. Regeneration required before storefront use."
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Deployed storefront primary. The file is the AI-generated five-bar lineup registered in lib/media/image-manifest.ts as asset_soap_lineup_5 (GENERATED_PRODUCT_REPRESENTATION, notDocumentaryPhoto) — a generated representation with no text or prices baked in, NOT bundle photography. No bundle photography on file; collage image 15316_227_zkei.jpg carries superseded prices and is archive-only. Corrected 2026-10-13: the record formerly claimed MISSING_ASSET with src null while this registered lineup file was already deployed."
     }
   ],
   "short_description": "All five soap styles in one collection — you choose the scent, color, herbs, or botanical character of each bar.",
@@ -95,7 +96,7 @@ export const RECORD: Product = {
     "title": "OWNER_CONFIRMED",
     "price": "OWNER_CONFIRMED",
     "variants": "OWNER_CONFIRMED",
-    "images": "MISSING_ASSET",
+    "images": "GENERATED_REPRESENTATION — deployed generated lineup registered as asset_soap_lineup_5 in lib/media/image-manifest.ts; no bundle photography on file (corrected 2026-10-13)",
     "inventory_status": "NEEDS_VERIFICATION"
   },
   "verification_status": "OWNER_CONFIRMED",

@@ -31,7 +31,7 @@ export const RECORD: Product = {
     {
       "src": "/images/products/full-soap-collection.webp",
       "fallback": "/images/products/full-soap-collection.png",
-      "alt_text": "Full Soap Collection all nine botanical bars",
+      "alt_text": "Generated illustration of five double-layer botanical soap bars in the collection's styles (the collection itself gathered nine bars; this artwork shows five)",
       "status": "placeholder"
     }
   ],
