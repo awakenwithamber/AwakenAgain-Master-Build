@@ -31,6 +31,7 @@ import {
   requestOtp,
   verifyOtp,
 } from '../../../lib/grimoire/otp';
+import { enforceRateLimit } from '../../../lib/security/rate-limit';
 
 /** Bound store — in-memory until the Supabase binding is verified. */
 const store = new InMemoryOtpStore();
@@ -44,6 +45,11 @@ function sessionDistinctId(request: Request, fallback: string): string {
 }
 
 export async function POST(request: Request) {
+  // Strict per-IP budget (lib/security/rate-limit): code issuance and
+  // verification share it; the per-code attempt cap still applies inside.
+  const limited = enforceRateLimit(request, 'grimoire-otp');
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -118,6 +124,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const limited = enforceRateLimit(request, 'grimoire-otp-session');
+  if (limited) return limited;
+
   const token = new URL(request.url).searchParams.get('token');
   const session = await getValidSession(store, token);
   if (!session) {

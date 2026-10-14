@@ -42,6 +42,7 @@ import {
   resolveServerDistinctId,
 } from '../../../lib/analytics/posthog-server';
 import { ANALYTICS_EVENT_NAMES } from '../../../lib/analytics/events';
+import { enforceRateLimit } from '../../../lib/security/rate-limit';
 
 export type ContactRelayStatus =
   | 'relayed'
@@ -79,6 +80,9 @@ function relayPayload(record: ContactRecord): Record<string, unknown> {
 }
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, 'contact');
+  if (limited) return limited;
+
   const attemptId = generateAttemptId();
 
   let body: unknown;

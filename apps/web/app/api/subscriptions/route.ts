@@ -25,6 +25,7 @@ import { NextResponse } from 'next/server';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { CASH_APP_HANDLE, VENMO_HANDLE } from '../../../lib/checkout/order';
+import { enforceRateLimit } from '../../../lib/security/rate-limit';
 import { subscriptionsLedgerPath } from '../../../lib/subscriptions/entitlement';
 import {
   captureGrimoireServerEvent,
@@ -69,6 +70,9 @@ function paymentInstructions() {
 /* ------------------------------------------------------------------ */
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, 'subscriptions');
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await request.json();

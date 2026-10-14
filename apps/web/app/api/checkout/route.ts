@@ -33,6 +33,7 @@ import {
   type OrderRecord,
 } from '../../../lib/checkout/order';
 import { createOrderStore } from '../../../lib/orders/store';
+import { enforceRateLimit } from '../../../lib/security/rate-limit';
 import { isEntitledSubscriber } from '../../../lib/subscriptions/entitlement';
 import {
   captureServerEventSoon,
@@ -107,6 +108,9 @@ function paymentInstructions(record: OrderRecord) {
 /* ------------------------------------------------------------------ */
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, 'checkout');
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await request.json();

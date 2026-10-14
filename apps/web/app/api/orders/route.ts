@@ -35,6 +35,7 @@ import {
   resolveServerDistinctId,
 } from '../../../lib/analytics/posthog-server';
 import { ANALYTICS_EVENT_NAMES } from '../../../lib/analytics/events';
+import { enforceRateLimit } from '../../../lib/security/rate-limit';
 
 function generateAttemptId(): string {
   const rand = Math.random().toString(36).slice(2, 10);
@@ -49,6 +50,9 @@ function distinctIdFor(request: Request, scope: string): string {
 }
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, 'orders');
+  if (limited) return limited;
+
   const attemptId = generateAttemptId();
 
   let body: unknown;

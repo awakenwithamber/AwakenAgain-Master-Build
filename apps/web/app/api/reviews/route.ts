@@ -16,10 +16,14 @@
 import { NextResponse } from 'next/server';
 import { reviewStore, validateReview } from '../../../lib/reviews/reviews';
 import { PRODUCTS } from '../../../lib/catalog/products';
+import { enforceRateLimit } from '../../../lib/security/rate-limit';
 
 const KNOWN_HANDLES = new Set(PRODUCTS.map((p) => p.handle));
 
 export async function GET(req: Request) {
+  const limited = enforceRateLimit(req, 'reviews-read');
+  if (limited) return limited;
+
   const { searchParams } = new URL(req.url);
   const productHandle = (searchParams.get('product') ?? '').trim();
   if (!productHandle || !KNOWN_HANDLES.has(productHandle)) {
@@ -49,6 +53,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const limited = enforceRateLimit(req, 'reviews-write');
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await req.json();

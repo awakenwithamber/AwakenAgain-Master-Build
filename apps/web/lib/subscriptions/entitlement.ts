@@ -30,7 +30,10 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { SubscriptionStatus } from './subscriptions';
+import type {
+  SubscriptionRecord,
+  SubscriptionStatus,
+} from './subscriptions';
 
 /** The only subscription statuses that grant checkout benefits. */
 export const SUBSCRIBER_ENTITLED_STATUSES: readonly SubscriptionStatus[] = [
@@ -90,6 +93,47 @@ export function readSubscriptionLedger(
     }
   }
   return entries;
+}
+
+/**
+ * The latest FULL subscription record the server holds for this email, or
+ * undefined when the ledger holds none. Same tolerant read as
+ * readSubscriptionLedger (missing file / malformed lines never throw).
+ * Used by the owner confirmation route, which needs the whole record to
+ * hand to `confirmSubscription()`; entitlement checks above only need
+ * {email, status} and keep using the lighter reader.
+ */
+export function findLatestSubscriptionRecord(
+  email: unknown,
+  ledgerPath: string = subscriptionsLedgerPath(),
+): SubscriptionRecord | undefined {
+  const target = normalizeSubscriptionEmail(email);
+  if (!target) return undefined;
+  let raw: string;
+  try {
+    raw = readFileSync(ledgerPath, 'utf8');
+  } catch {
+    return undefined; // no ledger yet → no record for anyone
+  }
+  let latest: SubscriptionRecord | undefined;
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const parsed = JSON.parse(trimmed) as SubscriptionRecord;
+      if (
+        parsed !== null &&
+        typeof parsed === 'object' &&
+        typeof parsed.status === 'string' &&
+        normalizeSubscriptionEmail(parsed.customer?.email) === target
+      ) {
+        latest = parsed;
+      }
+    } catch {
+      // skip malformed line — same tolerance as readSubscriptionLedger
+    }
+  }
+  return latest;
 }
 
 /**

@@ -18,8 +18,12 @@
  */
 import { NextResponse } from 'next/server';
 import { getChatProvider, validateChatRequest } from '../../../../lib/ai/chat-provider';
+import { enforceRateLimit } from '../../../../lib/security/rate-limit';
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, 'ai-chat');
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await request.json();

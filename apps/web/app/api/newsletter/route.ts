@@ -12,8 +12,12 @@ import { leadStore } from '../../../lib/leads/lead-store';
 import { validateNewsletter } from '../../../lib/leads/validation';
 import { captureContentServerEventSoon } from '../../../lib/analytics/content-posthog-server';
 import { resolveServerDistinctId } from '../../../lib/analytics/posthog-server';
+import { enforceRateLimit } from '../../../lib/security/rate-limit';
 
 export async function POST(req: Request) {
+  const limited = enforceRateLimit(req, 'newsletter');
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await req.json();
