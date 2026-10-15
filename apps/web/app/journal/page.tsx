@@ -8,9 +8,9 @@
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { SiteHeader } from '../../components/shop/SiteHeader';
 import { JournalImage } from './JournalImage';
 import { JOURNAL_ARTICLES } from '../../lib/content/journal';
+import { InterestTracker } from '../../components/personalization/InterestTracker';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './journal.module.css';
 
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 export default function JournalPage() {
   return (
     <>
-      <SiteHeader />
       <main id="main-content" className={styles.journalMain}>
+        <InterestTracker category="articles" signalKey="journal-index" />
         <p className="section-ornament" aria-hidden="true">
           ✦
         </p>

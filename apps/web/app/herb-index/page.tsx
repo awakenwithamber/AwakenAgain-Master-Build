@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { HERB_CATEGORIES, HERB_INDEX } from '../../lib/content/herbs';
 import { HerbExplorer } from '../../components/herbs/HerbExplorer';
+import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata: Metadata = {
   title: 'Herb Index',
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 export default function HerbIndexPage() {
   return (
     <main id="main-content" className="page content-page">
+      <InterestTracker category="herbs" signalKey="herb-index" />
       <h1>🌿 Herb Index</h1>
       <p>
         Our botanical archive holds 300+ herbs, roots, flowers, and mushrooms

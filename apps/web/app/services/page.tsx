@@ -7,9 +7,13 @@
  * honestly rather than inventing a booking flow.
  */
 import type { Metadata } from 'next';
-import { SiteHeader } from '../../components/shop/SiteHeader';
 import { ServiceCard } from '../../components/services/ServiceCard';
 import { SERVICES } from '../../lib/content/services';
+import {
+  SERVICE_PAGES,
+  servicePagePath,
+} from '../../lib/content/service-pages';
+import { InterestTracker } from '../../components/personalization/InterestTracker';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './services.module.css';
 
@@ -21,8 +25,8 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <>
-      <SiteHeader />
       <main id="main-content" className={styles.servicesMain}>
+        <InterestTracker category="readings" signalKey="services" />
         <div className={styles.servicesHero}>
           <p className="section-ornament" aria-hidden="true">
             ✦
@@ -39,6 +43,26 @@ export default function ServicesPage() {
             <ServiceCard key={service.handle} service={service} />
           ))}
         </div>
+        <section className={styles.exploreSection} aria-label="Services in depth">
+          <h2>Services in Depth</h2>
+          <p className={styles.exploreIntro}>
+            Each service, explored properly — what it is, what a session
+            includes, and how to begin.
+          </p>
+          <div className={styles.exploreGrid}>
+            {SERVICE_PAGES.map((sp) => (
+              <a
+                key={sp.slug}
+                className={styles.exploreCard}
+                href={servicePagePath(sp.slug)}
+              >
+                <p className={styles.exploreEyebrow}>{sp.eyebrow}</p>
+                <h3>{sp.title}</h3>
+                <p>{sp.deliveryNote}</p>
+              </a>
+            ))}
+          </div>
+        </section>
         <p className={styles.servicesContact}>
           Prefer to talk first? <a href="/contact">Contact Amber</a> — every
           message is read personally.

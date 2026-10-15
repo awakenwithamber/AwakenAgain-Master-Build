@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import InPreparation from '../../../components/content/InPreparation';
+import { InterestTracker } from '../../../components/personalization/InterestTracker';
 import { ViewBotanicalCardButton } from '../../../components/herbs/ViewBotanicalCardButton';
 import { HERB_INDEX, getHerb } from '../../../lib/content/herbs';
 import { getHerbRecord } from '../../../lib/herbs/herb-data';
@@ -53,6 +54,7 @@ export default async function HerbDetailPage({
 
   return (
     <main id="main-content" className="page content-page">
+      <InterestTracker category="herbs" signalKey={`herb-${slug}`} />
       <h1>
         {herb.name} <em>({herb.latin})</em>
       </h1>

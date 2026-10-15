@@ -4,11 +4,13 @@
  * A general "order confirmed" landing page. Payment on this site is by
  * Cash App / Venmo or by an emailed Bookipi card invoice, and Amber
  * confirms every order personally — so this page simply thanks the
- * customer and points them to their email for confirmation.
+ * customer, points them to their email for confirmation, and links the
+ * order-status lookup (/order-status) where shipment tracking appears
+ * once the owner records it.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { SiteHeader } from '../../../components/shop/SiteHeader';
+import { ProfileInvite } from '../../../components/personalization/ProfileInvite';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
@@ -19,7 +21,6 @@ export const metadata: Metadata = {
 export default function CheckoutSuccessPage() {
   return (
     <>
-      <SiteHeader />
       <main
         id="main-content"
         style={{
@@ -68,6 +69,20 @@ export default function CheckoutSuccessPage() {
             Continue Shopping
           </Link>
           <Link
+            href="/order-status"
+            style={{
+              display: 'inline-block',
+              fontFamily: "'Cinzel Decorative', 'Cinzel', serif",
+              border: '1px solid rgba(212,175,55,0.5)',
+              color: '#d4af37',
+              borderRadius: '30px',
+              padding: '0.9rem 2rem',
+              textDecoration: 'none',
+            }}
+          >
+            Check Order Status
+          </Link>
+          <Link
             href="/"
             style={{
               display: 'inline-block',
@@ -82,6 +97,7 @@ export default function CheckoutSuccessPage() {
             Back Home
           </Link>
         </div>
+        <ProfileInvite moment="order-success" />
       </main>
     </>
   );

@@ -7,6 +7,7 @@
  */
 import type { Metadata } from 'next';
 import { SoapBuilder } from '../../components/builder/SoapBuilder';
+import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata: Metadata = {
   title: 'Create Your Own Alchemy Soap',
@@ -23,6 +24,7 @@ export default async function SoapBuilderPage({
   const bundle = params.bundle === '1' || params.bundle === 'true';
   return (
     <main>
+      <InterestTracker category="soaps" signalKey="soap-builder" />
       <SoapBuilder mode={bundle ? 'bundle' : 'single'} />
     </main>
   );

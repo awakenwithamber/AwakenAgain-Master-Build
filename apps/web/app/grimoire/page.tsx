@@ -6,6 +6,7 @@
  */
 import type { Metadata } from 'next';
 import { GrimoireBook } from '../../components/grimoire/GrimoireBook';
+import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata: Metadata = {
   title: 'The Living Grimoire - Book of Light',
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 export default function GrimoirePage() {
   return (
     <main id="main-content">
+      <InterestTracker category="grimoire" signalKey="grimoire" />
       <GrimoireBook />
     </main>
   );

@@ -11,6 +11,7 @@ import {
 import { PriceDisplay } from '../../components/catalog/PriceDisplay';
 import { SavingsDisplay } from '../../components/catalog/SavingsDisplay';
 import { SoapBuilder } from '../../components/builder/SoapBuilder';
+import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata = {
   title: 'The Soap Shop — Create Your Own Alchemy Soap',
@@ -64,6 +65,7 @@ export default function SoapShopPage() {
   const componentSum = bundleComponentSumCents();
   return (
     <main id="main-content">
+      <InterestTracker category="soaps" signalKey="soap-shop" />
       <h1>The Soap Shop</h1>
       <p>
         Handcrafted botanical soaps from Amber&apos;s Alchemy Apothecary —

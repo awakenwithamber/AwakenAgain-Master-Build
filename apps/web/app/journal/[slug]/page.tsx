@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ArticleViewTracker from '../../../components/content/ArticleViewTracker';
+import { InterestTracker } from '../../../components/personalization/InterestTracker';
 import { JOURNAL_ARTICLES, getArticle } from '../../../lib/content/journal';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
@@ -38,6 +39,10 @@ export default async function JournalArticlePage({
   return (
     <main id="main-content" className="page journal-article-page">
       <ArticleViewTracker slug={article.slug} />
+      <InterestTracker
+        category="articles"
+        signalKey={`journal-${article.slug}`}
+      />
       <article>
         <span className="journal-tag">{article.tag}</span>
         <h1>{article.title}</h1>
