@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { AdminGate } from '../../../components/admin/AdminGate';
 import { AdminViewTracker } from '../../../components/admin/AdminViewTracker';
 import { PendingBindingQuizLeadStore } from '../../../lib/stores/operational-stores';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Admin — Leads',
@@ -34,7 +35,7 @@ export default function AdminLeadsPage() {
           </p>
         </div>
         <p>
-          <a href="/admin">← Back to overview</a>
+          <Link href="/admin">← Back to overview</Link>
         </p>
       </main>
     </AdminGate>

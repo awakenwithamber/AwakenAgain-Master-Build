@@ -69,6 +69,7 @@ import {
   type SlotTheme,
 } from './state';
 import styles from './SoapBuilderModal.module.css';
+import Link from 'next/link';
 
 export interface BundleConfiguratorProps {
   /** Theme from the completed ritual — applied to all 5 slots on mount. */
@@ -423,8 +424,8 @@ export function BundleConfigurator({ theme, seasonal }: BundleConfiguratorProps)
       {added && (
         <p role="status" className={styles.addedNote}>
           ✨ Your collection is in your cart —{' '}
-          <a href="/cart">review your cart</a> or{' '}
-          <a href="/checkout">head to checkout</a>.
+          <Link href="/cart">review your cart</Link> or{' '}
+          <Link href="/checkout">head to checkout</Link>.
         </p>
       )}
 

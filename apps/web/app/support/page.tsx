@@ -8,6 +8,7 @@
 import type { Metadata } from 'next';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './support.module.css';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Support the Apothecary',
@@ -93,11 +94,11 @@ export default function SupportPage() {
           <ul>
             <li>
               <strong>Shop the apothecary</strong> — every purchase directly
-              supports the business. <a href="/shop">Browse products</a>
+              supports the business. <Link href="/shop">Browse products</Link>
             </li>
             <li>
               <strong>Join the Living Grimoire</strong> — $7.77/month
-              membership with 10% off storewide. <a href="/grimoire">Learn more</a>
+              membership with 10% off storewide. <Link href="/grimoire">Learn more</Link>
             </li>
             <li>
               <strong>Share with a friend</strong> — word of mouth is the
@@ -106,7 +107,7 @@ export default function SupportPage() {
             <li>
               <strong>Work with Amber</strong> — explore her professional
               services in AI, technology, and botanical consulting.{' '}
-              <a href="/about#professional-services">Learn more</a>
+              <Link href="/about#professional-services">Learn more</Link>
             </li>
           </ul>
         </section>

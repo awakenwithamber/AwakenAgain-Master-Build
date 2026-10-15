@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import { AdminGate } from '../../components/admin/AdminGate';
 import { AdminViewTracker } from '../../components/admin/AdminViewTracker';
 import { defaultOrderStore, JsonlOrderStore } from '../../lib/stores/order-store';
+import Link from 'next/link';
 import {
   PendingBindingQuizLeadStore,
   PendingBindingReviewStore,
@@ -88,7 +89,7 @@ export default async function AdminOverviewPage() {
           <ul>
             {SECTIONS.map((s) => (
               <li key={s.href}>
-                <a href={s.href}>{s.name}</a> — {s.desc}
+                <Link href={s.href}>{s.name}</Link> — {s.desc}
               </li>
             ))}
           </ul>

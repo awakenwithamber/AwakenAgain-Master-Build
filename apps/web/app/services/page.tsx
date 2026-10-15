@@ -16,6 +16,7 @@ import {
 import { InterestTracker } from '../../components/personalization/InterestTracker';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './services.module.css';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Healing Services',
@@ -64,7 +65,7 @@ export default function ServicesPage() {
           </div>
         </section>
         <p className={styles.servicesContact}>
-          Prefer to talk first? <a href="/contact">Contact Amber</a> — every
+          Prefer to talk first? <Link href="/contact">Contact Amber</Link> — every
           message is read personally.
         </p>
       </main>

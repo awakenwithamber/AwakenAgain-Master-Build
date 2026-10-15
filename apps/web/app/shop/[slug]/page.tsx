@@ -25,6 +25,7 @@ import {
   type ProductDisplayImage,
 } from '../../../lib/media/product-image';
 import type { Product } from '../../../types';
+import Link from 'next/link';
 
 export function generateStaticParams() {
   return PRODUCTS.map((p) => ({ slug: p.handle }));
@@ -113,9 +114,9 @@ function PurchaseSection({ product }: { product: Product }) {
         <h2>Superseded</h2>
         <p>
           This product has been superseded by{' '}
-          <a href={`/shop/${replacementHandle}`}>
+          <Link href={`/shop/${replacementHandle}`}>
             {replacement?.title ?? BUNDLE_NAME}
-          </a>
+          </Link>
           . This listing is kept for reference and is not available for
           purchase.
         </p>
@@ -160,7 +161,7 @@ export default async function ProductPage({
           category={product.category}
         />
         <p>
-          <a href="/shop">← Back to the shop</a>
+          <Link href="/shop">← Back to the shop</Link>
         </p>
         <h1>{product.title}</h1>
         <p>{product.category}</p>

@@ -12,6 +12,7 @@ import { PriceDisplay } from '../../components/catalog/PriceDisplay';
 import { SavingsDisplay } from '../../components/catalog/SavingsDisplay';
 import { SoapBuilder } from '../../components/builder/SoapBuilder';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'The Soap Shop — Create Your Own Alchemy Soap',
@@ -89,7 +90,7 @@ export default function SoapShopPage() {
         <ul>
           {FEATURED_SOUPS.map((soap) => (
             <li key={soap.name}>
-              <a href={soap.href}>
+              <Link href={soap.href}>
                 <img
                   src={soap.image}
                   alt={soap.name}
@@ -99,7 +100,7 @@ export default function SoapShopPage() {
                 />
                 <h3>{soap.name}</h3>
                 <p>{soap.description}</p>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

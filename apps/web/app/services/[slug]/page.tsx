@@ -23,6 +23,7 @@ import { PriceDisplay } from '../../../components/catalog/PriceDisplay';
 import { VariantAddToCart } from '../../../components/shop/VariantAddToCart';
 import { InterestTracker } from '../../../components/personalization/InterestTracker';
 import styles from '../services.module.css';
+import Link from 'next/link';
 
 export function generateStaticParams() {
   return SERVICE_PAGES.map((p) => ({ slug: p.slug }));
@@ -78,7 +79,7 @@ export default async function ServiceLandingPage({
         />
       ) : null}
       <p className={styles.detailBack}>
-        <a href="/services">← All services</a>
+        <Link href="/services">← All services</Link>
       </p>
 
       <div className={styles.detailHero}>
@@ -171,9 +172,9 @@ export default async function ServiceLandingPage({
               or sprung on you.
             </p>
             <p>
-              <a className="btn-primary" href="/contact">
+              <Link className="btn-primary" href="/contact">
                 Contact Amber ✦
-              </a>
+              </Link>
             </p>
             <p>
               <small>
@@ -202,7 +203,7 @@ export default async function ServiceLandingPage({
           <ul className={styles.relatedList}>
             {related.map((rel) => (
               <li key={rel.slug}>
-                <a href={servicePagePath(rel.slug)}>{rel.title}</a>
+                <Link href={servicePagePath(rel.slug)}>{rel.title}</Link>
               </li>
             ))}
           </ul>
