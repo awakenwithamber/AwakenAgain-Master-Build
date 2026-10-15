@@ -31,6 +31,11 @@ const SHOP_LINKS = [
   { href: '/services', label: 'Services & Readings' },
 ];
 
+const INVOLVED_LINKS = [
+  { href: '/network', label: 'The Awaken Network' },
+  { href: '/partner', label: 'Partner With Us' },
+];
+
 const LEGAL_LINKS = [
   { href: '/legal', label: 'Disclaimers' },
   { href: '/privacy', label: 'Privacy Policy' },
@@ -68,6 +73,16 @@ export default function Footer() {
           <h3>Learn</h3>
           <ul>
             {LEARN_LINKS.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href}>{l.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <nav className="footer-col" aria-label="Get involved">
+          <h3>Get Involved</h3>
+          <ul>
+            {INVOLVED_LINKS.map((l) => (
               <li key={l.href}>
                 <Link href={l.href}>{l.label}</Link>
               </li>

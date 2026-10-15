@@ -29,6 +29,7 @@ import { ReviewsSection } from '../components/home/ReviewsSection';
 import { LearnSection } from '../components/home/LearnSection';
 import { GrimoirePromo } from '../components/home/GrimoirePromo';
 import { GuideSignup } from '../components/home/GuideSignup';
+import { NetworkInvite } from '../components/home/NetworkInvite';
 import { PersonalizedSections } from '../components/home/PersonalizedSections';
 import { PickedForYou, type ArticlePick } from '../components/home/PickedForYou';
 import { toCardModel, type HomeProductCardModel } from '../components/home/product-cards';
@@ -98,6 +99,7 @@ export default function HomePage() {
           grimoirePromo={<GrimoirePromo />}
           afterSections={<GuideSignup />}
         />
+        <NetworkInvite />
       </main>
     </>
   );

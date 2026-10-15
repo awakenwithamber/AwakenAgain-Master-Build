@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { POST as quizLeadPost } from './quiz-lead/route';
 import { POST as newsletterPost } from './newsletter/route';
+import { POST as affiliateInterestPost } from './affiliate-interest/route';
+import { POST as partnerIdeaPost } from './partner-idea/route';
 
 function jsonRequest(body: unknown): Request {
   return new Request('http://localhost/api/x', {
@@ -107,5 +109,136 @@ describe('newsletter route', () => {
     );
     expect(res.status).toBe(422);
     expect((await res.json()).ok).toBe(false);
+  });
+});
+
+describe('affiliate-interest route', () => {
+  beforeEach(() => {
+    process.env.LEAD_STORE_DIR = mkdtempSync(join(tmpdir(), 'leads-'));
+  });
+  afterEach(() => {
+    delete process.env.LEAD_STORE_DIR;
+  });
+
+  it('stores a valid registration → 201, as an affiliate_interest lead', async () => {
+    const res = await affiliateInterestPost(
+      jsonRequest({
+        name: 'Jo Maker',
+        email: 'jo@example.com',
+        consent: true,
+        projects: ['brandalchemy', 'awaken-network'],
+        note: 'I grow herbs.',
+      }),
+    );
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.id).toBeTruthy();
+
+    const lines = readFileSync(
+      join(process.env.LEAD_STORE_DIR!, 'affiliate_interest.jsonl'),
+      'utf8',
+    )
+      .trim()
+      .split('\n');
+    const record = JSON.parse(lines[lines.length - 1]);
+    expect(record.kind).toBe('affiliate_interest');
+    expect(record.name).toBe('Jo Maker');
+    expect(record.email).toBe('jo@example.com');
+    expect(record.consent).toBe(true);
+    expect(record.metadata.projects).toBe('awaken-network,brandalchemy');
+    expect(record.metadata.note).toBe('I grow herbs.');
+  });
+
+  it('rejects missing consent and unknown projects → 422, stores nothing', async () => {
+    const noConsent = await affiliateInterestPost(
+      jsonRequest({
+        name: 'Jo',
+        email: 'jo@example.com',
+        consent: false,
+        projects: ['awaken-network'],
+      }),
+    );
+    expect(noConsent.status).toBe(422);
+
+    const unknown = await affiliateInterestPost(
+      jsonRequest({
+        name: 'Jo',
+        email: 'jo@example.com',
+        consent: true,
+        projects: ['moon-base'],
+      }),
+    );
+    expect(unknown.status).toBe(422);
+
+    const empty = await affiliateInterestPost(
+      jsonRequest({
+        name: 'Jo',
+        email: 'jo@example.com',
+        consent: true,
+        projects: [],
+      }),
+    );
+    expect(empty.status).toBe(422);
+  });
+});
+
+describe('partner-idea route', () => {
+  beforeEach(() => {
+    process.env.LEAD_STORE_DIR = mkdtempSync(join(tmpdir(), 'leads-'));
+  });
+  afterEach(() => {
+    delete process.env.LEAD_STORE_DIR;
+  });
+
+  it('stores a valid submission → 201, as a partner_idea lead', async () => {
+    const res = await partnerIdeaPost(
+      jsonRequest({
+        name: 'Jo Maker',
+        email: 'jo@example.com',
+        consent: true,
+        contributionType: 'supply',
+        idea: 'I press botanical oils in small batches.',
+        links: 'https://example.com',
+      }),
+    );
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+
+    const lines = readFileSync(
+      join(process.env.LEAD_STORE_DIR!, 'partner_idea.jsonl'),
+      'utf8',
+    )
+      .trim()
+      .split('\n');
+    const record = JSON.parse(lines[lines.length - 1]);
+    expect(record.kind).toBe('partner_idea');
+    expect(record.metadata.contribution_type).toBe('supply');
+    expect(record.metadata.idea).toContain('botanical oils');
+    expect(record.metadata.links).toBe('https://example.com');
+  });
+
+  it('rejects unknown contribution type and missing idea → 422', async () => {
+    const badType = await partnerIdeaPost(
+      jsonRequest({
+        name: 'Jo',
+        email: 'jo@example.com',
+        consent: true,
+        contributionType: 'magic',
+        idea: 'Something.',
+      }),
+    );
+    expect(badType.status).toBe(422);
+
+    const noIdea = await partnerIdeaPost(
+      jsonRequest({
+        name: 'Jo',
+        email: 'jo@example.com',
+        consent: true,
+        contributionType: 'idea',
+      }),
+    );
+    expect(noIdea.status).toBe(422);
   });
 });

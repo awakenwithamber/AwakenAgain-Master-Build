@@ -1,0 +1,232 @@
+/**
+ * /partner (Partnerships) + partner-idea form styles.
+ * Tokens come from app/globals.css; mirrors components/network so the
+ * two get-involved pages read as one family.
+ */
+
+.pageMain {
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.5vw, 2.9rem);
+  color: var(--parchment);
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.hero p {
+  color: var(--text-muted);
+  max-width: 46rem;
+  margin: 0 auto;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.wayGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr));
+  gap: 1.75rem;
+  margin-top: 2rem;
+}
+
+.wayCard {
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+
+.wayName {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--parchment);
+  margin: 0 0 0.6rem;
+  line-height: 1.35;
+}
+
+.wayBlurb {
+  color: var(--text-body);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.sectionBlock {
+  margin-top: 4.5rem;
+}
+
+.sectionBlock h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--parchment);
+  text-align: center;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+}
+
+.sectionIntro {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 42rem;
+  margin: 0 auto 2rem;
+  line-height: 1.65;
+}
+
+.crossLink {
+  text-align: center;
+  color: var(--text-muted);
+  margin-top: 3.5rem;
+}
+
+.crossLink a {
+  color: var(--brass-lt);
+}
+
+/* --- Partner-idea form --- */
+
+.formBox {
+  max-width: 40rem;
+  margin: 0 auto;
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  padding: 1.5rem 1.5rem 1.75rem;
+}
+
+.field {
+  margin: 0 0 1.1rem;
+}
+
+.field label,
+.field legend {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brass-lt);
+  margin: 0 0 0.45rem;
+  padding: 0;
+}
+
+fieldset.field {
+  border: none;
+  padding: 0;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  background: rgba(21, 11, 38, 0.8);
+  color: var(--parchment);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: rgba(207, 195, 171, 0.55);
+}
+
+.input:focus-visible,
+.textarea:focus-visible {
+  outline: 3px solid var(--brass);
+  outline-offset: 2px;
+}
+
+.textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.radioList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.radioItem label {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-family: inherit;
+  font-size: 1rem;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text-body);
+  margin: 0;
+  cursor: pointer;
+}
+
+.consent {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  color: var(--text-body);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.submitBtn {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  padding: 0.9rem 1.9rem;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--brass), var(--brass));
+  color: #150b26;
+  box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.submitBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(140, 106, 59, 0.5);
+}
+
+.submitBtn:focus-visible {
+  outline: 3px solid var(--brass);
+  outline-offset: 3px;
+}
+
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+
+.formStatus {
+  text-align: center;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.formError {
+  color: #e8a0a0;
+  margin: 1rem 0 0;
+}
