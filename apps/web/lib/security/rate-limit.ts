@@ -80,12 +80,24 @@ export const RATE_LIMIT_GROUPS = {
   admin: 'strict',
   'grimoire-otp': 'strict',
   'grimoire-otp-session': 'generous',
+  /**
+   * Account sign-in (Phase 3 Step 3): code request + verify share the
+   * STRICT budget for the same reason as grimoire-otp — it caps code
+   * guessing per IP; the per-code attempt cap applies inside as well.
+   */
+  'account-auth': 'strict',
+  /** Account profile writes (likes/searches/progress/delete). */
+  account: 'moderate',
+  /** Account reads (profile view, export download). */
+  'account-read': 'generous',
   checkout: 'moderate',
   orders: 'moderate',
   subscriptions: 'moderate',
   contact: 'moderate',
   newsletter: 'moderate',
   'quiz-lead': 'moderate',
+  'affiliate-interest': 'moderate',
+  'partner-idea': 'moderate',
   'reviews-write': 'moderate',
   'reviews-read': 'generous',
   'ai-chat': 'moderate',

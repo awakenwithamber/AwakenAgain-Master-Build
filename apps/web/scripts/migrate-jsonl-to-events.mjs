@@ -138,12 +138,46 @@ function sources() {
       tsOf: (p) => p?.capturedAt,
     },
     {
+      // Get-involved captures (2026-10-15, audit fix #8) — same lead
+      // shape as quiz/newsletter; keyed by normalized email like both.
+      name: 'leads:affiliate_interest',
+      file: join(leadsDir, 'affiliate_interest.jsonl'),
+      stream: 'leads',
+      keyOf: (p) => normalizeEmail(p?.email),
+      typeOf: (p) =>
+        typeof p?.kind === 'string' ? `lead.${p.kind}` : 'lead.recorded',
+      tsOf: (p) => p?.capturedAt,
+    },
+    {
+      name: 'leads:partner_idea',
+      file: join(leadsDir, 'partner_idea.jsonl'),
+      stream: 'leads',
+      keyOf: (p) => normalizeEmail(p?.email),
+      typeOf: (p) =>
+        typeof p?.kind === 'string' ? `lead.${p.kind}` : 'lead.recorded',
+      tsOf: (p) => p?.capturedAt,
+    },
+    {
       name: 'reviews',
       file: join(reviewsDir, 'reviews.jsonl'),
       stream: 'reviews',
       keyOf: (p) => stringKey(p?.id),
       typeOf: () => 'review.recorded',
       tsOf: (p) => p?.createdAt,
+    },
+    {
+      // Customer accounts (Phase 3 Step 3) — one append-only ledger of
+      // account events keyed by normalized email; the record's own type
+      // is the event type, same as the app writes it.
+      name: 'accounts',
+      file:
+        process.env.ACCOUNTS_LEDGER_PATH ??
+        join(cwd, '.accounts-ledger.jsonl'),
+      stream: 'accounts',
+      keyOf: (p) => normalizeEmail(p?.email),
+      typeOf: (p) =>
+        typeof p?.type === 'string' ? p.type : 'account.recorded',
+      tsOf: (p) => p?.recorded_at,
     },
   ];
 }

@@ -75,9 +75,10 @@ describe('invite copy', () => {
       const copy = INVITE_COPY[moment];
       expect(copy.line.length).toBeGreaterThan(20);
       expect(copy.ctaLabel.length).toBeGreaterThan(0);
-      // Actions that exist today: the footer newsletter anchor or the
-      // Grimoire email sign-in — never a fake profile-creation route.
-      expect(['#newsletter-signup', '/grimoire']).toContain(copy.ctaHref);
+      // Actions that exist today: the footer newsletter anchor, the
+      // Grimoire email sign-in, or — since Phase 3 Step 3 built it —
+      // the real /account profile route. Never a route that 404s.
+      expect(['#newsletter-signup', '/grimoire', '/account']).toContain(copy.ctaHref);
     }
   });
 });

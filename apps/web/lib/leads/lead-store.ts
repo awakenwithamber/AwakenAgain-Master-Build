@@ -1,5 +1,6 @@
 /**
- * Provider-neutral lead store (G6 quiz leads, G15 newsletter).
+ * Provider-neutral lead store (G6 quiz leads, G15 newsletter,
+ * affiliate-interest + partner-idea captures since 2026-10-15).
  *
  * Contract: the app only ever depends on the `LeadStore` interface.
  * "Local JSONL now" — JsonlLeadStore appends one JSON object per line under
@@ -9,16 +10,29 @@
  * Server-only: uses node:fs. Never import from a client component.
  */
 import { appendFile, mkdir } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import {
   EVENT_STREAMS,
   appendEvent,
   postgresEnabled,
+  readStreamEvents,
 } from '../events/event-store';
 import type { QuizResultSnapshot } from '../quiz/quiz';
 
-export type LeadKind = 'quiz_lead' | 'newsletter';
+/**
+ * Lead kinds. The 2026-10-15 get-involved build (audit fix #8) added
+ * 'affiliate_interest' (/network) and 'partner_idea' (/partner) on the
+ * same pattern: consent-gated, one append per capture, stored verbatim
+ * by both drivers. Broadcast audience reads 'newsletter' only — the
+ * new kinds are never emailed as a list.
+ */
+export type LeadKind =
+  | 'quiz_lead'
+  | 'newsletter'
+  | 'affiliate_interest'
+  | 'partner_idea';
 
 export interface LeadRecord {
   id: string;
@@ -114,3 +128,69 @@ export const leadStore: LeadStore = {
   append: (record) =>
     (postgresEnabled() ? pgLeadStore : jsonlLeadStore).append(record),
 };
+
+/* ------------------------------------------------------------------ */
+/* Reads (Phase 3 Step 3: profile linking + account data export)       */
+/* ------------------------------------------------------------------ */
+
+const LEAD_KINDS: readonly LeadKind[] = [
+  'quiz_lead',
+  'newsletter',
+  'affiliate_interest',
+  'partner_idea',
+];
+
+/** A stored object counts as a lead for the email when kind + normalized email match. */
+function leadRecordFromParsed(parsed: unknown, email: string): LeadRecord | null {
+  if (parsed === null || typeof parsed !== 'object') return null;
+  const record = parsed as LeadRecord;
+  if (!LEAD_KINDS.includes(record.kind)) return null;
+  if (typeof record.email !== 'string') return null;
+  if (record.email.trim().toLowerCase() !== email) return null;
+  return record;
+}
+
+/**
+ * Every lead stored for one normalized email, in append order, from
+ * either driver — the read side profiles use to LINK past quiz captures
+ * to an account (the lead records themselves are never copied or
+ * mutated) and the account export uses for completeness. Missing files
+ * and malformed lines are tolerated in the codebase's ledger style.
+ */
+export async function readLeadsForEmailAsync(
+  emailInput: unknown,
+): Promise<LeadRecord[]> {
+  const email =
+    typeof emailInput === 'string' ? emailInput.trim().toLowerCase() : '';
+  if (!email) return [];
+  if (postgresEnabled()) {
+    const events = await readStreamEvents(EVENT_STREAMS.leads);
+    const records: LeadRecord[] = [];
+    for (const event of events) {
+      if (event.stream_key !== email) continue;
+      const record = leadRecordFromParsed(event.payload, email);
+      if (record) records.push(record);
+    }
+    return records;
+  }
+  const records: LeadRecord[] = [];
+  for (const kind of LEAD_KINDS) {
+    let raw: string;
+    try {
+      raw = readFileSync(join(storeDir(), `${kind}.jsonl`), 'utf8');
+    } catch {
+      continue; // no captures of this kind yet
+    }
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const record = leadRecordFromParsed(JSON.parse(trimmed), email);
+        if (record) records.push(record);
+      } catch {
+        // skip malformed line
+      }
+    }
+  }
+  return records;
+}

@@ -9,9 +9,10 @@
  * tells us whether THIS browser session is that first one. Invites only
  * appear from the second session onward.
  *
- * The invites point only at flows that exist today (the newsletter and
- * the Living Grimoire email sign-in). Saved profiles are Phase 3 — the
- * copy says so; nothing here creates or pretends to create an account.
+ * The invites point only at flows that exist today (the newsletter,
+ * the Living Grimoire email sign-in, and — since Phase 3 Step 3 —
+ * account profiles at /account). Nothing here creates or pretends to
+ * create an account; it invites, the flows themselves do the work.
  */
 import type { StorageLike } from './consent';
 
@@ -117,9 +118,9 @@ export const INVITE_COPY: Record<
     ctaHref: '#newsletter-signup',
   },
   'quiz-results': {
-    line: 'Keep your allies close — the newsletter carries seasonal rituals and remedies; saved profiles are on the way.',
-    ctaLabel: 'Join the newsletter',
-    ctaHref: '#newsletter-signup',
+    line: 'Keep your allies close — a free profile saves your results, likes, and searches across visits.',
+    ctaLabel: 'Create your profile',
+    ctaHref: '/account',
   },
   cart: {
     line: 'Grimoire members save 10% and ship free — sign in with just your email, no password to remember.',

@@ -9,6 +9,8 @@
  *
  * Grouping (derived from the real route inventory, 2026-10-14):
  * - Home, Services & Readings, Quiz, Journal are single destinations.
+ * - Get-involved destinations (2026-10-15): /network is a top-level
+ *   link (The Awaken Network pane); /partner lives in About & Support.
  * - Shop / Herb Library / The Living Grimoire / About & Support are
  *   groups — every other customer-facing route lives in exactly one.
  * Transactional routes (/cart, /checkout) sit at the end of Shop:
@@ -63,12 +65,15 @@ export const NAV_ENTRIES: NavEntry[] = [
   { kind: 'link', href: '/services', label: 'Services & Readings' },
   { kind: 'link', href: '/quiz', label: 'Quiz' },
   { kind: 'link', href: '/journal', label: 'Journal' },
+  { kind: 'link', href: '/network', label: 'The Awaken Network' },
   {
     kind: 'group',
     id: 'about-support',
     label: 'About & Support',
     links: [
       { href: '/about', label: 'About Amber' },
+      { href: '/account', label: 'My Account' },
+      { href: '/partner', label: 'Partner With Us' },
       { href: '/support', label: 'Support' },
       { href: '/order-status', label: 'Order Status' },
       { href: '/faqs', label: 'FAQs' },
