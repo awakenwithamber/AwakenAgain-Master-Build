@@ -38,6 +38,26 @@ export const CONTENT_ANALYTICS_EVENT_NAMES = {
   newsletterFormViewed: 'newsletter_form_viewed',
   /** Server: newsletter signup validated, consent confirmed, record stored. */
   newsletterSubscribed: 'newsletter_subscribed',
+  /** Server: affiliate-interest lead validated + stored (/network, 2026-10-15). */
+  affiliateInterestRegistered: 'affiliate_interest_registered',
+  /** Server: partner-idea lead validated + stored (/partner, 2026-10-15). */
+  partnerIdeaSubmitted: 'partner_idea_submitted',
+  /** Server: account sign-in code issued (Phase 3 Step 3). */
+  accountCodeRequested: 'account_code_requested',
+  /** Server: account sign-in verified; session issued. */
+  accountSignedIn: 'account_signin_completed',
+  /** Server: account deleted (tombstone appended). */
+  accountDeleted: 'account_deleted',
+  /** Server: account data export downloaded. */
+  accountExportDownloaded: 'account_export_downloaded',
+  /** Server: profile likes saved (count only — handles never enter analytics). */
+  profileLikesUpdated: 'profile_likes_updated',
+  /** Server: a search was saved to the profile (surface only, never the query). */
+  profileSearchSaved: 'profile_search_saved',
+  /** Server: a quiz result was saved to the profile. */
+  profileQuizResultSaved: 'profile_quiz_result_saved',
+  /** Server: on-device progress synced to the profile. */
+  profileProgressSynced: 'profile_progress_synced',
   /** Client: journal article page rendered. */
   articleViewed: 'article_viewed',
   /** Client: a catalog search executed (lengths, never the raw query). */
@@ -60,6 +80,16 @@ export const CONTENT_EVENT_OWNERSHIP = {
   review_submitted: 'client',
   newsletter_form_viewed: 'client',
   newsletter_subscribed: 'server',
+  affiliate_interest_registered: 'server',
+  partner_idea_submitted: 'server',
+  account_code_requested: 'server',
+  account_signin_completed: 'server',
+  account_deleted: 'server',
+  account_export_downloaded: 'server',
+  profile_likes_updated: 'server',
+  profile_search_saved: 'server',
+  profile_quiz_result_saved: 'server',
+  profile_progress_synced: 'server',
   article_viewed: 'client',
   search_performed: 'client',
   content_page_viewed: 'client',
@@ -75,6 +105,20 @@ export interface ContentAnalyticsEventProperties {
   review_submitted: { product_handle: string; rating: number };
   newsletter_form_viewed: { placement: string };
   newsletter_subscribed: { placement: string };
+  /** Slugs only, comma-joined in display order — no name/email/note text. */
+  affiliate_interest_registered: { project_slugs: string };
+  /** The contribution-type id only — the idea text never enters analytics. */
+  partner_idea_submitted: { contribution_type: string };
+  /** Delivery mode only ('preview' while no real provider is bound). */
+  account_code_requested: { delivery: string };
+  account_signin_completed: { is_new_account: boolean };
+  account_deleted: Record<string, never>;
+  account_export_downloaded: { lead_count: number; order_count: number };
+  profile_likes_updated: { like_count: number };
+  /** The surface id only — the saved query text never enters analytics. */
+  profile_search_saved: { surface: string };
+  profile_quiz_result_saved: { via: string };
+  profile_progress_synced: { has_interests: boolean };
   article_viewed: { slug: string; section: string };
   search_performed: { query_length: number; result_count: number };
   content_page_viewed: { path: string };

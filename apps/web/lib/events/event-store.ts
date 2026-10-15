@@ -39,6 +39,8 @@ export const EVENT_STREAMS = {
   broadcasts: 'broadcasts',
   leads: 'leads',
   reviews: 'reviews',
+  /** Customer accounts + profiles (Phase 3 Step 3) — lib/accounts. */
+  accounts: 'accounts',
 } as const;
 
 export type EventStream = (typeof EVENT_STREAMS)[keyof typeof EVENT_STREAMS];

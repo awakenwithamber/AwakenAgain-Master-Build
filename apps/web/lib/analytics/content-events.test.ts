@@ -7,7 +7,7 @@
  *   the single choke point buildContentEventPayload().
  * - Event names are snake_case, past-tense, one per user action.
  * - No PII/payment/secrets in any property — payloads are scanned at
- *   runtime over representative samples for all 11 events (name, email,
+ *   runtime over representative samples for every event (name, email,
  *   rating text, review body never enter a payload).
  * - Client/server ownership is total: every event has exactly one owner;
  *   server-owned events cannot be emitted via the client tracker.
@@ -45,6 +45,16 @@ const SAMPLES: { [K in ContentAnalyticsEventName]: ContentAnalyticsEventProperti
   review_submitted: { product_handle: 'dreamease-capsules', rating: 5 },
   newsletter_form_viewed: { placement: 'footer' },
   newsletter_subscribed: { placement: 'footer' },
+  affiliate_interest_registered: { project_slugs: 'awaken-network,brandalchemy' },
+  partner_idea_submitted: { contribution_type: 'idea' },
+  account_code_requested: { delivery: 'preview' },
+  account_signin_completed: { is_new_account: true },
+  account_deleted: {},
+  account_export_downloaded: { lead_count: 2, order_count: 1 },
+  profile_likes_updated: { like_count: 3 },
+  profile_search_saved: { surface: 'catalog' },
+  profile_quiz_result_saved: { via: 'quiz' },
+  profile_progress_synced: { has_interests: true },
   article_viewed: { slug: 'the-hidden-power-of-mugwort', section: 'journal' },
   search_performed: { query_length: 6, result_count: 3 },
   content_page_viewed: { path: '/herbal-wisdom' },

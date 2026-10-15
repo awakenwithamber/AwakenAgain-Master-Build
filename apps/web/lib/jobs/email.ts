@@ -27,7 +27,8 @@ export type EmailTemplate =
   | 'weekly_promo'
   | 'unsubscribe_confirmation'
   | 'review_reminder'
-  | 'quiz_results';
+  | 'quiz_results'
+  | 'account_signin_code';
 
 export interface PurchaseConfirmationData {
   order_id: string;
@@ -67,12 +68,26 @@ export interface QuizResultsData {
   result: QuizResultSnapshot;
 }
 
+/**
+ * Account sign-in code (Phase 3 Step 3): the ONLY template whose data
+ * carries a secret — the 6-digit code itself, which exists solely to be
+ * delivered to the address's owner. The job is built at the route, the
+ * code is never logged (the logging provider logs template + recipient
+ * + job id only), never returned to the client, and never put in an
+ * analytics payload.
+ */
+export interface AccountSigninCodeData {
+  code: string;
+  expires_in_minutes: number;
+}
+
 export type EmailTemplateData =
   | { template: 'purchase_confirmation'; data: PurchaseConfirmationData }
   | { template: 'weekly_promo'; data: WeeklyPromoData }
   | { template: 'unsubscribe_confirmation'; data: UnsubscribeConfirmationData }
   | { template: 'review_reminder'; data: ReviewReminderData }
-  | { template: 'quiz_results'; data: QuizResultsData };
+  | { template: 'quiz_results'; data: QuizResultsData }
+  | { template: 'account_signin_code'; data: AccountSigninCodeData };
 
 export type EmailJobStatus = 'queued' | 'sent' | 'failed';
 
@@ -85,7 +100,8 @@ export interface EmailJob {
     | WeeklyPromoData
     | UnsubscribeConfirmationData
     | ReviewReminderData
-    | QuizResultsData;
+    | QuizResultsData
+    | AccountSigninCodeData;
   queued_at: string;
   status: EmailJobStatus;
   attempts: number;
@@ -178,6 +194,16 @@ export function createEmailProvider(): EmailProvider {
   return new LoggingEmailProvider();
 }
 
+/**
+ * True while the bound provider is the logging preview (NO REAL SENDS).
+ * Customer-facing copy keys off this so it never claims an email was
+ * delivered while delivery is unbound (the quiz honesty rule, audit
+ * 2026-10-15 BROKEN-1, applied to account sign-in).
+ */
+export function emailDeliveryIsPreview(): boolean {
+  return createEmailProvider().name === 'logging';
+}
+
 /* ------------------------------------------------------------------ */
 /* Unsubscribe handling                                                 */
 /* ------------------------------------------------------------------ */
@@ -244,6 +270,17 @@ export function buildPurchaseConfirmationJob(
     throw new Error('Purchase confirmation requires order_id, total_cents, item_summary.');
   }
   return buildEmailJob({ to, template: 'purchase_confirmation', data });
+}
+
+/** Account sign-in code factory — delivery via the EmailProvider only. */
+export function buildAccountSigninCodeJob(
+  to: unknown,
+  data: AccountSigninCodeData,
+): EmailJob {
+  if (!/^\d{6}$/.test(data.code)) {
+    throw new Error('Sign-in code job requires the 6-digit code.');
+  }
+  return buildEmailJob({ to, template: 'account_signin_code', data });
 }
 
 /** Quiz-results factory — the send is routed via the EmailProvider. */
