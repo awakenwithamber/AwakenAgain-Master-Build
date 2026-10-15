@@ -10,8 +10,15 @@
  * - getValidSession: valid → session; expired → pruned/null; unknown → null.
  * - createSupabaseOtpStore refuses to run (binding NEEDS VERIFICATION).
  * - Contract is store-agnostic: flows work against the OtpStore interface.
+ * - Entitlement (audit 2026-10-15 GAP-4): with an entitlement check bound,
+ *   a correct code for a non-entitled email grants NO session
+ *   ('not_entitled'), does not consume the code, and fails closed when
+ *   the checker throws or no subscription record exists.
  */
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   InMemoryOtpStore,
   OTP_CODE_LENGTH,
@@ -23,6 +30,7 @@ import {
   verifyOtp,
   type OtpStore,
 } from './otp';
+import { isEntitledSubscriberAsync } from '../subscriptions/entitlement';
 
 function freshStore(): OtpStore {
   return new InMemoryOtpStore();
@@ -107,6 +115,111 @@ describe('verifyOtp', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('verifyOtp entitlement gate (audit 2026-10-15 GAP-4)', () => {
+  afterEach(() => {
+    delete process.env.SUBSCRIPTIONS_LEDGER_PATH;
+  });
+
+  function subscriptionLedger(lines: unknown[]): string {
+    const path = join(
+      mkdtempSync(join(tmpdir(), 'otp-entitlement-')),
+      'subscriptions.jsonl',
+    );
+    writeFileSync(
+      path,
+      lines.map((l) => JSON.stringify(l)).join('\n') + (lines.length ? '\n' : ''),
+      'utf8',
+    );
+    return path;
+  }
+
+  function subscriptionRecord(email: string, status: string) {
+    return {
+      subscription_id: 'SUB-TEST-0001',
+      created_at: '2026-10-13T00:00:00.000Z',
+      computed_by: 'server',
+      plan_id: 'living-grimoire-monthly',
+      plan_name: 'Living Grimoire',
+      price_cents: 777,
+      interval: 'month',
+      status,
+      customer: { name: 'Test Member', email },
+      confirmed_at: status === 'active' ? '2026-10-13T01:00:00.000Z' : null,
+      confirmed_by: status === 'active' ? 'owner' : null,
+      recurring_mechanic: 'NEEDS_VERIFICATION',
+      ledger_version: 1,
+    };
+  }
+
+  it('entitled member: session issued exactly as before', async () => {
+    process.env.SUBSCRIPTIONS_LEDGER_PATH = subscriptionLedger([
+      subscriptionRecord('member@example.com', 'active'),
+    ]);
+    const store = freshStore();
+    const { request, code } = await requestOtp(store, 'member@example.com');
+    const result = await verifyOtp(store, request.request_id, code, {
+      entitlementCheck: isEntitledSubscriberAsync,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.session.email).toBe('member@example.com');
+      expect(await getValidSession(store, result.session.session_token)).not.toBeNull();
+    }
+  });
+
+  it('non-entitled (pending_payment): no session, code NOT consumed', async () => {
+    process.env.SUBSCRIPTIONS_LEDGER_PATH = subscriptionLedger([
+      subscriptionRecord('pending@example.com', 'pending_payment'),
+    ]);
+    const store = freshStore();
+    const { request, code } = await requestOtp(store, 'pending@example.com');
+    const denied = await verifyOtp(store, request.request_id, code, {
+      entitlementCheck: isEntitledSubscriberAsync,
+    });
+    expect(denied.ok).toBe(false);
+    if (!denied.ok) expect(denied.reason).toBe('not_entitled');
+    // The request survives unconsumed — possession was proven; membership
+    // is the only missing piece. Once entitled, the same code verifies.
+    const persisted = await store.getCodeRequest(request.request_id);
+    expect(persisted).not.toBeNull();
+    expect(persisted!.consumed).toBe(false);
+    const after = await verifyOtp(store, request.request_id, code, {
+      entitlementCheck: async () => true,
+    });
+    expect(after.ok).toBe(true);
+  });
+
+  it('no subscription record at all: fail-closed not_entitled', async () => {
+    process.env.SUBSCRIPTIONS_LEDGER_PATH = subscriptionLedger([]);
+    const store = freshStore();
+    const { request, code } = await requestOtp(store, 'stranger@example.com');
+    const result = await verifyOtp(store, request.request_id, code, {
+      entitlementCheck: isEntitledSubscriberAsync,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('not_entitled');
+  });
+
+  it('a throwing entitlement checker fails closed (never grants)', async () => {
+    const store = freshStore();
+    const { request, code } = await requestOtp(store, 'member@example.com');
+    const result = await verifyOtp(store, request.request_id, code, {
+      entitlementCheck: async () => {
+        throw new Error('ledger unavailable');
+      },
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('not_entitled');
+  });
+
+  it('without a checker bound, the pure possession contract is unchanged', async () => {
+    const store = freshStore();
+    const { request, code } = await requestOtp(store, 'anyone@example.com');
+    const result = await verifyOtp(store, request.request_id, code);
+    expect(result.ok).toBe(true);
   });
 });
 

@@ -6,6 +6,11 @@
  *  response), emits server-owned `otp_requested`.
  * POST { action: 'verify', request_id, code } → single-use verification;
  *  on success issues a 24h session token, emits server-owned `otp_verified`.
+ *  ENTITLEMENT (audit 2026-10-15 GAP-4): verification also resolves
+ *  subscription entitlement (lib/subscriptions/entitlement — the latest
+ *  record for the email must be 'active', fail-closed). A correct code
+ *  for a non-member email is answered 403 with an honest explanation and
+ *  grants NO session — a code proves inbox possession, not membership.
  * GET ?token= → session validity (for the GrimoireGate component).
  *
  * Bound store: InMemoryOtpStore (dev/preview). It does NOT survive
@@ -31,6 +36,7 @@ import {
   requestOtp,
   verifyOtp,
 } from '../../../lib/grimoire/otp';
+import { isEntitledSubscriberAsync } from '../../../lib/subscriptions/entitlement';
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
 
 /** Bound store — in-memory until the Supabase binding is verified. */
@@ -94,9 +100,24 @@ export async function POST(request: Request) {
     });
   }
 
-  // action === 'verify'
-  const verified = await verifyOtp(store, parsed.request_id, parsed.code);
+  // action === 'verify' — code possession AND active membership are both
+  // required before a session exists (entitlement semantics live in
+  // lib/subscriptions/entitlement; fail-closed).
+  const verified = await verifyOtp(store, parsed.request_id, parsed.code, {
+    entitlementCheck: isEntitledSubscriberAsync,
+  });
   if (!verified.ok) {
+    if (verified.reason === 'not_entitled') {
+      // Honest, non-leaky: the code was right; there is simply no active
+      // membership for that email.
+      return fail(
+        [
+          "That email doesn't have an active Living Grimoire membership. " +
+            'If you recently subscribed, sign in with the same email you subscribed with.',
+        ],
+        403,
+      );
+    }
     const reasons: Record<string, string> = {
       not_found: 'Code request not found. Request a new code.',
       expired: 'That code has expired. Request a new code.',

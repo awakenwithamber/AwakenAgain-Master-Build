@@ -22,6 +22,14 @@
  * - Codes are stored hashed (SHA-256 + per-request salt) — never plaintext.
  * - Session tokens are 256-bit random, 24-hour TTL.
  * - OTP codes NEVER appear in analytics events (see grimoire-events).
+ * - ENTITLEMENT (audit 2026-10-15 GAP-4): a code proves possession of an
+ *   email inbox — it is NOT proof of membership. verifyOtp accepts an
+ *   entitlement check; the route binds the subscription entitlement
+ *   lookup (latest record for the email must be 'active', fail-closed).
+ *   Without it, the moment a delivery provider is bound, ANY email could
+ *   obtain a member session. A failed check grants NO session and does
+ *   NOT consume the code (membership is a separate axis from possession:
+ *   subscribe, then the same code path works).
  */
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { isRecord, sanitizeEmail } from '../security/validation';
@@ -183,16 +191,39 @@ export async function requestOtp(
 
 export type VerifyOtpResult =
   | { ok: true; session: OtpSession }
-  | { ok: false; reason: 'not_found' | 'expired' | 'consumed' | 'too_many_attempts' | 'mismatch' };
+  | {
+      ok: false;
+      reason:
+        | 'not_found'
+        | 'expired'
+        | 'consumed'
+        | 'too_many_attempts'
+        | 'mismatch'
+        | 'not_entitled';
+    };
+
+export interface VerifyOtpOptions {
+  /**
+   * Membership gate, consulted AFTER the code matches and BEFORE any
+   * session exists. Receives the request's (already normalized) email.
+   * Must resolve false for unknown / non-active emails — fail-closed.
+   * A checker that throws is treated as "not entitled" (fail-closed),
+   * never as a grant.
+   */
+  entitlementCheck?: (email: string) => Promise<boolean>;
+}
 
 /**
  * Verify a code. Single use: success consumes the request and issues a
- * session; 5 failed attempts burn the request.
+ * session; 5 failed attempts burn the request. When an entitlement check
+ * is supplied, a correct code for a non-entitled email yields
+ * 'not_entitled' — no session is issued and the request is NOT consumed.
  */
 export async function verifyOtp(
   store: OtpStore,
   requestId: unknown,
   codeInput: unknown,
+  options: VerifyOtpOptions = {},
 ): Promise<VerifyOtpResult> {
   if (typeof requestId !== 'string' || typeof codeInput !== 'string') {
     return { ok: false, reason: 'not_found' };
@@ -213,6 +244,19 @@ export async function verifyOtp(
   if (!/^\d{6}$/.test(code) || !verifyCodeHash(code, record.code_hash)) {
     await store.saveCodeRequest({ ...record, attempts: record.attempts + 1 });
     return { ok: false, reason: 'mismatch' };
+  }
+  // The code matched — possession is proven. Membership is NOT: resolve
+  // entitlement before any session is granted (audit GAP-4). Fail-closed:
+  // a throwing checker denies, and denial neither consumes the request
+  // nor counts as an attempt (the code itself was correct).
+  if (options.entitlementCheck) {
+    let entitled = false;
+    try {
+      entitled = await options.entitlementCheck(record.email);
+    } catch {
+      entitled = false;
+    }
+    if (!entitled) return { ok: false, reason: 'not_entitled' };
   }
   await store.deleteCodeRequest(requestId);
   const session: OtpSession = {
