@@ -5,8 +5,13 @@
  * maintain. Small catalog (45 products), so a scored substring match is
  * fast and honest: field-weighted scoring, deterministic ordering, max 10
  * results. UI lives in components/ui/Search.tsx.
+ *
+ * Superseded products are never returned: their records are reference
+ * material, and surfacing one in search would present a retired product
+ * as discoverable/purchasable.
  */
 import { PRODUCTS } from '../catalog/products';
+import { isSupersededProduct } from '../catalog/status';
 import type { Product } from '../../types';
 
 export interface SearchResult {
@@ -56,6 +61,7 @@ export function searchProducts(
   if (tokens.length === 0) return [];
   const scored: SearchResult[] = [];
   for (const p of products) {
+    if (isSupersededProduct(p)) continue;
     const score = scoreProduct(tokens, p);
     if (score > 0) scored.push({ product: p, score });
   }

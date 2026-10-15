@@ -10,6 +10,7 @@
  * regression tests and imported by app/api/checkout/route.ts.
  */
 import { getProductByHandle } from '../catalog/products';
+import { isSupersededProduct } from '../catalog/status';
 import { BUNDLE_ID, formulaKindForHandle, getFormulaSize, toCents } from '../pricing/pricing';
 import {
   sanitizeEmail,
@@ -250,6 +251,22 @@ function priceItem(input: CheckoutItemInput): OrderLine {
   }
   if (!Number.isInteger(input.unit_price_cents) || input.unit_price_cents < 0) {
     throw new Error(`Invalid unit price claim for ${product_handle}.`);
+  }
+
+  // Superseded products are reference-only. The record stays in the
+  // catalog (provenance, redirects, image registry) but the product can
+  // never be ordered — at any price, subscriber or not. This guard sits
+  // ABOVE the formula / customization / plain branch split below, so no
+  // pricing path can bypass it (a customization or formula attached to a
+  // superseded product is rejected here, not priced from the shape or
+  // herb tables). The bundle path needs no equivalent check: priceBundle
+  // accepts only BUNDLE_ID — the current Alchemy collection — and never
+  // resolves a per-product record.
+  const resolvedProduct = getProductByHandle(product_handle);
+  if (resolvedProduct && isSupersededProduct(resolvedProduct)) {
+    throw new Error(
+      `Product ${product_handle} is no longer available — it has been superseded and cannot be ordered.`,
+    );
   }
 
   let serverUnitCents: number;

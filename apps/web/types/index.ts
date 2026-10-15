@@ -51,6 +51,16 @@ export interface Product {
   field_verification?: Record<string, unknown>;
   provenance?: Record<string, unknown>;
   last_verified?: string | null;
+  /**
+   * Catalog lifecycle marker carried by the source record (vocabulary in
+   * VerificationStatus above). 'SUPERSEDED' products stay in the catalog
+   * for reference but must never be sold, sitemap-listed, or returned by
+   * search — the single enforcement predicate is isSupersededProduct in
+   * lib/catalog/status.ts. Absent/null = a current product.
+   */
+  verification_status?: string | null;
+  /** Handle of the product that replaced this one, when superseded. */
+  superseded_by?: string | null;
   [key: string]: unknown;
 }
 

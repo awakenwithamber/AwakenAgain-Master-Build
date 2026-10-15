@@ -6,7 +6,7 @@
  * truth), and representative symptom searches resolve to the expected herbs.
  */
 import { describe, expect, it } from 'vitest';
-import { illustrationFor } from './illustrations';
+import { BOTANICAL_ILLUSTRATIONS, illustrationFor } from './illustrations';
 import {
   CATEGORY_LABELS,
   ENERGETIC_PROPERTIES,
@@ -51,8 +51,16 @@ describe('herb records', () => {
   });
 
   it('alias slugs resolve to their canonical illustration', () => {
-    expect(getHerbRecord('valerian-root')?.illustration).toContain('herb-valerian_');
-    expect(getHerbRecord('red-raspberry-leaf')?.illustration).toContain('herb-raspberry-leaf_');
+    // Alias equivalence, asserted the way the willow-bark line below does
+    // it: the alias record's resolved illustration equals the canonical
+    // slug's. Since 2026-10-08 every mapped CDN hotlink returns 403, so
+    // illustrationFor deliberately resolves them all to the local
+    // placeholder; the preserved map entries still carry the canonical
+    // artwork URLs, which the fragment assertions guard directly.
+    expect(getHerbRecord('valerian-root')?.illustration).toBe(illustrationFor('valerian'));
+    expect(getHerbRecord('red-raspberry-leaf')?.illustration).toBe(illustrationFor('red-raspberry'));
+    expect(BOTANICAL_ILLUSTRATIONS['valerian-root']).toContain('herb-valerian_');
+    expect(BOTANICAL_ILLUSTRATIONS['red-raspberry-leaf']).toContain('herb-raspberry-leaf_');
     expect(getHerbRecord('chasteberry')?.illustration).toBeTruthy();
     expect(getHerbRecord('willow-bark')?.illustration).toBe(illustrationFor('white-willow'));
   });
