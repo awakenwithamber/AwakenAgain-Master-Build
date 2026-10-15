@@ -9,7 +9,6 @@
  * certifications, timelines, or inventory statements.
  */
 import type { Metadata } from 'next';
-import { SiteHeader } from '../../components/shop/SiteHeader';
 import styles from './about.module.css';
 
 export const metadata: Metadata = {
@@ -21,7 +20,6 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <SiteHeader />
       <main id="main-content" className={styles.aboutMain}>
         <div className={styles.portraitWrap}>
           <div

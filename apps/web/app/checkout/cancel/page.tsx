@@ -6,7 +6,6 @@
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { SiteHeader } from '../../../components/shop/SiteHeader';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
@@ -23,7 +22,6 @@ export default async function CheckoutCancelPage({
 
   return (
     <>
-      <SiteHeader />
       <main
         id="main-content"
         style={{

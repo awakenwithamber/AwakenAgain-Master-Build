@@ -10,7 +10,6 @@
  * (801) 414-8984, tel:+18014148984.
  */
 import type { Metadata } from 'next';
-import { SiteHeader } from '../../components/shop/SiteHeader';
 import { ContactForm } from './ContactForm';
 
 export const metadata: Metadata = {
@@ -26,7 +25,6 @@ const CONTACT_PHONE_TEL = 'tel:+18014148984';
 export default function ContactPage() {
   return (
     <>
-      <SiteHeader />
       <main
         style={{
           maxWidth: '44rem',

@@ -7,7 +7,6 @@
  * marked.
  */
 import type { Metadata } from 'next';
-import { SiteHeader } from '../../components/shop/SiteHeader';
 import { FaqAccordion } from './FaqAccordion';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './faq.module.css';
@@ -20,7 +19,6 @@ export const metadata: Metadata = {
 export default function FaqsPage() {
   return (
     <>
-      <SiteHeader />
       <main id="main-content" className={styles.faqMain}>
         <p className="section-ornament" aria-hidden="true">
           ✦

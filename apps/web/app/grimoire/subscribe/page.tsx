@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { SiteHeader } from '../../../components/shop/SiteHeader';
 import { SubscribeForm } from '../../../components/grimoire/SubscribeForm';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
@@ -16,7 +15,6 @@ export const metadata: Metadata = {
 export default function GrimoireSubscribePage() {
   return (
     <>
-      <SiteHeader />
       <main id="main-content">
         <h1>The Living Grimoire - Book of Light</h1>
         <p>
