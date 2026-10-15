@@ -10,6 +10,7 @@
  */
 import type { Metadata } from 'next';
 import styles from './about.module.css';
+import { BRAND_PHONE_DISPLAY, BRAND_PHONE_TEL } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
   title: 'About Amber',
@@ -161,7 +162,12 @@ export default function AboutPage() {
                   awaken@consultant.com
                 </a>
                 <br />
-                Phone: <a href="tel:+18014148984">(801) 414-8984</a>
+                {/* Business number only (owner directive 2026-10-13):
+                    801-819-6795 on every business surface; the personal
+                    number appears solely as the footer's secondary listing.
+                    Audit 2026-10-15 BROKEN-3. */}
+                Phone:{' '}
+                <a href={BRAND_PHONE_TEL}>{BRAND_PHONE_DISPLAY}</a>
               </p>
             </address>
             <p>

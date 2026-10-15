@@ -6,11 +6,20 @@
  * client validation mirrors the server rules in lib/contact/contact.ts,
  * but the SERVER always re-validates (CLIENT=PREVIEW, SERVER=AUTHORITY).
  *
- * Contact identity (verified 2026-10-04): awaken@consultant.com,
- * (801) 414-8984, tel:+18014148984.
+ * Contact identity comes from lib/seo/config (BRAND_* constants) — never
+ * retyped here. Owner directive 2026-10-13: every business surface carries
+ * the BUSINESS number 801-819-6795; (801) 414-8984 is personal-only and
+ * appears solely as the footer's secondary listing. (Audit 2026-10-15
+ * BROKEN-3: this page previously carried the personal number as primary,
+ * under a stale "verified 2026-10-04" note from before the recovery.)
  */
 import type { Metadata } from 'next';
 import { ContactForm } from './ContactForm';
+import {
+  BRAND_EMAIL,
+  BRAND_PHONE_DISPLAY,
+  BRAND_PHONE_TEL,
+} from '../../lib/seo/config';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -18,9 +27,9 @@ export const metadata: Metadata = {
     "Reach Amber at Amber's Alchemy Apothecary — questions about orders, custom soaps, the Living Grimoire, or wholesale. Amber reads every message herself.",
 };
 
-const CONTACT_EMAIL = 'awaken@consultant.com';
-const CONTACT_PHONE_DISPLAY = '(801) 414-8984';
-const CONTACT_PHONE_TEL = 'tel:+18014148984';
+const CONTACT_EMAIL = BRAND_EMAIL;
+const CONTACT_PHONE_DISPLAY = BRAND_PHONE_DISPLAY;
+const CONTACT_PHONE_TEL = BRAND_PHONE_TEL;
 
 export default function ContactPage() {
   return (

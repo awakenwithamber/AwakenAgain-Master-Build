@@ -113,8 +113,12 @@ const TOPIC_REPLIES: TopicReply[] = [
   {
     match: /shipping|delivery/i,
     reply:
-      'Shipping is free on orders over $100 (over $75 for subscribers), and orders are ' +
-      'fulfilled in about 3–5 business days. Amber confirms every order personally.',
+      // Shipping canon (owner decision 2026-10-10): free at $45; always
+      // free for subscribers. The $100/$75 figure was stale
+      // (audit 2026-10-15 BROKEN-4).
+      'Shipping is free on orders of $45 or more (always free for Living Grimoire ' +
+      'subscribers), and orders are fulfilled in about 3–5 business days. Amber ' +
+      'confirms every order personally.',
   },
   {
     match: /price|cost|much/i,

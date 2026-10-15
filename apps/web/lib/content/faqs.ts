@@ -32,7 +32,10 @@ export const FAQS: Faq[] = [
   {
     question: 'How do I pay for my order?',
     answer: [
-      'We accept Cash App ($AmberPatten347) and Venmo (@AwakenwithAmber) only. At checkout you will see the exact payment instructions, send your payment, and we confirm your order once it arrives.',
+      // Payment canon (owner decision 2026-10-13): Cash App / Venmo, or card
+      // via an emailed Bookipi invoice. The previous "Cash App and Venmo
+      // only" wording predated the Bookipi path (audit 2026-10-15 GAP-2).
+      'We accept Cash App ($AmberPatten347) and Venmo (@AwakenwithAmber), or a credit/debit card paid through a secure Bookipi invoice we email you after you order. At checkout you choose how you will pay and see the exact instructions; we confirm your order once your payment arrives.',
       'We never ask for card details on this site.',
     ],
     source: 'owner-verified',
@@ -40,7 +43,11 @@ export const FAQS: Faq[] = [
   {
     question: 'What are the shipping terms?',
     answer: [
-      'Shipping is free on orders over $100, and free on orders over $75 for Living Grimoire subscribers. Orders are handcrafted and typically ship within 3–5 business days where operationally accurate.',
+      // Shipping canon (owner decision 2026-10-10): free at $45; always free
+      // for Living Grimoire subscribers. Matches FREE_SHIPPING_*_CENTS in
+      // lib/checkout/order.ts. The $100/$75 wording here was stale
+      // (audit 2026-10-15 BROKEN-4).
+      'Shipping is free on orders of $45 or more, and always free for Living Grimoire subscribers. Orders are handcrafted and typically ship within 3–5 business days where operationally accurate.',
     ],
     source: 'owner-verified',
   },
@@ -84,7 +91,7 @@ export const FAQS: Faq[] = [
   {
     question: 'What is the Herbal Allies Quiz?',
     answer: [
-      'Our quiz helps you discover the herbal allies that fit your current focus — sleep, energy, immunity, skin, digestion, and more — and the remedy form you prefer. You can optionally share your name and email to receive your results and a welcome note from the apothecary. We never sell or share your information.',
+      'Our quiz helps you discover the herbal allies that fit your current focus — sleep, energy, immunity, skin, digestion, and more — and the remedy form you prefer. You can optionally share your name and email to save your results with the apothecary; email delivery of results is being set up, and we will send them as soon as it opens. We never sell or share your information.',
     ],
     source: 'owner-verified',
   },
