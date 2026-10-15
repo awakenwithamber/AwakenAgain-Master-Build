@@ -11,6 +11,8 @@
 import { useEffect } from 'react';
 import { trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
+import { recordInterestNow } from '../../lib/personalization/client';
+import { interestForCatalogCategory } from '../../lib/personalization/interests';
 
 export function ProductViewTracker({
   productHandle,
@@ -25,6 +27,10 @@ export function ProductViewTracker({
       ANALYTICS_EVENT_NAMES.productViewed,
       { product_handle: productHandle, category },
     );
+    // Interest profile (2026-10-14): a product view signals its catalog
+    // category's interest. Consent-gated inside recordInterest.
+    const interest = interestForCatalogCategory(category);
+    if (interest) recordInterestNow(interest, 1);
   }, [productHandle, category]);
   return null;
 }

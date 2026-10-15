@@ -49,6 +49,8 @@ import { getSeasonalFeature } from '../../lib/catalog/seasonal';
 import { formatPrice } from '../../lib/pricing/pricing';
 import { track, trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
+import { recordInterestNow } from '../../lib/personalization/client';
+import { ProfileInvite } from '../personalization/ProfileInvite';
 import type {
   Customization,
   OrderConfiguration,
@@ -235,6 +237,9 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
     });
     if (key === 'reveal') {
       trackOnce(`ritual_completed_${mode}`, ANALYTICS_EVENT_NAMES.ritualCompleted, {});
+      // Interest profile (2026-10-14): completing the ritual is a +3
+      // soaps signal. Consent-gated inside recordInterest.
+      recordInterestNow('soaps', 3);
     }
   };
 
@@ -561,6 +566,7 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
             <dd>{colorLabel(theme.color)}</dd>
           </dl>
           <BundleConfigurator key={themeKey} theme={theme} seasonal={seasonal} />
+          <ProfileInvite moment="soap-builder" />
           <p>
             <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={startNew}>
               Start a new creation
@@ -603,6 +609,8 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
           Hand-poured to order by Amber in Salt Lake City. Please allow 3–5
           business days for your soap to be crafted and cured before shipping.
         </p>
+        <ProfileInvite moment="soap-builder" />
+
         <p className={styles.makerNotes}>
           <strong>Maker notes:</strong>{' '}
           {makerNotes({

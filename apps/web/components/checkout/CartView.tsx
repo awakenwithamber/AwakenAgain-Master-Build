@@ -11,9 +11,9 @@ import { getHerb } from '../../lib/catalog/herbs';
 import { formatPrice } from '../../lib/pricing/pricing';
 import { track } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
-import { SiteHeader } from '../shop/SiteHeader';
 import { useCart, cartItemTitle } from './cart-store';
 import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
+import { ProfileInvite } from '../personalization/ProfileInvite';
 
 export function CartView() {
   const { items, bundle, loaded, removeItem, updateQuantity, setBundle, clear } =
@@ -27,7 +27,6 @@ export function CartView() {
 
   return (
     <>
-      <SiteHeader />
       <main className="cart-main">
         <h1>Your Cart</h1>
         {empty ? (
@@ -169,6 +168,8 @@ export function CartView() {
                 </small>
               </p>
             </section>
+
+            <ProfileInvite moment="cart" />
 
             <p>
               <a href="/checkout" className="btn-primary">

@@ -1,0 +1,96 @@
+/* Consent bar + privacy-choices control (owner spec 2026-10-14).
+   Brand: dark plum surfaces, gold accents. Calm bar — never a modal.
+   All interactive targets are at least 44px tall. */
+
+.consentBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  background: var(--plum-deep);
+  border-top: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--text-body);
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+.consentInner {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.consentText {
+  margin: 0;
+  flex: 1 1 22rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.consentText a {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+.consentActions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.consentButton {
+  min-height: 44px;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--gold);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--gold);
+  transition: background var(--transition), color var(--transition);
+}
+
+.consentButton:hover {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.consentButtonPrimary {
+  background: var(--gold);
+  color: #150b26;
+  font-weight: 600;
+}
+
+.consentButtonPrimary:hover {
+  background: var(--parchment-dk);
+  color: #150b26;
+}
+
+/* Privacy page control */
+.choicesBox {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--plum-mid);
+  padding: 1.25rem;
+  margin: 1rem 0;
+}
+
+.choicesState {
+  margin: 0 0 0.75rem;
+}
+
+.choicesActions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consentButton {
+    transition: none;
+  }
+}

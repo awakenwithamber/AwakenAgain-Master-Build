@@ -34,6 +34,7 @@ const SHOP_LINKS = [
 const LEGAL_LINKS = [
   { href: '/legal', label: 'Disclaimers' },
   { href: '/privacy', label: 'Privacy Policy' },
+  { href: '/privacy#privacy-choices', label: 'Privacy Choices' },
   { href: '/terms', label: 'Terms of Service' },
 ];
 
@@ -93,7 +94,7 @@ export default function Footer() {
             <a href="tel:+18014148984">(801) 414-8984</a>
           </p>
         </div>
-        <div className="footer-col footer-newsletter">
+        <div className="footer-col footer-newsletter" id="newsletter-signup">
           <h3>Stay in the Circle</h3>
           <NewsletterSignup placement="footer" />
         </div>

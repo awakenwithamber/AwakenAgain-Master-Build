@@ -1,0 +1,60 @@
+/* Profile-invite line (owner spec 2026-10-14): one gentle line at a
+   save-moment — inline, never a popup. Brand plum/gold; targets ≥44px. */
+
+.invite {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--plum-mid);
+  color: var(--text-body);
+  padding: 0.8rem 1rem;
+  margin: 1.25rem auto;
+  max-width: 44rem;
+  text-align: left;
+}
+
+.inviteLine {
+  margin: 0;
+  flex: 1 1 18rem;
+  line-height: 1.55;
+  font-size: 1rem;
+}
+
+.inviteCta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.inviteCta:hover {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.inviteDismiss {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.inviteDismiss:hover {
+  color: var(--gold);
+}

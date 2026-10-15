@@ -20,6 +20,8 @@ import {
   getQuizResult,
 } from '../../lib/quiz/quiz';
 import { trackContent, trackContentOnce } from '../../lib/analytics/content-posthog';
+import { recordInterestNow } from '../../lib/personalization/client';
+import { ProfileInvite } from '../personalization/ProfileInvite';
 import { PRODUCTS } from '../../lib/catalog/products';
 import { BRAND_NAME } from '../../lib/seo/config';
 
@@ -63,6 +65,9 @@ export default function Quiz() {
     setFormId(id);
     trackContent('quiz_step_completed', { step: 2, step_name: QUIZ_STEP_NAMES[1], concern_id: concernId });
     trackContent('quiz_completed', { concern_id: concernId, form_id: id });
+    // Interest profile (2026-10-14): completing the quiz is a +3 quiz
+    // signal. Consent-gated inside recordInterest.
+    recordInterestNow('quiz', 3);
     setPhase('results');
   };
 
@@ -235,6 +240,8 @@ export default function Quiz() {
               </>
             )}
           </div>
+
+          <ProfileInvite moment="quiz-results" />
 
           <p className="quiz-disclaimer">
             Educational only — these suggestions are not medical advice and are
