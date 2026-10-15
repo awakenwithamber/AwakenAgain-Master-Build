@@ -8,7 +8,7 @@
 import { useEffect, useRef } from 'react';
 import { trackPlatformEvent } from '../../lib/analytics/platform-events';
 
-export type AdminSection = 'overview' | 'orders' | 'leads' | 'reviews' | 'broadcast';
+export type AdminSection = 'overview' | 'orders' | 'leads' | 'reviews' | 'broadcast' | 'subscriptions';
 
 export function AdminViewTracker({ section }: { section: AdminSection }) {
   const fired = useRef(false);
