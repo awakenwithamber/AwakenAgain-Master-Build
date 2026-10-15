@@ -17,6 +17,7 @@ import { SHOP_GOALS, goalLabelsForHandle } from './shop-goals';
 import { ProductCard } from './ProductCard';
 import { RitualBundleCard } from './RitualBundleCard';
 import styles from './shop.module.css';
+import Link from 'next/link';
 
 /** Category filter pills (spec §7) — each maps onto the goal mapping. */
 const FILTER_PILLS: Array<{ id: string; label: string; goalId: string | null }> = [
@@ -105,7 +106,7 @@ export function ShopClient() {
         <h2 className="section-title">Shop by Goal</h2>
         <p className="section-subtitle">
           Not sure where to begin? Choose what you&apos;d love support with —
-          or <a href="/quiz">take the Find My Remedy quiz ✦</a>.
+          or <Link href="/quiz">take the Find My Remedy quiz ✦</Link>.
         </p>
         <div className={styles.goalGrid}>
           {SHOP_GOALS.map((goal) => (

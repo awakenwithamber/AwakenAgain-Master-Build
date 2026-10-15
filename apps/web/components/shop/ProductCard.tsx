@@ -23,6 +23,7 @@ import { useCart } from '../checkout/cart-store';
 import { getProductDisplayImage } from '../../lib/media/product-image';
 import type { Product } from '../../types';
 import styles from './shop.module.css';
+import Link from 'next/link';
 
 const CATEGORY_ICONS: Record<string, string> = {
   Soaps: '🧼',
@@ -152,7 +153,7 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
           {icon} {product.category}
         </span>
         <h3 className="product-card-name">
-          <a href={`/shop/${product.handle}`}>{product.title}</a>
+          <Link href={`/shop/${product.handle}`}>{product.title}</Link>
         </h3>
         {/* Inline reviews: omitted — no fabricated reviews; the review store
             ships empty and only approved owner-moderated reviews may appear. */}
@@ -226,7 +227,7 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
         {!hasPrice ? (
           <p>
             <small>
-              Pricing not yet established — <a href="/contact">contact us</a>.
+              Pricing not yet established — <Link href="/contact">contact us</Link>.
             </small>
           </p>
         ) : null}

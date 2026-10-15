@@ -21,6 +21,7 @@ import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart, cartItemTitle } from './cart-store';
 import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 import type { CartItem } from '../../types';
+import Link from 'next/link';
 
 type PaymentMethodChoice = 'cash_app_or_venmo' | 'bookipi_card_invoice';
 
@@ -182,7 +183,7 @@ export function CheckoutForm() {
           </p>
         </section>
         <p>
-          <a href="/shop">Continue shopping</a>
+          <Link href="/shop">Continue shopping</Link>
         </p>
       </main>
     );
@@ -194,7 +195,7 @@ export function CheckoutForm() {
         <h1>Checkout</h1>
         {empty ? (
           <p>
-            Your cart is empty. <a href="/shop">Browse the shop</a>
+            Your cart is empty. <Link href="/shop">Browse the shop</Link>
           </p>
         ) : (
           <>

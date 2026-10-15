@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import styles from './home.module.css';
+import Link from 'next/link';
 
 const DISMISS_KEY = 'aa-consult-banner-dismissed';
 
@@ -35,7 +36,7 @@ export function ConsultBanner() {
     <div className={styles.consultBanner} role="note" aria-label="Free consultation banner">
       <p>
         Not sure what to choose?{' '}
-        <a href="/custom-formula">Get a Free Custom Formula Consultation</a>
+        <Link href="/custom-formula">Get a Free Custom Formula Consultation</Link>
       </p>
       <button
         type="button"

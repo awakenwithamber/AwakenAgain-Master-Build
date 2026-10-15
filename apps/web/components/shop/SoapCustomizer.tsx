@@ -17,6 +17,7 @@ import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart } from '../checkout/cart-store';
 import { ScentPathPicker } from './ScentPathPicker';
 import type { Customization, Product, ScentSelection } from '../../types';
+import Link from 'next/link';
 
 interface Props {
   product: Product;
@@ -281,7 +282,7 @@ export function SoapCustomizer({ product }: Props) {
         {error ? <p role="alert">{error}</p> : null}
         {added ? (
           <p>
-            Added to your cart. <a href="/cart">Review cart</a>
+            Added to your cart. <Link href="/cart">Review cart</Link>
           </p>
         ) : null}
       </div>

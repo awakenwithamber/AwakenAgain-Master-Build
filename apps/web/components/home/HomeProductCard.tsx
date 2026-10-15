@@ -18,6 +18,7 @@ import { PriceDisplay } from '../catalog/PriceDisplay';
 import { useCart } from '../checkout/cart-store';
 import type { HomeProductCardModel } from './product-cards';
 import styles from './home.module.css';
+import Link from 'next/link';
 
 export function HomeProductCard({ product }: { product: HomeProductCardModel }) {
   const { addItem } = useCart();
@@ -57,7 +58,7 @@ export function HomeProductCard({ product }: { product: HomeProductCardModel }) 
         <div className={styles.productBody}>
           <span className={styles.productBadge}>{product.category}</span>
           <h3 className={styles.productName}>
-            <a href={`/shop/${product.handle}`}>{product.title}</a>
+            <Link href={`/shop/${product.handle}`}>{product.title}</Link>
           </h3>
           {product.benefitLine ? (
             <p className={styles.productBenefit}>{product.benefitLine}</p>

@@ -27,6 +27,7 @@ import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart } from '../checkout/cart-store';
 import { ScentPathPicker } from './ScentPathPicker';
 import type { BundleSlot, Customization, ScentSelection } from '../../types';
+import Link from 'next/link';
 
 function defaultScent(): ScentSelection {
   return { type: 'signature', recipe_id: 'SCENT_RECIPE_01' };
@@ -276,7 +277,7 @@ export function BundleBuilder() {
         {error ? <p role="alert">{error}</p> : null}
         {added ? (
           <p>
-            Bundle added to your cart. <a href="/cart">Review cart</a>
+            Bundle added to your cart. <Link href="/cart">Review cart</Link>
           </p>
         ) : null}
       </div>

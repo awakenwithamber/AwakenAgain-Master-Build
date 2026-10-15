@@ -10,6 +10,7 @@ import { toCents } from '../../lib/pricing/pricing';
 import { PriceDisplay } from '../catalog/PriceDisplay';
 import { useCart } from '../checkout/cart-store';
 import type { Product } from '../../types';
+import Link from 'next/link';
 
 interface Props {
   product: Product;
@@ -98,7 +99,7 @@ export function VariantAddToCart({ product }: Props) {
       {error ? <p role="alert">{error}</p> : null}
       {added ? (
         <p>
-          Added to your cart. <a href="/cart">Review cart</a>
+          Added to your cart. <Link href="/cart">Review cart</Link>
         </p>
       ) : null}
     </div>

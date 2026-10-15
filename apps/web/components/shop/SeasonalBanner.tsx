@@ -4,6 +4,7 @@
  * scent theme only. NEVER state or imply pumpkin is an ingredient.
  */
 import { getSeasonalFeature } from '../../lib/catalog/seasonal';
+import Link from 'next/link';
 
 export function SeasonalBanner() {
   const now = new Date();
@@ -20,7 +21,7 @@ export function SeasonalBanner() {
       </p>
       {feature.availability ? <p>{feature.availability}</p> : null}
       <p>
-        <a href="/shop">Explore the Soap of the Month</a>
+        <Link href="/shop">Explore the Soap of the Month</Link>
       </p>
     </section>
   );
