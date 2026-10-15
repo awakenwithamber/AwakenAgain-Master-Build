@@ -52,6 +52,7 @@ import { SummaryList } from './shared/SummaryList';
 import { HerbGrid } from './shared/HerbGrid';
 import { SafetyPanel } from './shared/SafetyPanel';
 import type { FormulaCustomization } from '../../types';
+import Link from 'next/link';
 import {
   FORMULA_STEP_HEADLINES,
   FORMULA_STEP_HINTS,
@@ -418,8 +419,8 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
         {added && (
           <p role="status" className="cart-confirm">
             ✨ Your formula is in your cart —{' '}
-            <a href="/cart">review your cart</a> or{' '}
-            <a href="/checkout">head to checkout</a>.
+            <Link href="/cart">review your cart</Link> or{' '}
+            <Link href="/checkout">head to checkout</Link>.
           </p>
         )}
 
@@ -469,12 +470,12 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
     <div className="builder-root">
       <style>{FORMULA_BUILDER_CSS}</style>
       <header className="builder-header">
-        <a className="brand" href="/shop">
+        <Link className="brand" href="/shop">
           Amber's Alchemy Apothecary
-        </a>
+        </Link>
         <nav className="nav" aria-label="Formula builders">
-          <a href="/custom-formula">Capsule Builder</a>
-          <a href="/custom-formula/tea">Tea Builder</a>
+          <Link href="/custom-formula">Capsule Builder</Link>
+          <Link href="/custom-formula/tea">Tea Builder</Link>
         </nav>
       </header>
 
@@ -566,9 +567,9 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
             )}
             <p className="preview-cap">
               Also craving a different ritual? Try the{' '}
-              <a href={otherHref}>
+              <Link href={otherHref}>
                 {otherKind === 'capsule' ? 'capsule builder' : 'tea builder'}
-              </a>
+              </Link>
               .
             </p>
           </aside>

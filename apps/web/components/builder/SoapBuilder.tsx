@@ -62,6 +62,7 @@ import { ShapeImage } from './ShapeImage';
 import { BundleConfigurator } from './BundleConfigurator';
 import { BUILDER_CSS } from './shared/builder-styles';
 import { useCart } from '../checkout/cart-store';
+import Link from 'next/link';
 import {
   BASE_HINTS,
   BUNDLE_MODE_STEPS,
@@ -631,8 +632,8 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
         {added && (
           <p role="status" className={styles.addedNote}>
             ✨ Your creation is in your cart —{' '}
-            <a href="/cart">review your cart</a> or{' '}
-            <a href="/checkout">head to checkout</a>.
+            <Link href="/cart">review your cart</Link> or{' '}
+            <Link href="/checkout">head to checkout</Link>.
           </p>
         )}
 
