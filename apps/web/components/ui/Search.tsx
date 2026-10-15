@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchProducts } from '../../lib/search/search';
 import { trackContent } from '../../lib/analytics/content-posthog';
 import { formatPrice, toCents } from '../../lib/pricing/pricing';
+import { SaveSearchButton } from '../account/SaveSearchButton';
 
 export default function Search() {
   const [query, setQuery] = useState('');
@@ -73,6 +74,9 @@ export default function Search() {
               ))}
             </ul>
           )}
+          {/* Explicit save (Phase 3 Step 3): searching records nothing
+              server-side; only this tap saves, to the signed-in profile. */}
+          <SaveSearchButton query={query.trim()} surface="catalog" />
           <button
             type="button"
             className="site-search-close"

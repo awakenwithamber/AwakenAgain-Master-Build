@@ -11,7 +11,7 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   QUIZ_CONCERNS,
@@ -21,6 +21,7 @@ import {
 } from '../../lib/quiz/quiz';
 import { trackContent, trackContentOnce } from '../../lib/analytics/content-posthog';
 import { recordInterestNow } from '../../lib/personalization/client';
+import { fetchAccountProfile } from '../../lib/accounts/client';
 import { ProfileInvite } from '../personalization/ProfileInvite';
 import { PRODUCTS } from '../../lib/catalog/products';
 import { BRAND_NAME } from '../../lib/seo/config';
@@ -44,6 +45,38 @@ export default function Quiz() {
   const [lead, setLead] = useState<LeadState>({ name: '', email: '', consent: false });
   const [leadStatus, setLeadStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [leadErrors, setLeadErrors] = useState<string[]>([]);
+  // Account state for the results screen (Phase 3 Step 3): signed-in
+  // visitors save the result straight to their profile instead of the
+  // email lead form. undefined = not checked yet, null = signed out.
+  const [accountEmail, setAccountEmail] = useState<string | null | undefined>(undefined);
+  const [profileSave, setProfileSave] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  useEffect(() => {
+    if (phase !== 'results') return;
+    let cancelled = false;
+    void fetchAccountProfile().then((profile) => {
+      if (!cancelled) setAccountEmail(profile?.email ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [phase]);
+
+  const saveToProfile = async () => {
+    if (!concernId || !formId) return;
+    setProfileSave('saving');
+    try {
+      const res = await fetch('/api/account/quiz-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ concernId, formId }),
+      });
+      const json = await res.json();
+      setProfileSave(res.ok && json.ok ? 'saved' : 'error');
+    } catch {
+      setProfileSave('error');
+    }
+  };
 
   const start = () => {
     trackContentOnce('quiz-intro', 'quiz_started', {});
@@ -78,6 +111,7 @@ export default function Quiz() {
     setLead({ name: '', email: '', consent: false });
     setLeadStatus('idle');
     setLeadErrors([]);
+    setProfileSave('idle');
   };
 
   const submitLead = async () => {
@@ -186,6 +220,36 @@ export default function Quiz() {
             ))}
           </ul>
 
+          {accountEmail && (
+            <div className="quiz-lead">
+              <h3>Save to your profile</h3>
+              {profileSave === 'saved' ? (
+                <p className="quiz-lead-done">
+                  ✦ Saved to your profile — find your allies any time at{' '}
+                  <Link href="/account">My Account</Link>.
+                </p>
+              ) : (
+                <>
+                  <p>
+                    You&apos;re signed in as {accountEmail}. Keep these
+                    allies in your profile, with your likes and searches.
+                  </p>
+                  <button
+                    className="btn-primary"
+                    onClick={saveToProfile}
+                    disabled={profileSave === 'saving'}
+                  >
+                    {profileSave === 'saving'
+                      ? 'Saving…'
+                      : profileSave === 'error'
+                        ? 'Save didn’t land — try again'
+                        : 'Save to My Profile'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           <div className="quiz-lead">
             {/* Honesty (audit 2026-10-15 BROKEN-1): no email provider is
                 bound yet, so this copy promises only what happens today —
@@ -203,8 +267,9 @@ export default function Quiz() {
                 <p>
                   Your allies live on this page. Share your email and
                   we&apos;ll save your results under your name — when email
-                  delivery opens, your results will be sent to you, and
-                  you&apos;ll be invited to create a profile to keep them.
+                  delivery opens, your results will be sent to you. Or{' '}
+                  <Link href="/account">create a free profile</Link> to
+                  keep them with your likes and searches.
                 </p>
                 <label>
                   Name
