@@ -9,11 +9,20 @@
  *       prose mentioning "was $55" is allowed and the test distinguishes it.
  * - (d) Every manifest entry uses only the 8-term provenance vocabulary.
  *
+ * PORTABILITY (audit 2026-10-15 GAP-8): products.canonical.v3.json lives
+ * in the migration workspace (awakenagain-migration/catalog-enrichment/),
+ * NOT in this repo — a clean clone can never contain it, and the one test
+ * that reads it hard-failed ENOENT everywhere else. Like the PG-gated
+ * suites (AWAKEN_PG_TEST_URL), that single test now SKIPS with a clear
+ * reason when the external fixture is absent and runs fully when it is
+ * present. Every other law in this file uses in-repo data and always runs.
+ *
  * Audit basis: docs/migration/IMAGE_INTEGRITY_REPORT.md (2026-10-05).
  * Brand: Amber's Alchemy Apothecary.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   IMAGE_MANIFEST,
@@ -29,6 +38,22 @@ const V3_JSON = new URL(
   '../../../catalog-enrichment/products.canonical.v3.json',
   import.meta.url,
 );
+
+/**
+ * The external-fixture gate (see PORTABILITY note in the header): when
+ * the canonical export is absent (any clean clone of this repo), tests
+ * that read it skip instead of failing ENOENT; when present, they run.
+ */
+const V3_AVAILABLE = existsSync(fileURLToPath(V3_JSON));
+const itV3 = V3_AVAILABLE ? it : it.skip;
+if (!V3_AVAILABLE) {
+  console.warn(
+    '[image-manifest] SKIPPING external-fixture test (c/v3): ' +
+      'products.canonical.v3.json not found at ' +
+      fileURLToPath(V3_JSON) +
+      ' — it lives in the migration workspace, not this repo.',
+  );
+}
 
 function resolveStaged(p: string): string {
   return p.startsWith('~/') ? homedir() + p.slice(1) : p;
@@ -161,7 +186,7 @@ describe('catalog image references', () => {
 });
 
 describe('stale $55 bundle price — price fields only', () => {
-  it('(c) no price field in products.canonical.v3.json equals $55', () => {
+  itV3('(c) no price field in products.canonical.v3.json equals $55 [external fixture: migration workspace]', () => {
     const v3 = JSON.parse(readFileSync(V3_JSON, 'utf8'));
     const priceKeys = new Set(['price', 'subscriber_price', 'compare_at_price']);
     const hits: string[] = [];
