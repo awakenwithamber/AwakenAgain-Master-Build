@@ -15,7 +15,12 @@
  * - connect-src https://us.posthog.com (the configured api_host —
  *   NEXT_PUBLIC_POSTHOG_HOST, lib/analytics/posthog.ts) +
  *   https://us.i.posthog.com (the ingestion host the SDK derives from
- *   that api_host for capture/flags traffic).
+ *   that api_host for capture/flags traffic) +
+ *   https://us-assets.i.posthog.com (the SDK fetches its remote config
+ *   from the assets host via XHR/fetch — observed during the Phase 2
+ *   personalization work; without it the fetch is CSP-blocked and the
+ *   SDK silently runs on defaults. Owner-directed fix, 2026-10-15,
+ *   closing the Step 6 live-verify line item).
  * - frame-src https://player.vimeo.com — the welcome-video iframe in
  *   components/home/WelcomeVideo.tsx (the only embed in the app).
  * Deliberately NO 'unsafe-eval' anywhere. Inline script/style allowances
@@ -29,7 +34,7 @@ const CONTENT_SECURITY_POLICY = [
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://d2xsxph8kpxj0f.cloudfront.net https://files.manuscdn.com",
   "media-src 'self'",
-  "connect-src 'self' https://us.posthog.com https://us.i.posthog.com",
+  "connect-src 'self' https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com",
   'frame-src https://player.vimeo.com',
   "frame-ancestors 'none'",
   "base-uri 'self'",

@@ -92,6 +92,8 @@ describe('security headers (next.config headers())', () => {
     expect(connectSrc).toContain("'self'");
     expect(connectSrc).toContain('https://us.posthog.com');
     expect(connectSrc).toContain('https://us.i.posthog.com');
+    // posthog-js remote-config fetch (owner-directed fix 2026-10-15).
+    expect(connectSrc).toContain('https://us-assets.i.posthog.com');
 
     expect(directive(csp, 'frame-src')).toContain('https://player.vimeo.com');
     expect(directive(csp, 'media-src')).toBe("media-src 'self'");
