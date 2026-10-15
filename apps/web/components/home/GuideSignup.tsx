@@ -2,6 +2,11 @@
  * "Free Herbal Healing Guide" — lead capture wired to the existing
  * newsletter endpoint (POST /api/newsletter). Consent is a hard gate:
  * nothing is stored without the explicit checkbox.
+ *
+ * Honesty (audit 2026-10-15 BROKEN-2): no email provider is bound yet, so
+ * the success copy must not claim the guide was sent ("on its way /
+ * check your inbox"). It promises the signup is saved and the guide will
+ * be emailed when delivery opens.
  */
 'use client';
 
@@ -70,8 +75,8 @@ export function GuideSignup() {
           </p>
           {status.kind === 'done' ? (
             <p className={`${styles.guideStatus} ${styles.guideSuccess}`} role="status">
-              ✦ Welcome in — your guide is on its way. Check your inbox for a
-              note from Amber.
+              ✦ Welcome in — you&apos;re on the list. Your guide will be
+              emailed to you as soon as our email delivery opens.
             </p>
           ) : (
             <form className={styles.guideForm} onSubmit={submit}>
@@ -104,7 +109,7 @@ export function GuideSignup() {
                 className={styles.btnPrimary}
                 disabled={status.kind === 'sending'}
               >
-                {status.kind === 'sending' ? 'Sending…' : 'Send Me the Guide ✦'}
+                {status.kind === 'sending' ? 'Saving…' : 'Get My Guide ✦'}
               </button>
             </form>
           )}

@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -35,6 +35,35 @@ describe('quiz-lead route', () => {
     const json = await res.json();
     expect(json.ok).toBe(true);
     expect(json.id).toBeTruthy();
+  });
+
+  it('stores the FULL quiz result on the lead record (audit BROKEN-1)', async () => {
+    const res = await quizLeadPost(
+      jsonRequest({
+        name: 'Amber',
+        email: 'friend@example.com',
+        consent: true,
+        concernId: 'sleep',
+        formId: 'tea',
+      }),
+    );
+    expect(res.status).toBe(201);
+    const lines = readFileSync(
+      join(process.env.LEAD_STORE_DIR!, 'quiz_lead.jsonl'),
+      'utf8',
+    )
+      .trim()
+      .split('\n');
+    const record = JSON.parse(lines[lines.length - 1]);
+    expect(record.metadata).toMatchObject({ concern_id: 'sleep', form_id: 'tea' });
+    // The actual allies + recommendations the visitor saw — not just ids.
+    expect(record.quizResult.concernId).toBe('sleep');
+    expect(record.quizResult.formId).toBe('tea');
+    expect(record.quizResult.allies.map((a: { name: string }) => a.name)).toContain(
+      'Valerian root',
+    );
+    expect(record.quizResult.productHandles.length).toBeGreaterThan(0);
+    expect(record.quizResult.productReason).toBeTruthy();
   });
 
   it('rejects invalid payloads → 422, and bad JSON → 400', async () => {

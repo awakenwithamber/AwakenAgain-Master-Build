@@ -16,6 +16,7 @@
  * module; analytics events for queued jobs carry job_id/template only.
  */
 import { isRecord, sanitizeEmail } from '../security/validation';
+import type { QuizResultSnapshot } from '../quiz/quiz';
 
 /* ------------------------------------------------------------------ */
 /* Job contracts                                                        */
@@ -25,7 +26,8 @@ export type EmailTemplate =
   | 'purchase_confirmation'
   | 'weekly_promo'
   | 'unsubscribe_confirmation'
-  | 'review_reminder';
+  | 'review_reminder'
+  | 'quiz_results';
 
 export interface PurchaseConfirmationData {
   order_id: string;
@@ -52,11 +54,25 @@ export interface ReviewReminderData {
   review_url: string;
 }
 
+/**
+ * Quiz-results email data (audit 2026-10-15 fix #2): the FULL computed
+ * result snapshot from the lead record, so the eventual send renders
+ * exactly what the visitor saw. The job is built and routed through the
+ * EmailProvider at lead-capture time; today the only bound provider is
+ * the logging preview (NO REAL SENDS), and customer-facing copy must not
+ * claim delivery until a real provider is bound (owner-gated step).
+ */
+export interface QuizResultsData {
+  name: string | null;
+  result: QuizResultSnapshot;
+}
+
 export type EmailTemplateData =
   | { template: 'purchase_confirmation'; data: PurchaseConfirmationData }
   | { template: 'weekly_promo'; data: WeeklyPromoData }
   | { template: 'unsubscribe_confirmation'; data: UnsubscribeConfirmationData }
-  | { template: 'review_reminder'; data: ReviewReminderData };
+  | { template: 'review_reminder'; data: ReviewReminderData }
+  | { template: 'quiz_results'; data: QuizResultsData };
 
 export type EmailJobStatus = 'queued' | 'sent' | 'failed';
 
@@ -68,7 +84,8 @@ export interface EmailJob {
     | PurchaseConfirmationData
     | WeeklyPromoData
     | UnsubscribeConfirmationData
-    | ReviewReminderData;
+    | ReviewReminderData
+    | QuizResultsData;
   queued_at: string;
   status: EmailJobStatus;
   attempts: number;
@@ -227,6 +244,17 @@ export function buildPurchaseConfirmationJob(
     throw new Error('Purchase confirmation requires order_id, total_cents, item_summary.');
   }
   return buildEmailJob({ to, template: 'purchase_confirmation', data });
+}
+
+/** Quiz-results factory — the send is routed via the EmailProvider. */
+export function buildQuizResultsJob(
+  to: unknown,
+  data: QuizResultsData,
+): EmailJob {
+  if (!data.result || !Array.isArray(data.result.allies)) {
+    throw new Error('Quiz results email requires the computed result snapshot.');
+  }
+  return buildEmailJob({ to, template: 'quiz_results', data });
 }
 
 export function buildReviewReminderJob(

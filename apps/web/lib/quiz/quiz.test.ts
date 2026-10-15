@@ -8,6 +8,7 @@ import {
   getQuizResult,
   isValidConcernId,
   isValidFormId,
+  toQuizResultSnapshot,
 } from './quiz';
 
 const BANNED = [
@@ -95,5 +96,19 @@ describe('compliance', () => {
     expect(getConcern('sleep')?.label).toBe('Sleep & Rest');
     expect(getForm('tea')?.label).toBe('Herbal Tea');
     expect(getConcern('nope')).toBeUndefined();
+  });
+
+  it('snapshot carries the FULL result and survives a JSON round-trip (audit BROKEN-1)', () => {
+    const result = getQuizResult('sleep', 'tea')!;
+    const snapshot = toQuizResultSnapshot(result);
+    expect(snapshot.concernId).toBe('sleep');
+    expect(snapshot.formId).toBe('tea');
+    expect(snapshot.allies).toEqual(result.allies);
+    expect(snapshot.allies.length).toBeGreaterThan(0);
+    expect(snapshot.productHandles).toEqual(result.productHandles);
+    expect(snapshot.productReason).toBe(result.productReason);
+    // Stored on the lead record (JSONL line / event payload) — must be
+    // plain JSON data, no class instances or functions.
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
   });
 });

@@ -16,11 +16,13 @@ import {
   LoggingEmailProvider,
   buildEmailJob,
   buildPurchaseConfirmationJob,
+  buildQuizResultsJob,
   buildReviewReminderJob,
   buildWeeklyPromoJob,
   createEmailProvider,
   handleUnsubscribe,
 } from './email';
+import { getQuizResult, toQuizResultSnapshot } from '../quiz/quiz';
 
 describe('buildEmailJob', () => {
   it('builds a queued job with a valid recipient', () => {
@@ -59,6 +61,31 @@ describe('buildEmailJob', () => {
     expect(() =>
       buildEmailJob({ to: 'x@y.com', template: 'weekly_promo', data: 'nope' as never }),
     ).toThrow();
+  });
+});
+
+describe('buildQuizResultsJob (audit 2026-10-15 fix #2)', () => {
+  it('builds a queued quiz_results job carrying the full snapshot', () => {
+    const snapshot = toQuizResultSnapshot(getQuizResult('energy', 'capsule')!);
+    const job = buildQuizResultsJob('friend@example.com', {
+      name: 'Friend',
+      result: snapshot,
+    });
+    expect(job.template).toBe('quiz_results');
+    expect(job.status).toBe('queued');
+    expect(job.to).toBe('friend@example.com');
+    const data = job.data as { result: typeof snapshot };
+    expect(data.result.allies.map((a) => a.name)).toContain('Ashwagandha');
+    expect(data.result.productHandles.length).toBeGreaterThan(0);
+  });
+
+  it('rejects a missing snapshot', () => {
+    expect(() =>
+      buildQuizResultsJob('friend@example.com', {
+        name: null,
+        result: undefined as never,
+      }),
+    ).toThrow(/snapshot/);
   });
 });
 

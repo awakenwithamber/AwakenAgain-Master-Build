@@ -181,19 +181,31 @@ export default function Quiz() {
           <ul className="quiz-products">
             {result.productHandles.map((handle) => (
               <li key={handle}>
-                <a href={`/shop/${handle}`}>{productTitle(handle)}</a>
+                <Link href={`/shop/${handle}`}>{productTitle(handle)}</Link>
               </li>
             ))}
           </ul>
 
           <div className="quiz-lead">
-            <h3>Want your results by email?</h3>
+            {/* Honesty (audit 2026-10-15 BROKEN-1): no email provider is
+                bound yet, so this copy promises only what happens today —
+                results are SAVED with the apothecary; the email is sent
+                when delivery opens. Never "on their way" until then. */}
+            <h3>Keep your results</h3>
             {leadStatus === 'done' ? (
               <p className="quiz-lead-done">
-                ✨ Received — welcome to the apothecary circle. Your results are on their way.
+                ✨ Saved — welcome to the apothecary circle. Your results are
+                saved with us, and we&apos;ll email them to you as soon as
+                email delivery opens.
               </p>
             ) : (
               <>
+                <p>
+                  Your allies live on this page. Share your email and
+                  we&apos;ll save your results under your name — when email
+                  delivery opens, your results will be sent to you, and
+                  you&apos;ll be invited to create a profile to keep them.
+                </p>
                 <label>
                   Name
                   <input
@@ -220,7 +232,8 @@ export default function Quiz() {
                     checked={lead.consent}
                     onChange={(e) => setLead({ ...lead, consent: e.target.checked })}
                   />
-                  Yes — send my results and occasional apothecary notes. I can
+                  Yes — save my results, email them to me when delivery
+                  opens, and send occasional apothecary notes. I can
                   unsubscribe anytime. We never sell or share your information.
                 </label>
                 {leadErrors.length > 0 && (
@@ -235,7 +248,7 @@ export default function Quiz() {
                   onClick={submitLead}
                   disabled={leadStatus === 'sending'}
                 >
-                  {leadStatus === 'sending' ? 'Sending…' : 'Send My Results'}
+                  {leadStatus === 'sending' ? 'Saving…' : 'Save My Results'}
                 </button>
               </>
             )}

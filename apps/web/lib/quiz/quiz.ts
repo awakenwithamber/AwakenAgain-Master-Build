@@ -332,6 +332,35 @@ export interface QuizResult {
   productReason: string;
 }
 
+/**
+ * JSON-safe snapshot of a computed result, stored on the quiz lead record
+ * (audit 2026-10-15 BROKEN-1: previously only concern/form IDs were kept,
+ * so the actual allies a visitor was shown were never persisted). The
+ * future quiz-results email renders from this snapshot — no recompute —
+ * and the result stays recoverable even if QUIZ_MAP copy changes later.
+ */
+export interface QuizResultSnapshot {
+  concernId: string;
+  concernLabel: string;
+  formId: string;
+  formLabel: string;
+  allies: HerbalAlly[];
+  productHandles: string[];
+  productReason: string;
+}
+
+export function toQuizResultSnapshot(result: QuizResult): QuizResultSnapshot {
+  return {
+    concernId: result.concern.id,
+    concernLabel: result.concern.label,
+    formId: result.form.id,
+    formLabel: result.form.label,
+    allies: result.allies.map((a) => ({ ...a })),
+    productHandles: [...result.productHandles],
+    productReason: result.productReason,
+  };
+}
+
 export function isValidConcernId(id: unknown): id is keyof typeof QUIZ_MAP {
   return typeof id === 'string' && id in QUIZ_MAP;
 }
