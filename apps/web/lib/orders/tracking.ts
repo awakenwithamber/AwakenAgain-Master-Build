@@ -17,7 +17,14 @@
  * SERVER-ONLY: uses node:fs. Never import from a client component.
  */
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { appendFile, mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import {
+  EVENT_STREAMS,
+  appendEvent,
+  postgresEnabled,
+  readStreamEvents,
+} from '../events/event-store';
 
 /* ------------------------------------------------------------------ */
 /* Carriers                                                             */
@@ -185,6 +192,56 @@ export function findLatestTracking(
 ): OrderTrackingEvent | undefined {
   let latest: OrderTrackingEvent | undefined;
   for (const event of readTrackingEvents(ledgerPath)) {
+    if (event.order_id === orderId) latest = event;
+  }
+  return latest;
+}
+
+/* ------------------------------------------------------------------ */
+/* Driver-aware async accessors (Phase 3 Step 1: store binding)        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Append one tracking event. JSONL driver: the exact append the admin
+ * route used to perform itself. Postgres driver: one 'order_tracking'
+ * event keyed by order_id.
+ */
+export async function appendTrackingEvent(
+  event: OrderTrackingEvent,
+): Promise<void> {
+  if (postgresEnabled()) {
+    await appendEvent(
+      EVENT_STREAMS.orderTracking,
+      event.order_id,
+      'tracking.recorded',
+      event,
+      event.recorded_at,
+    );
+    return;
+  }
+  const path = orderTrackingLedgerPath();
+  await mkdir(dirname(path), { recursive: true });
+  await appendFile(path, `${JSON.stringify(event)}\n`, 'utf8');
+}
+
+/** readTrackingEvents, driver-aware. Same validity filter, append order. */
+export async function readTrackingEventsAsync(): Promise<OrderTrackingEvent[]> {
+  if (!postgresEnabled()) return readTrackingEvents();
+  const events = await readStreamEvents(EVENT_STREAMS.orderTracking);
+  const valid: OrderTrackingEvent[] = [];
+  for (const event of events) {
+    const payload: unknown = event.payload;
+    if (isTrackingEvent(payload)) valid.push(payload);
+  }
+  return valid;
+}
+
+/** findLatestTracking, driver-aware. */
+export async function findLatestTrackingAsync(
+  orderId: string,
+): Promise<OrderTrackingEvent | undefined> {
+  let latest: OrderTrackingEvent | undefined;
+  for (const event of await readTrackingEventsAsync()) {
     if (event.order_id === orderId) latest = event;
   }
   return latest;

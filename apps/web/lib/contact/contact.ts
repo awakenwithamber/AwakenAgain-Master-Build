@@ -20,7 +20,8 @@ import {
   sanitizePlainText,
 } from '../security/validation';
 import type { RecordStore } from '../orders/store';
-import { JsonlRecordStore } from '../orders/store';
+import { JsonlRecordStore, PgRecordStore } from '../orders/store';
+import { EVENT_STREAMS, postgresEnabled } from '../events/event-store';
 import { join } from 'node:path';
 import {
   CONTACT_HONEYPOT_FIELD,
@@ -97,11 +98,23 @@ export function defaultContactMessagesPath(): string {
   );
 }
 
-/** Contact store wired to its own JSONL file (env-overridable). */
+/**
+ * Contact store wired to its own ledger. Driver selection by env
+ * (Phase 3 Step 1): DATABASE_URL set → Postgres event store; unset →
+ * the JSONL file, byte-identical to before.
+ */
 export function createContactStore(): RecordStore<
   ContactRecord,
   ContactReviewEntry
 > {
+  if (postgresEnabled()) {
+    return new PgRecordStore<ContactRecord, ContactReviewEntry>({
+      stream: EVENT_STREAMS.contactMessages,
+      getId: (record) => record.message_id,
+      eventType: 'contact_message.recorded',
+      toSummary: toContactReviewEntry,
+    });
+  }
   return new JsonlRecordStore<ContactRecord, ContactReviewEntry>({
     path: defaultContactMessagesPath,
     getId: (record) => record.message_id,
