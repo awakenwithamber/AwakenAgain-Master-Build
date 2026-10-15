@@ -1,0 +1,59 @@
+/**
+ * POST /api/account/quiz-result — save a quiz result to the signed-in
+ * profile (Phase 3 Step 3).
+ *
+ * Body: { concernId, formId }. The snapshot is computed SERVER-side
+ * from the ids (lib/quiz) — the client's copy of its own result is
+ * never trusted as the stored record. Saving also stamps the profile's
+ * quiz-completion progress marker (in the store's save path).
+ */
+import { NextResponse } from 'next/server';
+import {
+  getQuizResult,
+  isValidConcernId,
+  isValidFormId,
+  toQuizResultSnapshot,
+} from '../../../../lib/quiz/quiz';
+import { saveQuizResultAsync } from '../../../../lib/accounts/accounts';
+import {
+  accountFail,
+  isRecordBody,
+  readJsonBody,
+  requireAccountSession,
+} from '../../../../lib/accounts/http';
+import { captureContentServerEventSoon } from '../../../../lib/analytics/content-posthog-server';
+import { resolveServerDistinctId } from '../../../../lib/analytics/posthog-server';
+import { enforceRateLimit } from '../../../../lib/security/rate-limit';
+
+export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, 'account');
+  if (limited) return limited;
+
+  const session = await requireAccountSession(request);
+  if (!session.ok) return session.response;
+
+  const body = await readJsonBody(request);
+  if (!isRecordBody(body)) {
+    return accountFail(['Request body must be a JSON object.'], 400);
+  }
+  if (!isValidConcernId(body.concernId) || !isValidFormId(body.formId)) {
+    return accountFail(['Unknown quiz answers — please retake the quiz.']);
+  }
+  const result = getQuizResult(body.concernId, body.formId);
+  if (!result) {
+    return accountFail(['Unknown quiz answers — please retake the quiz.']);
+  }
+  const snapshot = toQuizResultSnapshot(result);
+  const state = await saveQuizResultAsync(session.identity.email, snapshot, 'quiz');
+
+  captureContentServerEventSoon(
+    'profile_quiz_result_saved',
+    { via: 'quiz' },
+    resolveServerDistinctId(
+      request.headers.get('cookie'),
+      `account-session:${session.identity.session_id.slice(0, 12)}`,
+    ),
+  );
+
+  return NextResponse.json({ ok: true, quiz_results: state.quiz_results });
+}

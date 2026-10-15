@@ -12,6 +12,7 @@ import { PRODUCTS, getProductByHandle } from '../../../lib/catalog/products';
 import { isSupersededProduct } from '../../../lib/catalog/status';
 import { PriceDisplay } from '../../../components/catalog/PriceDisplay';
 import { SavingsDisplay } from '../../../components/catalog/SavingsDisplay';
+import { LikeButton } from '../../../components/shop/LikeButton';
 import { SoapCustomizer } from '../../../components/shop/SoapCustomizer';
 import { BundleBuilder } from '../../../components/shop/BundleBuilder';
 import { VariantAddToCart } from '../../../components/shop/VariantAddToCart';
@@ -169,6 +170,14 @@ export default async function ProductPage({
             must not display a purchasable-looking price above its notice. */}
         {isSupersededProduct(product) ? null : (
           <PriceBlock product={product} />
+        )}
+        {/* Like (Phase 3 Step 3): explicit tap, kept on-device and in
+            the signed-in profile. Superseded listings are reference
+            only — no like affordance, like no price. */}
+        {isSupersededProduct(product) ? null : (
+          <p>
+            <LikeButton handle={product.handle} />
+          </p>
         )}
         {product.handle === ALCHEMY_BUNDLE_HANDLE ? (
           <SavingsDisplay componentSumCents={bundleComponentSumCents()} />

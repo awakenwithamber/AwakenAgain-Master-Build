@@ -1,0 +1,258 @@
+/**
+ * /account (My Account) + sign-in form + profile islands.
+ * Tokens come from app/globals.css; layout mirrors /network.
+ */
+
+.pageMain {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 2.25rem;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.5vw, 2.7rem);
+  color: var(--parchment);
+  letter-spacing: 0.04em;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.hero p {
+  color: var(--text-muted);
+  max-width: 44rem;
+  margin: 0 auto;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.card {
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.card h2 {
+  font-family: var(--font-display);
+  color: var(--parchment);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.9rem;
+  font-size: 1.35rem;
+}
+
+.card h3 {
+  color: var(--parchment);
+  font-weight: 500;
+  margin: 1.1rem 0 0.4rem;
+}
+
+.card p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--parchment);
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.form input {
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--brass);
+  background: rgba(10, 6, 20, 0.45);
+  color: var(--parchment);
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.codeInput {
+  letter-spacing: 0.45em;
+  text-align: center;
+  font-size: 1.3rem !important;
+}
+
+.errors {
+  color: #f0b4a6;
+  margin: 0;
+  padding-left: 1.1rem;
+  text-align: left;
+}
+
+.note {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(201, 162, 75, 0.35);
+  border-radius: var(--radius-lg);
+  background: rgba(10, 6, 20, 0.3);
+}
+
+.listRow a {
+  color: var(--brass-lt);
+}
+
+.removeBtn {
+  background: none;
+  border: 1px solid rgba(201, 162, 75, 0.5);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  flex: none;
+}
+
+.removeBtn:hover {
+  color: var(--parchment);
+  border-color: var(--brass-lt);
+}
+
+.allyList {
+  margin: 0.3rem 0 0.6rem;
+  padding-left: 1.2rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.meta {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0.35rem 0;
+}
+
+.progressLabel {
+  width: 7.5rem;
+  flex: none;
+  color: var(--parchment);
+  font-size: 0.92rem;
+  text-transform: capitalize;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(10, 6, 20, 0.55);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brass), var(--brass-lt));
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.dangerZone {
+  border-color: rgba(214, 112, 90, 0.55);
+}
+
+.deleteForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-width: 26rem;
+}
+
+.deleteForm input {
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(214, 112, 90, 0.6);
+  background: rgba(10, 6, 20, 0.45);
+  color: var(--parchment);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.deleteBtn {
+  background: none;
+  border: 1px solid rgba(214, 112, 90, 0.8);
+  color: #f0b4a6;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.likeBtn {
+  background: none;
+  border: 1px solid var(--brass);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.likeBtn[aria-pressed='true'] {
+  color: var(--brass-lt);
+  border-color: var(--brass-lt);
+  background: rgba(201, 162, 75, 0.12);
+}
+
+.saveSearchBtn {
+  background: none;
+  border: 1px solid var(--brass);
+  color: var(--brass-lt);
+  border-radius: 999px;
+  padding: 0.35rem 0.95rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+  margin-top: 0.6rem;
+}
+
+.saveSearchBtn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}

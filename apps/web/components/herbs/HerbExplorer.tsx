@@ -17,6 +17,7 @@ import {
   type HerbRecord,
 } from '../../lib/herbs/herb-data';
 import { OPEN_BOTANICAL_CARD_EVENT } from './BotanicalCardHost';
+import { SaveSearchButton } from '../account/SaveSearchButton';
 
 function openBotanicalCard(slug: string) {
   window.dispatchEvent(
@@ -134,6 +135,9 @@ export function HerbExplorer() {
                 ))}
               </ul>
             )}
+            {/* Explicit save (Phase 3 Step 3): only this tap saves the
+                search, to the signed-in profile. */}
+            {searched && <SaveSearchButton query={searched} surface="herbs" />}
           </>
         )}
       </div>
