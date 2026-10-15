@@ -1,12 +1,11 @@
 /**
  * Shop index — "The Apothecary Shop" (workstream G).
  *
- * Server component: metadata + SiteHeader, with the interactive shop
+ * Server component: metadata, with the interactive shop
  * (ritual bundles → Shop by Goal → filter pills → product grid) in the
  * ShopClient island. Brand: "Amber's Alchemy Apothecary" exact everywhere.
  */
 import type { Metadata } from 'next';
-import { SiteHeader } from '../../components/shop/SiteHeader';
 import { ShopClient } from '../../components/shop/ShopClient';
 
 export const metadata: Metadata = {
@@ -18,7 +17,6 @@ export const metadata: Metadata = {
 export default function ShopPage() {
   return (
     <>
-      <SiteHeader />
       <ShopClient />
     </>
   );

@@ -18,7 +18,6 @@ import { formatPrice } from '../../lib/pricing/pricing';
 import { CASH_APP_HANDLE, VENMO_HANDLE } from '../../lib/checkout/order';
 import { track, trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
-import { SiteHeader } from '../shop/SiteHeader';
 import { useCart, cartItemTitle } from './cart-store';
 import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 import type { CartItem } from '../../types';
@@ -191,7 +190,6 @@ export function CheckoutForm() {
 
   return (
     <>
-      <SiteHeader />
       <main>
         <h1>Checkout</h1>
         {empty ? (

@@ -6,7 +6,6 @@
  * for-profit LLC are NOT tax-deductible — stated clearly.
  */
 import type { Metadata } from 'next';
-import { SiteHeader } from '../../components/shop/SiteHeader';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './support.module.css';
 
@@ -20,7 +19,6 @@ const SUGGESTED_AMOUNTS = ['$5', '$11', '$22', '$33', '$77'];
 export default function SupportPage() {
   return (
     <>
-      <SiteHeader />
       <main id="main-content" className={styles.supportMain}>
         <div className={styles.supportHero}>
           <p className="section-ornament" aria-hidden="true">
