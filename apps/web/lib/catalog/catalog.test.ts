@@ -136,8 +136,13 @@ describe('seasonal features — configurable data', () => {
     }
   });
 
-  it('no seasonal feature exists for other months (data-driven, not hard-coded UI)', () => {
-    expect(getSeasonalFeature(11, 2026)).toBeUndefined();
+  it('Nov + Dec 2026 resolve to the fall themes the owner confirmed 2026-10-15', () => {
+    expect(getSeasonalFeature(11, 2026)?.id).toBe('cedar-hearth-nov-2026');
+    expect(getSeasonalFeature(12, 2026)?.id).toBe('alpine-frost-dec-2026');
+  });
+
+  it('months with no confirmed feature resolve to undefined (data-driven, not hard-coded UI)', () => {
+    expect(getSeasonalFeature(1, 2027)).toBeUndefined();
     expect(getSeasonalFeature(10, 2027)).toBeUndefined();
   });
 });

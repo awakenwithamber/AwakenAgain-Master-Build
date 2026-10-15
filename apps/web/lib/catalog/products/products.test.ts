@@ -10,21 +10,22 @@
 import { describe, expect, it } from 'vitest';
 import { CATALOG_PROVENANCE, PRODUCTS, getProductByHandle } from './index';
 import { BUNDLE_PRICE_CENTS, bundleComponentSumCents } from '../../pricing/pricing';
+import { isSupersededProduct } from '../status';
 
 describe('catalog port provenance', () => {
   it('carries a provenance header: source, count, status', () => {
     expect(CATALOG_PROVENANCE.source).toBe('products.canonical.v3.json');
-    expect(CATALOG_PROVENANCE.recordCount).toBe(45);
+    expect(CATALOG_PROVENANCE.recordCount).toBe(46);
     expect(CATALOG_PROVENANCE.status).toBe('PROPOSED');
   });
 
-  it('contains exactly 45 records', () => {
-    expect(PRODUCTS).toHaveLength(45);
+  it('contains exactly 46 records (45 ported + the hand-authored trio)', () => {
+    expect(PRODUCTS).toHaveLength(46);
   });
 
   it('handles are unique', () => {
     const handles = PRODUCTS.map((p) => p.handle);
-    expect(new Set(handles).size).toBe(45);
+    expect(new Set(handles).size).toBe(46);
   });
 });
 
@@ -62,6 +63,87 @@ describe('bundle record consistency with the pricing spec', () => {
     for (const v of bundle!.variants ?? []) {
       if (v.price != null) {
         expect(Math.round(v.price * 100)).toBe(BUNDLE_PRICE_CENTS);
+      }
+    }
+  });
+});
+
+interface TrioMember {
+  handle: string;
+  shape: string;
+  price: number;
+}
+
+describe('Hearth & Harvest Trio record (owner-approved 2026-10-15)', () => {
+  const trio = getProductByHandle('hearth-harvest-trio');
+  const members = (trio?.member_products ?? []) as unknown as TrioMember[];
+
+  it('exists and is a current (not superseded) bundle', () => {
+    expect(trio).toBeDefined();
+    expect(trio!.category).toBe('Bundles');
+    expect(isSupersededProduct(trio!)).toBe(false);
+    expect(trio!.price_status as string).toBe('OWNER_CONFIRMED');
+  });
+
+  it('price is the owner-confirmed $26.77; subscriber $24.09', () => {
+    expect(Math.round((trio!.price as number) * 100)).toBe(2677);
+    expect(Math.round((trio!.subscriber_price as number) * 100)).toBe(2409);
+  });
+
+  it('names exactly the three approved member soaps, each Large Wave Rectangle', () => {
+    expect(members.map((m) => m.handle)).toEqual([
+      'warm-cinnamon-comfort-soap',
+      'sacred-forest-ritual-soap',
+      'gaias-rose-soap',
+    ]);
+    for (const m of members) {
+      expect(m.shape).toBe('Large Wave Rectangle');
+    }
+  });
+
+  it('compare_at_price equals the member sum computed from the member records', () => {
+    let sumCents = 0;
+    for (const m of members) {
+      const product = getProductByHandle(m.handle);
+      expect(product).toBeDefined();
+      expect(isSupersededProduct(product!)).toBe(false);
+      const variant = (product!.variants ?? []).find(
+        (v) => v.shape === 'Large Wave Rectangle',
+      );
+      expect(variant).toBeDefined();
+      expect(Math.round((variant!.price as number) * 100)).toBe(
+        Math.round(m.price * 100),
+      );
+      sumCents += Math.round((variant!.price as number) * 100);
+    }
+    expect(sumCents).toBe(3531);
+    expect(Math.round((trio!.compare_at_price as number) * 100)).toBe(sumCents);
+  });
+
+  it('bundle_savings_computed is internally consistent with the approved math', () => {
+    const savings = trio!.bundle_savings_computed as unknown as {
+      component_sum: number;
+      bundle_price: number;
+      savings_amount: number;
+      savings_pct: number;
+    };
+    expect(Math.round(savings.component_sum * 100)).toBe(3531);
+    expect(Math.round(savings.bundle_price * 100)).toBe(2677);
+    expect(savings.component_sum - savings.bundle_price).toBeCloseTo(
+      savings.savings_amount,
+      2,
+    );
+    expect((savings.savings_amount / savings.component_sum) * 100).toBeCloseTo(
+      24.2,
+      1,
+    );
+    expect(savings.savings_pct).toBe(24.2);
+  });
+
+  it('trio variant price agrees with the trio record price', () => {
+    for (const v of trio!.variants ?? []) {
+      if (v.price != null) {
+        expect(Math.round(v.price * 100)).toBe(2677);
       }
     }
   });

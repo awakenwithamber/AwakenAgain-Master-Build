@@ -50,10 +50,11 @@ import { RECORD as rec_warm_cinnamon_comfort_soap } from './rec-warm-cinnamon-co
 import { RECORD as rec_alchemy_tea_blend } from './rec-alchemy-tea-blend';
 import { RECORD as rec_custom_tea_blends } from './rec-custom-tea-blends';
 import { RECORD as rec_soap_style_collection_5 } from './rec-soap-style-collection-5';
+import { RECORD as rec_hearth_harvest_trio } from './rec-hearth-harvest-trio';
 
 export const CATALOG_PROVENANCE = {
   source: 'products.canonical.v3.json',
-  recordCount: 45,
+  recordCount: 46,
   generatedAt: '2026-10-05T23:08:13.352Z',
   status: 'PROPOSED',
 } as const;
@@ -104,6 +105,7 @@ export const PRODUCTS: Product[] = [
   rec_alchemy_tea_blend,
   rec_custom_tea_blends,
   rec_soap_style_collection_5,
+  rec_hearth_harvest_trio,
 ];
 
 export function getProductByHandle(handle: string): Product | undefined {
