@@ -19,6 +19,11 @@ import {
   subscriptionsLedgerPath,
 } from './entitlement';
 import type { SubscriptionRecord, SubscriptionStatus } from './subscriptions';
+import {
+  EVENT_STREAMS,
+  postgresEnabled,
+  readStreamEvents,
+} from '../events/event-store';
 
 /**
  * A ledger line as stored. Cancellation lines appended by the owner
@@ -86,19 +91,10 @@ const STATUS_ORDER: Record<SubscriptionStatus, number> = {
   cancelled: 2,
 };
 
-/**
- * One row per member email, resolved from the LATEST ledger line
- * (entitlement semantics), sorted for triage: members awaiting payment
- * confirmation first, then active, then cancelled; alphabetical by email
- * within each group.
- */
-export function listSubscriptionMembers(
-  ledgerPath: string = subscriptionsLedgerPath(),
+/** Project latest-per-email records to sorted member rows. */
+function projectMembers(
+  latestByEmail: Map<string, StoredSubscriptionRecord>,
 ): SubscriptionMember[] {
-  const latestByEmail = new Map<string, StoredSubscriptionRecord>();
-  for (const record of readSubscriptionRecords(ledgerPath)) {
-    latestByEmail.set(normalizeSubscriptionEmail(record.customer.email), record);
-  }
   const members: SubscriptionMember[] = [];
   for (const [email, record] of latestByEmail) {
     members.push({
@@ -118,4 +114,51 @@ export function listSubscriptionMembers(
     return byStatus !== 0 ? byStatus : a.email.localeCompare(b.email);
   });
   return members;
+}
+
+/**
+ * One row per member email, resolved from the LATEST ledger line
+ * (entitlement semantics), sorted for triage: members awaiting payment
+ * confirmation first, then active, then cancelled; alphabetical by email
+ * within each group.
+ */
+export function listSubscriptionMembers(
+  ledgerPath: string = subscriptionsLedgerPath(),
+): SubscriptionMember[] {
+  const latestByEmail = new Map<string, StoredSubscriptionRecord>();
+  for (const record of readSubscriptionRecords(ledgerPath)) {
+    latestByEmail.set(normalizeSubscriptionEmail(record.customer.email), record);
+  }
+  return projectMembers(latestByEmail);
+}
+
+/**
+ * listSubscriptionMembers, driver-aware (Phase 3 Step 1). With
+ * DATABASE_URL set, folds the 'subscriptions' event stream with the
+ * same acceptance rule readSubscriptionRecords applies to JSONL lines;
+ * unset, delegates to the JSONL implementation unchanged.
+ */
+export async function listSubscriptionMembersAsync(): Promise<
+  SubscriptionMember[]
+> {
+  if (!postgresEnabled()) return listSubscriptionMembers();
+  const events = await readStreamEvents<StoredSubscriptionRecord>(
+    EVENT_STREAMS.subscriptions,
+  );
+  const latestByEmail = new Map<string, StoredSubscriptionRecord>();
+  for (const event of events) {
+    const parsed = event.payload;
+    if (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      typeof parsed.status === 'string' &&
+      normalizeSubscriptionEmail(parsed.customer?.email)
+    ) {
+      latestByEmail.set(
+        normalizeSubscriptionEmail(parsed.customer.email),
+        parsed,
+      );
+    }
+  }
+  return projectMembers(latestByEmail);
 }

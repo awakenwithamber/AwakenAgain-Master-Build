@@ -3,9 +3,9 @@
  *
  * The interface is the contract; implementations are swappable:
  * - JsonlOrderStore — reads the local JSONL order ledger written by
- *   POST /api/checkout (development / pre-Supabase). Read-only.
- * - A future Supabase-backed store implements the same interface once the
- *   project binding is verified (see docs/migration/DATA_MIGRATION_MAP.md).
+ *   POST /api/checkout (development / pre-Phase-3). Read-only.
+ * - PgOrderStore — reads the append-only Postgres event store
+ *   (Phase 3 Step 1), selected when DATABASE_URL is set.
  *
  * CLIENT=PREVIEW / SERVER=AUTHORITY: admin pages are read-only views over
  * whatever the server persisted. Nothing here computes prices — records are
@@ -13,6 +13,11 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import type { OrderRecord } from '../checkout/order';
+import {
+  EVENT_STREAMS,
+  postgresEnabled,
+  readStreamEvents,
+} from '../events/event-store';
 
 export interface OrderListOptions {
   limit?: number;
@@ -87,8 +92,52 @@ export class JsonlOrderStore implements OrderStore {
   }
 }
 
-/** Default store: the same ledger path convention as POST /api/checkout. */
+/**
+ * Postgres-backed order store (Phase 3 Step 1): reads the 'orders'
+ * event stream. Same semantics as JsonlOrderStore — every stored order
+ * record, newest created_at first, payloads that are not order records
+ * skipped AND reported (with the event id standing in for the JSONL
+ * line number, which has no meaning in a table).
+ */
+export class PgOrderStore implements OrderStore {
+  private issues: LedgerParseIssue[] = [];
+
+  /** Parse issues from the last listOrders() call. */
+  getParseIssues(): LedgerParseIssue[] {
+    return [...this.issues];
+  }
+
+  async listOrders(options: OrderListOptions = {}): Promise<OrderRecord[]> {
+    this.issues = [];
+    const events = await readStreamEvents(EVENT_STREAMS.orders);
+    const records: OrderRecord[] = [];
+    for (const event of events) {
+      const payload: unknown = event.payload;
+      if (isOrderRecord(payload)) {
+        records.push(payload);
+      } else {
+        this.issues.push({
+          line: event.id,
+          error:
+            'stored event payload is not an OrderRecord (missing order_id/items/total_cents)',
+        });
+      }
+    }
+    records.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    const limit = options.limit ?? 100;
+    return records.slice(0, Math.max(0, limit));
+  }
+}
+
+/**
+ * Default store. Driver selection by env (Phase 3 Step 1): DATABASE_URL
+ * set → Postgres event store; unset → the JSONL ledger at the same path
+ * convention POST /api/checkout uses, byte-identical to before.
+ */
 export function defaultOrderStore(): OrderStore {
+  if (postgresEnabled()) {
+    return new PgOrderStore();
+  }
   const path =
     process.env.ORDERS_LEDGER_PATH ??
     `${process.cwd()}/.orders-ledger.jsonl`;

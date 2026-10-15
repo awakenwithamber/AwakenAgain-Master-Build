@@ -13,6 +13,12 @@
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import {
+  EVENT_STREAMS,
+  appendEvent,
+  postgresEnabled,
+  readStreamEvents,
+} from '../events/event-store';
 
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 
@@ -157,4 +163,73 @@ export class JsonlReviewStore implements ReviewStore {
   }
 }
 
-export const reviewStore: ReviewStore = new JsonlReviewStore();
+/**
+ * Postgres implementation (Phase 3 Step 1): reviews are events in the
+ * 'reviews' stream, keyed by review id. A review's current state is its
+ * LATEST event (a future moderation action appends a new event for the
+ * same id — state is never edited in place, matching the append-only
+ * ledger law). Filters and sorts below are the JsonlReviewStore's,
+ * applied to the latest-state fold.
+ */
+export class PgReviewStore implements ReviewStore {
+  async submit(input: ReviewInput): Promise<Review> {
+    const record: Review = {
+      ...input,
+      id: randomUUID(),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      source: 'nextjs',
+    };
+    await appendEvent(
+      EVENT_STREAMS.reviews,
+      record.id,
+      'review.recorded',
+      record,
+      record.createdAt,
+    );
+    return record;
+  }
+
+  /** Latest state per review id, in first-append order. */
+  private async readAllLatest(): Promise<Review[]> {
+    const events = await readStreamEvents<Review>(EVENT_STREAMS.reviews);
+    const latest = new Map<string, Review>();
+    for (const event of events) latest.set(event.stream_key, event.payload);
+    return [...latest.values()];
+  }
+
+  async listApproved(productHandle: string): Promise<Review[]> {
+    const all = await this.readAllLatest();
+    return all
+      .filter((r) => r.productHandle === productHandle && r.status === 'approved')
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  async listQueue(): Promise<Review[]> {
+    const all = await this.readAllLatest();
+    return all.sort((a, b) => {
+      const rank = (s: ReviewStatus) =>
+        s === 'pending' ? 0 : s === 'approved' ? 1 : 2;
+      return rank(a.status) - rank(b.status) || b.createdAt.localeCompare(a.createdAt);
+    });
+  }
+}
+
+const jsonlReviewStore = new JsonlReviewStore();
+const pgReviewStore = new PgReviewStore();
+
+/**
+ * Shared store for Route Handlers. Driver selection happens at CALL
+ * time (Phase 3 Step 1): DATABASE_URL set → Postgres event store;
+ * unset → JSONL, byte-identical to before.
+ */
+export const reviewStore: ReviewStore = {
+  submit: (input) =>
+    (postgresEnabled() ? pgReviewStore : jsonlReviewStore).submit(input),
+  listApproved: (productHandle) =>
+    (postgresEnabled() ? pgReviewStore : jsonlReviewStore).listApproved(
+      productHandle,
+    ),
+  listQueue: () =>
+    (postgresEnabled() ? pgReviewStore : jsonlReviewStore).listQueue(),
+};
