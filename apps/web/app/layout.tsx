@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { OrganizationJsonLd } from '../components/seo/JsonLd';
-import { SiteNotice } from '../components/layout/SiteNotice';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import { FooterBanner } from '../components/layout/FooterBanner';
@@ -10,6 +9,7 @@ import { LegacyAnchorRedirect } from '../components/seo/LegacyAnchorRedirect';
 import { MusicGate } from '../components/music/MusicGate';
 import { BotanicalCardHost } from '../components/herbs/BotanicalCardHost';
 import { GaiaWidget } from '../components/chat/GaiaWidget';
+import { ConsentBar } from '../components/privacy/ConsentBar';
 
 const base = siteUrl();
 
@@ -66,8 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
-        {/* Site-wide renewal notice — present on every route. */}
-        <SiteNotice />
         {/* Shared chrome — workstream 2 (customer content) owns nav/footer. */}
         <Header />
         {children}
@@ -77,6 +75,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <BotanicalCardHost />
         {/* Gaia chatbot — popup intro + lower-right button (owner directive 2026-10-10). */}
         <GaiaWidget />
+        {/* Analytics consent bar (2026-10-14) — calm bottom bar, shows only until the visitor chooses. */}
+        <ConsentBar />
         {/* Legacy SPA anchor → route bridge (client-side; fragments never reach the server). */}
         <LegacyAnchorRedirect />
         <OrganizationJsonLd />

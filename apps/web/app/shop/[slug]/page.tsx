@@ -9,9 +9,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PRODUCTS, getProductByHandle } from '../../../lib/catalog/products';
+import { isSupersededProduct } from '../../../lib/catalog/status';
 import { PriceDisplay } from '../../../components/catalog/PriceDisplay';
 import { SavingsDisplay } from '../../../components/catalog/SavingsDisplay';
-import { SiteHeader } from '../../../components/shop/SiteHeader';
 import { SoapCustomizer } from '../../../components/shop/SoapCustomizer';
 import { BundleBuilder } from '../../../components/shop/BundleBuilder';
 import { VariantAddToCart } from '../../../components/shop/VariantAddToCart';
@@ -52,7 +52,6 @@ export async function generateMetadata({
   };
 }
 
-const SUPERSEDED_BUNDLE_HANDLE = 'full-soap-collection';
 const ALCHEMY_BUNDLE_HANDLE = 'soap-style-collection-5';
 
 function provenanceNote(
@@ -101,15 +100,24 @@ function PriceBlock({ product }: { product: Product }) {
 }
 
 function PurchaseSection({ product }: { product: Product }) {
-  if (product.handle === SUPERSEDED_BUNDLE_HANDLE) {
+  if (isSupersededProduct(product)) {
+    // Kept for direct visits that arrive without the next.config redirect
+    // (and for any future superseded products): honest reference-only
+    // notice, no purchase path. The replacement link comes from the
+    // record's own superseded_by field; the Alchemy collection is the
+    // fallback only when the record names none.
+    const replacementHandle = product.superseded_by ?? ALCHEMY_BUNDLE_HANDLE;
+    const replacement = getProductByHandle(replacementHandle);
     return (
       <section aria-label="Availability notice">
         <h2>Superseded</h2>
         <p>
-          This 9-bar collection has been superseded by{' '}
-          <a href={`/shop/${ALCHEMY_BUNDLE_HANDLE}`}>{BUNDLE_NAME}</a> ($35.77 for
-          five individually customizable soaps). This listing is kept for
-          reference and is not available for purchase.
+          This product has been superseded by{' '}
+          <a href={`/shop/${replacementHandle}`}>
+            {replacement?.title ?? BUNDLE_NAME}
+          </a>
+          . This listing is kept for reference and is not available for
+          purchase.
         </p>
       </section>
     );
@@ -146,7 +154,6 @@ export default async function ProductPage({
 
   return (
     <>
-      <SiteHeader />
       <main>
         <ProductViewTracker
           productHandle={product.handle}
@@ -157,7 +164,11 @@ export default async function ProductPage({
         </p>
         <h1>{product.title}</h1>
         <p>{product.category}</p>
-        <PriceBlock product={product} />
+        {/* Superseded products show NO price at all — a reference listing
+            must not display a purchasable-looking price above its notice. */}
+        {isSupersededProduct(product) ? null : (
+          <PriceBlock product={product} />
+        )}
         {product.handle === ALCHEMY_BUNDLE_HANDLE ? (
           <SavingsDisplay componentSumCents={bundleComponentSumCents()} />
         ) : null}

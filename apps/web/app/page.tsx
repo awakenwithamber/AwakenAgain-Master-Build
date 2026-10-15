@@ -6,7 +6,14 @@
  * consult banner → hero → welcome video → goal cards → best sellers →
  * how-made → trust stats → reviews → learn → free guide.
  *
- * Shared chrome (skip link, SiteNotice, header, footer) is rendered by
+ * Personalization (owner spec 2026-10-14): the server renders exactly
+ * that default order for everyone. Only after mount, and only for
+ * visitors who accepted analytics consent with a clear on-device top
+ * interest, PersonalizedSections rearranges the content sections and
+ * PickedForYou appears (lib/personalization rules, unit-tested). The
+ * Grimoire promotion is never demoted.
+ *
+ * Shared chrome (skip link, header, footer) is rendered by
  * app/layout.tsx — do not duplicate it here. Pricing is display-only from
  * the canonical catalog; the server recomputes authoritatively at checkout.
  */
@@ -22,6 +29,13 @@ import { ReviewsSection } from '../components/home/ReviewsSection';
 import { LearnSection } from '../components/home/LearnSection';
 import { GrimoirePromo } from '../components/home/GrimoirePromo';
 import { GuideSignup } from '../components/home/GuideSignup';
+import { PersonalizedSections } from '../components/home/PersonalizedSections';
+import { PickedForYou, type ArticlePick } from '../components/home/PickedForYou';
+import { toCardModel, type HomeProductCardModel } from '../components/home/product-cards';
+import { getProductByHandle, PRODUCTS } from '../lib/catalog/products';
+import { JOURNAL_ARTICLES } from '../lib/content/journal';
+import { pickHandlesForInterest } from '../lib/personalization/home-personalization';
+import { INTEREST_CATEGORIES, type InterestCategory } from '../lib/personalization/interests';
 import { BRAND_NAME } from '../lib/seo/config';
 
 export const metadata: Metadata = {
@@ -31,6 +45,34 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
+/**
+ * "Picked for you" candidate models for every interest — computed on the
+ * server from the canonical catalog. The client row selects at most one
+ * interest's models; the visitor's profile never leaves their device.
+ */
+function buildPicksByInterest(): Partial<
+  Record<InterestCategory, HomeProductCardModel[]>
+> {
+  const picks: Partial<Record<InterestCategory, HomeProductCardModel[]>> = {};
+  for (const category of INTEREST_CATEGORIES) {
+    const models: HomeProductCardModel[] = [];
+    for (const handle of pickHandlesForInterest(category, PRODUCTS)) {
+      const product = getProductByHandle(handle);
+      if (!product) continue;
+      const model = toCardModel(product);
+      if (model) models.push(model);
+    }
+    if (models.length > 0) picks[category] = models;
+  }
+  return picks;
+}
+
+const ARTICLE_PICKS: ArticlePick[] = JOURNAL_ARTICLES.slice(0, 3).map((a) => ({
+  slug: a.slug,
+  title: a.title,
+  excerpt: a.excerpt,
+}));
+
 export default function HomePage() {
   return (
     <>
@@ -38,14 +80,24 @@ export default function HomePage() {
       <main id="main-content">
         <Hero />
         <WelcomeVideo />
-        <GoalCards />
-        <BestSellers />
-        <HowMade />
-        <TrustStats />
-        <ReviewsSection />
-        <LearnSection />
-        <GrimoirePromo />
-        <GuideSignup />
+        <PersonalizedSections
+          pickedForYou={
+            <PickedForYou
+              picksByInterest={buildPicksByInterest()}
+              articlePicks={ARTICLE_PICKS}
+            />
+          }
+          sections={{
+            'goal-cards': <GoalCards />,
+            'best-sellers': <BestSellers />,
+            'how-made': <HowMade />,
+            'trust-stats': <TrustStats />,
+            reviews: <ReviewsSection />,
+            learn: <LearnSection />,
+          }}
+          grimoirePromo={<GrimoirePromo />}
+          afterSections={<GuideSignup />}
+        />
       </main>
     </>
   );

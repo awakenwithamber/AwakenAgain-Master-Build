@@ -32,7 +32,7 @@
 
 .serviceGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr));
   gap: 1.75rem;
   margin-top: 2rem;
 }
@@ -145,5 +145,211 @@
 }
 
 .servicesContact a {
+  color: var(--brass-lt);
+}
+
+/* --- Service landing pages (/services/[slug]) + index explore grid --- */
+
+.exploreSection {
+  margin-top: 4rem;
+}
+
+.exploreSection h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--parchment);
+  text-align: center;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+}
+
+.exploreIntro {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 42rem;
+  margin: 0 auto 2rem;
+}
+
+.exploreGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr));
+  gap: 1.1rem;
+}
+
+.exploreCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.2rem 1.25rem;
+  text-decoration: none;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    border-color var(--transition);
+}
+
+.exploreCard:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 10px 30px rgba(110, 75, 126, 0.4),
+    0 4px 20px rgba(10, 6, 20, 0.55);
+  border-color: var(--brass-lt);
+}
+
+.exploreCard h3 {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  color: var(--parchment);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.exploreCard p {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.exploreEyebrow {
+  font-family: var(--font-display);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass-lt);
+  margin: 0;
+}
+
+.detailMain {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 5rem;
+}
+
+.detailBack {
+  margin: 0 0 1.5rem;
+}
+
+.detailBack a {
+  color: var(--brass-lt);
+}
+
+.detailHero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.detailHero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.5vw, 2.9rem);
+  color: var(--parchment);
+  letter-spacing: 0.04em;
+  margin: 0.4rem 0 0.75rem;
+  font-weight: 500;
+}
+
+.detailFigure {
+  margin: 0 auto 1.5rem;
+  max-width: 44rem;
+}
+
+.detailImage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+}
+
+.detailFigure figcaption {
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}
+
+.detailFallback {
+  max-width: 44rem;
+  aspect-ratio: 16 / 9;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: var(--brass);
+  background: linear-gradient(135deg, var(--plum-mid), var(--plum-deep));
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+}
+
+.detailDelivery {
+  color: var(--text-muted);
+  max-width: 42rem;
+  margin: 0 auto;
+  font-size: 1.02rem;
+}
+
+.detailPrice {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--brass-lt);
+  margin: 1rem 0 0;
+}
+
+.detailPriceNote {
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 1rem 0 0;
+}
+
+.detailSection {
+  margin: 0 0 2.25rem;
+  color: var(--text-body);
+  line-height: 1.65;
+}
+
+.detailSection h2 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--parchment);
+  letter-spacing: 0.03em;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.detailList {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.detailList li {
+  margin-bottom: 0.45rem;
+}
+
+.bookingBox {
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  padding: 1.5rem 1.5rem 1.75rem;
+  margin: 0 0 2.5rem;
+}
+
+.bookingBox h2 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--parchment);
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.relatedList {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.relatedList a {
   color: var(--brass-lt);
 }

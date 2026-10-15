@@ -233,6 +233,86 @@ html {
 }
 
 /* ------------------------------------------------------------------ */
+/* Form controls — unified dark-theme default                          */
+/*                                                                     */
+/* Every text-like input, textarea, and select on the site gets the   */
+/* admin/footer reference treatment by default: deep-plum surface     */
+/* (#1a0f2e), gold-toned border, theme text, readable placeholder,     */
+/* and a solid-gold border on focus (on top of the global              */
+/* :focus-visible outline above).                                     */
+/*                                                                     */
+/* The selectors are wrapped in :where() so they carry ZERO           */
+/* specificity: any deliberate local styling — a CSS-module class      */
+/* (cart qty, guide signup, herb explorer, Grimoire book), an inline    */
+/* style (contact form, admin confirm form), the footer/gaia rules     */
+/* below, or the builders' scoped stylesheets — always wins. This      */
+/* rule only reaches controls that had no styling of their own and     */
+/* would otherwise render in browser-default white with dark text      */
+/* on the dark plum pages. Checkbox/radio get the gold accent color    */
+/* the footer/cart/guide rules already use locally. Color, range,     */
+/* and file inputs are bespoke controls and are intentionally not     */
+/* covered here.                                                       */
+/* ------------------------------------------------------------------ */
+:root {
+  /* Native UA widgets (select dropdowns, number spinners, scrollbars)
+     render in their dark variant, matching the plum theme. */
+  color-scheme: dark;
+}
+
+:where(
+    input[type='text'],
+    input[type='email'],
+    input[type='tel'],
+    input[type='search'],
+    input[type='number'],
+    input[type='password'],
+    input[type='url'],
+    textarea,
+    select
+  ) {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text-body);
+  background-color: #1a0f2e;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.8rem;
+}
+
+:where(
+    input[type='text'],
+    input[type='email'],
+    input[type='tel'],
+    input[type='search'],
+    input[type='number'],
+    input[type='password'],
+    input[type='url'],
+    textarea,
+    select
+  )::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+:where(
+    input[type='text']:focus,
+    input[type='email']:focus,
+    input[type='tel']:focus,
+    input[type='search']:focus,
+    input[type='number']:focus,
+    input[type='password']:focus,
+    input[type='url']:focus,
+    textarea:focus,
+    select:focus
+  ) {
+  border-color: var(--brass);
+}
+
+:where(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--brass);
+}
+
+/* ------------------------------------------------------------------ */
 /* Section chrome (spec §3)                                            */
 /* ------------------------------------------------------------------ */
 .section-ornament {
@@ -535,10 +615,22 @@ html {
   position: relative;
 }
 
+.nav-caret {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.72em;
+  transition: transform var(--transition);
+}
+
+.nav-drop-btn[aria-expanded='true'] .nav-caret {
+  transform: rotate(180deg);
+}
+
 .nav-drop-menu {
   position: absolute;
   top: calc(100% + 0.5rem);
   left: -0.75rem;
+  z-index: 950;
   min-width: 14rem;
   list-style: none;
   margin: 0;
@@ -547,6 +639,14 @@ html {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+}
+
+/* Group menus are always in the DOM (SSR / no-JS link presence) and
+   toggled with the hidden attribute — make sure no display rule in
+   this sheet can resurrect a hidden menu. */
+.nav-drop-menu[hidden],
+.mobile-nav-panel .nav-sub[hidden] {
+  display: none;
 }
 
 .nav-drop-menu a {
@@ -663,6 +763,8 @@ html {
   top: 100%;
   left: 0;
   right: 0;
+  max-height: calc(100dvh - 4.5rem);
+  overflow-y: auto;
   background: #1a0f24;
   border-bottom: 1px solid var(--border);
   padding: 1rem 1.5rem 1.5rem;
@@ -684,7 +786,9 @@ html {
 
 .mobile-nav-panel a,
 .mobile-nav-panel .nav-drop-btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 44px; /* WCAG tap target — every panel row is tappable */
   font-family: var(--font-accent);
   font-size: 1.05rem;
   color: var(--text-body);
@@ -694,6 +798,11 @@ html {
   border: none;
   text-align: left;
   cursor: pointer;
+}
+
+.mobile-nav-panel .nav-drop-btn {
+  width: 100%;
+  justify-content: space-between;
 }
 
 .mobile-nav-panel a:hover,
@@ -707,6 +816,7 @@ html {
 
 .mobile-nav-panel .nav-accent-btn {
   margin-top: 0.75rem;
+  justify-content: center;
   text-align: center;
   font-size: 0.85rem;
   padding: 0.7rem 1.2rem;
@@ -719,6 +829,24 @@ html {
 
   .hamburger {
     display: inline-block;
+  }
+
+  /* Fit fix: the brand block (flex-shrink: 0) plus the actions row
+     (music controls + cart + hamburger) is wider than a phone
+     viewport at its min-content size. Without wrapping, flex items
+     cannot shrink below min-content, so the row overflowed and
+     mobile browsers expanded the layout viewport (innerWidth 488
+     on a 412px phone) and scaled the whole page down. Letting both
+     rows wrap keeps every control reachable and inside the screen;
+     on wide-enough screens nothing wraps and layout is unchanged. */
+  .site-header-inner {
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
   }
 }
 
@@ -968,52 +1096,9 @@ h1, h2, h3,
   border: 0;
 }
 
-/* ------------------------------------------------------------------ */
-/* Storefront sub-header (components/shop/SiteHeader)                  */
-/* Explicit theme colors: this chrome must never fall back to          */
-/* inherited/UA colors on the dark plum background.                    */
-/* ------------------------------------------------------------------ */
-.storefront-header {
-  background: rgba(21, 11, 38, 0.6);
-  border-bottom: 1px solid var(--border);
-}
-
-.storefront-nav {
-  max-width: 78rem;
-  margin: 0 auto;
-  padding: 0.6rem 1.25rem;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
-}
-
-.storefront-brand {
-  margin: 0;
-  font-family: var(--font-display);
-  letter-spacing: 0.04em;
-  color: var(--parchment);
-}
-
-.storefront-links {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.1rem;
-  margin: 0;
-  padding: 0;
-}
-
-.storefront-links a {
-  font-family: var(--font-accent);
-  color: var(--text-body);
-  text-decoration: none;
-}
-
-.storefront-links a:hover {
-  color: var(--brass-lt);
-  text-decoration: underline;
-}
+/* The legacy .storefront-* sub-header styles were removed with the
+   SiteHeader component in the Phase 2 unified-nav build (2026-10-14):
+   the classes were used by that component alone. */
 
 /* ------------------------------------------------------------------ */
 /* Cart page (components/checkout/CartView)                            */
@@ -1318,4 +1403,11 @@ h1, h2, h3,
     right: 1rem;
     bottom: 1rem;
   }
+}
+
+/* Personalization emphasis (2026-10-14): when a consenting visitor's top
+   on-device interest is the Grimoire, the (never demoted) Grimoire promo
+   section gains a gold emphasis ring. Toggled client-side only. */
+.aa-grimoire-emphasis {
+  box-shadow: inset 0 0 0 2px var(--gold), inset 0 0 3rem rgba(212, 175, 55, 0.12);
 }
