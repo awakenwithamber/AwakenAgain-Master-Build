@@ -21,6 +21,12 @@ import {
   EVENT_OWNERSHIP,
   SOURCE_PROPERTY,
 } from './events';
+import {
+  browserTrafficType,
+  canCaptureDetails,
+  readBrowserConsentState,
+  type ConsentState,
+} from '../personalization/consent';
 
 const PROJECT_TOKEN = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const API_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.posthog.com';
@@ -37,22 +43,83 @@ function isConfigured(): boolean {
 
 let initPromise: Promise<void> | null = null;
 
+/**
+ * Consent gate for detailed events (owner spec 2026-10-14): typed events
+ * fire ONLY after the visitor accepted analytics consent. Before any
+ * choice, PostHog runs in anonymous page-count mode (init config below:
+ * autocapture OFF, person profiles NEVER). A declined visitor is opted
+ * out entirely (see applyAnalyticsConsent + the init reconciliation).
+ */
+export function hasDetailConsent(): boolean {
+  return canCaptureDetails(readBrowserConsentState());
+}
+
+function currentTrafficType() {
+  return browserTrafficType();
+}
+
+function currentConsentState(): ConsentState {
+  return readBrowserConsentState();
+}
+
 /** Idempotent init — safe to call from any client component. */
 export function initPostHog(): Promise<void> {
   if (typeof window === 'undefined' || !isConfigured()) return Promise.resolve();
   if (!initPromise) {
     initPromise = import('posthog-js').then(({ default: posthog }) => {
+      // Read the persisted choice BEFORE init: a declined visitor must
+      // not fire even the pageview that init would otherwise capture.
+      const declined = currentConsentState() === 'declined';
       posthog.init(PROJECT_TOKEN as string, {
         api_host: API_HOST,
-        capture_pageview: true,
-        capture_pageleave: true,
+        capture_pageview: !declined,
+        capture_pageleave: !declined,
+        // Privacy-first defaults (2026-10-14): no autocapture, no person
+        // profiles — before consent only anonymous page counts fire, and
+        // even after consent the app emits only its typed events.
+        autocapture: false,
+        person_profiles: 'never',
       });
       // Migration source tagging: every event this app emits carries
       // implementation_source='nextjs' (static build uses 'legacy_static').
-      posthog.register({ [SOURCE_PROPERTY]: ANALYTICS_SOURCE });
+      // Test-traffic tagging: every event carries traffic_type so owner
+      // test runs (?aa_test=1) can be filtered out of real reporting.
+      posthog.register({
+        [SOURCE_PROPERTY]: ANALYTICS_SOURCE,
+        traffic_type: currentTrafficType(),
+      });
+      // Reconcile capture with the persisted consent choice on every
+      // load: a past decline stays opted out until the visitor changes
+      // it on the privacy page.
+      if (currentConsentState() === 'declined') {
+        posthog.opt_out_capturing();
+      }
     });
   }
   return initPromise;
+}
+
+/**
+ * Apply a consent state change to the live PostHog instance (called by
+ * the consent UI via lib/personalization/client.ts). accepted → capture
+ * on; declined → opt_out_capturing() (nothing fires at all); unknown
+ * (after a withdrawal reset) → capture back on, but track() stays gated
+ * so only anonymous page counts flow until a fresh choice.
+ */
+export async function applyAnalyticsConsent(state: ConsentState): Promise<void> {
+  if (typeof window === 'undefined' || !isConfigured()) return;
+  try {
+    await initPostHog();
+    const { default: posthog } = await import('posthog-js');
+    if (state === 'declined') {
+      posthog.opt_out_capturing();
+    } else {
+      posthog.opt_in_capturing();
+    }
+    posthog.register({ traffic_type: currentTrafficType() });
+  } catch {
+    /* analytics failures are never customer-facing */
+  }
 }
 
 /**
@@ -87,6 +154,8 @@ export function track<E extends ClientEventName>(
   props: AnalyticsEventProperties[E],
 ): void {
   if (!isConfigured()) return;
+  // Consent gate (2026-10-14): detailed events only after acceptance.
+  if (!hasDetailConsent()) return;
   const payload = buildEventPayload(props);
   initPostHog()
     .then(() => import('posthog-js'))

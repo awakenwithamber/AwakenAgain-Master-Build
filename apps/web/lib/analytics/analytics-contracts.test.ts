@@ -337,7 +337,9 @@ describe('server capture (lib/analytics/posthog-server.ts)', () => {
 describe('instrumentation-client.ts (Next.js client entry point)', () => {
   it('delegates to initPostHog and carries no hard-coded key', () => {
     const src = readFileSync(
-      new URL('../../app/instrumentation-client.ts', import.meta.url),
+      // Project root, NOT app/: Next.js only loads instrumentation-client
+      // from the project root (or src/), so the file lives there.
+      new URL('../../instrumentation-client.ts', import.meta.url),
       'utf8',
     );
     expect(src).toContain('initPostHog');

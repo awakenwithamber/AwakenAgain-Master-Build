@@ -18,7 +18,7 @@
  * taxonomy). WIRED, never IMPLEMENTED — receipt is BLOCKED on the owner's
  * phc_ key.
  */
-import { initPostHog } from './posthog';
+import { hasDetailConsent, initPostHog } from './posthog';
 import { ANALYTICS_SOURCE, SOURCE_PROPERTY } from './events';
 
 /** Builder event names. Add new events here — never inline a string elsewhere. */
@@ -243,6 +243,8 @@ export function trackBuilderEvent<E extends BuilderEventName>(
   props: BuilderEventProperties[E],
 ): void {
   if (!isConfigured()) return;
+  // Consent gate (2026-10-14): detailed events only after acceptance.
+  if (!hasDetailConsent()) return;
   const payload = buildBuilderEventPayload(props);
   initPostHog()
     .then(() => import('posthog-js'))

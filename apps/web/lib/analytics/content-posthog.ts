@@ -8,7 +8,7 @@
  * Analytics never breaks the customer experience.
  * Status: WIRED — BLOCKED on the owner's phc_ key.
  */
-import { initPostHog } from './posthog';
+import { hasDetailConsent, initPostHog } from './posthog';
 import {
   CONTENT_ANALYTICS_EVENT_NAMES,
   CONTENT_EVENT_OWNERSHIP,
@@ -45,6 +45,8 @@ export function trackContent<E extends ContentClientEventName>(
   const owner = CONTENT_EVENT_OWNERSHIP[event];
   if (owner !== 'client') return;
   if (!isConfigured()) return;
+  // Consent gate (2026-10-14): detailed events only after acceptance.
+  if (!hasDetailConsent()) return;
   const payload = buildContentEventPayload(props);
   initPostHog()
     .then(() => import('posthog-js'))
