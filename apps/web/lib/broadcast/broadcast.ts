@@ -23,12 +23,21 @@
  * SERVER-ONLY: uses node:fs. Never import from a client component.
  */
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { appendFile, mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import {
   normalizeSubscriptionEmail,
   readSubscriptionLedger,
+  readSubscriptionLedgerAsync,
   subscriptionsLedgerPath,
+  type SubscriptionLedgerEntry,
 } from '../subscriptions/entitlement';
+import {
+  EVENT_STREAMS,
+  appendEvent,
+  postgresEnabled,
+  readStreamEvents,
+} from '../events/event-store';
 
 /* ------------------------------------------------------------------ */
 /* Audience                                                             */
@@ -78,12 +87,12 @@ function readConsentedLeadEmails(filePath: string): Set<string> {
   return emails;
 }
 
-/** Emails whose LATEST subscription-ledger status is 'active'. */
-function readActiveSubscriberEmails(
-  ledgerPath: string = subscriptionsLedgerPath(),
+/** Fold ledger entries to the emails whose LATEST status is 'active'. */
+function activeEmailsFromEntries(
+  entries: SubscriptionLedgerEntry[],
 ): Set<string> {
   const latest = new Map<string, string>();
-  for (const entry of readSubscriptionLedger(ledgerPath)) {
+  for (const entry of entries) {
     latest.set(entry.email, entry.status);
   }
   const emails = new Set<string>();
@@ -91,6 +100,13 @@ function readActiveSubscriberEmails(
     if (status === 'active') emails.add(email);
   }
   return emails;
+}
+
+/** Emails whose LATEST subscription-ledger status is 'active'. */
+function readActiveSubscriberEmails(
+  ledgerPath: string = subscriptionsLedgerPath(),
+): Set<string> {
+  return activeEmailsFromEntries(readSubscriptionLedger(ledgerPath));
 }
 
 /**
@@ -214,4 +230,76 @@ export function readBroadcastDrafts(
     }
   }
   return drafts.reverse();
+}
+
+/* ------------------------------------------------------------------ */
+/* Driver-aware async accessors (Phase 3 Step 1: store binding)        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Append one broadcast draft record. JSONL driver: the exact append the
+ * admin route used to perform itself. Postgres driver: one 'broadcasts'
+ * event keyed by broadcast_id. Still records intent only — nothing is
+ * sent, in either driver.
+ */
+export async function appendBroadcastDraftRecord(
+  record: BroadcastDraftRecord,
+): Promise<void> {
+  if (postgresEnabled()) {
+    await appendEvent(
+      EVENT_STREAMS.broadcasts,
+      record.broadcast_id,
+      'broadcast.recorded',
+      record,
+      record.created_at,
+    );
+    return;
+  }
+  const path = broadcastsLedgerPath();
+  await mkdir(dirname(path), { recursive: true });
+  await appendFile(path, `${JSON.stringify(record)}\n`, 'utf8');
+}
+
+/** readBroadcastDrafts, driver-aware. Newest first, same validity filter. */
+export async function readBroadcastDraftsAsync(): Promise<
+  BroadcastDraftRecord[]
+> {
+  if (!postgresEnabled()) return readBroadcastDrafts();
+  const events = await readStreamEvents(EVENT_STREAMS.broadcasts);
+  const drafts: BroadcastDraftRecord[] = [];
+  for (const event of events) {
+    const payload: unknown = event.payload;
+    if (isBroadcastDraft(payload)) drafts.push(payload);
+  }
+  return drafts.reverse();
+}
+
+/**
+ * computeBroadcastAudience, driver-aware. With DATABASE_URL set the
+ * audience folds the 'leads' event stream (newsletter captures with
+ * consent: true — the same hard gate) and the subscription event
+ * stream; the injectable `sources` only apply to the JSONL driver.
+ */
+export async function computeBroadcastAudienceAsync(
+  sources?: Parameters<typeof computeBroadcastAudience>[0],
+): Promise<BroadcastAudience> {
+  if (!postgresEnabled()) return computeBroadcastAudience(sources);
+  const leadEvents = await readStreamEvents(EVENT_STREAMS.leads);
+  const newsletter = new Set<string>();
+  for (const event of leadEvents) {
+    const parsed = event.payload as { email?: unknown; consent?: unknown; kind?: unknown };
+    const email = normalizeSubscriptionEmail(parsed?.email);
+    if (email && parsed?.kind === 'newsletter' && parsed?.consent === true) {
+      newsletter.add(email);
+    }
+  }
+  const subscribers = activeEmailsFromEntries(
+    await readSubscriptionLedgerAsync(),
+  );
+  const union = new Set<string>([...newsletter, ...subscribers]);
+  return {
+    newsletter_recipients: newsletter.size,
+    active_subscribers: subscribers.size,
+    total_recipients: union.size,
+  };
 }

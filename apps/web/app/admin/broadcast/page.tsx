@@ -31,10 +31,11 @@ import { AdminGate } from '../../../components/admin/AdminGate';
 import { AdminViewTracker } from '../../../components/admin/AdminViewTracker';
 import { ownerSecretConfigured } from '../../../lib/admin/owner-auth';
 import {
-  computeBroadcastAudience,
-  readBroadcastDrafts,
+  computeBroadcastAudienceAsync,
+  readBroadcastDraftsAsync,
 } from '../../../lib/broadcast/broadcast';
 import { BroadcastComposer } from './BroadcastComposer';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Admin — Broadcast',
@@ -54,9 +55,9 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function AdminBroadcastPage() {
-  const audience = computeBroadcastAudience();
-  const drafts = readBroadcastDrafts();
+export default async function AdminBroadcastPage() {
+  const audience = await computeBroadcastAudienceAsync();
+  const drafts = await readBroadcastDraftsAsync();
   const configured = ownerSecretConfigured();
 
   return (
@@ -124,7 +125,7 @@ export default function AdminBroadcastPage() {
         </section>
 
         <p>
-          <a href="/admin">← Back to overview</a>
+          <Link href="/admin">← Back to overview</Link>
         </p>
       </main>
     </AdminGate>

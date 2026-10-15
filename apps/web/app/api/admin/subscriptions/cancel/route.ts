@@ -20,18 +20,16 @@
  * transition is too, this just avoids a redundant ledger line).
  * `pending_payment` and `active` members can both be cancelled.
  *
- * SERVER-ONLY: reads a server env secret and the filesystem ledger.
+ * SERVER-ONLY: reads a server env secret and the subscription ledger.
  * Never import from a client component.
  */
 import { NextResponse } from 'next/server';
-import { appendFileSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { isRecord, sanitizeEmail } from '../../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../../lib/security/rate-limit';
 import { ownerAuthorized } from '../../../../../lib/admin/owner-auth';
 import {
-  findLatestSubscriptionRecord,
-  subscriptionsLedgerPath,
+  appendSubscriptionRecord,
+  findLatestSubscriptionRecordAsync,
 } from '../../../../../lib/subscriptions/entitlement';
 import {
   cancelSubscription,
@@ -42,11 +40,9 @@ function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
 }
 
-/** Append-only ledger write — same pattern as POST /api/subscriptions. */
-function persistSubscription(record: SubscriptionRecord): void {
-  const path = subscriptionsLedgerPath();
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, `${JSON.stringify(record)}\n`, 'utf8');
+/** Append-only ledger write — driver-aware, as POST /api/subscriptions. */
+async function persistSubscription(record: SubscriptionRecord): Promise<void> {
+  await appendSubscriptionRecord(record);
 }
 
 /* ------------------------------------------------------------------ */
@@ -82,7 +78,7 @@ export async function POST(request: Request) {
     return fail(['A valid email address is required.']);
   }
 
-  const latest = findLatestSubscriptionRecord(email);
+  const latest = await findLatestSubscriptionRecordAsync(email);
   if (!latest) {
     // Never create a record here — cancellation only transitions an
     // existing subscription.
@@ -108,7 +104,7 @@ export async function POST(request: Request) {
   };
 
   try {
-    persistSubscription(cancelled);
+    await persistSubscription(cancelled);
   } catch (err) {
     return fail(
       [

@@ -24,16 +24,14 @@
  * Never import from a client component.
  */
 import { NextResponse } from 'next/server';
-import { appendFileSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { isRecord, sanitizePlainText } from '../../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../../lib/security/rate-limit';
 import { ownerAuthorized } from '../../../../../lib/admin/owner-auth';
 import { defaultOrderStore } from '../../../../../lib/stores/order-store';
 import {
+  appendTrackingEvent,
   buildTrackingEvent,
-  findLatestTracking,
-  orderTrackingLedgerPath,
+  findLatestTrackingAsync,
   sanitizeCarrier,
   sanitizeTrackingNumber,
   toTrackingView,
@@ -45,11 +43,9 @@ function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
 }
 
-/** Append-only ledger write — same pattern as the subscription routes. */
-function persistTrackingEvent(event: OrderTrackingEvent): void {
-  const path = orderTrackingLedgerPath();
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, `${JSON.stringify(event)}\n`, 'utf8');
+/** Append-only ledger write — driver-aware, as the subscription routes. */
+async function persistTrackingEvent(event: OrderTrackingEvent): Promise<void> {
+  await appendTrackingEvent(event);
 }
 
 /* ------------------------------------------------------------------ */
@@ -110,7 +106,7 @@ export async function POST(request: Request) {
     return fail([`No order found with ID ${orderIdInput}.`], 404);
   }
 
-  const existing = findLatestTracking(order.order_id);
+  const existing = await findLatestTrackingAsync(order.order_id);
   if (
     existing &&
     existing.carrier === carrier &&
@@ -131,7 +127,7 @@ export async function POST(request: Request) {
     tracking_number: trackingNumber,
   });
   try {
-    persistTrackingEvent(event);
+    await persistTrackingEvent(event);
   } catch (err) {
     return fail(
       [

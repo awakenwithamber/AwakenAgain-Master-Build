@@ -34,7 +34,7 @@ import {
 } from '../../../lib/checkout/order';
 import { createOrderStore } from '../../../lib/orders/store';
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
-import { isEntitledSubscriber } from '../../../lib/subscriptions/entitlement';
+import { isEntitledSubscriberAsync } from '../../../lib/subscriptions/entitlement';
 import {
   captureServerEventSoon,
   resolveServerDistinctId,
@@ -56,10 +56,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Read from the raw body because validateAndBuildOrder owns sanitization;
  * the lookup normalizes (trim + lowercase) the same way.
  */
-function verifySubscriberClaim(body: unknown): boolean {
+async function verifySubscriberClaim(body: unknown): Promise<boolean> {
   if (!isRecord(body) || body.is_subscriber !== true) return false;
   const customer = isRecord(body.customer) ? body.customer : undefined;
-  return isEntitledSubscriber(customer?.email);
+  return isEntitledSubscriberAsync(customer?.email);
 }
 
 /**
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
   let record: OrderRecord;
   try {
     record = validateAndBuildOrder(body, {
-      isSubscriberVerified: verifySubscriberClaim(body),
+      isSubscriberVerified: await verifySubscriberClaim(body),
     });
   } catch (err) {
     return fail([err instanceof Error ? err.message : 'Invalid order.']);

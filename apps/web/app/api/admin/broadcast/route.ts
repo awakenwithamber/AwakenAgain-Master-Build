@@ -24,15 +24,13 @@
  * Never import from a client component.
  */
 import { NextResponse } from 'next/server';
-import { appendFileSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { isRecord, sanitizePlainText } from '../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../lib/security/rate-limit';
 import { ownerAuthorized } from '../../../../lib/admin/owner-auth';
 import {
-  broadcastsLedgerPath,
+  appendBroadcastDraftRecord,
   buildBroadcastDraft,
-  computeBroadcastAudience,
+  computeBroadcastAudienceAsync,
   type BroadcastDraftRecord,
 } from '../../../../lib/broadcast/broadcast';
 
@@ -40,11 +38,9 @@ function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
 }
 
-/** Append-only ledger write — same pattern as the other owner routes. */
-function persistBroadcast(record: BroadcastDraftRecord): void {
-  const path = broadcastsLedgerPath();
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, `${JSON.stringify(record)}\n`, 'utf8');
+/** Append-only ledger write — driver-aware, as the other owner routes. */
+async function persistBroadcast(record: BroadcastDraftRecord): Promise<void> {
+  await appendBroadcastDraftRecord(record);
 }
 
 /* ------------------------------------------------------------------ */
@@ -86,11 +82,11 @@ export async function POST(request: Request) {
     return fail(['A broadcast message is required (5000 characters max).']);
   }
 
-  const audience = computeBroadcastAudience();
+  const audience = await computeBroadcastAudienceAsync();
   const draft = buildBroadcastDraft({ subject, body: message, audience });
 
   try {
-    persistBroadcast(draft);
+    await persistBroadcast(draft);
   } catch (err) {
     return fail(
       [

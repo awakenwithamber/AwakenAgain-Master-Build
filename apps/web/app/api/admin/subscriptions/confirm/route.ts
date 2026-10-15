@@ -24,18 +24,16 @@
  * creates NOTHING (404). Confirming an already-`active` member is a 200
  * no-op (idempotent).
  *
- * SERVER-ONLY: reads a server env secret and the filesystem ledger.
+ * SERVER-ONLY: reads a server env secret and the subscription ledger.
  * Never import from a client component.
  */
 import { NextResponse } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
-import { appendFileSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { isRecord, sanitizeEmail } from '../../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../../lib/security/rate-limit';
 import {
-  findLatestSubscriptionRecord,
-  subscriptionsLedgerPath,
+  appendSubscriptionRecord,
+  findLatestSubscriptionRecordAsync,
 } from '../../../../../lib/subscriptions/entitlement';
 import {
   confirmSubscription,
@@ -65,11 +63,9 @@ function ownerAuthorized(request: Request): OwnerAuth {
   return timingSafeEqual(presentedBuf, expectedBuf) ? 'granted' : 'denied';
 }
 
-/** Append-only ledger write — same pattern as POST /api/subscriptions. */
-function persistSubscription(record: SubscriptionRecord): void {
-  const path = subscriptionsLedgerPath();
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, `${JSON.stringify(record)}\n`, 'utf8');
+/** Append-only ledger write — driver-aware, as POST /api/subscriptions. */
+async function persistSubscription(record: SubscriptionRecord): Promise<void> {
+  await appendSubscriptionRecord(record);
 }
 
 /* ------------------------------------------------------------------ */
@@ -105,7 +101,7 @@ export async function POST(request: Request) {
     return fail(['A valid email address is required.']);
   }
 
-  const latest = findLatestSubscriptionRecord(email);
+  const latest = await findLatestSubscriptionRecordAsync(email);
   if (!latest) {
     // Never create a record here — confirmation only transitions an
     // existing signup.
@@ -152,7 +148,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    persistSubscription(confirmed);
+    await persistSubscription(confirmed);
   } catch (err) {
     return fail(
       [

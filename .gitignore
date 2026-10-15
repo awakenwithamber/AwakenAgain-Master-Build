@@ -22,6 +22,10 @@ out/
 .orders-ledger.jsonl
 *.orders-ledger.jsonl
 
+# ALL JSONL ledgers are runtime data (subscriptions, orders, contact,
+# tracking, broadcasts, leads, reviews + migration backups) — never commit
+*.jsonl
+
 # Test artifacts
 .vitest/
 
@@ -41,3 +45,6 @@ Thumbs.db
 
 # Local tooling
 .coolify/
+
+# TypeScript incremental build info (generated)
+*.tsbuildinfo

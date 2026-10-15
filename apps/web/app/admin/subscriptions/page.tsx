@@ -21,8 +21,9 @@ import type { Metadata } from 'next';
 import { AdminGate } from '../../../components/admin/AdminGate';
 import { AdminViewTracker } from '../../../components/admin/AdminViewTracker';
 import { ownerSecretConfigured } from '../../../lib/admin/owner-auth';
-import { listSubscriptionMembers } from '../../../lib/subscriptions/members';
+import { listSubscriptionMembersAsync } from '../../../lib/subscriptions/members';
 import { SubscriberManager } from './SubscriberManager';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Admin — Subscriptions',
@@ -35,8 +36,8 @@ export const metadata: Metadata = {
 // build-time snapshot.
 export const dynamic = 'force-dynamic';
 
-export default function AdminSubscriptionsPage() {
-  const members = listSubscriptionMembers();
+export default async function AdminSubscriptionsPage() {
+  const members = await listSubscriptionMembersAsync();
   const configured = ownerSecretConfigured();
 
   return (
@@ -75,12 +76,12 @@ export default function AdminSubscriptionsPage() {
 
         <p>
           Prefer the single-purpose tool?{' '}
-          <a href="/admin/subscriptions/confirm">
+          <Link href="/admin/subscriptions/confirm">
             Confirm a subscription by email →
-          </a>
+          </Link>
         </p>
         <p>
-          <a href="/admin">← Back to overview</a>
+          <Link href="/admin">← Back to overview</Link>
         </p>
       </main>
     </AdminGate>

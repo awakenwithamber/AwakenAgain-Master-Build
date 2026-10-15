@@ -7,8 +7,9 @@
  * client-supplied price is ignored, never trusted.
  *
  * POST → validates input, builds a `pending_payment` SubscriptionRecord,
- * appends it to the local JSONL ledger (reversible; production persistence
- * is the database — UNDECIDED, NEEDS VERIFICATION), emits the server-owned
+ * appends it to the subscription ledger (JSONL locally; the append-only
+ * Postgres event store when DATABASE_URL is set — Phase 3 Step 1), emits
+ * the server-owned
  * `subscription_created` analytics fact, and returns Cash App + Venmo
  * payment instructions for the first month.
  *
@@ -22,11 +23,9 @@
  * lib/subscriptions/subscriptions.ts (imported here and by tests).
  */
 import { NextResponse } from 'next/server';
-import { appendFileSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { CASH_APP_HANDLE, VENMO_HANDLE } from '../../../lib/checkout/order';
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
-import { subscriptionsLedgerPath } from '../../../lib/subscriptions/entitlement';
+import { appendSubscriptionRecord } from '../../../lib/subscriptions/entitlement';
 import {
   captureGrimoireServerEvent,
   GRIMOIRE_ANALYTICS_EVENT_NAMES,
@@ -39,19 +38,17 @@ import {
   type SubscriptionRecord,
 } from '../../../lib/subscriptions/subscriptions';
 
-/** Ledger path — shared with the entitlement lookup (single source of truth). */
-function ledgerPath(): string {
-  return subscriptionsLedgerPath();
-}
-
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
 }
 
-function persistSubscription(record: SubscriptionRecord): void {
-  const path = ledgerPath();
-  mkdirSync(dirname(path), { recursive: true });
-  appendFileSync(path, `${JSON.stringify(record)}\n`, 'utf8');
+/**
+ * Append-only ledger write — driver-aware (Phase 3 Step 1): the
+ * subscription ledger (JSONL today, the Postgres event store when
+ * DATABASE_URL is set), via lib/subscriptions/entitlement.
+ */
+async function persistSubscription(record: SubscriptionRecord): Promise<void> {
+  await appendSubscriptionRecord(record);
 }
 
 function paymentInstructions() {
@@ -88,7 +85,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    persistSubscription(record);
+    await persistSubscription(record);
   } catch (err) {
     return fail(
       [

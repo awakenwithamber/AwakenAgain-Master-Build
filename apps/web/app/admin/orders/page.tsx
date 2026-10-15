@@ -1,11 +1,17 @@
 /**
- * G12 — Admin orders list (read-only) + Phase 2 tracking entry.
+ * G12 — Admin orders list (read-only) + Phase 2 tracking entry +
+ * payment confirmation (audit 2026-10-15 GAP-1).
  * Renders the server-written order ledger exactly as persisted; prices are
  * displayed, never recomputed (SERVER=AUTHORITY — the ledger is the truth).
  * Shipment tracking renders from the separate append-only tracking ledger
  * and is recorded through the owner-secret endpoint
  * (POST /api/admin/orders/tracking) via the form at the bottom — order
- * records themselves are never edited here or anywhere.
+ * records themselves are never edited here or anywhere. Payment
+ * confirmation works the same way: an append-only payment ledger
+ * (lib/orders/payments.ts) recorded through
+ * POST /api/admin/orders/payment; an order shows as paid when a
+ * confirmation event exists for it. Payment methods render as human
+ * labels, never the raw enum (audit POLISH-1).
  */
 import type { Metadata } from 'next';
 import { AdminGate } from '../../../components/admin/AdminGate';
@@ -13,13 +19,20 @@ import { AdminViewTracker } from '../../../components/admin/AdminViewTracker';
 import { defaultOrderStore, JsonlOrderStore } from '../../../lib/stores/order-store';
 import { ownerSecretConfigured } from '../../../lib/admin/owner-auth';
 import { TrackingEntryForm } from './TrackingEntryForm';
+import { PaymentConfirmForm } from './PaymentConfirmForm';
 import {
   carrierLabel,
   carrierTrackingUrl,
-  readTrackingEvents,
+  readTrackingEventsAsync,
   type OrderTrackingEvent,
 } from '../../../lib/orders/tracking';
+import {
+  paymentMethodLabel,
+  readPaymentEventsAsync,
+  type OrderPaymentEvent,
+} from '../../../lib/orders/payments';
 import { formatPrice } from '../../../lib/pricing/pricing';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Admin — Orders',
@@ -44,8 +57,15 @@ export default async function AdminOrdersPage() {
   // POST /api/admin/orders/tracking and shown to the customer on
   // /order-status; the order records themselves are never mutated.
   const trackingByOrder = new Map<string, OrderTrackingEvent>();
-  for (const event of readTrackingEvents()) {
+  for (const event of await readTrackingEventsAsync()) {
     trackingByOrder.set(event.order_id, event);
+  }
+
+  // Latest payment confirmation per order (same append-only, latest-wins
+  // join). An order with an entry here is paid.
+  const paymentByOrder = new Map<string, OrderPaymentEvent>();
+  for (const event of await readPaymentEventsAsync()) {
+    paymentByOrder.set(event.order_id, event);
   }
 
   return (
@@ -108,7 +128,24 @@ export default async function AdminOrdersPage() {
                   </td>
                   <td>{formatPrice(o.total_cents)}</td>
                   <td>{o.shipping_status}</td>
-                  <td>{o.payment_method}</td>
+                  <td>
+                    {paymentMethodLabel(o.payment_method)}
+                    <br />
+                    {(() => {
+                      const payment = paymentByOrder.get(o.order_id);
+                      return payment ? (
+                        <small>
+                          ✓ Paid — confirmed{' '}
+                          {payment.recorded_at.slice(0, 10)}
+                          {payment.reference
+                            ? ` · ref ${payment.reference}`
+                            : ''}
+                        </small>
+                      ) : (
+                        <small>Awaiting payment</small>
+                      );
+                    })()}
+                  </td>
                   <td>
                     {(() => {
                       const tracking = trackingByOrder.get(o.order_id);
@@ -137,6 +174,22 @@ export default async function AdminOrdersPage() {
           </table>
         )}
 
+        <section aria-label="Confirm payment received" style={{ marginTop: '2.5rem' }}>
+          <h2>Confirm payment received</h2>
+          <p>
+            When an order&apos;s payment lands — BookiPay shows the Bookipi
+            invoice paid, or the Cash App / Venmo payment arrives — confirm
+            it here. The confirmation is appended to the payment ledger
+            (the order record is never edited), the table above marks the
+            order paid, and the customer sees “Payment confirmed” on the{' '}
+            <Link href="/order-status">order-status page</Link>. Bookipi
+            sends no automatic signal, so this step is what moves an order
+            out of “awaiting payment”. See the Bookipi owner runbook for
+            the full per-order loop.
+          </p>
+          <PaymentConfirmForm configured={ownerSecretConfigured()} />
+        </section>
+
         <section aria-label="Record shipment tracking" style={{ marginTop: '2.5rem' }}>
           <h2>Record shipment tracking</h2>
           <p>
@@ -144,7 +197,7 @@ export default async function AdminOrdersPage() {
             entry is appended to the tracking ledger (the order record is
             never edited), and the customer sees the number and its
             carrier link on the{' '}
-            <a href="/order-status">order-status page</a>. Recording the
+            <Link href="/order-status">order-status page</Link>. Recording the
             same number again changes nothing; a corrected number simply
             supersedes the earlier entry.
           </p>
@@ -152,7 +205,7 @@ export default async function AdminOrdersPage() {
         </section>
 
         <p>
-          <a href="/admin">← Back to overview</a>
+          <Link href="/admin">← Back to overview</Link>
         </p>
       </main>
     </AdminGate>
