@@ -4,7 +4,10 @@
  * Guards the Netlify-fidelity contract (source of truth §1–§2):
  * - NEVER autoplay: playback starts only via enable()/toggle()/slider.
  * - Fade 0 → target over ~4s in 33 steps; default 7%, stored honoured, capped 12%.
- * - Music choice NOT persisted; volume IS persisted to localStorage['siteVolume'].
+ * - Music choice NOT persisted across sessions; WITHIN a session the
+ *   intent is kept in sessionStorage (audit 2026-10-15 GAP-3) so a
+ *   full-page load re-arms playback on the first gesture. Volume IS
+ *   persisted to localStorage['siteVolume'].
  * - visibilitychange (hidden) pauses; pagehide pauses + unloads the source.
  *
  * Runs in plain Node (no DOM, no JSX) with fake audio/storage/document/window.
@@ -14,13 +17,16 @@ import {
   DEFAULT_VOLUME_PERCENT,
   FADE_DURATION_MS,
   FADE_STEPS,
+  INTENT_STORAGE_KEY,
   MAX_VOLUME_PERCENT,
   VOLUME_STORAGE_KEY,
   MusicEngine,
   clampVolumePercent,
   percentToGain,
+  readStoredIntent,
   readStoredVolume,
   resolveTargetVolume,
+  writeStoredIntent,
   writeStoredVolume,
   type AudioElementLike,
   type DocumentLike,
@@ -318,8 +324,87 @@ describe('MusicEngine', () => {
       playing: false,
       volumePercent: 7,
     });
-    // Only the volume key exists — no "music choice" key is ever written.
+    // Only the volume key exists in localStorage — the music choice is
+    // never written there (session intent lives in sessionStorage only,
+    // and this harness provides none).
     expect(storage.keys()).toEqual([VOLUME_STORAGE_KEY]);
+  });
+
+  it('session intent: enable/disable persist intent to sessionStorage only (audit GAP-3)', async () => {
+    const h = makeHarness();
+    const session = new FakeStorage();
+    const deps = { ...h.deps, sessionStorage: session };
+    const engine = new MusicEngine(deps);
+
+    await engine.enable();
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(session.getItem(INTENT_STORAGE_KEY)).toBe('on');
+    expect(h.storage.keys()).toEqual([VOLUME_STORAGE_KEY]); // localStorage untouched by intent
+
+    engine.disable();
+    expect(session.getItem(INTENT_STORAGE_KEY)).toBe('off');
+  });
+
+  it('session intent helpers round-trip and reject junk', () => {
+    const s = new FakeStorage();
+    expect(readStoredIntent(s)).toBeNull();
+    expect(readStoredIntent(null)).toBeNull();
+    writeStoredIntent(s, 'on');
+    expect(readStoredIntent(s)).toBe('on');
+    writeStoredIntent(s, 'off');
+    expect(readStoredIntent(s)).toBe('off');
+    s.setItem(INTENT_STORAGE_KEY, 'banana');
+    expect(readStoredIntent(s)).toBeNull();
+    expect(() => writeStoredIntent(null, 'on')).not.toThrow();
+  });
+
+  it('restored session intent boots enabled-but-silent, then first gesture resumes (no autoplay)', async () => {
+    const h = makeHarness();
+    const session = new FakeStorage();
+    session.setItem(INTENT_STORAGE_KEY, 'on');
+    const deps = { ...h.deps, sessionStorage: session };
+    const engine = new MusicEngine(deps);
+
+    // Intent restored, but NOTHING plays before a gesture.
+    expect(engine.getSnapshot().enabled).toBe(true);
+    expect(engine.getSnapshot().playing).toBe(false);
+    expect(h.audio.playCalls).toBe(0);
+
+    engine.initLifecycle();
+    expect(h.win.listenerCount('pointerdown')).toBe(1);
+    expect(h.win.listenerCount('keydown')).toBe(1);
+
+    h.win.fire('pointerdown');
+    await flushMicrotasks();
+    expect(h.audio.playCalls).toBe(1);
+    expect(engine.getSnapshot().playing).toBe(true);
+    // One-shot: listeners disarmed after the first gesture.
+    expect(h.win.listenerCount('pointerdown')).toBe(0);
+    expect(h.win.listenerCount('keydown')).toBe(0);
+  });
+
+  it('no gesture re-arm is armed when the session intent was off', () => {
+    const h = makeHarness();
+    const session = new FakeStorage();
+    session.setItem(INTENT_STORAGE_KEY, 'off');
+    const engine = new MusicEngine({ ...h.deps, sessionStorage: session });
+    engine.initLifecycle();
+    expect(h.win.listenerCount('pointerdown')).toBe(0);
+    expect(h.win.listenerCount('keydown')).toBe(0);
+    expect(h.audio.playCalls).toBe(0);
+  });
+
+  it('destroy() removes an armed gesture re-arm', () => {
+    const h = makeHarness();
+    const session = new FakeStorage();
+    session.setItem(INTENT_STORAGE_KEY, 'on');
+    const engine = new MusicEngine({ ...h.deps, sessionStorage: session });
+    engine.initLifecycle();
+    expect(h.win.listenerCount('pointerdown')).toBe(1);
+    engine.destroy();
+    expect(h.win.listenerCount('pointerdown')).toBe(0);
+    expect(h.win.listenerCount('keydown')).toBe(0);
   });
 
   it('toggle() starts and stops playback', async () => {

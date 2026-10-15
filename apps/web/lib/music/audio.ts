@@ -7,7 +7,13 @@
  * HARD RULES (do not weaken):
  * - NEVER autoplay. Playback starts only from an explicit user gesture:
  *   "Get the Full Experience" (entry gate) or the nav toggle / volume slider.
- * - Music *choice* is NOT persisted — the entry gate reappears on every load.
+ * - Music *choice* is NOT persisted across sessions — the entry gate
+ *   reappears on every new visit. WITHIN a session the on/off intent IS
+ *   kept in sessionStorage (audit 2026-10-15 GAP-3): a full-page load
+ *   (refresh, typed URL) used to kill playback permanently because the
+ *   fresh engine booted with intent off. Now a restored "on" intent
+ *   re-arms playback on the visitor's FIRST gesture in the new document
+ *   — still never audible autoplay.
  * - Volume IS persisted to localStorage['siteVolume'] (0–100 slider scale).
  * - Fade-in target: stored volume if present, capped at 12%; default 7%.
  * - Tab hidden → pause. pagehide → pause + unload the audio source.
@@ -16,6 +22,8 @@ import { AUDIO } from '../media/image-paths';
 
 /** localStorage key for the persisted volume slider value (0–100). */
 export const VOLUME_STORAGE_KEY = 'siteVolume';
+/** sessionStorage key for the session-scoped music intent ('on' | 'off'). */
+export const INTENT_STORAGE_KEY = 'aaMusicIntent';
 /** Fade-in target when no stored volume exists. */
 export const DEFAULT_VOLUME_PERCENT = 7;
 /** Stored volumes are honoured but capped at this percent for the fade-in. */
@@ -56,8 +64,39 @@ export interface WindowLike {
 export interface MusicEngineDeps {
   createAudioElement: () => AudioElementLike;
   storage: KeyValueStorage | null;
+  /** sessionStorage (session-scoped intent) — separate from `storage`. */
+  sessionStorage?: KeyValueStorage | null;
   documentRef: DocumentLike | null;
   windowRef: WindowLike | null;
+}
+
+/**
+ * Read the session-scoped music intent: 'on' | 'off' | null (no choice
+ * made this session, or storage unavailable).
+ */
+export function readStoredIntent(
+  session: KeyValueStorage | null | undefined,
+): 'on' | 'off' | null {
+  if (!session) return null;
+  try {
+    const raw = session.getItem(INTENT_STORAGE_KEY);
+    return raw === 'on' || raw === 'off' ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Persist the session-scoped intent. Never throws. */
+export function writeStoredIntent(
+  session: KeyValueStorage | null | undefined,
+  intent: 'on' | 'off',
+): void {
+  if (!session) return;
+  try {
+    session.setItem(INTENT_STORAGE_KEY, intent);
+  } catch {
+    /* storage unavailable — intent simply isn't restored after full loads */
+  }
 }
 
 export function clampVolumePercent(value: number): number {
@@ -127,6 +166,7 @@ export class MusicEngine {
   private lifecycleBound = false;
   private boundVisibility: (() => void) | null = null;
   private boundPageHide: (() => void) | null = null;
+  private boundGesture: (() => void) | null = null;
   private listeners = new Set<SnapshotListener>();
   private snapshot: MusicStateSnapshot;
 
@@ -134,6 +174,10 @@ export class MusicEngine {
     this.volumePercent = clampVolumePercent(
       readStoredVolume(deps.storage) ?? DEFAULT_VOLUME_PERCENT,
     );
+    // Restore the SESSION intent (audit GAP-3): after a full-page load the
+    // visitor's earlier "music on" choice survives; playback itself only
+    // resumes on their first gesture (see initLifecycle) — never autoplay.
+    this.intentOn = readStoredIntent(deps.sessionStorage) === 'on';
     this.snapshot = this.buildSnapshot();
   }
 
@@ -234,6 +278,7 @@ export class MusicEngine {
     // slider, the audible volume, and the stored preference never disagree.
     writeStoredVolume(this.deps.storage, target);
     this.intentOn = true;
+    writeStoredIntent(this.deps.sessionStorage, 'on');
     audio.volume = 0;
     this.emit();
     try {
@@ -250,10 +295,11 @@ export class MusicEngine {
     this.startFade(target);
   }
 
-  /** Nav toggle OFF. The choice is deliberately NOT persisted. */
+  /** Nav toggle OFF. Persisted for the session only — never across visits. */
   disable(): void {
     this.cancelFade();
     this.intentOn = false;
+    writeStoredIntent(this.deps.sessionStorage, 'off');
     this.actuallyPlaying = false;
     if (this.audio) this.audio.pause();
     this.emit();
@@ -288,6 +334,7 @@ export class MusicEngine {
     const audio = this.audio;
     if (!audio) return;
     this.intentOn = true;
+    writeStoredIntent(this.deps.sessionStorage, 'on');
     audio.volume = percentToGain(next);
     this.actuallyPlaying = true; // optimistic; corrected below if refused
     this.emit();
@@ -321,6 +368,28 @@ export class MusicEngine {
     this.boundPageHide = () => this.unloadForPageHide();
     documentRef.addEventListener('visibilitychange', this.boundVisibility);
     windowRef.addEventListener('pagehide', this.boundPageHide);
+    // Session-intent restore (audit GAP-3): this document was freshly
+    // loaded and the visitor had music ON. Browsers forbid audible
+    // autoplay, so re-arm on the FIRST gesture anywhere in the document;
+    // the gesture itself makes play() legal, and enable() fades in from
+    // silence at the capped gentle volume.
+    if (this.intentOn && !this.actuallyPlaying) {
+      this.boundGesture = () => {
+        this.disarmGestureResume();
+        if (this.intentOn && !this.actuallyPlaying) void this.enable();
+      };
+      windowRef.addEventListener('pointerdown', this.boundGesture);
+      windowRef.addEventListener('keydown', this.boundGesture);
+    }
+  }
+
+  private disarmGestureResume(): void {
+    const { windowRef } = this.deps;
+    if (this.boundGesture && windowRef) {
+      windowRef.removeEventListener('pointerdown', this.boundGesture);
+      windowRef.removeEventListener('keydown', this.boundGesture);
+    }
+    this.boundGesture = null;
   }
 
   destroy(): void {
@@ -331,6 +400,7 @@ export class MusicEngine {
     if (this.boundPageHide && windowRef) {
       windowRef.removeEventListener('pagehide', this.boundPageHide);
     }
+    this.disarmGestureResume();
     this.boundVisibility = null;
     this.boundPageHide = null;
     this.lifecycleBound = false;
@@ -382,11 +452,17 @@ function defaultBrowserDeps(): MusicEngineDeps {
   const hasWindow = typeof window !== 'undefined';
   const hasDocument = typeof document !== 'undefined';
   let storage: KeyValueStorage | null = null;
+  let sessionStorage: KeyValueStorage | null = null;
   if (hasWindow) {
     try {
       storage = window.localStorage;
     } catch {
       storage = null;
+    }
+    try {
+      sessionStorage = window.sessionStorage;
+    } catch {
+      sessionStorage = null;
     }
   }
   return {
@@ -396,6 +472,7 @@ function defaultBrowserDeps(): MusicEngineDeps {
       return document.createElement('audio');
     },
     storage,
+    sessionStorage,
     documentRef: hasDocument ? document : null,
     windowRef: hasWindow ? window : null,
   };
