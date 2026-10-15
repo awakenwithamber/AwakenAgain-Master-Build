@@ -500,6 +500,45 @@ describePg('pg leads + reviews (equivalence)', () => {
     expect(events[0].event_type).toBe('lead.quiz_lead');
   });
 
+  it('get-involved kinds (2026-10-15) store verbatim with lead.<kind> types', async () => {
+    const affiliate = await leadStore.append({
+      kind: 'affiliate_interest',
+      email: 'ally@example.com',
+      name: 'Ally',
+      consent: true,
+      consentAt: '2026-10-15T00:00:00.000Z',
+      metadata: { projects: 'awaken-network,brandalchemy', project_count: 2 },
+    });
+    const partner = await leadStore.append({
+      kind: 'partner_idea',
+      email: 'ally@example.com',
+      name: 'Ally',
+      consent: true,
+      consentAt: '2026-10-15T00:00:00.000Z',
+      metadata: { contribution_type: 'skills', idea: 'Label design help.' },
+    });
+    expect(affiliate.kind).toBe('affiliate_interest');
+    expect(partner.kind).toBe('partner_idea');
+
+    const events = await readStreamEvents(EVENT_STREAMS.leads);
+    expect(events.map((e) => e.event_type)).toEqual([
+      'lead.affiliate_interest',
+      'lead.partner_idea',
+    ]);
+    expect(events.map((e) => e.stream_key)).toEqual([
+      'ally@example.com',
+      'ally@example.com',
+    ]);
+    expect(events[0].payload).toMatchObject({
+      kind: 'affiliate_interest',
+      metadata: { projects: 'awaken-network,brandalchemy' },
+    });
+    expect(events[1].payload).toMatchObject({
+      kind: 'partner_idea',
+      metadata: { contribution_type: 'skills' },
+    });
+  });
+
   it('reviews submit as pending; a later event for the id supersedes', async () => {
     const submitted = await reviewStore.submit({
       productHandle: 'gaias-rose-soap',
