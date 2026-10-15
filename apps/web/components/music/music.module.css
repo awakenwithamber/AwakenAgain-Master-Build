@@ -169,6 +169,11 @@
 @media (max-width: 640px) {
   .controls {
     gap: 0.35rem;
+    /* Allow the controls to compress inside the header actions row
+       instead of forcing it wider than the viewport (flex items do
+       not shrink below min-content while flex-shrink is 0). */
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
   .toggle {
@@ -178,6 +183,7 @@
 
   .slider {
     width: 60px;
+    min-width: 0;
   }
 
   .gateDialog {

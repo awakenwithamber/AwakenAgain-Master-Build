@@ -299,15 +299,15 @@
 .cardGrid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
 }
 
 .cardGridBases {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
 }
 
 .cardGridScent {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
 }
 
 .card {
@@ -903,7 +903,7 @@
 .slotGrid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
   margin: 16px 0;
 }
 
@@ -1082,7 +1082,12 @@
   .cardGrid,
   .cardGridBases,
   .cardGridScent {
-    grid-template-columns: 1fr;
+    /* minmax(0, …), not plain 1fr: a 1fr track's automatic minimum is
+       the item's min-content, and the row-direction cards' combined
+       min-content (~362px) inflated the track past a 320px viewport,
+       pushing the cards off-screen. A definite 0 minimum keeps the
+       single column exactly at the container width. */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .card {
@@ -1091,6 +1096,14 @@
     align-items: center;
     gap: 14px;
     padding: 16px;
+  }
+
+  /* Flex items do not shrink below their min-content by default; the
+     name/desc/hint spans' combined min-content (~362px) overflowed
+     the card on narrow phones and pushed the hint off-screen. Let the
+     spans compress and wrap inside the card instead. */
+  .card > * {
+    min-width: 0;
   }
 
   .cardIcon {

@@ -834,7 +834,7 @@
   border: 1px solid rgba(212, 175, 55, 0.5);
   background: rgba(21, 11, 38, 0.8);
   color: #d4af37;
-  min-width: 16rem;
+  min-width: min(16rem, 100%);
   flex: 1 1 auto;
   max-width: 24rem;
 }
