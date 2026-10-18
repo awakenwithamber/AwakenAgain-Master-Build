@@ -1,7 +1,13 @@
 /**
- * Content-Security-Policy — built from EVIDENCE in this codebase (audit
- * remediation, Phase 2). Every non-'self' origin below names why it is
- * allowed; do not add an origin without the same evidence:
+ * TARGET: apps/web/next.config.mjs (replaces the current file)
+ * Change vs current: the Content-Security-Policy is NO LONGER emitted here.
+ * It moved to middleware (lib/security/csp.ts + middleware.ts) so it can
+ * carry a per-request nonce instead of 'unsafe-inline' in script-src
+ * (Aikido issue 845087258). Emitting it in both places would intersect the
+ * two policies and keep the scanner flag. Every other header below —
+ * including HSTS (Aikido issue 857156854) — is unchanged.
+ *
+ * The CSP origin evidence record lives in lib/security/csp.ts. Summary:
  * - script-src https://us-assets.i.posthog.com — posthog-js (installed
  *   SDK) lazy-loads its feature modules (surveys, web-vitals, etc.)
  *   from its assets host. The SDK core itself is bundled same-origin.
@@ -23,24 +29,8 @@
  *   closing the Step 6 live-verify line item).
  * - frame-src https://player.vimeo.com — the welcome-video iframe in
  *   components/home/WelcomeVideo.tsx (the only embed in the app).
- * Deliberately NO 'unsafe-eval' anywhere. Inline script/style allowances
- * remain because Next.js injects inline bootstrap scripts and the app
- * uses inline style attributes throughout.
+ * Deliberately NO 'unsafe-eval' anywhere.
  */
-const CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://us-assets.i.posthog.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://d2xsxph8kpxj0f.cloudfront.net https://files.manuscdn.com",
-  "media-src 'self'",
-  "connect-src 'self' https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com",
-  'frame-src https://player.vimeo.com',
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-].join('; ');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -61,7 +51,6 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
-          { key: 'Content-Security-Policy', value: CONTENT_SECURITY_POLICY },
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains',

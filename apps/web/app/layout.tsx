@@ -11,6 +11,11 @@ import { BotanicalCardHost } from '../components/herbs/BotanicalCardHost';
 import { GaiaWidget } from '../components/chat/GaiaWidget';
 import { ConsentBar } from '../components/privacy/ConsentBar';
 
+// CSP nonce (Aikido 845087258): pages must render per-request so Next.js
+// can stamp the middleware nonce onto its inline scripts. Static prerender
+// HTML carries no nonce and its inline scripts would be blocked by the CSP.
+export const dynamic = 'force-dynamic';
+
 const base = siteUrl();
 
 export const metadata: Metadata = {

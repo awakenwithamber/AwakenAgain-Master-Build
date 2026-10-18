@@ -9,8 +9,7 @@
  * Note: written with React.createElement (no JSX) because this repo's
  * vitest transform does not parse JSX in .tsx test files.
  */
-import { createElement } from 'react';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { OrganizationJsonLd, ProductJsonLd } from './JsonLd';
 import { BRAND_NAME, BRAND_EMAIL, BRAND_PHONE_JSONLD, siteUrl } from '../../lib/seo/config';
@@ -25,7 +24,13 @@ function decodeEntities(html: string): string {
 }
 
 describe('OrganizationJsonLd', () => {
-  const html = decodeEntities(renderToStaticMarkup(createElement(OrganizationJsonLd)));
+  // Async server component since the CSP-nonce change (Aikido 845087258):
+  // it reads the per-request nonce from headers(), so render it by
+  // awaiting the component function rather than createElement.
+  let html = '';
+  beforeAll(async () => {
+    html = decodeEntities(renderToStaticMarkup(await OrganizationJsonLd()));
+  });
 
   it('emits the exact canonical brand name', () => {
     expect(html).toContain(BRAND_NAME);
@@ -49,19 +54,22 @@ describe('OrganizationJsonLd', () => {
 });
 
 describe('ProductJsonLd', () => {
-  const html = decodeEntities(
-    renderToStaticMarkup(
-      createElement(ProductJsonLd, {
-        product: {
-          name: 'DreamEase Botanical Capsules',
-          description: 'Compliant test description.',
-          priceCents: 4777,
-          path: '/shop/dreamease-capsules',
-          sku: 'DREAMEASE-30D',
-        },
-      }),
-    ),
-  );
+  let html = '';
+  beforeAll(async () => {
+    html = decodeEntities(
+      renderToStaticMarkup(
+        await ProductJsonLd({
+          product: {
+            name: 'DreamEase Botanical Capsules',
+            description: 'Compliant test description.',
+            priceCents: 4777,
+            path: '/shop/dreamease-capsules',
+            sku: 'DREAMEASE-30D',
+          },
+        }),
+      ),
+    );
+  });
 
   it('emits the exact brand name in the brand node and never shortens it', () => {
     expect(html).toContain(BRAND_NAME);

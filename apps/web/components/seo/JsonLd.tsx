@@ -15,6 +15,7 @@
  * and behaves identically under Next.js.
  */
 import { createElement } from 'react';
+import { headers } from 'next/headers';
 import {
   BRAND_EMAIL,
   BRAND_NAME,
@@ -22,18 +23,44 @@ import {
   siteUrl,
 } from '../../lib/seo/config';
 
-function JsonLdScript({ id, data }: { id: string; data: Record<string, unknown> }) {
+/**
+ * CSP nonce (Aikido 845087258): middleware sets `x-nonce` per request and
+ * the CSP authorises inline scripts by that nonce only. These JSON-LD
+ * blocks are inline <script> elements, so they carry the nonce too.
+ * Outside a request context (unit tests, static analysis) there is no
+ * nonce and the attribute is simply omitted.
+ */
+async function requestNonce(): Promise<string | undefined> {
+  try {
+    return (await headers()).get('x-nonce') ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function JsonLdScript({
+  id,
+  data,
+  nonce,
+}: {
+  id: string;
+  data: Record<string, unknown>;
+  nonce?: string;
+}) {
   return createElement('script', {
     id,
     type: 'application/ld+json',
+    ...(nonce ? { nonce } : {}),
     dangerouslySetInnerHTML: { __html: JSON.stringify(data) },
   });
 }
 
 /** Organization + WebSite structured data. Render once in app/layout.tsx. */
-export function OrganizationJsonLd() {
+export async function OrganizationJsonLd() {
   const base = siteUrl();
+  const nonce = await requestNonce();
   return JsonLdScript({
+    nonce,
     id: 'jsonld-organization',
     data: {
       '@context': 'https://schema.org',
@@ -93,10 +120,12 @@ export interface ProductJsonLdProps {
  * The product-page worker renders this inside /shop/[handle] with the
  * canonical product record as props.
  */
-export function ProductJsonLd({ product }: ProductJsonLdProps) {
+export async function ProductJsonLd({ product }: ProductJsonLdProps) {
   const base = siteUrl();
   const url = `${base}${product.path}`;
+  const nonce = await requestNonce();
   return JsonLdScript({
+    nonce,
     id: `jsonld-product-${product.path.replace(/[^a-z0-9]+/gi, '-')}`,
     data: {
       '@context': 'https://schema.org',
