@@ -96,6 +96,10 @@ describe('Content-Security-Policy (lib/security/csp, nonce-based)', () => {
     expect(directive(csp, 'base-uri')).toBe("base-uri 'self'");
     expect(directive(csp, 'form-action')).toBe("form-action 'self'");
     expect(directive(csp, 'object-src')).toBe("object-src 'none'");
+    // HTTPS-upgrade enforcement: browsers upgrade any http:// subresource.
+    expect(directive(csp, 'upgrade-insecure-requests')).toBe(
+      'upgrade-insecure-requests',
+    );
   });
 
   it('CSP allows the evidenced origins', () => {

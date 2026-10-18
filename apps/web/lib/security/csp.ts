@@ -27,6 +27,11 @@
  * - frame-src https://player.vimeo.com — the welcome-video iframe in
  *   components/home/WelcomeVideo.tsx (the only embed in the app).
  *
+ * 'upgrade-insecure-requests' is included so browsers auto-upgrade any
+ * http:// subresource request to https:// (HTTPS-upgrade enforcement,
+ * alongside the http→https 308 redirects and HSTS). The app references no
+ * http:// subresources (verified in source and live HTML 2026-10-18), so
+ * this is defence-in-depth with nothing to break.
  * Deliberately NO 'unsafe-eval' anywhere, and NO 'unsafe-inline' in
  * script-src: inline scripts are authorised per-request by nonce instead.
  * style-src keeps 'unsafe-inline' — it governs inline style *attributes*
@@ -47,6 +52,7 @@ export function buildContentSecurityPolicy(nonce: string): string {
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
+    'upgrade-insecure-requests',
   ].join('; ');
 }
 
