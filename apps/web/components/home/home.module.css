@@ -213,6 +213,16 @@
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
 }
 
+.heroWelcome {
+  font-family: 'Cormorant Garamond', 'EB Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1.3rem, 3.2vw, 1.65rem);
+  color: #ecd28a;
+  line-height: 1.6;
+  margin: 0 auto 1.5rem;
+  max-width: 44rem;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.6);
+}
 .heroSub {
   font-size: clamp(1.1rem, 3vw, 1.35rem);
   color: #b08d2a;

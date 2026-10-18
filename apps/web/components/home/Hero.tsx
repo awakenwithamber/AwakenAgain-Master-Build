@@ -12,6 +12,11 @@ export function Hero() {
         <h1 id="hero-heading" className={styles.heroTitle}>
           Discover Your Personal Herbal Allies
         </h1>
+        {/* Owner's welcome line (added 2026-10-18 at her direction). */}
+        <p className={styles.heroWelcome}>
+          Welcome to a realm where the essence of nature&rsquo;s bounty is
+          harnessed in its purest form.
+        </p>
         <p className={styles.heroSub}>
           Answer a few thoughtful questions and receive your personalized herbal
           match — in under two minutes.
