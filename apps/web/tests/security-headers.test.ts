@@ -75,6 +75,12 @@ describe('security headers (next.config headers())', () => {
     const headers = await emittedHeaders();
     expect(headers.has('Content-Security-Policy')).toBe(false);
   });
+
+  it('disables the X-Powered-By framework advertisement', () => {
+    expect(
+      (nextConfig as { poweredByHeader?: boolean }).poweredByHeader,
+    ).toBe(false);
+  });
 });
 
 describe('Content-Security-Policy (lib/security/csp, nonce-based)', () => {

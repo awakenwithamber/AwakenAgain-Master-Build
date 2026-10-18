@@ -39,6 +39,10 @@ const nextConfig = {
   // the app runnable on any Node host or container platform.
   output: 'standalone',
   reactStrictMode: true,
+  // Do not advertise the framework: Next.js otherwise sends
+  // `X-Powered-By: Next.js` on page responses (Aikido surface-monitoring
+  // finding "Server leaks info via 'X-Powered-By' HTTP header", Medium).
+  poweredByHeader: false,
   // Security headers — parity with the legacy production contract
   // (PRODUCTION_CONTRACT.md §2: Netlify served these on /*), extended by
   // the Phase 2 audit remediation (CSP + HSTS + Permissions-Policy;
