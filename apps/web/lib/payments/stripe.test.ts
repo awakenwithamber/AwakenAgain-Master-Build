@@ -10,7 +10,7 @@
  *   writer of 'paid' for card orders.
  */
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -25,6 +25,7 @@ import {
   type StripeClientLike,
 } from './stripe';
 import type { OrderRecord } from '../checkout/order';
+import { closeAllEventPools } from '../events/event-store';
 
 const DIR = mkdtempSync(join(tmpdir(), 'stripe-payments-'));
 const LEDGER = join(DIR, 'stripe-payments.jsonl');
@@ -200,5 +201,33 @@ describe('paid ledger', () => {
     const rec = record({ order_id: 'AWK-20261019-PAID01' });
     expect(resolveOrderStatus(rec, found)).toBe('paid');
     expect(resolveOrderStatus(rec, null)).toBe('pending_payment');
+  });
+
+  it('selects the Postgres driver when DATABASE_URL is set — never a silent file fallback', async () => {
+    const savedUrl = process.env.DATABASE_URL;
+    // Closed port: the PG attempt fails fast at connect time.
+    process.env.DATABASE_URL = 'postgres://127.0.0.1:1/awaken_unreachable';
+    try {
+      await expect(
+        recordStripePayment({
+          order_id: 'AWK-20261019-PGSEL',
+          stripe_session_id: 'cs_test_pgsel',
+          payment_intent_id: 'pi_test_pgsel',
+          amount_total_cents: 100,
+          currency: 'usd',
+          paid_at: '2026-10-19T02:00:00.000Z',
+          source: 'stripe_webhook' as const,
+        }),
+      ).rejects.toThrow();
+      const after = existsSync(LEDGER) ? readFileSync(LEDGER, 'utf8') : '';
+      expect(after).not.toContain('AWK-20261019-PGSEL');
+    } finally {
+      if (savedUrl === undefined) {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = savedUrl;
+      }
+      await closeAllEventPools();
+    }
   });
 });

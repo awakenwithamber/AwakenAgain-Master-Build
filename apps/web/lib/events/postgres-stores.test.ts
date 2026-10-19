@@ -65,6 +65,11 @@ import {
 } from '../broadcast/broadcast';
 import { leadStore } from '../leads/lead-store';
 import { reviewStore } from '../reviews/reviews';
+import {
+  findStripePayment,
+  recordStripePayment,
+  type StripePaymentRecord,
+} from '../payments/stripe';
 
 const PG_URL = process.env.AWAKEN_PG_TEST_URL;
 const describePg = PG_URL ? describe : describe.skip;
@@ -563,6 +568,39 @@ describePg('pg leads + reviews (equivalence)', () => {
     );
     const approved = await reviewStore.listApproved('gaias-rose-soap');
     expect(approved.map((r) => r.id)).toEqual([submitted.id]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Stripe payments — the webhook paid ledger (2026-10-19 durable fix)  */
+/* ------------------------------------------------------------------ */
+
+describePg('pg stripe payments (equivalence)', () => {
+  it('records once per order; find returns the record; unknown is null', async () => {
+    const payment: StripePaymentRecord = {
+      order_id: 'AWK-PG-STRIPE-1',
+      stripe_session_id: 'cs_test_pg_1',
+      payment_intent_id: 'pi_test_pg_1',
+      amount_total_cents: 5931,
+      currency: 'usd',
+      paid_at: '2026-10-19T01:00:00.000Z',
+      source: 'stripe_webhook',
+    };
+    await recordStripePayment(payment);
+    // Idempotent: a duplicate webhook delivery never double-records,
+    // and the FIRST record stands (mirrors the JSONL suite's law).
+    const again = await recordStripePayment({
+      ...payment,
+      stripe_session_id: 'cs_test_pg_DUPLICATE',
+    });
+    expect(again.stripe_session_id).toBe('cs_test_pg_1');
+    const events = await readStreamEvents(EVENT_STREAMS.stripePayments);
+    expect(events).toHaveLength(1);
+
+    const found = await findStripePayment('AWK-PG-STRIPE-1');
+    expect(found?.amount_total_cents).toBe(5931);
+    expect(found?.stripe_session_id).toBe('cs_test_pg_1');
+    expect(await findStripePayment('AWK-PG-UNKNOWN')).toBeNull();
   });
 });
 

@@ -11,7 +11,13 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  /* Stacking (2026-10-19 fix): the site header is sticky with
+     z-index 900 and the Gaia chat chrome sits at 950 (app/globals.css).
+     At z-index 100 the header painted OVER the top of this modal —
+     on phones the dialog's header and the top of the step choices were
+     obscured ("can't see the top of the choices"). A modal must sit
+     above all site chrome: 1000 clears both. */
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;

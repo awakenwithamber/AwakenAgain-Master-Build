@@ -41,6 +41,14 @@ export const EVENT_STREAMS = {
   reviews: 'reviews',
   /** Customer accounts + profiles (Phase 3 Step 3) — lib/accounts. */
   accounts: 'accounts',
+  /**
+   * Stripe webhook paid marks (2026-10-19 go-live) — lib/payments/stripe.
+   * Added 2026-10-19 (durable-stores fix): the paid ledger was the one
+   * go-live store with no Postgres driver, so the signature-verified
+   * webhook could never durably mark an order paid on Vercel's
+   * read-only filesystem.
+   */
+  stripePayments: 'stripe_payments',
 } as const;
 
 export type EventStream = (typeof EVENT_STREAMS)[keyof typeof EVENT_STREAMS];
