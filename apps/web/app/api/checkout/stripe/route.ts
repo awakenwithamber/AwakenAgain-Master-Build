@@ -1,8 +1,11 @@
 /**
- * Card checkout endpoint — DISABLED (set aside 2026-10-13, not deleted).
- * The original implementation is preserved under the repo-level
- * disabled/ directory. This stub fails closed so the checkout UI falls
- * back to Cash App / Venmo with a clear message.
+ * Legacy card checkout endpoint — INACTIVE, fails closed.
+ *
+ * The ACTIVE embedded card checkout is bound by
+ * app/api/stripe/checkout-session to an order created by
+ * POST /api/checkout (owner directive 2026-10-19). This stub from the
+ * set-aside 2026-10-13 implementation remains so stale callers fail
+ * loudly with a pointer to the working paths.
  */
 import { NextResponse } from 'next/server';
 
@@ -11,7 +14,7 @@ export async function POST() {
     {
       ok: false,
       errors: [
-        'Card checkout is not available right now. Please use Cash App or Venmo.',
+        'Card checkout has moved: place your order at checkout and pay by card on that page, or use Cash App, Venmo, or an emailed invoice.',
       ],
     },
     { status: 503 },
