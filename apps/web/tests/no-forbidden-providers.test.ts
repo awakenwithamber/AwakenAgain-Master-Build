@@ -1,8 +1,11 @@
 /**
  * GUARD TEST — payment provider purity.
- * Cash App + Venmo are the ONLY payment methods (owner directive 2026-10-04).
- * This test fails the suite if "stripe", "shopify", "paypal", or "square"
- * appear anywhere in the app, lib, or component sources — including comments
+ * Original guard (owner directive 2026-10-04): Cash App + Venmo only.
+ * AMENDED by the owner 2026-10-19: Stripe is now AUTHORIZED — the
+ * embedded Stripe checkout is the primary card path (and Stripe also
+ * backs the Living Grimoire subscription). Shopify, PayPal, and Square
+ * remain forbidden: this test fails the suite if any of them appear
+ * anywhere in the app, lib, or component sources — including comments
  * suggesting them as alternatives.
  *
  * Scope: shipped source directories (app/, lib/, components/), excluding
@@ -19,7 +22,7 @@ const ROOT = resolve(__dirname, '..');
 const SCAN_DIRS = ['app', 'lib', 'components'].map((d) => join(ROOT, d));
 const SKIP = new Set(['node_modules', '.next', '.vitest']);
 
-const FORBIDDEN = ['stripe', 'shopify', 'paypal', 'square'];
+const FORBIDDEN = ['shopify', 'paypal', 'square'];
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
@@ -54,7 +57,7 @@ describe('payment provider purity', () => {
     );
   });
 
-  it('checkout declares only Cash App + Venmo', async () => {
+  it('checkout declares the Cash App + Venmo handles', async () => {
     const { CASH_APP_HANDLE, VENMO_HANDLE } = await import(
       '../lib/checkout/order'
     );

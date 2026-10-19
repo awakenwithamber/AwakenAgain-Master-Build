@@ -97,7 +97,7 @@ describe('checkout route', () => {
     expect(json.ok).toBe(true);
     expect(json.order_id).toMatch(/^AWK-\d{8}-[A-Z0-9]{6}$/);
     expect(json.total_cents).toBe(1177 * 2 + 1977 + 3577);
-    // $79.08 >= $45 general free-shipping threshold (owner decision 2026-10-10)
+    // $73.54 >= $45 general free-shipping threshold (owner decision 2026-10-10)
     expect(json.shipping_status).toBe('FREE');
 
     const payment = json.payment as Record<string, string>;
@@ -343,7 +343,7 @@ describe('checkout route', () => {
   /**
    * PERMANENT REGRESSION — DO NOT WEAKEN OR REMOVE (owner directive
    * 2026-10-05). Original bug: a customization attached to a non-soap
-   * product was once charged at the customization's soap price ($5.77
+   * product was once charged at the customization's soap price ($5.00
    * for small-rose) instead of the product's real price — a silent
    * underpayment that produced internally inconsistent order records
    * (capsule title + soap price). The server gate (isSoapProduct in
@@ -351,7 +351,7 @@ describe('checkout route', () => {
    * reopens the money leak.
    */
   it('rejects a customization attached to a non-soap product', async () => {
-    // Attack: a $19.77 capsule variant priced at the $5.77 small-rose soap
+    // Attack: a $19.77 capsule variant priced at the $5.00 small-rose soap
     // price by attaching a valid soap customization. The record would be
     // internally inconsistent (capsule title + soap price), so it must fail.
     const { status, json } = await postCheckout({
@@ -366,11 +366,11 @@ describe('checkout route', () => {
             botanical: null,
             color: 'amber-gold',
           },
-          unit_price_cents: 577,
+          unit_price_cents: 500,
         },
       ],
       customer: CUSTOMER,
-      client_total_cents: 577,
+      client_total_cents: 500,
     });
     expect(status).toBe(422);
     expect(String((json.errors as string[]).join(' '))).toMatch(

@@ -297,7 +297,7 @@ describe('PERMANENT REGRESSION — persisted single-soap configuration is comple
   it('a tampered unit price on a builder cart line is rejected by the server recompute', () => {
     const customization = buildCustomizationLikeBuilder(completeRitualSelections());
     const item = buildCartItem('custom-alchemy-soap', customization, 1);
-    const tampered = { ...item, unit_price_cents: 577 };
+    const tampered = { ...item, unit_price_cents: 500 };
     expect(() => buildOrderConfiguration([tampered], undefined, 0)).toThrow(
       /Price mismatch/,
     );
