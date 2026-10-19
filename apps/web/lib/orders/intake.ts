@@ -15,9 +15,11 @@
  *      (tampered totals, unknown products/variants, incompatible
  *      customizations, malformed bundle payloads). The optional
  *      payment_method field is accepted here exactly as at /api/checkout
- *      ('cash_app_or_venmo' default, or 'bookipi_card_invoice' for card
- *      payment via an emailed Bookipi invoice) and is carried onto the
- *      record and the review-queue entry unchanged.
+ *      ('cash_app_or_venmo' default, 'stripe_card_embedded' for card
+ *      payment in the embedded checkout on this site, or
+ *      'bookipi_card_invoice' for card payment via an emailed Bookipi
+ *      invoice — the backup card path) and is carried onto the record
+ *      and the review-queue entry unchanged.
  *   2. persist — RecordStore.append() through the provider-neutral store
  *      interface (lib/orders/store.ts). Local JSONL today; a
  *      Supabase-backed RecordStore later, selected by configuration —

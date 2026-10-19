@@ -7,24 +7,17 @@
  * wired today is local JSONL (`JsonlRecordStore`) — the same reversible
  * ledger pattern the checkout flow already uses.
  *
- * The Postgres-backed implementation (PgRecordStore, Phase 3 Step 1)
- * implements this same interface over the append-only event store
- * (lib/events/event-store.ts) and is selected by configuration
- * (DATABASE_URL), never by editing call sites.
+ * A future Supabase-backed implementation must implement this interface and
+ * be selected by configuration (environment), never by editing call sites.
+ * No Supabase imports, SDKs, or provider-specific code exist in this module
+ * or anywhere in lib/ — provider bindings belong in /infrastructure after
+ * the owner's provider decision.
  *
  * SERVER-ONLY: uses node:fs. Never import from a client component.
  */
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { OrderRecord } from '../checkout/order';
-import {
-  EVENT_STREAMS,
-  appendEvent,
-  postgresEnabled,
-  readLatestEvent,
-  readStreamEvents,
-  type EventStream,
-} from '../events/event-store';
+import type { OrderRecord, PaymentMethod } from '../checkout/order';
 
 /* ------------------------------------------------------------------ */
 /* Generic contract                                                     */
@@ -35,7 +28,7 @@ export interface StoreReceipt {
   /** Business ID of the persisted record (order_id / message_id). */
   id: string;
   persisted_at: string;
-  backend: 'jsonl' | 'postgres';
+  backend: 'jsonl';
 }
 
 export interface ReviewQueueOptions {
@@ -79,7 +72,7 @@ export interface OrderReviewEntry {
   subtotal_cents: number;
   total_cents: number;
   shipping_status: 'FREE' | 'TO_BE_CONFIRMED';
-  payment_method: 'cash_app_or_venmo' | 'bookipi_card_invoice';
+  payment_method: PaymentMethod;
   /** Fulfillment triage state — 'pending_review' until the admin flow (G12) confirms. */
   review_status: 'pending_review';
 }
@@ -192,88 +185,8 @@ export class JsonlRecordStore<
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Postgres event-store implementation (Phase 3 Step 1)                */
-/* ------------------------------------------------------------------ */
-
-export interface PgStoreOptions<TRecord, TSummary> {
-  /** Event stream this store's records live in. */
-  stream: EventStream;
-  /** Extract the business ID (the stream key) from a record. */
-  getId: (record: TRecord) => string;
-  /** Event type stamped on appends. */
-  eventType: string;
-  /** Project a record to its review-queue summary. */
-  toSummary: (record: TRecord) => TSummary;
-  /** Rehydrate a stored payload; default is the identity (plain JSON). */
-  reviver?: (raw: unknown) => TRecord;
-}
-
-/**
- * RecordStore over the append-only Postgres event store
- * (lib/events/event-store.ts). Semantics mirror JsonlRecordStore
- * exactly: append is durable before it resolves; get() returns the
- * LATEST event for the id (the JSONL scan returns the last matching
- * line); reviewQueue() is newest-append-first. Selected by
- * configuration (DATABASE_URL), never by editing call sites.
- */
-export class PgRecordStore<
-  TRecord extends { created_at: string },
-  TSummary,
-> implements RecordStore<TRecord, TSummary>
-{
-  constructor(private readonly options: PgStoreOptions<TRecord, TSummary>) {}
-
-  private revive(raw: unknown): TRecord {
-    return this.options.reviver
-      ? this.options.reviver(raw)
-      : (raw as TRecord);
-  }
-
-  async append(record: TRecord): Promise<StoreReceipt> {
-    const result = await appendEvent(
-      this.options.stream,
-      this.options.getId(record),
-      this.options.eventType,
-      record,
-      record.created_at,
-    );
-    return {
-      id: this.options.getId(record),
-      persisted_at: result.persisted_at,
-      backend: 'postgres',
-    };
-  }
-
-  async get(id: string): Promise<TRecord | null> {
-    const event = await readLatestEvent(this.options.stream, id);
-    return event ? this.revive(event.payload) : null;
-  }
-
-  async reviewQueue(opts: ReviewQueueOptions = {}): Promise<TSummary[]> {
-    const limit = opts.limit ?? 100;
-    const events = await readStreamEvents(this.options.stream);
-    const summaries = events
-      .reverse()
-      .map((event) => this.options.toSummary(this.revive(event.payload)));
-    return summaries.slice(0, Math.max(0, limit));
-  }
-}
-
-/**
- * Order store wired to the shared ledger. Driver selection by env
- * (Phase 3 Step 1): DATABASE_URL set → Postgres event store; unset →
- * the JSONL ledger, byte-identical to before.
- */
+/** Order store wired to the shared ledger (env-overridable). */
 export function createOrderStore(): RecordStore<OrderRecord, OrderReviewEntry> {
-  if (postgresEnabled()) {
-    return new PgRecordStore<OrderRecord, OrderReviewEntry>({
-      stream: EVENT_STREAMS.orders,
-      getId: (record) => record.order_id,
-      eventType: 'order.recorded',
-      toSummary: toOrderReviewEntry,
-    });
-  }
   return new JsonlRecordStore<OrderRecord, OrderReviewEntry>({
     path: defaultOrderLedgerPath,
     getId: (record) => record.order_id,

@@ -10,12 +10,10 @@
  * or probe which emails ordered what.
  *
  * Response is a minimal summary (status, totals, item count) plus — once
- * the owner has recorded them — the payment confirmation from the
- * append-only payment ledger (lib/orders/payments.ts; an order is 'paid'
- * iff a confirmation event exists — audit 2026-10-15 GAP-1) and the
- * shipment's carrier tracking number and public carrier link from the
- * append-only tracking ledger (lib/orders/tracking.ts). No address,
- * phone, or notes ever leave the order record through this route.
+ * the owner has recorded one — the shipment's carrier tracking number
+ * and public carrier link from the append-only tracking ledger
+ * (lib/orders/tracking.ts). No address, phone, or notes ever leave the
+ * order record through this route.
  *
  * Rate-limited on the 'orders' group (moderate): a human checking a
  * parcel uses this a handful of times; scripted probing is throttled.
@@ -28,11 +26,14 @@ import {
 } from '../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../lib/security/rate-limit';
 import { defaultOrderStore } from '../../../../lib/stores/order-store';
-import { findLatestPaymentAsync } from '../../../../lib/orders/payments';
 import {
-  findLatestTrackingAsync,
+  findLatestTracking,
   toTrackingView,
 } from '../../../../lib/orders/tracking';
+import {
+  findStripePayment,
+  resolveOrderStatus,
+} from '../../../../lib/payments/stripe';
 import { normalizeSubscriptionEmail } from '../../../../lib/subscriptions/entitlement';
 
 function fail(errors: string[], status = 422) {
@@ -76,8 +77,13 @@ export async function POST(request: Request) {
     return fail([NOT_FOUND], 404);
   }
 
-  const tracking = await findLatestTrackingAsync(order.order_id);
-  const payment = await findLatestPaymentAsync(order.order_id);
+  const tracking = findLatestTracking(order.order_id);
+  // Card orders resolve 'paid' from the webhook-written Stripe payment
+  // ledger — the only writer of paid state for the embedded checkout.
+  const stripePayment =
+    order.payment_method === 'stripe_card_embedded'
+      ? await findStripePayment(order.order_id)
+      : null;
 
   return NextResponse.json({
     ok: true,
@@ -85,14 +91,8 @@ export async function POST(request: Request) {
       order_id: order.order_id,
       created_at: order.created_at,
       customer_name: order.customer.name,
-      /**
-       * Order lifecycle — 'pending_payment' until Amber confirms payment
-       * via POST /api/admin/orders/payment; the confirmation is an
-       * append-only ledger event joined here at read time, never an edit
-       * to the order record (audit 2026-10-15 GAP-1).
-       */
-      status: payment ? 'paid' : (order.status ?? 'pending_payment'),
-      payment_confirmed_at: payment ? payment.recorded_at : null,
+      /** Order lifecycle — 'pending_payment' until payment is confirmed. */
+      status: resolveOrderStatus(order, stripePayment),
       shipping_status: order.shipping_status,
       payment_method: order.payment_method,
       item_count:
