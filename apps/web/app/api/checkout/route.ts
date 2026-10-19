@@ -15,11 +15,17 @@
  * On success: an order record is created with a generated order ID and
  * appended to the local JSONL ledger (reversible; production persistence is
  * Supabase — UNDECIDED, NEEDS VERIFICATION). Payment follows the owner's
- * final decision (2026-10-13): Cash App + Venmo handles, or — when the
- * customer chose to pay by card — an emailed Bookipi invoice (Bookipi has
- * no public API; the owner sends the invoice from her own account and the
- * order waits under the same owner-confirmation gate). The response
- * instructions always match the method recorded on the order.
+ * decisions (2026-10-13 + 2026-10-19): Cash App + Venmo handles; card via
+ * the embedded Stripe checkout (primary card path — the order is recorded
+ * UNPAID here, a session is bound by POST /api/stripe/checkout-session,
+ * and only the signature-verified webhook marks it paid); or — as the
+ * backup card path — an emailed Bookipi invoice (Bookipi has no public
+ * API; the owner sends the invoice from her own account and the order
+ * waits under the same owner-confirmation gate). The response
+ * instructions always match the method recorded on the order. On success
+ * a purchase_confirmation email job is also queued for the customer
+ * (lib/jobs/order-confirmation — Resend when RESEND_API_KEY is set,
+ * logging provider otherwise).
  *
  * NOTE: only HTTP handlers and route config may be exported from a route
  * module — validateAndBuildOrder lives in lib/checkout/order.ts (imported
@@ -33,8 +39,9 @@ import {
   type OrderRecord,
 } from '../../../lib/checkout/order';
 import { createOrderStore } from '../../../lib/orders/store';
+import { queueOrderConfirmation } from '../../../lib/jobs/order-confirmation';
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
-import { isEntitledSubscriberAsync } from '../../../lib/subscriptions/entitlement';
+import { isEntitledSubscriber } from '../../../lib/subscriptions/entitlement';
 import {
   captureServerEventSoon,
   resolveServerDistinctId,
@@ -56,10 +63,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Read from the raw body because validateAndBuildOrder owns sanitization;
  * the lookup normalizes (trim + lowercase) the same way.
  */
-async function verifySubscriberClaim(body: unknown): Promise<boolean> {
+function verifySubscriberClaim(body: unknown): boolean {
   if (!isRecord(body) || body.is_subscriber !== true) return false;
   const customer = isRecord(body.customer) ? body.customer : undefined;
-  return isEntitledSubscriberAsync(customer?.email);
+  return isEntitledSubscriber(customer?.email);
 }
 
 /**
@@ -80,6 +87,16 @@ function persistOrder(record: OrderRecord) {
  * with, and the order is prepared once that invoice is paid.
  */
 function paymentInstructions(record: OrderRecord) {
+  if (record.payment_method === 'stripe_card_embedded') {
+    return {
+      method: record.payment_method,
+      order_id: record.order_id,
+      note:
+        'You chose to pay by card. Your order is placed and in review — ' +
+        'complete your card payment in the secure embedded checkout on ' +
+        'this page. Your order is prepared once payment is confirmed.',
+    };
+  }
   if (record.payment_method === 'bookipi_card_invoice') {
     return {
       method: record.payment_method,
@@ -121,7 +138,7 @@ export async function POST(request: Request) {
   let record: OrderRecord;
   try {
     record = validateAndBuildOrder(body, {
-      isSubscriberVerified: await verifySubscriberClaim(body),
+      isSubscriberVerified: verifySubscriberClaim(body),
     });
   } catch (err) {
     return fail([err instanceof Error ? err.message : 'Invalid order.']);
@@ -139,6 +156,16 @@ export async function POST(request: Request) {
       500,
     );
   }
+
+  // Order-confirmation email job — queued exactly once per accepted
+  // order, after persistence (trigger wired 2026-10-19; before this, the
+  // purchase_confirmation contract existed but no route ever queued one).
+  // Fire-and-forget with a catch: email can never fail or delay an
+  // accepted order. Delivery is real when RESEND_API_KEY is set
+  // (Resend provider), and a recorded no-send otherwise.
+  void queueOrderConfirmation(record).catch(() => {
+    // Intentionally swallowed — the ledger is the order system of record.
+  });
 
   // Authoritative order event (server-owned, exactly once per accepted
   // order). Observational only — the persisted ledger above is the truth.

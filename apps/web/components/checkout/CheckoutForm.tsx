@@ -4,26 +4,33 @@
  * The server Route Handler recomputes every total from canonical data and
  * rejects any mismatch (CLIENT=PREVIEW, SERVER=AUTHORITY).
  *
- * Payments (owner decision, final, 2026-10-13): Cash App $AmberPatten347
- * or Venmo @AwakenwithAmber, or card via an emailed Bookipi invoice. The
- * customer picks the method here; the server records it on the order and
- * returns the matching payment instructions; this UI renders exactly
- * what the server returned.
+ * Payments (owner decisions 2026-10-13 + 2026-10-19): card through the
+ * embedded Stripe checkout on this page (primary card path — the order
+ * is recorded first, unpaid; a session is bound to it; only the
+ * signature-verified webhook marks it paid), card via an emailed Bookipi
+ * invoice (backup), or Cash App $AmberPatten347 / Venmo @AwakenwithAmber.
+ * The customer picks the method here; the server records it on the order
+ * and returns the matching payment instructions; this UI renders exactly
+ * what the server returned. When Stripe is not configured, the card
+ * option says so and steers to invoice / Venmo / Cash App.
  * No PII in analytics — order_completed carries order_id/total/item count only.
  */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatPrice } from '../../lib/pricing/pricing';
 import { CASH_APP_HANDLE, VENMO_HANDLE } from '../../lib/checkout/order';
 import { track, trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart, cartItemTitle } from './cart-store';
+import { StripeEmbeddedCheckout } from './StripeEmbeddedCheckout';
 import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 import type { CartItem } from '../../types';
-import Link from 'next/link';
 
-type PaymentMethodChoice = 'cash_app_or_venmo' | 'bookipi_card_invoice';
+type PaymentMethodChoice =
+  | 'cash_app_or_venmo'
+  | 'bookipi_card_invoice'
+  | 'stripe_card_embedded';
 
 /**
  * Payment instructions as returned by the server for the method recorded
@@ -61,10 +68,45 @@ export function CheckoutForm() {
   const [notes, setNotes] = useState('');
   const [isSubscriber, setIsSubscriber] = useState(false);
   const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethodChoice>('cash_app_or_venmo');
+    useState<PaymentMethodChoice>('stripe_card_embedded');
+  /** null = not checked yet; false = card unavailable (degrade + steer). */
+  const [cardAvailable, setCardAvailable] = useState<boolean | null>(null);
+  const [stripeSession, setStripeSession] = useState<{
+    clientSecret: string;
+    publishableKey: string;
+  } | null>(null);
+  const [stripeError, setStripeError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<OrderResponse | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Card availability is a server fact (env-gated): ask once on mount.
+  // Unavailable → the card option explains itself and the selection
+  // falls back to Cash App / Venmo so the rest of checkout just works.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/stripe/checkout-session');
+        const data = (await res.json()) as { card_available?: boolean };
+        if (cancelled) return;
+        const available = data.card_available === true;
+        setCardAvailable(available);
+        if (!available) {
+          setPaymentMethod((current) =>
+            current === 'stripe_card_embedded'
+              ? 'cash_app_or_venmo'
+              : current,
+          );
+        }
+      } catch {
+        if (!cancelled) setCardAvailable(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (!loaded) return <p>Loading checkout…</p>;
 
@@ -105,6 +147,46 @@ export function CheckoutForm() {
       if (res.ok && data.ok) {
         setResult(data);
         clear();
+        // Card orders: bind the embedded Stripe session to the order the
+        // server just persisted (server totals only — no amounts here).
+        if (paymentMethod === 'stripe_card_embedded' && data.order_id) {
+          try {
+            const sessionRes = await fetch('/api/stripe/checkout-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                order_id: data.order_id,
+                email: email.trim(),
+              }),
+            });
+            const sessionData = (await sessionRes.json()) as {
+              ok?: boolean;
+              client_secret?: string;
+              publishable_key?: string;
+              errors?: string[];
+            };
+            if (
+              sessionRes.ok &&
+              sessionData.ok &&
+              sessionData.client_secret &&
+              sessionData.publishable_key
+            ) {
+              setStripeSession({
+                clientSecret: sessionData.client_secret,
+                publishableKey: sessionData.publishable_key,
+              });
+            } else {
+              setStripeError(
+                sessionData.errors?.join(' ') ??
+                  'Card payment could not be started. You can pay by invoice, Venmo, or Cash App instead.',
+              );
+            }
+          } catch {
+            setStripeError(
+              'Card payment could not be started. You can pay by invoice, Venmo, or Cash App instead.',
+            );
+          }
+        }
         // Client-side: the customer saw the confirmation + the payment
         // instructions for their chosen method. The authoritative order event (order_created) is
         // emitted server-side by the checkout Route Handler — this client
@@ -144,7 +226,34 @@ export function CheckoutForm() {
           <h2>Complete your payment</h2>
           <p>{result.payment?.note}</p>
           {(result.payment?.method ?? result.payment_method) ===
-          'bookipi_card_invoice' ? (
+          'stripe_card_embedded' ? (
+            stripeSession ? (
+              <StripeEmbeddedCheckout
+                publishableKey={stripeSession.publishableKey}
+                clientSecret={stripeSession.clientSecret}
+              />
+            ) : stripeError ? (
+              <>
+                <p role="alert">{stripeError}</p>
+                <p>
+                  Your order is saved. You can pay instead by emailed
+                  Bookipi invoice (just contact Amber and mention your
+                  order ID), or send your total now:
+                </p>
+                <ul>
+                  <li>
+                    <strong>Cash App:</strong> {CASH_APP_HANDLE}
+                  </li>
+                  <li>
+                    <strong>Venmo:</strong> {VENMO_HANDLE}
+                  </li>
+                </ul>
+              </>
+            ) : (
+              <p>Preparing your secure card payment…</p>
+            )
+          ) : (result.payment?.method ?? result.payment_method) ===
+            'bookipi_card_invoice' ? (
             <p>
               Your Bookipi invoice will be sent to:{' '}
               <strong>{result.payment?.invoice_email}</strong>
@@ -173,7 +282,10 @@ export function CheckoutForm() {
             {(result.payment?.method ?? result.payment_method) ===
             'bookipi_card_invoice'
               ? ' — it will appear on your invoice.'
-              : ' — please include this in your payment note so we can match it to your order.'}
+              : (result.payment?.method ?? result.payment_method) ===
+                  'stripe_card_embedded'
+                ? ' — your payment confirmation will show here as soon as it is confirmed.'
+                : ' — please include this in your payment note so we can match it to your order.'}
           </p>
           <p>
             <small>
@@ -183,7 +295,7 @@ export function CheckoutForm() {
           </p>
         </section>
         <p>
-          <Link href="/shop">Continue shopping</Link>
+          <a href="/shop">Continue shopping</a>
         </p>
       </main>
     );
@@ -195,7 +307,7 @@ export function CheckoutForm() {
         <h1>Checkout</h1>
         {empty ? (
           <p>
-            Your cart is empty. <Link href="/shop">Browse the shop</Link>
+            Your cart is empty. <a href="/shop">Browse the shop</a>
           </p>
         ) : (
           <>
@@ -292,14 +404,24 @@ export function CheckoutForm() {
                 <input
                   type="radio"
                   name="payment-method"
-                  value="cash_app_or_venmo"
-                  checked={paymentMethod === 'cash_app_or_venmo'}
-                  onChange={() => setPaymentMethod('cash_app_or_venmo')}
+                  value="stripe_card_embedded"
+                  checked={paymentMethod === 'stripe_card_embedded'}
+                  disabled={cardAvailable === false}
+                  onChange={() => setPaymentMethod('stripe_card_embedded')}
                 />
-                <strong>Cash App or Venmo</strong> — place your order now, and
-                we&apos;ll show you the payment handles and your order ID
-                right after.
+                <strong>Credit or debit card</strong> — pay securely right
+                here on this page. Your order is placed first, then you
+                complete payment without leaving the site.
               </label>
+              {cardAvailable === false ? (
+                <p>
+                  <small>
+                    Card checkout is not available right now — please pay
+                    by invoice, Venmo, or Cash App below; those work as
+                    always.
+                  </small>
+                </p>
+              ) : null}
               <label>
                 <input
                   type="radio"
@@ -308,9 +430,22 @@ export function CheckoutForm() {
                   checked={paymentMethod === 'bookipi_card_invoice'}
                   onChange={() => setPaymentMethod('bookipi_card_invoice')}
                 />
-                <strong>Credit or debit card</strong> — place your order now,
-                and we&apos;ll email you a secure Bookipi invoice to pay by
-                card. Your order is prepared once the invoice is paid.
+                <strong>Pay by invoice instead</strong> — place your order
+                now, and we&apos;ll email you a secure Bookipi invoice to
+                pay by card. Your order is prepared once the invoice is
+                paid.
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="payment-method"
+                  value="cash_app_or_venmo"
+                  checked={paymentMethod === 'cash_app_or_venmo'}
+                  onChange={() => setPaymentMethod('cash_app_or_venmo')}
+                />
+                <strong>Cash App or Venmo</strong> — place your order now, and
+                we&apos;ll show you the payment handles and your order ID
+                right after.
               </label>
             </section>
 
@@ -365,9 +500,10 @@ export function CheckoutForm() {
             </section>
             <p>
               <small>
-                Payment is by Cash App, Venmo, or card by emailed Bookipi
-                invoice — you&apos;ll get the payment details for your chosen
-                method, and your order ID, right after placing your order.
+                Payment is by card right here on this page, Cash App,
+                Venmo, or card by emailed Bookipi invoice — you&apos;ll get
+                the payment details for your chosen method, and your order
+                ID, right after placing your order.
               </small>
             </p>
           </>

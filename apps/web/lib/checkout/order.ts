@@ -164,33 +164,48 @@ export const CASH_APP_HANDLE = '$AmberPatten347';
 export const VENMO_HANDLE = '@AwakenwithAmber';
 
 /**
- * How an order is paid (owner decision, final, 2026-10-13):
+ * How an order is paid (owner decisions 2026-10-13 + 2026-10-19):
  * - 'cash_app_or_venmo' — the customer sends payment to the handles above
  *   after ordering (the default; existing clients unchanged).
- * - 'bookipi_card_invoice' — card payment via a Bookipi invoice the owner
- *   emails from her own Bookipi account after the order is placed. Bookipi
- *   has no public API or webhooks: nothing is charged at checkout, the
- *   order record carries the choice, and fulfillment waits for the paid
- *   invoice under the same owner-confirmation gate as every other order.
+ * - 'stripe_card_embedded' — card payment through the embedded Stripe
+ *   checkout on this site (owner directive 2026-10-19: embedded checkout
+ *   is the primary card path). The order is recorded FIRST, unpaid; a
+ *   Checkout Session is then created from the server-computed totals,
+ *   and the order is marked paid ONLY by the signature-verified Stripe
+ *   webhook — never by a client-side return.
+ * - 'bookipi_card_invoice' — the BACKUP card path (kept 2026-10-19):
+ *   a Bookipi invoice the owner emails from her own Bookipi account
+ *   after the order is placed. Bookipi has no public API or webhooks:
+ *   nothing is charged at checkout, the order record carries the
+ *   choice, and fulfillment waits for the paid invoice under the same
+ *   owner-confirmation gate as every other order.
  * Any other value is rejected.
  */
-export type PaymentMethod = 'cash_app_or_venmo' | 'bookipi_card_invoice';
+export type PaymentMethod =
+  | 'cash_app_or_venmo'
+  | 'bookipi_card_invoice'
+  | 'stripe_card_embedded';
 
 export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'cash_app_or_venmo';
 
 export const PAYMENT_METHODS: readonly PaymentMethod[] = [
   'cash_app_or_venmo',
   'bookipi_card_invoice',
+  'stripe_card_embedded',
 ];
 
 /** Validate the optional payment_method field; absent means the default. */
 export function parsePaymentMethod(raw: unknown): PaymentMethod {
   if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
-  if (raw === 'cash_app_or_venmo' || raw === 'bookipi_card_invoice') {
+  if (
+    raw === 'cash_app_or_venmo' ||
+    raw === 'bookipi_card_invoice' ||
+    raw === 'stripe_card_embedded'
+  ) {
     return raw;
   }
   throw new Error(
-    `Unknown payment method: ${String(raw)}. Choose Cash App or Venmo, or card by emailed invoice.`,
+    `Unknown payment method: ${String(raw)}. Choose Cash App or Venmo, card on this site, or card by emailed invoice.`,
   );
 }
 
