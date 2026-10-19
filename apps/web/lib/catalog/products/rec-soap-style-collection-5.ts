@@ -18,7 +18,7 @@ export const RECORD: Product = {
   "compare_at_price": 47.85,
   "subscriber_price": 32.19,
   "price_status": "OWNER_CONFIRMED",
-  "pricing_note": "Owner-confirmed $35.77 (revised 2026-10-05, was $55). Component sum at current per-shape prices = $47.85; bundle saves $12.08 (25.2%) — savings may be displayed ONLY from these computed values. All totals server-authoritative.",
+  "pricing_note": "Bundle price $35.77 owner-confirmed (2026-10-05; confirmed 2026-10-19 under the canon per-shape prices — higher pricing wins). Component sum $47.85 (5.77 + 8.77 + 9.77 + 11.77 + 11.77); savings $12.08 (25.2%), displayed ONLY from these computed values. All totals server-authoritative.",
   "sizes": [
     "5 bars (one per style)"
   ],

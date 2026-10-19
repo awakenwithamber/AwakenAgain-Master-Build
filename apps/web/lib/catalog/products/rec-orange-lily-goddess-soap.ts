@@ -139,7 +139,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A radiant citrus-floral bar for bright skin, soft confidence, and goddess-level shower energy.",
-  "extended_description": "Orange Lily Goddess is sunshine in soap form. Sweet orange brings an uplifting citrus brightness, lily-inspired florals add a soft feminine heart, and goat milk rounds out the lather so skin feels soft after rinsing.\n\nThe confidence bar: lather up, breathe in the radiant citrus-floral scent, and step out glowing. Individual experiences vary.",
+  "extended_description": "Orange Lily Goddess is an artisanal handmade botanical soap — sunshine in bar form. Sweet orange brings an uplifting citrus brightness, lily-inspired florals add a soft feminine heart, and goat milk rounds out the lather so skin feels soft after rinsing.\n\nThe confidence bar: lather up, breathe in the radiant citrus-floral scent, and step out glowing. Individual experiences vary.",
   "featured_ingredients": [
     {
       "name": "Sweet orange",
@@ -262,9 +262,9 @@ export const RECORD: Product = {
     "enriched_by": "Muse catalog-enrichment worker (subagent), 2026-10-04",
     "status": "DRAFT — owner review required. Not published, not deployed.",
     "price": {
-      "source_file": "Owner directive 2026-10-05 (newest source of truth; supersedes Sept 27 catalog prices)",
-      "date": "2026-10-05",
-      "note": "Owner directive 2026-10-05: Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Supersedes flat $4.77 merge misapplication and image-card prices (3oz/$4.77, 4oz/$7.88, 4oz/$8.44, 5oz/$11.77). Server-authoritative."
+      "source_file": "Owner directive 2026-10-05 (canon per-shape soap prices), confirmed 2026-10-19 — higher pricing wins",
+      "date": "2026-10-19",
+      "note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
     }
   },
   "field_verification": {
@@ -296,5 +296,5 @@ export const RECORD: Product = {
   "last_verified": "2026-10-05",
   "tags": [],
   "price_display": "From $5.77",
-  "pricing_note": "Owner-confirmed per-shape pricing 2026-10-05 (supersedes flat $4.77). Variant price applies on selection; all totals server-authoritative."
+  "pricing_note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
 };

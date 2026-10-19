@@ -22,7 +22,7 @@ export const RECORD: Product = {
   "compare_at_price": 35.31,
   "subscriber_price": 24.09,
   "price_status": "OWNER_CONFIRMED",
-  "pricing_note": "Owner-confirmed $26.77 (approved 2026-10-15 with the Fall 2026 collection proposal). Component sum at current per-shape prices = $35.31 (3 × Large Wave Rectangle at $11.77); bundle saves $8.54 (24.2%) — savings may be displayed ONLY from these computed values. All totals server-authoritative.",
+  "pricing_note": "Owner-confirmed bundle price $26.77 (approved 2026-10-15) under the canon per-shape prices (owner-confirmed 2026-10-19 — higher pricing wins): component sum is $35.31 (3 × Large Wave Rectangle at $11.77), so the bundle saves $8.54 (24.2%). All totals server-authoritative.",
   "sizes": [
     "3 bars (one of each member soap)"
   ],
@@ -117,7 +117,7 @@ export const RECORD: Product = {
     "price": {
       "source_file": "Owner approval 2026-10-15 (Fall 2026 collection proposal §2)",
       "date": "2026-10-15",
-      "note": "Bundle price $26.77 approved as proposed; subscriber $24.09 at the standard 10% Grimoire discount. Component sum $35.31 (3 × $11.77 Large Wave Rectangle, owner-confirmed 2026-10-05 per-shape prices); savings $8.54 (24.2%) computed from those values."
+      "note": "Bundle price $26.77 approved 2026-10-15; subscriber $24.09 at the standard 10% Grimoire discount. Component sum $35.31 (3 × $11.77 Large Wave Rectangle at the canon per-shape price, owner-confirmed 2026-10-19 — higher pricing wins); savings $8.54 (24.2%)."
     }
   },
   "field_verification": {
@@ -136,6 +136,6 @@ export const RECORD: Product = {
     "bundle_price": 26.77,
     "savings_amount": 8.54,
     "savings_pct": 24.2,
-    "method": "computed from current per-shape prices (3 × Large Wave Rectangle $11.77); server-authoritative"
+    "method": "computed from canon per-shape prices (3 × Large Wave Rectangle $11.77, owner-confirmed 2026-10-19); server-authoritative"
   }
 };

@@ -139,7 +139,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "An earthy, grounding bar that turns your shower into a forest cleansing ritual.",
-  "extended_description": "Sacred Forest Ritual is made for grounding, clearing, and coming back to yourself. Rosemary, nettle-style greens, and forest botanicals give the bar an earthy, woodsy character over a creamy goat-milk and shea-butter base.\n\nA sensory reset that feels like stepping barefoot into ancient woods: lather up, breathe deep, and return to center. Individual experiences vary.",
+  "extended_description": "Sacred Forest Ritual is an artisanal handmade botanical soap made for grounding, clearing, and coming back to yourself. Rosemary, nettle-style greens, and forest botanicals give the bar an earthy, woodsy character over a creamy goat-milk and shea-butter base.\n\nA sensory reset that feels like stepping barefoot into ancient woods: lather up, breathe deep, and return to center. Individual experiences vary.",
   "featured_ingredients": [
     {
       "name": "Rosemary",
@@ -264,9 +264,9 @@ export const RECORD: Product = {
     "enriched_by": "Muse catalog-enrichment worker (subagent), 2026-10-04",
     "status": "DRAFT — owner review required. Not published, not deployed.",
     "price": {
-      "source_file": "Owner directive 2026-10-05 (newest source of truth; supersedes Sept 27 catalog prices)",
-      "date": "2026-10-05",
-      "note": "Owner directive 2026-10-05: Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Supersedes flat $4.77 merge misapplication and image-card prices (3oz/$4.77, 4oz/$7.88, 4oz/$8.44, 5oz/$11.77). Server-authoritative."
+      "source_file": "Owner directive 2026-10-05 (canon per-shape soap prices), confirmed 2026-10-19 — higher pricing wins",
+      "date": "2026-10-19",
+      "note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
     }
   },
   "field_verification": {
@@ -298,5 +298,5 @@ export const RECORD: Product = {
   "last_verified": "2026-10-05",
   "tags": [],
   "price_display": "From $5.77",
-  "pricing_note": "Owner-confirmed per-shape pricing 2026-10-05 (supersedes flat $4.77). Variant price applies on selection; all totals server-authoritative."
+  "pricing_note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
 };
