@@ -1,7 +1,12 @@
 /**
- * Canonical soap shape table — OWNER-CONFIRMED 2026-10-05.
+ * Canonical soap shape table — OWNER-CONFIRMED 2026-10-19.
  * This module is the price authority for the soap line. Prices in integer
  * cents. UI components consume this; they never hard-code soap prices.
+ *
+ * Canon per-shape prices are the 2026-10-05 directive prices
+ * ($5.77/$8.77/$9.77/$11.77), CONFIRMED by the owner on 2026-10-19
+ * ("the higher pricing wins"). A brief same-day change to lower
+ * listing prices ($5.00/$7.00/$9.00) was reverted the same day.
  */
 import type { SoapShape } from '../../types';
 

@@ -146,7 +146,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A romantic rose-and-hibiscus bar for goddess skin and heart-opening showers.",
-  "extended_description": "Gaia's Rose is a lush floral soap infused with rose petals and hibiscus for a soft, feminine ritual. Available in round rose molds or bar shapes, each piece feels like a tiny love letter from the garden.\n\nLather up and let the romantic rose-and-hibiscus aroma turn an ordinary shower into a heart-opening moment. Individual experiences vary.",
+  "extended_description": "Gaia's Rose is an artisanal handmade botanical soap infused with rose petals and hibiscus for a soft, feminine ritual. Available in round rose molds or bar shapes, each piece feels like a tiny love letter from the garden.\n\nLather up and let the romantic rose-and-hibiscus aroma turn an ordinary shower into a heart-opening moment. Individual experiences vary.",
   "featured_ingredients": [
     {
       "name": "Rose petals",
@@ -274,9 +274,9 @@ export const RECORD: Product = {
     "enriched_by": "Muse catalog-enrichment worker (subagent), 2026-10-04",
     "status": "DRAFT — owner review required. Not published, not deployed.",
     "price": {
-      "source_file": "Owner directive 2026-10-05 (newest source of truth; supersedes Sept 27 catalog prices)",
-      "date": "2026-10-05",
-      "note": "Owner directive 2026-10-05: Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Supersedes flat $4.77 merge misapplication and image-card prices (3oz/$4.77, 4oz/$7.88, 4oz/$8.44, 5oz/$11.77). Server-authoritative."
+      "source_file": "Owner directive 2026-10-05 (canon per-shape soap prices), confirmed 2026-10-19 — higher pricing wins",
+      "date": "2026-10-19",
+      "note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
     }
   },
   "field_verification": {
@@ -308,5 +308,5 @@ export const RECORD: Product = {
   "last_verified": "2026-10-05",
   "tags": [],
   "price_display": "From $5.77",
-  "pricing_note": "Owner-confirmed per-shape pricing 2026-10-05 (supersedes flat $4.77). Variant price applies on selection; all totals server-authoritative."
+  "pricing_note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
 };

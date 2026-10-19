@@ -118,7 +118,7 @@ export const RECORD: Product = {
       "note": "Purple wave-art rectangular soap photography; matches Wave Art Rectangle card."
     }
   ],
-  "short_description": "A made-to-order botanical soap ritual with your choice of shape, base, color, aroma, herbs, and single- or double-layer design — a fun, intuitive builder.",
+  "short_description": "A made-to-order artisanal botanical soap ritual with your choice of shape, base, color, aroma, herbs, and single- or double-layer design — a fun, intuitive builder.",
   "extended_description": "Create a personalized bath bar from the available soap bases, botanical additions, colors, aromas, and molds. Choose a glycerin/castor-oil base, a goat-milk/shea-butter base, or both in a double-layer pour — then add your botanicals, color, and aroma.\n\nEach small-batch bar is individually poured, so color, botanical placement, and pattern naturally vary. Final ingredient and allergen information reflects the exact finished bar. Individual experiences vary.",
   "featured_ingredients": [],
   "complete_ingredients": "Base and botanical ingredients vary by customization. Available bases previously specified include glycerin/castor-oil and goat-milk/shea-butter options; final ingredient declaration must reflect the exact finished bar.",

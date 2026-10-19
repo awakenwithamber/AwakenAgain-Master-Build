@@ -148,7 +148,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A cool, spa-bright bar that wakes the breath, clears the mood, and refreshes tired skin.",
-  "extended_description": "Eucalyptus Mint Spa Renewal is clean, cooling, and invigorating — like stepping into a mountain spa after a long week. Eucalyptus, peppermint, and mint leaves bring a crisp, spa-fresh aroma, spirulina adds botanical color, and goat milk keeps the lather creamy and kind to skin.\n\nA favorite for the refresh button on your day: lather, breathe in the cool minty steam, and rinse the day away. Individual experiences vary.",
+  "extended_description": "Eucalyptus Mint Spa Renewal is an artisanal handmade botanical soap — clean, cooling, and invigorating, like stepping into a mountain spa after a long week. Eucalyptus, peppermint, and mint leaves bring a crisp, spa-fresh aroma, spirulina adds botanical color, and goat milk keeps the lather creamy and kind to skin.\n\nA favorite for the refresh button on your day: lather, breathe in the cool minty steam, and rinse the day away. Individual experiences vary.",
   "featured_ingredients": [
     {
       "name": "Eucalyptus",
@@ -271,9 +271,9 @@ export const RECORD: Product = {
     "enriched_by": "Muse catalog-enrichment worker (subagent), 2026-10-04",
     "status": "DRAFT — owner review required. Not published, not deployed.",
     "price": {
-      "source_file": "Owner directive 2026-10-05 (newest source of truth; supersedes Sept 27 catalog prices)",
-      "date": "2026-10-05",
-      "note": "Owner directive 2026-10-05: Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Supersedes flat $4.77 merge misapplication and image-card prices (3oz/$4.77, 4oz/$7.88, 4oz/$8.44, 5oz/$11.77). Server-authoritative."
+      "source_file": "Owner directive 2026-10-05 (canon per-shape soap prices), confirmed 2026-10-19 — higher pricing wins",
+      "date": "2026-10-19",
+      "note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
     }
   },
   "field_verification": {
@@ -305,5 +305,5 @@ export const RECORD: Product = {
   "last_verified": "2026-10-05",
   "tags": [],
   "price_display": "From $5.77",
-  "pricing_note": "Owner-confirmed per-shape pricing 2026-10-05 (supersedes flat $4.77). Variant price applies on selection; all totals server-authoritative."
+  "pricing_note": "Owner-confirmed 2026-10-19 (higher pricing wins; supersedes the brief same-day lower-price change): the 2026-10-05 canon per-shape prices stand — Small Rose 2oz $5.77 / Medium Rose 3oz $8.77 / Large Plain Rectangle 4oz $9.77 / Large Wave Rectangle 4.5oz $11.77 / Large Floral Round 4.5oz $11.77. Server-authoritative."
 };
