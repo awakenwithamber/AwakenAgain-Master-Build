@@ -10,7 +10,7 @@
  * - Preview-shape invariance: the canvas is ALWAYS the Large Wave Rectangle;
  *   the cart records the actual selected mold separately.
  * - Bundle math derives from lib/pricing — components never hard-code
- *   $35.77 / $12.08 / $47.85 (source-grep guard).
+ *   $35.77 / $3.23 / $39.00 (source-grep guard).
  * - No superseded payment paths (Stripe/Shopify/PayPal/Square) anywhere.
  * - Analytics: only canonical 19-event contract names are emitted.
  */
