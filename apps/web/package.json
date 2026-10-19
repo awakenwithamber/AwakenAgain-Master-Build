@@ -1,12 +1,16 @@
 {
   "dependencies": {
+    "@stripe/react-stripe-js": "^7.0.0",
+    "@stripe/stripe-js": "^10.1.0",
     "next": "^15.3.0",
     "pg": "^8.23.1",
     "posthog-js": "^1.200.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "resend": "^6.34.1",
+    "stripe": "^23.0.0"
   },
-  "description": "Amber's Alchemy Apothecary — Next.js + React + TypeScript storefront (scaffold, DRAFT)",
+  "description": "Amber's Alchemy Apothecary \u2014 Next.js + React + TypeScript storefront (scaffold, DRAFT)",
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/pg": "^8.23.1",
@@ -22,8 +26,6 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "db:migrate": "node scripts/apply-migrations.mjs",
-    "db:migrate-jsonl": "node scripts/migrate-jsonl-to-events.mjs",
     "dev": "next dev",
     "port-catalog": "node scripts/port-catalog.mjs",
     "start": "next start",
