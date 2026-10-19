@@ -54,6 +54,7 @@ import { sanitizePlainText } from '../security/validation';
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
   bookipi_card_invoice: 'Card — Bookipi invoice',
+  stripe_card_embedded: 'Card — embedded checkout',
 };
 
 export function paymentMethodLabel(method: PaymentMethod): string {
