@@ -3,9 +3,9 @@ import { SubscribeForm } from '../../../components/grimoire/SubscribeForm';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
-  title: `The Living Grimoire - Book of Light — ${BRAND_NAME}`,
+  title: `Living Grimoire of Light & Magic — ${BRAND_NAME}`,
   description:
-    'Get full access to The Living Grimoire - Book of Light for $8.88, or join for $7.77/month with new chapters every other month: 10% storewide discount, monthly articles and rituals, exclusive recipes, and early access.',
+    'Get full access to Living Grimoire of Light & Magic for $8.88, or join for $7.77/month with new chapters every other month: 10% storewide discount, monthly articles and rituals, exclusive recipes, and early access.',
 };
 
 /**
@@ -16,7 +16,7 @@ export default function GrimoireSubscribePage() {
   return (
     <>
       <main id="main-content">
-        <h1>The Living Grimoire - Book of Light</h1>
+        <h1>Living Grimoire of Light & Magic</h1>
         <p>
           <strong>Amber&apos;s Family Grimoire</strong> — a book, handmade by the women
           in my family, passed down from mother to daughter through generations.

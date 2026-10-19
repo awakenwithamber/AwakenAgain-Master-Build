@@ -39,7 +39,8 @@ export function ConsentBar() {
         <p className={styles.consentText}>
           We count visits anonymously. With your permission, we also learn
           which corners of the apothecary you love — herbs, soaps, the
-          Grimoire — to shape this site around them. First-party only,
+          Living Grimoire of Light & Magic — to shape this site around them.
+          First-party only,
           never sold. <Link href="/privacy">How it works</Link>
         </p>
         <div className={styles.consentActions}>

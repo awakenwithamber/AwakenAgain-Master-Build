@@ -123,7 +123,7 @@ export function SubscriberManager({
           kind: 'success',
           message:
             kind === 'confirm'
-              ? `Done — ${member.email} is now an active Living Grimoire member. Subscriber benefits apply at checkout right away.`
+              ? `Done — ${member.email} is now an active Living Grimoire of Light & Magic member. Subscriber benefits apply at checkout right away.`
               : `Done — the membership for ${member.email} is cancelled. Subscriber benefits no longer apply to that email.`,
         });
         // Re-read the ledger server-side; the list is the truth.
@@ -232,11 +232,11 @@ export function SubscriberManager({
       )}
 
       {members.length === 0 ? (
-        <p>No Living Grimoire subscriptions in the ledger yet.</p>
+        <p>No Living Grimoire of Light & Magic subscriptions in the ledger yet.</p>
       ) : (
         <table>
           <caption>
-            Living Grimoire members, from the subscription ledger (latest
+            Living Grimoire of Light & Magic members, from the subscription ledger (latest
             record per member wins)
           </caption>
           <thead>

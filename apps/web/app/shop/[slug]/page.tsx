@@ -93,7 +93,7 @@ function PriceBlock({ product }: { product: Product }) {
       {typeof product.subscriber_price === 'number' ? (
         <span>
           {' '}
-          · Living Grimoire subscriber{' '}
+          · Living Grimoire of Light & Magic subscriber{' '}
           <PriceDisplay cents={Math.round(product.subscriber_price * 100)} />
         </span>
       ) : null}

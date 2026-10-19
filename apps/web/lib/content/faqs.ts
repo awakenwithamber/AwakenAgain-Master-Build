@@ -47,7 +47,7 @@ export const FAQS: Faq[] = [
       // for Living Grimoire subscribers. Matches FREE_SHIPPING_*_CENTS in
       // lib/checkout/order.ts. The $100/$75 wording here was stale
       // (audit 2026-10-15 BROKEN-4).
-      'Shipping is free on orders of $45 or more, and always free for Living Grimoire subscribers. Orders are handcrafted and typically ship within 3–5 business days where operationally accurate.',
+      'Shipping is free on orders of $45 or more, and always free for Living Grimoire of Light & Magic subscribers. Orders are handcrafted and typically ship within 3–5 business days where operationally accurate.',
     ],
     source: 'owner-verified',
   },
@@ -67,9 +67,9 @@ export const FAQS: Faq[] = [
     source: 'owner-verified',
   },
   {
-    question: 'What is the Living Grimoire membership?',
+    question: 'What is the Living Grimoire of Light & Magic membership?',
     answer: [
-      'The Living Grimoire is our membership at $7.77/month: 10% off storewide, monthly articles and rituals, exclusive recipes, early access to new releases, personalized recommendations, and subscriber gifts. Safety information is never paywalled.',
+      'Living Grimoire of Light & Magic is our membership at $7.77/month: 10% off storewide, monthly articles and rituals, exclusive recipes, early access to new releases, personalized recommendations, and subscriber gifts. Safety information is never paywalled.',
     ],
     source: 'owner-verified',
   },

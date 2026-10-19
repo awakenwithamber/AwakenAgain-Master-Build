@@ -95,7 +95,7 @@ export function ConfirmSubscriptionForm({
         // so one message covers both truthfully.
         setOutcome({
           kind: 'success',
-          message: `Done — ${data.email ?? submittedEmail} has an active Living Grimoire membership. Subscriber benefits (free shipping on every order and 10% off) apply at checkout right away.`,
+          message: `Done — ${data.email ?? submittedEmail} has an active Living Grimoire of Light & Magic membership. Subscriber benefits (free shipping on every order and 10% off) apply at checkout right away.`,
         });
         setEmail('');
         setOwnerKey('');
@@ -157,7 +157,7 @@ export function ConfirmSubscriptionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      aria-label="Confirm a Living Grimoire subscription"
+      aria-label="Confirm a Living Grimoire of Light & Magic subscription"
     >
       <div style={{ marginBottom: '1.25rem' }}>
         <label htmlFor="confirm-member-email" style={labelStyle}>

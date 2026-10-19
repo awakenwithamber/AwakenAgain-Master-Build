@@ -95,7 +95,7 @@ export function SubscribeForm() {
   if (status === 'success' && success) {
     return (
       <section aria-labelledby="subscribe-success" aria-live="polite">
-        <h2 id="subscribe-success">Welcome to the Living Grimoire 🌿</h2>
+        <h2 id="subscribe-success">Welcome to the Living Grimoire of Light & Magic 🌿</h2>
         <p>
           Your subscription request is recorded as <strong>pending payment</strong>. Send your
           first month of <strong>{success.payment.amount}</strong> to complete it:
@@ -128,7 +128,7 @@ export function SubscribeForm() {
           <li key={benefit}>{benefit}</li>
         ))}
       </ul>
-      <form onSubmit={onSubmit} aria-label="Living Grimoire signup">
+      <form onSubmit={onSubmit} aria-label="Living Grimoire of Light & Magic signup">
         <div>
           <label htmlFor="sub-name">Name</label>
           <input

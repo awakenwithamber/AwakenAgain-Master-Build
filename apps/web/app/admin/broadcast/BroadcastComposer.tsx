@@ -156,7 +156,7 @@ export function BroadcastComposer({
         <h2 style={{ marginTop: 0 }}>Audience</h2>
         <p style={{ margin: '0.5rem 0' }}>
           Counted live from the real lists — consented newsletter signups
-          plus active Living Grimoire subscribers, deduplicated:
+          plus active Living Grimoire of Light & Magic subscribers, deduplicated:
         </p>
         <dl>
           <div>
@@ -169,7 +169,7 @@ export function BroadcastComposer({
           </div>
           <div>
             <dt style={{ display: 'inline', fontWeight: 600 }}>
-              Active Grimoire subscribers:{' '}
+              Active Living Grimoire of Light &amp; Magic subscribers:{' '}
             </dt>
             <dd style={{ display: 'inline', margin: 0 }}>
               {audience.active_subscribers}

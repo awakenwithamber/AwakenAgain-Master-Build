@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 
 const SECTIONS = [
   { href: '/admin/orders', name: 'Orders', desc: 'Read-only order ledger (local JSONL until Supabase binding), with shipment tracking once recorded.' },
-  { href: '/admin/subscriptions', name: 'Subscriptions', desc: 'Living Grimoire members — confirm payment or cancel with the owner key.' },
+  { href: '/admin/subscriptions', name: 'Subscriptions', desc: 'Living Grimoire of Light & Magic members — confirm payment or cancel with the owner key.' },
   { href: '/admin/leads', name: 'Leads', desc: 'Quiz lead capture — store binding pending.' },
   { href: '/admin/reviews', name: 'Reviews', desc: 'Moderation queue — store binding pending.' },
   { href: '/admin/broadcast', name: 'Broadcast', desc: 'Compose + record broadcasts — delivery activates when an email provider connects.' },

@@ -33,7 +33,7 @@ export interface ArticlePick {
 const INTEREST_LABEL: Record<InterestCategory, string> = {
   herbs: 'your love of herbal remedies',
   soaps: 'your love of handcrafted soaps',
-  grimoire: 'your love of the Living Grimoire',
+  grimoire: 'your love of the Living Grimoire of Light & Magic',
   readings: 'your interest in readings & services',
   quiz: 'your Herbal Allies path',
   articles: 'your love of apothecary reading',
@@ -102,7 +102,7 @@ export function PickedForYou({
             {top === 'grimoire' ? (
               <p className={styles.sectionSub}>
                 <Link className={styles.btnSecondary} href="/grimoire">
-                  Enter the Living Grimoire →
+                  Enter the Living Grimoire of Light & Magic →
                 </Link>
               </p>
             ) : null}

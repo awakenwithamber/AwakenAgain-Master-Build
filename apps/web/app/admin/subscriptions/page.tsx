@@ -28,7 +28,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Admin — Subscriptions',
   description:
-    'Living Grimoire member management for Amber\'s Alchemy Apothecary (internal).',
+    'Living Grimoire of Light & Magic member management for Amber\'s Alchemy Apothecary (internal).',
   robots: { index: false, follow: false },
 };
 
@@ -44,9 +44,9 @@ export default async function AdminSubscriptionsPage() {
     <AdminGate>
       <AdminViewTracker section="subscriptions" />
       <main aria-labelledby="admin-subscriptions-title">
-        <h1 id="admin-subscriptions-title">Subscriptions — Living Grimoire</h1>
+        <h1 id="admin-subscriptions-title">Subscriptions — Living Grimoire of Light & Magic</h1>
         <p>
-          Every member who signed up for the Living Grimoire, resolved
+          Every member who signed up for the Living Grimoire of Light & Magic, resolved
           from the subscription ledger ({members.length} shown). A member
           becomes <strong>active</strong> only when you confirm their
           first payment; subscriber benefits (free shipping on every

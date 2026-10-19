@@ -40,7 +40,7 @@ export default function TermsPage() {
       <h2>Shipping & fulfillment</h2>
       <p>
         Shipping is free on orders over $45, and always free for Living
-        Grimoire subscribers. Orders are handcrafted and typically ship
+        Grimoire of Light & Magic subscribers. Orders are handcrafted and typically ship
         within 3–5 business days where operationally accurate. You will
         be notified if a delay affects your order.
       </p>
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
       <h2>Intellectual property</h2>
       <p>
-        Journal articles, Living Grimoire content, product formulations, and
+        Journal articles, Living Grimoire of Light & Magic content, product formulations, and
         site copy are the property of {BRAND_NAME}. You may share links and
         brief excerpts with attribution; please do not republish full works.
       </p>

@@ -9,9 +9,9 @@ import { GrimoireBook } from '../../components/grimoire/GrimoireBook';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata: Metadata = {
-  title: 'The Living Grimoire - Book of Light',
+  title: 'Living Grimoire of Light & Magic',
   description:
-    "Open The Living Grimoire - Book of Light — Amber's family grimoire, a handmade-style book of true magic, healing, recipes, spells, herbal wisdom, and botanical illustrations from Amber's Alchemy Apothecary.",
+    "Open Living Grimoire of Light & Magic — Amber's family grimoire, a handmade-style book of true magic, healing, recipes, spells, herbal wisdom, and botanical illustrations from Amber's Alchemy Apothecary.",
 };
 
 export default function GrimoirePage() {

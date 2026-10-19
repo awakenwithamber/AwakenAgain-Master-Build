@@ -27,7 +27,7 @@ interface GrimoireGateProps {
   gateTitle?: string;
 }
 
-export function GrimoireGate({ children, gateTitle = 'Living Grimoire' }: GrimoireGateProps) {
+export function GrimoireGate({ children, gateTitle = 'Living Grimoire of Light & Magic' }: GrimoireGateProps) {
   const [state, setState] = useState<GateState>({ step: 'email' });
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -106,7 +106,7 @@ export function GrimoireGate({ children, gateTitle = 'Living Grimoire' }: Grimoi
     <section aria-labelledby="grimoire-gate-heading">
       <h2 id="grimoire-gate-heading">{gateTitle} — subscriber access</h2>
       <p>
-        This content is for Living Grimoire members. Enter your email and we&apos;ll send a
+        This content is for Living Grimoire of Light & Magic members. Enter your email and we&apos;ll send a
         one-time code to verify your access.
       </p>
       {state.step === 'email' ? (

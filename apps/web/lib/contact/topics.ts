@@ -12,7 +12,7 @@
 export const CONTACT_TOPICS = [
   { id: 'order-question', label: 'A question about my order' },
   { id: 'custom-product', label: 'Custom soap / product question' },
-  { id: 'grimoire', label: 'Living Grimoire membership' },
+  { id: 'grimoire', label: 'Living Grimoire of Light & Magic membership' },
   { id: 'wholesale', label: 'Wholesale / collaboration' },
   { id: 'something-else', label: 'Something else' },
 ] as const;
