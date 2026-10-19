@@ -93,8 +93,8 @@ describe('bundle pricing — derived, never hard-coded', () => {
   });
 
   it('savings percentage derives live: 25.2% (1208/4785 = 25.245…%)', () => {
-    // The business record's "25.3%" was a rounding approximation; the
-    // derived one-decimal value is 25.2%. The spec — not copy — is truth.
+    // Derived one-decimal value under the canon shape prices
+    // (owner-confirmed 2026-10-19). The spec — not copy — is truth.
     expect(bundleSavingsPct()).toBe(25.2);
   });
 
@@ -122,7 +122,7 @@ describe('integer-cents discipline', () => {
   });
 
   it('formatPrice renders exact dollars', () => {
-    expect(formatPrice(577)).toBe('$5.77');
+    expect(formatPrice(500)).toBe('$5.00');
     expect(formatPrice(1208)).toBe('$12.08');
     expect(formatPrice(3577)).toBe('$35.77');
   });

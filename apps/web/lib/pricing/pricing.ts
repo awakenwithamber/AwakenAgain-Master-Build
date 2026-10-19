@@ -27,7 +27,13 @@ export const CANONICAL_PRICES = {
 
 export const BUNDLE_ID = 'soap-style-collection-5';
 export const BUNDLE_NAME = 'The Alchemy Soap Collection';
-/** Owner-confirmed 2026-10-05 (was $55). */
+/**
+ * Owner-confirmed 2026-10-05 (was $55) and CONFIRMED again 2026-10-19
+ * under the canon per-shape prices (owner correction: "the higher
+ * pricing wins" — a brief same-day lower-price change was reverted).
+ * The component sum derives live from the canonical shape table
+ * ($47.85); savings $12.08 (25.2%).
+ */
 export const BUNDLE_PRICE_CENTS = 3577;
 export const BUNDLE_SLOT_SHAPES: readonly string[] = [
   'small-rose',
