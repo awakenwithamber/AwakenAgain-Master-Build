@@ -246,7 +246,7 @@ describe('intakeOrder — validation stage', () => {
       validBody({
         items: [VALID_SOAP_ITEM],
         bundle: bundlePayload(),
-        client_total_cents: 2354 + 3577,
+        client_total_cents: 1177 * 2 + 3577,
       }),
       createOrderStore(),
     );

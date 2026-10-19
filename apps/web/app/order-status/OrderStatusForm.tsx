@@ -18,7 +18,10 @@ interface OrderSummary {
   customer_name: string;
   status: 'pending_payment' | 'paid' | 'cancelled';
   shipping_status: 'FREE' | 'TO_BE_CONFIRMED';
-  payment_method: 'cash_app_or_venmo' | 'bookipi_card_invoice';
+  payment_method:
+    | 'cash_app_or_venmo'
+    | 'bookipi_card_invoice'
+    | 'stripe_card_embedded';
   item_count: number;
   total_cents: number;
 }
