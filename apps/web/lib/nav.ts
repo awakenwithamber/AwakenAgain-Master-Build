@@ -34,7 +34,7 @@ export const NAV_ENTRIES: NavEntry[] = [
     id: 'shop',
     label: 'Shop',
     links: [
-      { href: '/shop', label: 'Shop Remedies' },
+      { href: '/shop', label: 'Remedies' },
       { href: '/soap-shop', label: 'Soap Shop' },
       { href: '/soap-builder', label: 'Soap Builder' },
       { href: '/custom-formula', label: 'Create Remedy' },
@@ -56,9 +56,9 @@ export const NAV_ENTRIES: NavEntry[] = [
   {
     kind: 'group',
     id: 'grimoire',
-    label: 'The Living Grimoire',
+    label: 'Living Grimoire of Light & Magic',
     links: [
-      { href: '/grimoire', label: 'Enter the Grimoire' },
+      { href: '/grimoire', label: 'Enter the Living Grimoire of Light & Magic' },
       { href: '/grimoire/subscribe', label: 'Subscribe' },
     ],
   },

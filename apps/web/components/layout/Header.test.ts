@@ -42,6 +42,17 @@ describe('nav data (lib/nav.ts)', () => {
     }
   });
 
+  it('puts "Remedies" at the top of the Shop menu, exactly once (punch list)', () => {
+    const shop = NAV_ENTRIES.find((e) => e.kind === 'group' && e.id === 'shop');
+    if (!shop || shop.kind !== 'group') throw new Error('shop group missing');
+    // The remedies page (/shop) is the FIRST item of the Shop menu,
+    // labelled exactly "Remedies" — owner punch list 2026-10-10 line 8.
+    expect(shop.links[0]).toEqual({ href: '/shop', label: 'Remedies' });
+    // …and it is not duplicated anywhere else in the Shop menu.
+    expect(shop.links.filter((l) => l.label === 'Remedies')).toHaveLength(1);
+    expect(shop.links.filter((l) => l.href === '/shop')).toHaveLength(1);
+  });
+
   it('has no duplicate hrefs and stays grouped (~7 top-level entries)', () => {
     const all: string[] = [];
     for (const entry of NAV_ENTRIES) {
