@@ -29,6 +29,12 @@ import {
   pageTitle,
   type GrimoirePage,
 } from './grimoireContent';
+import {
+  clampNavigationTarget,
+  lastSpreadBase,
+  sheetPageIndices,
+  spreadBaseFor,
+} from './grimoirePagination';
 
 const DESKTOP_QUERY = '(min-width: 900px)';
 const TURN_MS = 600;
@@ -251,18 +257,18 @@ function ColophonPageView({
     <PageShell page={page} side={side}>
       <h2 className={styles.handHeading}>Colophon</h2>
       <p className={`${styles.handBody} ${styles.dropcap}`}>
-        Here ends the first volume of the Living Grimoire — twelve herbs,
+        Here ends the first volume of the Living Grimoire of Light & Magic — twelve herbs,
         written by hand and bound in leather. More entries are being written
         and verified as this new site grows; the book is alive, and it will
         keep growing.
       </p>
       <p className={styles.handBody}>
-        Keepers of the Living Grimoire receive new entries, monthly rituals,
+        Keepers of the Living Grimoire of Light & Magic receive new entries, monthly rituals,
         and subscriber gifts as the archive grows.
       </p>
       <p style={{ marginTop: '1em' }}>
         <Link href="/grimoire/subscribe" className={styles.entryLink}>
-          Become a keeper — Living Grimoire $7.77/mo →
+          Become a keeper — Living Grimoire of Light & Magic $7.77/mo →
         </Link>
       </p>
       <p>
@@ -333,7 +339,7 @@ export function GrimoireBook() {
   const maxPage = pages.length - 1;
   const bookOpen = coverState === 'open';
   const displayPage = turn ? turn.from : page;
-  const spreadBase = isDesktop ? Math.floor(displayPage / 2) * 2 : displayPage;
+  const spreadBase = spreadBaseFor(displayPage, isDesktop);
 
   /* Ref mirror of guard state so delayed calls (ribbon → open → jump) never
      act on a stale closure. */
@@ -369,7 +375,10 @@ export function GrimoireBook() {
     (target: number) => {
       const g = guardRef.current;
       if (g.turn || !g.bookOpen) return;
-      const t = Math.max(0, Math.min(maxPage, Math.round(target)));
+      // Desktop targets are spread bases, never a right-hand page itself:
+      // targeting the final page index directly made the turn sheet read
+      // pages[pages.length] (undefined) and throw. See grimoirePagination.
+      const t = clampNavigationTarget(target, pages.length, isDesktop);
       if (t === g.page) return;
       const dir: TurnState['dir'] = t > g.page ? 'fwd' : 'back';
       setTurn({ dir, from: g.page, to: t });
@@ -380,7 +389,7 @@ export function GrimoireBook() {
         setAnnounce(`Page ${t + 1} of ${pages.length} — ${pageTitle(pages[t])}`);
       }, TURN_MS);
     },
-    [maxPage, pages],
+    [isDesktop, maxPage, pages],
   );
 
   const step = isDesktop ? 2 : 1;
@@ -458,8 +467,13 @@ export function GrimoireBook() {
       : dir === 'fwd'
         ? styles.sheetRight
         : styles.sheetLeft;
-    const frontIdx = dir === 'fwd' ? (isDesktop ? from + 1 : from) : from;
-    const backIdx = dir === 'fwd' ? (isDesktop ? to + 1 : to) : to;
+    const { frontIdx, backIdx } = sheetPageIndices(
+      dir,
+      from,
+      to,
+      isDesktop,
+      pages.length,
+    );
     const faceSide = full || dir === 'fwd' ? 'right' : 'left';
     sheet = (
       <div
@@ -489,13 +503,16 @@ export function GrimoireBook() {
   }
 
   const atStart = page <= 0;
-  const atEnd = page >= maxPage;
+  // On desktop the book ends at the final SPREAD (base of the last page),
+  // not at the last page index — the old comparison left Next enabled on
+  // the final spread and invited the crashing extra turn.
+  const atEnd = page >= lastSpreadBase(pages.length, isDesktop);
 
   return (
     <section
       className={styles.stage}
       role="region"
-      aria-label="The Living Grimoire — an interactive handmade-style book of herbal wisdom"
+      aria-label="Living Grimoire of Light & Magic — an interactive handmade-style book of herbal wisdom"
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
@@ -533,11 +550,11 @@ export function GrimoireBook() {
                   Amber&apos;s Alchemy Apothecary
                 </p>
                 <h2 className={styles.coverTitle}>
-                  The Living
+                  Living Grimoire
                   <br />
-                  Grimoire
+                  of Light
                   <br />
-                  Book of Light
+                  &amp; Magic
                 </h2>
                 <p className={styles.coverRule} aria-hidden="true">
                   ✦ ✦ ✦
@@ -553,7 +570,7 @@ export function GrimoireBook() {
                   onClick={openBook}
                   disabled={coverState === 'opening'}
                 >
-                  Open the Grimoire ✦
+                  Open the Living Grimoire of Light &amp; Magic ✦
                 </button>
               </div>
             </div>
