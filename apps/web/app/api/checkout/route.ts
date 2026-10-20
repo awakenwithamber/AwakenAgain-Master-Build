@@ -41,7 +41,7 @@ import {
 import { createOrderStore } from '../../../lib/orders/store';
 import { queueOrderConfirmation } from '../../../lib/jobs/order-confirmation';
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
-import { isEntitledSubscriberAsync } from '../../../lib/subscriptions/entitlement';
+import { isEntitledSubscriber } from '../../../lib/subscriptions/entitlement';
 import {
   captureServerEventSoon,
   resolveServerDistinctId,
@@ -62,16 +62,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * order email with an entitled status (lib/subscriptions/entitlement).
  * Read from the raw body because validateAndBuildOrder owns sanitization;
  * the lookup normalizes (trim + lowercase) the same way.
- *
- * Driver-aware (the Async accessor): the read must hit the SAME store
- * the subscribe route writes — with DATABASE_URL set that is the
- * Postgres event store; the synchronous JSONL reader would never see a
- * Postgres-recorded subscription (2026-10-19 durable-stores fix).
  */
-async function verifySubscriberClaim(body: unknown): Promise<boolean> {
+function verifySubscriberClaim(body: unknown): boolean {
   if (!isRecord(body) || body.is_subscriber !== true) return false;
   const customer = isRecord(body.customer) ? body.customer : undefined;
-  return isEntitledSubscriberAsync(customer?.email);
+  return isEntitledSubscriber(customer?.email);
 }
 
 /**
@@ -143,7 +138,7 @@ export async function POST(request: Request) {
   let record: OrderRecord;
   try {
     record = validateAndBuildOrder(body, {
-      isSubscriberVerified: await verifySubscriberClaim(body),
+      isSubscriberVerified: verifySubscriberClaim(body),
     });
   } catch (err) {
     return fail([err instanceof Error ? err.message : 'Invalid order.']);
