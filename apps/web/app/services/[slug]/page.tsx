@@ -108,7 +108,7 @@ export default async function ServiceLandingPage({
             {subscriberPrice !== null ? (
               <span>
                 {' '}
-                · Living Grimoire subscriber{' '}
+                · Living Grimoire of Light & Magic subscriber{' '}
                 <PriceDisplay cents={Math.round(subscriberPrice * 100)} />
               </span>
             ) : null}

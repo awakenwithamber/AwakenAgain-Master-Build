@@ -196,7 +196,7 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
                 {typeof product.subscriber_price === 'number' ? (
                   <div>
                     <small>
-                      Grimoire subscriber{' '}
+                      Living Grimoire of Light &amp; Magic subscriber{' '}
                       <PriceDisplay cents={toCents(product.subscriber_price)} />
                     </small>
                   </div>

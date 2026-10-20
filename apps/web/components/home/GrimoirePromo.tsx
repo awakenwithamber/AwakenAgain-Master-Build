@@ -18,7 +18,7 @@ export function GrimoirePromo() {
           ✦ ─────────────── ✦
         </div>
         <h2 id="grimoire-promo-heading" className={styles.sectionTitle}>
-          The Living Grimoire
+          Living Grimoire of Light & Magic
         </h2>
         <p className={styles.sectionSub}>
           A handmade-style book of herbal wisdom — traditional uses, botanical
@@ -51,7 +51,7 @@ export function GrimoirePromo() {
         </div>
         <div className={styles.heroCtas}>
           <a className={styles.btnPrimary} href="/grimoire">
-            ✦ Open the Grimoire
+            ✦ Open the Living Grimoire of Light & Magic
           </a>
           <a className={styles.btnSecondary} href="/grimoire/subscribe">
             Become a Keeper — $7.77/mo

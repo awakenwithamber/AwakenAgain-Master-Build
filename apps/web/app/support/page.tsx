@@ -97,7 +97,7 @@ export default function SupportPage() {
               supports the business. <Link href="/shop">Browse products</Link>
             </li>
             <li>
-              <strong>Join the Living Grimoire</strong> — $7.77/month
+              <strong>Join the Living Grimoire of Light & Magic</strong> — $7.77/month
               membership with 10% off storewide. <Link href="/grimoire">Learn more</Link>
             </li>
             <li>

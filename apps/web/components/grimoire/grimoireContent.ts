@@ -13,7 +13,7 @@
 import { getHerb, HERBS } from '../../lib/catalog/herbs';
 import type { Herb } from '../../types';
 
-export const GRIMOIRE_TITLE = 'The Living Grimoire - Book of Light';
+export const GRIMOIRE_TITLE = 'Living Grimoire of Light & Magic';
 
 export const PARACELSUS_QUOTE =
   'The art of healing comes from nature, not from the physician.';

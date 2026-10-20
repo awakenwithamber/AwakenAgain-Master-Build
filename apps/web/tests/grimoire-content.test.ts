@@ -72,7 +72,7 @@ describe('grimoire page sequence', () => {
   });
 
   it('title page carries the exact book title and Paracelsus quote', () => {
-    expect(GRIMOIRE_TITLE).toBe('The Living Grimoire - Book of Light');
+    expect(GRIMOIRE_TITLE).toBe('Living Grimoire of Light & Magic');
     expect(PARACELSUS_QUOTE).toBe(
       'The art of healing comes from nature, not from the physician.',
     );

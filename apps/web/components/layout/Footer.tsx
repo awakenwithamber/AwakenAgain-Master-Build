@@ -51,7 +51,8 @@ export default function Footer() {
           <h3>{BRAND_NAME}</h3>
           <p>
             Handcrafted botanical soaps, capsules, balms, and the Living
-            Grimoire — made in small batches in Salt Lake City, Utah.
+            Grimoire of Light &amp; Magic — made in small batches in Salt Lake
+            City, Utah.
           </p>
           <p className="footer-payments">
             Payments: Cash App <strong>$AmberPatten347</strong> · Venmo{' '}

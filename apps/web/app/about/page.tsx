@@ -93,7 +93,7 @@ export default function AboutPage() {
               </li>
               <li>
                 Amber confirms every order personally before fulfillment. Free
-                shipping on orders over $45 (always free for Living Grimoire
+                shipping on orders over $45 (always free for Living Grimoire of Light & Magic
                 subscribers); below that, shipping is confirmed with you before
                 anything ships.
               </li>

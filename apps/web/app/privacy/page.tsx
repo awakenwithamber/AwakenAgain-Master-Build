@@ -66,7 +66,8 @@ export default function PrivacyPage() {
           choices, and searches — never names, emails, payment details, or
           message text), and this device keeps a small first-party
           interest profile — which corners of the apothecary you explore
-          (herbs, soaps, the Grimoire, readings, the quiz, articles) — so
+          (herbs, soaps, the Living Grimoire of Light & Magic, readings,
+          the quiz, articles) — so
           the homepage can greet you with what you love first. That
           profile is stored only in your own browser; it is never sent to
           us or anyone else.

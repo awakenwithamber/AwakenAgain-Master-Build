@@ -30,7 +30,7 @@ import { ConfirmSubscriptionForm } from './ConfirmSubscriptionForm';
 export const metadata: Metadata = {
   title: 'Admin — Confirm subscription',
   description:
-    'Owner tool: activate a paid Living Grimoire subscription (internal).',
+    'Owner tool: activate a paid Living Grimoire of Light & Magic subscription (internal).',
   robots: { index: false, follow: false },
 };
 
@@ -52,7 +52,7 @@ export default function ConfirmSubscriptionPage() {
     >
       <h1 id="confirm-subscription-title">Confirm a subscription</h1>
       <p>
-        Use this after a member has paid for their Living Grimoire
+        Use this after a member has paid for their Living Grimoire of Light & Magic
         subscription outside the site (for example, by an emailed
         invoice). Enter the email they subscribed with and your owner
         key — their membership switches to active, and subscriber

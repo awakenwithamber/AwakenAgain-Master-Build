@@ -127,7 +127,7 @@ const TOPIC_REPLIES: TopicReply[] = [
   {
     match: /grimoire/i,
     reply:
-      'The Living Grimoire is the membership circle — $7.77/month with 10% off storewide, ' +
+      'Living Grimoire of Light & Magic is the membership circle — $7.77/month with 10% off storewide, ' +
       'monthly articles and rituals, exclusive recipes, and early access to new creations. ' +
       'Safety information is never paywalled.',
   },

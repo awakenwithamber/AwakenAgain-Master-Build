@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: `%s — ${BRAND_NAME}`,
   },
   description:
-    "Amber's Alchemy Apothecary — handcrafted botanical soaps, capsules, balms, and the Living Grimoire. AwakenAgain.com.",
+    "Amber's Alchemy Apothecary — handcrafted botanical soaps, capsules, balms, and the Living Grimoire of Light & Magic. AwakenAgain.com.",
   keywords: [...SITE_KEYWORDS],
   alternates: {
     canonical: '/',

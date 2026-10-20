@@ -11,7 +11,7 @@ import { ShopClient } from '../../components/shop/ShopClient';
 export const metadata: Metadata = {
   title: 'Shop',
   description:
-    "The Apothecary Shop — ritual bundles, handcrafted botanical soaps, capsules, balms, teas, and the Living Grimoire from Amber's Alchemy Apothecary.",
+    "The Apothecary Shop — ritual bundles, handcrafted botanical soaps, capsules, balms, teas, and the Living Grimoire of Light & Magic from Amber's Alchemy Apothecary.",
 };
 
 export default function ShopPage() {

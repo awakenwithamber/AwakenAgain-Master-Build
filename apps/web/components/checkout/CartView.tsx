@@ -135,7 +135,7 @@ export function CartView() {
                 checked={isSubscriber}
                 onChange={(e) => setIsSubscriber(e.target.checked)}
               />
-              I&apos;m a Living Grimoire subscriber (always free shipping)
+              I&apos;m a Living Grimoire of Light & Magic subscriber (always free shipping)
             </label>
 
             <section aria-label="Order summary (preview)" className="cart-summary">
@@ -143,7 +143,7 @@ export function CartView() {
               <p>Subtotal: {formatPrice(preview.subtotalCents)}</p>
               {preview.subscriberDiscountCents > 0 ? (
                 <p>
-                  Living Grimoire subscriber discount (10%): −
+                  Living Grimoire of Light & Magic subscriber discount (10%): −
                   {formatPrice(preview.subscriberDiscountCents)}{' '}
                   <small>
                     (applied when your membership is confirmed — verified at
@@ -155,9 +155,9 @@ export function CartView() {
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
                   ? isSubscriber
-                    ? 'Free — Living Grimoire subscribers always ship free.'
+                    ? 'Free — Living Grimoire of Light & Magic subscribers always ship free.'
                     : `Free — shipping is free on orders of ${formatPrice(preview.freeShippingThresholdCents)} or more.`
-                  : `To be confirmed — no shipping charge is added to this order; we confirm the shipping cost with you before fulfillment. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire subscribers.`}
+                  : `To be confirmed — no shipping charge is added to this order; we confirm the shipping cost with you before fulfillment. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire of Light & Magic subscribers.`}
               </p>
               <p>
                 <strong>Total (preview): {formatPrice(preview.totalCents)}</strong>

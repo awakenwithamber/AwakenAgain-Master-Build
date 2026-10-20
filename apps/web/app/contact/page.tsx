@@ -24,7 +24,7 @@ import {
 export const metadata: Metadata = {
   title: 'Contact',
   description:
-    "Reach Amber at Amber's Alchemy Apothecary — questions about orders, custom soaps, the Living Grimoire, or wholesale. Amber reads every message herself.",
+    "Reach Amber at Amber's Alchemy Apothecary — questions about orders, custom soaps, the Living Grimoire of Light & Magic, or wholesale. Amber reads every message herself.",
 };
 
 const CONTACT_EMAIL = BRAND_EMAIL;
@@ -56,7 +56,7 @@ export default function ContactPage() {
           Contact the Apothecary
         </h1>
         <p style={{ color: 'var(--aa-cream-dim)' }}>
-          Questions about an order, a custom soap, the Living Grimoire, or a
+          Questions about an order, a custom soap, the Living Grimoire of Light & Magic, or a
           collaboration? Send a message below — Amber reads every one herself
           and replies personally.
         </p>

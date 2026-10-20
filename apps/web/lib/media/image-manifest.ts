@@ -414,7 +414,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   real(
     'asset_product_grimoire_subscription',
     '/images/products/grimoire-subscription.webp',
-    'Living Grimoire Subscription — digital illustration of an open botanical grimoire under a moon-phase arch',
+    'Living Grimoire of Light & Magic Subscription — digital illustration of an open botanical grimoire under a moon-phase arch',
     'ILLUSTRATION',
     {
       notDocumentaryPhoto: true,

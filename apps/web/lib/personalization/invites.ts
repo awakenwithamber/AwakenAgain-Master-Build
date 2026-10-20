@@ -123,13 +123,13 @@ export const INVITE_COPY: Record<
     ctaHref: '/account',
   },
   cart: {
-    line: 'Grimoire members save 10% and ship free — sign in with just your email, no password to remember.',
-    ctaLabel: 'Sign in to the Living Grimoire',
+    line: 'Living Grimoire of Light & Magic members save 10% and ship free — sign in with just your email, no password to remember.',
+    ctaLabel: 'Sign in to the Living Grimoire of Light & Magic',
     ctaHref: '/grimoire',
   },
   'order-success': {
-    line: 'Grimoire members save 10% on every order — sign in with just your email, no password needed.',
-    ctaLabel: 'Sign in to the Living Grimoire',
+    line: 'Living Grimoire of Light & Magic members save 10% on every order — sign in with just your email, no password needed.',
+    ctaLabel: 'Sign in to the Living Grimoire of Light & Magic',
     ctaHref: '/grimoire',
   },
 };
