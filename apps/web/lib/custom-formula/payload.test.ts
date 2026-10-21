@@ -163,7 +163,7 @@ describe('validateAndBuildOrder — server checkout with formula lines', () => {
         },
       ],
       customer: { name: 'Test Customer', email: 'test@example.com' },
-      client_total_cents: item.unit_price_cents,
+      client_total_cents: item.unit_price_cents + 595,
     };
   }
 
@@ -175,7 +175,7 @@ describe('validateAndBuildOrder — server checkout with formula lines', () => {
     );
     expect(record.items[0]?.unit_price_cents).toBe(3333 + 23 + 23);
     expect(record.items[0]?.formula?.herb_ids).toEqual(['andrographis', 'garlic']);
-    expect(record.total_cents).toBe(3333 + 23 + 23);
+    expect(record.total_cents).toBe(3333 + 23 + 23 + 595);
     expect(record.computed_by).toBe('server');
     expect(record.payment_method).toBe('cash_app_or_venmo');
   });
@@ -213,7 +213,7 @@ describe('validateAndBuildOrder — server checkout with formula lines', () => {
         },
       ],
       customer: { name: 'Test Customer', email: 'test@example.com' },
-      client_total_cents: item.unit_price_cents,
+      client_total_cents: item.unit_price_cents + 595,
     });
     const name = record.items[0]?.formula?.creation_name ?? '';
     expect(name).not.toMatch(/<|>/);
