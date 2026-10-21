@@ -5,10 +5,18 @@
  * directive 2026-10-19). The raw body is verified against
  * STRIPE_WEBHOOK_SECRET with the Stripe signature; anything that fails
  * verification is rejected (400) and marks nothing. A verified
- * 'checkout.session.completed' (or 'payment_intent.succeeded') event
- * marks the bound order paid ONLY when its amount equals the persisted
- * server-computed order total. The client-side return page displays
- * status — it can never set it.
+ * 'checkout.session.completed' event marks the bound order paid ONLY
+ * when its amount equals the persisted server-computed order total
+ * PLUS the Stripe Tax amount Stripe reports on the session
+ * (total_details.amount_tax) — order totals are pre-tax since
+ * 2026-10-20. The tax amount is stored on the payment record.
+ *
+ * FAIL-SAFE (2026-10-20): if a session event carries no usable
+ * total_details.amount_tax, the amount cannot be verified, so NOTHING
+ * is marked paid (400). 'payment_intent.succeeded' events carry no
+ * tax breakdown at all, so they are acknowledged but NEVER mark an
+ * order paid — the session event is the verifying event. The
+ * client-side return page displays status — it can never set it.
  *
  * Endpoint registration (owner step): point a Stripe webhook endpoint
  * at https://awakenagain.com/api/stripe/webhook for
@@ -47,41 +55,46 @@ async function applyEvent(
   event: StripeEventLike,
 ): Promise<{ orderId: string; alreadyPaid: boolean } | null> {
   const object = event.data.object;
-  let orderId: string | null = null;
-  let amount: number | null = null;
-  let sessionId = '';
-  let paymentIntentId: string | null = null;
-  let currency = 'usd';
 
-  if (event.type === 'checkout.session.completed') {
-    const metadata = (object.metadata ?? {}) as Record<string, unknown>;
-    orderId =
-      asString(metadata.order_id) ?? asString(object.client_reference_id);
-    amount = asNumber(object.amount_total);
-    sessionId = asString(object.id) ?? '';
-    paymentIntentId = asString(object.payment_intent);
-    currency = asString(object.currency) ?? 'usd';
-    const paymentStatus = asString(object.payment_status);
-    // Embedded sessions can complete with an async payment still
-    // pending — only a paid session marks the order paid.
-    if (paymentStatus && paymentStatus !== 'paid') return null;
-  } else if (event.type === 'payment_intent.succeeded') {
-    const metadata = (object.metadata ?? {}) as Record<string, unknown>;
-    orderId = asString(metadata.order_id);
-    amount = asNumber(object.amount_received) ?? asNumber(object.amount);
-    paymentIntentId = asString(object.id);
-    currency = asString(object.currency) ?? 'usd';
-  } else {
-    return null;
-  }
+  // payment_intent.succeeded carries no tax breakdown (no
+  // total_details), so its amount can never be verified against the
+  // pre-tax order total + tax. Fail safe: acknowledge, mark nothing —
+  // checkout.session.completed is the verifying event.
+  if (event.type !== 'checkout.session.completed') return null;
+
+  const metadata = (object.metadata ?? {}) as Record<string, unknown>;
+  const orderId =
+    asString(metadata.order_id) ?? asString(object.client_reference_id);
+  const amount = asNumber(object.amount_total);
+  const sessionId = asString(object.id) ?? '';
+  const paymentIntentId = asString(object.payment_intent);
+  const currency = asString(object.currency) ?? 'usd';
+  const paymentStatus = asString(object.payment_status);
+  // Embedded sessions can complete with an async payment still
+  // pending — only a paid session marks the order paid.
+  if (paymentStatus && paymentStatus !== 'paid') return null;
 
   if (!orderId || amount === null) return null;
 
+  // Stripe Tax breakdown: without a usable amount_tax the charged
+  // amount cannot be verified — fail safe, mark nothing.
+  const totalDetails = (object.total_details ?? null) as Record<
+    string,
+    unknown
+  > | null;
+  const taxCents = totalDetails ? asNumber(totalDetails.amount_tax) : null;
+  if (taxCents === null) {
+    throw new Error(
+      `Stripe session ${sessionId} carries no tax breakdown (total_details.amount_tax) — amount cannot be verified for order ${orderId}; not marking paid.`,
+    );
+  }
+
   const order = await createOrderStore().get(orderId);
   if (!order) return null;
-  if (amount !== order.total_cents) {
+  const expected = order.total_cents + taxCents;
+  if (amount !== expected) {
     throw new Error(
-      `Stripe amount ${amount} does not match order ${orderId} total ${order.total_cents}.`,
+      `Stripe amount ${amount} does not match order ${orderId} total ${order.total_cents} + tax ${taxCents} (= ${expected}).`,
     );
   }
 
@@ -91,6 +104,7 @@ async function applyEvent(
     stripe_session_id: sessionId,
     payment_intent_id: paymentIntentId,
     amount_total_cents: amount,
+    tax_cents: taxCents,
     currency,
     paid_at: new Date().toISOString(),
     source: 'stripe_webhook',
