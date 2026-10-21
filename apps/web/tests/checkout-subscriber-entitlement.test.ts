@@ -34,8 +34,11 @@ const CAPSULE_ITEM = {
   quantity: 1,
   unit_price_cents: 1977,
 };
-// $19.77 item: below the $45 general free-shipping threshold.
-// Verified subscriber figures: round(1977 * 0.9) = 1779; discount = 198.
+// $19.77 item: below the $45 general free-shipping threshold, so the
+// standard total carries the flat $5.95 shipping (2026-10-20):
+// 1977 + 595 = 2572, shipping_status 'FLAT'.
+// Verified subscriber figures: round(1977 * 0.9) = 1779; discount = 198,
+// free shipping, total 1779.
 
 function subscriptionLine(email: string, status: string) {
   return JSON.stringify({
@@ -84,17 +87,18 @@ describe('checkout subscriber entitlement', () => {
       items: [CAPSULE_ITEM],
       customer,
       is_subscriber: true,
-      client_total_cents: 1977,
+      client_total_cents: 2572,
     });
     expect(standardClaim.status).toBe(200);
-    expect(standardClaim.json.shipping_status).toBe('TO_BE_CONFIRMED');
-    expect(standardClaim.json.total_cents).toBe(1977);
+    expect(standardClaim.json.shipping_status).toBe('FLAT');
+    expect(standardClaim.json.total_cents).toBe(2572);
     expect(standardClaim.json.subscriber_discount_cents).toBe(0);
     expect(standardClaim.json.is_subscriber_verified).toBe(false);
 
-    // The real client preview shows the claimed discount, so its total is
-    // the discounted figure — that must ALSO be accepted (not blocked),
-    // with the server recording the standard total.
+    // The real client preview shows the claimed discount + free
+    // shipping, so its total is the discounted figure — that must ALSO
+    // be accepted (not blocked), with the server recording the
+    // standard total (with the flat shipping charge).
     const discountedClaim = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
@@ -102,10 +106,10 @@ describe('checkout subscriber entitlement', () => {
       client_total_cents: 1779,
     });
     expect(discountedClaim.status).toBe(200);
-    expect(discountedClaim.json.total_cents).toBe(1977);
-    expect(discountedClaim.json.shipping_status).toBe('TO_BE_CONFIRMED');
+    expect(discountedClaim.json.total_cents).toBe(2572);
+    expect(discountedClaim.json.shipping_status).toBe('FLAT');
     const saved = lastOrder();
-    expect(saved.total_cents).toBe(1977);
+    expect(saved.total_cents).toBe(2572);
     expect(saved.is_subscriber_asserted).toBe(true);
     expect(saved.is_subscriber_verified).toBe(false);
   });
@@ -140,13 +144,13 @@ describe('checkout subscriber entitlement', () => {
       items: [CAPSULE_ITEM],
       customer: { name: 'Pending', email: 'pending@example.com' },
       is_subscriber: true,
-      client_total_cents: 1977,
+      client_total_cents: 2572,
     });
     expect(status).toBe(200);
-    expect(json.shipping_status).toBe('TO_BE_CONFIRMED');
+    expect(json.shipping_status).toBe('FLAT');
     expect(json.subscriber_discount_cents).toBe(0);
     expect(json.is_subscriber_verified).toBe(false);
-    expect(json.total_cents).toBe(1977);
+    expect(json.total_cents).toBe(2572);
   });
 
   it('(d) tampering is still rejected — arbitrary totals and unit prices', async () => {
