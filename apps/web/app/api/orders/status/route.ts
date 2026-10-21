@@ -10,9 +10,14 @@
  * or probe which emails ordered what.
  *
  * Response is a minimal summary (status, totals, item count) plus — once
- * the owner has recorded one — the shipment's carrier tracking number
- * and public carrier link from the append-only tracking ledger
- * (lib/orders/tracking.ts). No address, phone, or notes ever leave the
+ * the owner has recorded them — the payment confirmation from the
+ * append-only payment ledger (lib/orders/payments.ts; an order is 'paid'
+ * iff a confirmation event exists — audit 2026-10-15 GAP-1) and the
+ * shipment's carrier tracking number and public carrier link from the
+ * append-only tracking ledger (lib/orders/tracking.ts). Embedded-card
+ * orders additionally resolve 'paid' from the webhook-written Stripe
+ * payment ledger (lib/payments/stripe.ts — the only writer of paid
+ * state for card orders). No address, phone, or notes ever leave the
  * order record through this route.
  *
  * Rate-limited on the 'orders' group (moderate): a human checking a
@@ -26,8 +31,9 @@ import {
 } from '../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../lib/security/rate-limit';
 import { defaultOrderStore } from '../../../../lib/stores/order-store';
+import { findLatestPaymentAsync } from '../../../../lib/orders/payments';
 import {
-  findLatestTracking,
+  findLatestTrackingAsync,
   toTrackingView,
 } from '../../../../lib/orders/tracking';
 import {
@@ -77,9 +83,12 @@ export async function POST(request: Request) {
     return fail([NOT_FOUND], 404);
   }
 
-  const tracking = findLatestTracking(order.order_id);
-  // Card orders resolve 'paid' from the webhook-written Stripe payment
-  // ledger — the only writer of paid state for the embedded checkout.
+  const tracking = await findLatestTrackingAsync(order.order_id);
+  const payment = await findLatestPaymentAsync(order.order_id);
+  // Card orders also resolve 'paid' from the webhook-written Stripe
+  // payment ledger — the only writer of paid state for the embedded
+  // checkout. Cash App / Venmo / Bookipi orders resolve from the owner
+  // payment-confirmation ledger above (GAP-1).
   const stripePayment =
     order.payment_method === 'stripe_card_embedded'
       ? await findStripePayment(order.order_id)
@@ -91,8 +100,19 @@ export async function POST(request: Request) {
       order_id: order.order_id,
       created_at: order.created_at,
       customer_name: order.customer.name,
-      /** Order lifecycle — 'pending_payment' until payment is confirmed. */
-      status: resolveOrderStatus(order, stripePayment),
+      /**
+       * Order lifecycle — 'pending_payment' until payment is confirmed:
+       * by the owner's append-only confirmation event (any method) or,
+       * for embedded-card orders, by the verified Stripe webhook. The
+       * confirmation is joined at read time, never an edit to the
+       * order record (audit 2026-10-15 GAP-1).
+       */
+      status: payment ? 'paid' : resolveOrderStatus(order, stripePayment),
+      payment_confirmed_at: payment
+        ? payment.recorded_at
+        : stripePayment
+          ? stripePayment.paid_at
+          : null,
       shipping_status: order.shipping_status,
       payment_method: order.payment_method,
       item_count:
