@@ -65,12 +65,12 @@ describe('checkout payment method', () => {
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
       payment_method: 'bookipi_card_invoice',
-      client_total_cents: 1977,
+      client_total_cents: 1977 + 595,
     });
     expect(status).toBe(200);
     expect(json.ok).toBe(true);
     expect(json.payment_method).toBe('bookipi_card_invoice');
-    expect(json.total_cents).toBe(1977);
+    expect(json.total_cents).toBe(1977 + 595);
 
     const payment = json.payment as Record<string, unknown>;
     expect(payment.method).toBe('bookipi_card_invoice');
@@ -88,7 +88,7 @@ describe('checkout payment method', () => {
 
     const saved = lastOrder();
     expect(saved.payment_method).toBe('bookipi_card_invoice');
-    expect(saved.total_cents).toBe(1977);
+    expect(saved.total_cents).toBe(1977 + 595);
   });
 
   it('rejects an unknown payment method (422), at route and core level', async () => {
@@ -117,7 +117,7 @@ describe('checkout payment method', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
-      client_total_cents: 1977,
+      client_total_cents: 1977 + 595,
     });
     expect(status).toBe(200);
     expect(json.payment_method).toBe('cash_app_or_venmo');
@@ -137,10 +137,10 @@ describe('checkout payment method', () => {
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
       payment_method: 'cash_app_or_venmo',
-      client_total_cents: 1977,
+      client_total_cents: 1977 + 595,
     });
     expect(record.payment_method).toBe('cash_app_or_venmo');
-    expect(record.total_cents).toBe(1977);
+    expect(record.total_cents).toBe(1977 + 595);
   });
 
   it('verified subscriber pricing is identical across payment methods', async () => {
@@ -225,7 +225,7 @@ describe('checkout payment method', () => {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
         payment_method: 'bookipi_card_invoice',
-        client_total_cents: 1977,
+        client_total_cents: 1977 + 595,
       },
       store,
     );
@@ -241,7 +241,7 @@ describe('checkout payment method', () => {
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
-        client_total_cents: 1977,
+        client_total_cents: 1977 + 595,
       },
       store,
     );
