@@ -49,7 +49,7 @@ describe('orders route', () => {
     const { status, json } = await postOrders({
       items: [VALID_SOAP_ITEM],
       customer: CUSTOMER,
-      client_total_cents: 1177,
+      client_total_cents: 1177 + 595,
     });
     expect(status).toBe(200);
     expect(json.ok).toBe(true);
@@ -62,7 +62,7 @@ describe('orders route', () => {
     const entry = json.review_entry as Record<string, unknown>;
     expect(entry.order_id).toBe(json.order_id);
     expect(entry.review_status).toBe('pending_review');
-    expect(entry.total_cents).toBe(1177);
+    expect(entry.total_cents).toBe(1177 + 595);
 
     const fulfillment = json.fulfillment as Record<string, unknown>;
     expect(fulfillment.status).toBe('pending_review');
