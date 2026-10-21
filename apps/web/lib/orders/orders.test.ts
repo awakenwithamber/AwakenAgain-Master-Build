@@ -70,7 +70,7 @@ function validBody(overrides: Record<string, unknown> = {}) {
   return {
     items: [VALID_SOAP_ITEM],
     customer: CUSTOMER,
-    client_total_cents: 1177 * 2,
+    client_total_cents: 1177 * 2 + 595,
     ...overrides,
   };
 }
@@ -82,12 +82,12 @@ describe('intakeOrder — validation stage', () => {
     if (!outcome.ok) return;
     expect(outcome.record.order_id).toMatch(/^AWK-\d{8}-[A-Z0-9]{6}$/);
     expect(outcome.record.computed_by).toBe('server');
-    expect(outcome.record.total_cents).toBe(2354);
+    expect(outcome.record.total_cents).toBe(2354 + 595);
     expect(outcome.receipt.backend).toBe('jsonl');
     expect(outcome.receipt.id).toBe(outcome.record.order_id);
     expect(outcome.reviewEntry.order_id).toBe(outcome.record.order_id);
     expect(outcome.reviewEntry.review_status).toBe('pending_review');
-    expect(outcome.reviewEntry.total_cents).toBe(2354);
+    expect(outcome.reviewEntry.total_cents).toBe(2354 + 595);
   });
 
   it('rejects a tampered client total at the validation stage', async () => {
@@ -310,7 +310,7 @@ describe('RecordStore contract — JSONL implementation', () => {
 
     const fetched = await store.get(first.record.order_id);
     expect(fetched?.order_id).toBe(first.record.order_id);
-    expect(fetched?.total_cents).toBe(2354);
+    expect(fetched?.total_cents).toBe(2354 + 595);
     expect(fetched?.computed_by).toBe('server');
 
     const queue = await store.reviewQueue();
@@ -319,7 +319,7 @@ describe('RecordStore contract — JSONL implementation', () => {
     expect(queue[0]?.order_id).toBe(second.record.order_id);
     expect(queue[1]?.order_id).toBe(first.record.order_id);
     expect(queue[0]?.review_status).toBe('pending_review');
-    expect(queue[0]?.shipping_status).toBe('TO_BE_CONFIRMED');
+    expect(queue[0]?.shipping_status).toBe('FLAT');
   });
 
   it('reviewQueue honors limit', async () => {
