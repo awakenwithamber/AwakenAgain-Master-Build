@@ -24,13 +24,25 @@
  *   unavailable and the rest of checkout works untouched. Webhook
  *   handling additionally requires STRIPE_WEBHOOK_SECRET.
  *
- * Paid state lives in its own append-only JSONL ledger (the same
- * pattern as order tracking), keyed by order_id, written once per order.
+ * Paid state lives in its own append-only ledger (the same pattern as
+ * order tracking), keyed by order_id, written once per order. Driver
+ * selection is the codebase standard (Phase 3 Step 1): DATABASE_URL set
+ * → the Postgres event store ('stripe_payments' stream); unset → the
+ * local JSONL file, byte-identical to before. (2026-10-19 durable-
+ * stores fix: this ledger originally shipped file-only, which on
+ * Vercel's read-only filesystem meant the webhook could never durably
+ * mark an order paid in production.)
  */
 import Stripe from 'stripe';
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { OrderRecord } from '../checkout/order';
+import {
+  EVENT_STREAMS,
+  appendEvent,
+  postgresEnabled,
+  readStreamEvents,
+} from '../events/event-store';
 
 /* ------------------------------------------------------------------ */
 /* Configuration (env-gated)                                            */
@@ -205,7 +217,6 @@ export function buildEmbeddedSessionParams(
     client_reference_id: record.order_id,
     metadata: { order_id: record.order_id },
     payment_intent_data: { metadata: { order_id: record.order_id } },
-    line_items: buildSessionLineItems(record),
     // Stripe Tax (owner decision 2026-10-20): tax is calculated from
     // the collected US shipping address; requires Stripe Tax to be
     // activated in the Stripe Dashboard (with a tax registration) or
@@ -213,6 +224,7 @@ export function buildEmbeddedSessionParams(
     automatic_tax: { enabled: true },
     shipping_address_collection: { allowed_countries: ['US'] },
     shipping_options: buildShippingOptions(record),
+    line_items: buildSessionLineItems(record),
     ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
   };
 }
@@ -266,6 +278,17 @@ export function defaultStripePaymentsLedgerPath(): string {
 }
 
 async function readStripePayments(): Promise<StripePaymentRecord[]> {
+  if (postgresEnabled()) {
+    const events = await readStreamEvents<StripePaymentRecord>(
+      EVENT_STREAMS.stripePayments,
+    );
+    const records: StripePaymentRecord[] = [];
+    for (const event of events) {
+      const parsed = event.payload;
+      if (parsed && typeof parsed.order_id === 'string') records.push(parsed);
+    }
+    return records;
+  }
   let raw: string;
   try {
     raw = await readFile(defaultStripePaymentsLedgerPath(), 'utf8');
@@ -303,6 +326,16 @@ export async function recordStripePayment(
 ): Promise<StripePaymentRecord> {
   const existing = await findStripePayment(record.order_id);
   if (existing) return existing;
+  if (postgresEnabled()) {
+    await appendEvent(
+      EVENT_STREAMS.stripePayments,
+      record.order_id,
+      'stripe_payment.recorded',
+      record,
+      record.paid_at,
+    );
+    return record;
+  }
   const path = defaultStripePaymentsLedgerPath();
   await mkdir(dirname(path), { recursive: true });
   await appendFile(path, `${JSON.stringify(record)}\n`, 'utf8');
