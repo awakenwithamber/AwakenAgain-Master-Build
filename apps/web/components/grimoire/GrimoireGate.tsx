@@ -7,15 +7,17 @@
  * session for the Living Grimoire gate. Otherwise it walks through:
  * email → request code → enter 6-digit code → session.
  *
- * The session token is kept in React state only (not persisted to
- * localStorage) until the durable store + session strategy is decided —
- * the in-memory OTP store is preview-only. This is intentional: nothing
- * here invents a session-persistence design.
+ * Stage 2: the OTP verify route also sets the session token as an
+ * httpOnly cookie, and /grimoire is server-rendered against it. On a
+ * successful verify this component calls router.refresh() so the
+ * server page re-resolves entitlements and serves the full book —
+ * the gate is a UX shell; gating itself lives on the server.
  *
- * Server authority: session validity is decided by GET /api/grimoire-otp;
- * the component trusts that endpoint's verdict, not its own state.
+ * Server authority: session validity is decided by GET /api/grimoire-otp
+ * (cookie-aware); the component trusts that endpoint's verdict.
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type GateState =
   | { step: 'email' }
@@ -23,16 +25,40 @@ type GateState =
   | { step: 'verified'; sessionToken: string; email: string };
 
 interface GrimoireGateProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   gateTitle?: string;
 }
 
-export function GrimoireGate({ children, gateTitle = 'Living Grimoire of Light & Magic' }: GrimoireGateProps) {
+export function GrimoireGate({ children, gateTitle = 'Living Grimoire — 333-page edition' }: GrimoireGateProps) {
+  const router = useRouter();
   const [state, setState] = useState<GateState>({ step: 'email' });
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // An existing session cookie (verified earlier) already entitles
+  // this visitor — reflect that instead of asking for another code.
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/grimoire-otp', { method: 'GET' })
+      .then((r) => r.json())
+      .then((data: { valid?: boolean; email?: string }) => {
+        if (!cancelled && data.valid) {
+          setState({
+            step: 'verified',
+            sessionToken: '',
+            email: data.email ?? '',
+          });
+        }
+      })
+      .catch(() => {
+        // No session — the email step below is the path in.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const post = useCallback(async (payload: Record<string, unknown>) => {
     const response = await fetch('/api/grimoire-otp', {
@@ -89,24 +115,37 @@ export function GrimoireGate({ children, gateTitle = 'Living Grimoire of Light &
           email: email.trim(),
         });
         setCode('');
+        // The verify response set the httpOnly session cookie — ask
+        // the server to re-render /grimoire with full entitlement.
+        router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Verification failed.');
       } finally {
         setBusy(false);
       }
     },
-    [busy, code, email, post, state],
+    [busy, code, email, post, router, state],
   );
 
   if (state.step === 'verified') {
-    return <>{children}</>;
+    return (
+      <>
+        {children ?? (
+          <p role="status">
+            Verified — the full Living Grimoire — 333-page edition is open
+            above.
+          </p>
+        )}
+      </>
+    );
   }
 
   return (
     <section aria-labelledby="grimoire-gate-heading">
-      <h2 id="grimoire-gate-heading">{gateTitle} — subscriber access</h2>
+      <h2 id="grimoire-gate-heading">{gateTitle} — member access</h2>
       <p>
-        This content is for Living Grimoire of Light & Magic members. Enter your email and we&apos;ll send a
+        Pages 14 and onward are for Living Grimoire subscribers, permanent-unlock
+        holders, and keepers. Enter your email and we&apos;ll send a
         one-time code to verify your access.
       </p>
       {state.step === 'email' ? (

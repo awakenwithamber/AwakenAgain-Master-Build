@@ -3,8 +3,8 @@
  *
  * Columns: shop, learn, services, legal, contact. Newsletter signup (G15)
  * embedded. Contact identity per owner verification: awaken@consultant.com,
- * (801) 819-6795. Payments: Cash App, Venmo, or card by emailed Bookipi
- * invoice — stated plainly.
+ * (801) 819-6795. Payments: card on this site, Cash App, or Venmo —
+ * stated plainly.
  */
 import Link from 'next/link';
 import NewsletterSignup from './NewsletterSignup';
@@ -41,6 +41,7 @@ const LEGAL_LINKS = [
   { href: '/privacy', label: 'Privacy Policy' },
   { href: '/privacy#privacy-choices', label: 'Privacy Choices' },
   { href: '/terms', label: 'Terms of Service' },
+  { href: '/returns', label: 'Returns & Refunds' },
 ];
 
 export default function Footer() {
@@ -55,9 +56,9 @@ export default function Footer() {
             City, Utah.
           </p>
           <p className="footer-payments">
-            Payments: Cash App <strong>$AmberPatten347</strong> · Venmo{' '}
-            <strong>@AwakenwithAmber</strong> · or pay by card with an emailed
-            Bookipi invoice
+            Payments: pay by card right here on this site · Cash App{' '}
+            <strong>$AmberPatten347</strong> · Venmo{' '}
+            <strong>@AwakenwithAmber</strong>
           </p>
         </div>
         <nav className="footer-col" aria-label="Shop">

@@ -22,12 +22,13 @@ import styles from './account.module.css';
 /**
  * Payment-method labels — mirrored from lib/orders/payments.ts
  * (paymentMethodLabel). That module reads ledgers with node:fs and so
- * cannot enter a client bundle; the two labels are duplicated here
+ * cannot enter a client bundle; the labels are duplicated here
  * deliberately, and the admin/orders surfaces keep the source copy.
  */
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
   bookipi_card_invoice: 'Card — Bookipi invoice',
+  stripe_card_embedded: 'Card — embedded checkout',
 };
 
 function paymentMethodLabel(method: string): string {
@@ -65,6 +66,113 @@ async function postJson(
   } catch {
     return { ok: false, json: {} };
   }
+}
+
+function SubscriptionSection({ profile }: { profile: ProfileView }) {
+  const [portalError, setPortalError] = useState<string | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const sub = profile.subscription;
+
+  const openPortal = async () => {
+    if (portalBusy) return;
+    setPortalBusy(true);
+    setPortalError(null);
+    const res = await postJson('/api/subscriptions/portal', {});
+    const url = res.json.url as string | undefined;
+    if (res.ok && url) {
+      window.location.assign(url);
+      return;
+    }
+    const errors = res.json.errors as string[] | undefined;
+    setPortalError(errors?.[0] ?? 'Could not open subscription management.');
+    setPortalBusy(false);
+  };
+
+  return (
+    <section className={styles.card} aria-labelledby="account-subscription">
+      <h2 id="account-subscription">Living Grimoire membership</h2>
+      {!sub || sub.display_status === 'none' ? (
+        <p>
+          No Living Grimoire membership under this email yet.{' '}
+          <Link href="/grimoire/subscribe">Join the Living Grimoire →</Link>
+        </p>
+      ) : sub.display_status === 'active' ? (
+        <p>
+          <strong>Active.</strong>{' '}
+          {sub.paid_through || sub.current_period_end
+            ? `Your current paid period runs through ${fmtDate(
+                (sub.paid_through ?? sub.current_period_end) as string,
+              )}${
+                sub.has_stripe_subscription
+                  ? ' — your card renews it automatically unless you cancel.'
+                  : '.'
+              }`
+            : sub.has_stripe_subscription
+              ? 'Your card renews it automatically each month unless you cancel.'
+              : 'Amber confirmed your membership personally.'}
+        </p>
+      ) : sub.display_status === 'past_due' ? (
+        <p role="alert">
+          <strong>Your payment failed.</strong> Your access continues until{' '}
+          {sub.grace_deadline ? fmtDate(sub.grace_deadline) : 'the end of the grace period'}{' '}
+          — update your card to keep access.
+        </p>
+      ) : sub.display_status === 'past_due_lapsed' ? (
+        <p>
+          <strong>Your payment failed</strong> and the grace period has ended, so
+          membership access is paused. Update your card to reactivate — a
+          successful payment restores access right away.
+        </p>
+      ) : sub.display_status === 'cancel_at_period_end' ||
+        sub.display_status === 'ending_paid_through' ? (
+        <p>
+          <strong>Cancelling.</strong> Your membership ends when the paid period
+          ends
+          {sub.paid_through
+            ? ` on ${fmtDate(sub.paid_through)}`
+            : ''}
+          {' '}— you keep full access until then, and you will not be charged again.
+        </p>
+      ) : sub.display_status === 'lapsed' ? (
+        <p>
+          <strong>Membership lapsed.</strong> Your paid period has ended.{' '}
+          <Link href="/grimoire/subscribe">Reactivate your membership →</Link>{' '}
+          — a new subscription or a successful payment restores access.
+        </p>
+      ) : sub.display_status === 'pending_payment' ? (
+        <p>
+          <strong>Awaiting payment.</strong> Your signup is recorded; membership
+          starts when payment is confirmed.
+        </p>
+      ) : (
+        <p>
+          <strong>Membership cancelled.</strong>{' '}
+          <Link href="/grimoire/subscribe">Rejoin the Living Grimoire →</Link>
+        </p>
+      )}
+      {sub?.has_stripe_subscription ? (
+        <div className={styles.actions}>
+          <button
+            className="btn-secondary"
+            type="button"
+            onClick={openPortal}
+            disabled={portalBusy}
+          >
+            {portalBusy ? 'Opening…' : 'Manage / cancel subscription'}
+          </button>
+          {portalError ? (
+            <p className={styles.meta} role="alert">
+              {portalError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      <p className={styles.meta}>
+        The separate $8.88 permanent unlock, if you hold one, is never affected
+        by subscription cancellation.
+      </p>
+    </section>
+  );
 }
 
 export function AccountProfile({ profile }: { profile: ProfileView }) {
@@ -150,6 +258,8 @@ export function AccountProfile({ profile }: { profile: ProfileView }) {
           </button>
         </div>
       </section>
+
+      <SubscriptionSection profile={profile} />
 
       <section className={styles.card} aria-labelledby="account-allies">
         <h2 id="account-allies">✦ Your herbal allies</h2>
@@ -319,7 +429,11 @@ export function AccountProfile({ profile }: { profile: ProfileView }) {
                     ? '✓ Paid'
                     : order.status === 'cancelled'
                       ? 'Cancelled'
-                      : 'Awaiting payment'}
+                      : order.status === 'refunded'
+                        ? 'Refunded'
+                        : order.status === 'disputed'
+                          ? 'Disputed'
+                          : 'Awaiting payment'}
                 </span>
               </li>
             ))}

@@ -14,6 +14,16 @@
  *   tax breakdown and never marks an order paid by itself.
  * - Duplicate deliveries are idempotent (one payment record).
  * - Unconfigured webhook → 503, marks nothing.
+ *
+ * Stage 1 additions (audit G-7/G-4):
+ * - Idempotency is by Stripe EVENT ID: the same event delivered twice
+ *   has a single effect (one payment record, one event-ledger entry,
+ *   one status transition) and the payment record carries the event id.
+ * - charge.refunded transitions the linked order to 'refunded' and
+ *   charge.dispute.created to 'disputed', resolved through the
+ *   payment_intent linkage recorded at payment time; an unresolvable
+ *   linkage is acknowledged (200) with no state change.
+ * - Unknown event types are acknowledged (200) with no state change.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, readFileSync } from 'node:fs';
@@ -49,10 +59,17 @@ vi.mock('../lib/payments/stripe', async (importOriginal) => {
 import { POST } from '../app/api/stripe/webhook/route';
 import { POST as postCheckout } from '../app/api/checkout/route';
 import { POST as postOrderStatus } from '../app/api/orders/status/route';
-import { findStripePayment } from '../lib/payments/stripe';
+import {
+  findLatestStripeOrderStatus,
+  findStripePayment,
+  findStripeWebhookEvent,
+  readStripeWebhookEvents,
+} from '../lib/payments/stripe';
 
 const DIR = mkdtempSync(join(tmpdir(), 'stripe-webhook-route-'));
 const PAYMENTS_LEDGER = join(DIR, 'stripe-payments.jsonl');
+const EVENTS_LEDGER = join(DIR, 'stripe-webhook-events.jsonl');
+const ORDER_STATUS_LEDGER = join(DIR, 'stripe-order-status.jsonl');
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
 const CAPSULE_ITEM = {
   product_handle: 'chill-pill-capsules',
@@ -65,10 +82,14 @@ const ENV_KEYS = [
   'ORDERS_LEDGER_PATH',
   'SUBSCRIPTIONS_LEDGER_PATH',
   'STRIPE_PAYMENTS_LEDGER_PATH',
+  'STRIPE_WEBHOOK_EVENTS_LEDGER_PATH',
+  'STRIPE_ORDER_STATUS_LEDGER_PATH',
+  'ORDER_PAYMENTS_LEDGER_PATH',
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
   'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',
   'RESEND_API_KEY',
+  'DATABASE_URL',
 ] as const;
 const savedEnv: Record<string, string | undefined> = {};
 
@@ -77,10 +98,14 @@ beforeEach(() => {
   process.env.ORDERS_LEDGER_PATH = join(DIR, 'orders.jsonl');
   process.env.SUBSCRIPTIONS_LEDGER_PATH = join(DIR, 'subscriptions.jsonl');
   process.env.STRIPE_PAYMENTS_LEDGER_PATH = PAYMENTS_LEDGER;
+  process.env.STRIPE_WEBHOOK_EVENTS_LEDGER_PATH = EVENTS_LEDGER;
+  process.env.STRIPE_ORDER_STATUS_LEDGER_PATH = ORDER_STATUS_LEDGER;
+  process.env.ORDER_PAYMENTS_LEDGER_PATH = join(DIR, 'order-payments.jsonl');
   process.env.STRIPE_SECRET_KEY = 'sk_test_fake';
   process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_fake';
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = 'pk_test_fake';
   delete process.env.RESEND_API_KEY;
+  delete process.env.DATABASE_URL;
 });
 
 afterEach(() => {
@@ -135,6 +160,30 @@ function completedEvent(
         ...(amountTax === null
           ? {}
           : { total_details: { amount_tax: amountTax } }),
+      },
+    },
+  };
+}
+
+/** A completed-session event with a caller-chosen payment_intent + event id. */
+function completedEventWithPi(
+  orderId: string,
+  paymentIntentId: string,
+  eventId: string,
+) {
+  return {
+    id: eventId,
+    type: 'checkout.session.completed',
+    data: {
+      object: {
+        id: `cs_${eventId}`,
+        payment_status: 'paid',
+        amount_total: ORDER_TOTAL_CENTS + TAX_CENTS,
+        currency: 'usd',
+        payment_intent: paymentIntentId,
+        client_reference_id: orderId,
+        metadata: { order_id: orderId },
+        total_details: { amount_tax: TAX_CENTS },
       },
     },
   };
@@ -280,5 +329,169 @@ describe('POST /api/stripe/webhook', () => {
     const { status } = await postWebhook(completedEvent(orderId));
     expect(status).toBe(503);
     expect(await findStripePayment(orderId)).toBeNull();
+  });
+
+  it('event-id idempotency: the same event twice has a single effect', async () => {
+    const orderId = await seedOrder();
+    const event = completedEventWithPi(orderId, 'pi_evtidem_1', 'evt_idem_1');
+    const first = await postWebhook(event);
+    expect(first.status).toBe(200);
+    expect(first.json.duplicate_event).toBe(false);
+    // The payment record carries the Stripe event id (G-7).
+    const payment = await findStripePayment(orderId);
+    expect(payment?.stripe_event_id).toBe('evt_idem_1');
+    const recorded = await findStripeWebhookEvent('evt_idem_1');
+    expect(recorded?.outcome).toBe('marked_paid');
+    expect(recorded?.order_id).toBe(orderId);
+
+    const second = await postWebhook(event);
+    expect(second.status).toBe(200);
+    expect(second.json.duplicate_event).toBe(true);
+    expect(second.json.marked_paid).toBe(true);
+    expect(second.json.already_paid).toBe(true);
+    // Single effect: one payment record, one event-ledger entry.
+    const paymentLines = readFileSync(PAYMENTS_LEDGER, 'utf8')
+      .trim()
+      .split('\n')
+      .filter((l) => l.includes(orderId));
+    expect(paymentLines).toHaveLength(1);
+    const eventEntries = (await readStripeWebhookEvents()).filter(
+      (e) => e.stripe_event_id === 'evt_idem_1',
+    );
+    expect(eventEntries).toHaveLength(1);
+    expect(await orderStatus(orderId)).toBe('paid');
+  });
+
+  it('a failed (400) delivery is NOT recorded — its redelivery fails loudly again', async () => {
+    const orderId = await seedOrder();
+    const bad = completedEvent(orderId, 100);
+    const first = await postWebhook(bad);
+    expect(first.status).toBe(400);
+    expect(await findStripeWebhookEvent(`evt_${orderId}`)).toBeNull();
+    const second = await postWebhook(bad);
+    expect(second.status).toBe(400);
+    expect(second.json.duplicate_event).not.toBe(true);
+    expect(await findStripePayment(orderId)).toBeNull();
+  });
+
+  it('charge.refunded transitions the linked order to refunded', async () => {
+    const orderId = await seedOrder();
+    const paid = await postWebhook(
+      completedEventWithPi(orderId, 'pi_refund_1', 'evt_pay_refund_1'),
+    );
+    expect(paid.json.marked_paid).toBe(true);
+    expect(await orderStatus(orderId)).toBe('paid');
+
+    const refund = await postWebhook({
+      id: 'evt_refund_1',
+      type: 'charge.refunded',
+      data: {
+        object: {
+          id: 'ch_refund_1',
+          payment_intent: 'pi_refund_1',
+          amount_refunded: ORDER_TOTAL_CENTS + TAX_CENTS,
+          currency: 'usd',
+        },
+      },
+    });
+    expect(refund.status).toBe(200);
+    expect(refund.json.status_transition).toBe('refunded');
+    expect(refund.json.order_id).toBe(orderId);
+    expect(refund.json.marked_paid).toBe(false);
+    expect(await orderStatus(orderId)).toBe('refunded');
+    const transition = await findLatestStripeOrderStatus(orderId);
+    expect(transition?.status).toBe('refunded');
+    expect(transition?.stripe_event_id).toBe('evt_refund_1');
+
+    // Redelivery of the same refund event is a no-op (event-id dedupe):
+    // still exactly one transition recorded for the order.
+    const again = await postWebhook({
+      id: 'evt_refund_1',
+      type: 'charge.refunded',
+      data: {
+        object: {
+          id: 'ch_refund_1',
+          payment_intent: 'pi_refund_1',
+          amount_refunded: ORDER_TOTAL_CENTS + TAX_CENTS,
+          currency: 'usd',
+        },
+      },
+    });
+    expect(again.status).toBe(200);
+    expect(again.json.duplicate_event).toBe(true);
+    const lines = readFileSync(ORDER_STATUS_LEDGER, 'utf8')
+      .trim()
+      .split('\n')
+      .filter((l) => l.includes(orderId));
+    expect(lines).toHaveLength(1);
+    expect(await orderStatus(orderId)).toBe('refunded');
+  });
+
+  it('charge.dispute.created transitions the linked order to disputed', async () => {
+    const orderId = await seedOrder();
+    await postWebhook(
+      completedEventWithPi(orderId, 'pi_dispute_1', 'evt_pay_dispute_1'),
+    );
+    expect(await orderStatus(orderId)).toBe('paid');
+
+    const dispute = await postWebhook({
+      id: 'evt_dispute_1',
+      type: 'charge.dispute.created',
+      data: {
+        object: {
+          id: 'dp_dispute_1',
+          charge: 'ch_dispute_1',
+          payment_intent: 'pi_dispute_1',
+          amount: ORDER_TOTAL_CENTS + TAX_CENTS,
+          currency: 'usd',
+        },
+      },
+    });
+    expect(dispute.status).toBe(200);
+    expect(dispute.json.status_transition).toBe('disputed');
+    expect(dispute.json.order_id).toBe(orderId);
+    expect(await orderStatus(orderId)).toBe('disputed');
+    const transition = await findLatestStripeOrderStatus(orderId);
+    expect(transition?.status).toBe('disputed');
+    expect(transition?.stripe_event_id).toBe('evt_dispute_1');
+  });
+
+  it('a refund with no recorded payment linkage acks 200 and changes nothing', async () => {
+    const orderId = await seedOrder();
+    const res = await postWebhook({
+      id: 'evt_refund_orphan_1',
+      type: 'charge.refunded',
+      data: {
+        object: {
+          id: 'ch_orphan',
+          payment_intent: 'pi_never_recorded',
+          amount_refunded: 100,
+          currency: 'usd',
+        },
+      },
+    });
+    expect(res.status).toBe(200);
+    expect(res.json.status_transition).toBeNull();
+    expect(res.json.order_id).toBeNull();
+    expect(await findLatestStripeOrderStatus(orderId)).toBeNull();
+    expect(await orderStatus(orderId)).toBe('pending_payment');
+  });
+
+  it('unknown event types are acknowledged (200) with no state change', async () => {
+    const orderId = await seedOrder();
+    const res = await postWebhook({
+      id: 'evt_unknown_1',
+      type: 'customer.created',
+      data: { object: { id: 'cus_test_1' } },
+    });
+    expect(res.status).toBe(200);
+    expect(res.json.received).toBe(true);
+    expect(res.json.marked_paid).toBe(false);
+    expect(res.json.status_transition).toBeNull();
+    expect(await findStripePayment(orderId)).toBeNull();
+    expect(await orderStatus(orderId)).toBe('pending_payment');
+    // The verified delivery is still recorded by event id.
+    const recorded = await findStripeWebhookEvent('evt_unknown_1');
+    expect(recorded?.outcome).toBe('acknowledged');
   });
 });

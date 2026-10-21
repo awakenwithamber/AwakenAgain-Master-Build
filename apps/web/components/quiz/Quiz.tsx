@@ -1,9 +1,17 @@
 /**
  * Herbal Allies Quiz — client island on the server quiz page (G6).
  *
- * Multi-step: intro → concern → form → results, with optional lead capture
- * (name/email + explicit consent) on the results screen. All question logic
- * lives in lib/quiz/quiz.ts; this component only renders steps.
+ * Multi-step: intro → concern → form → safety screening → results, with
+ * optional lead capture (name/email + explicit consent) on the results
+ * screen. All question logic lives in lib/quiz/quiz.ts; this component
+ * only renders steps.
+ *
+ * Stage 4 (R-14/R-15): the screening step asks pregnant-or-nursing /
+ * prescription-medication / managing-a-condition before results; the
+ * answers travel with the lead/profile saves and are stored on the
+ * result snapshot. Framing is educational throughout — the quiz
+ * explores herbal allies by focus area; it does not assess a body or
+ * match a remedy to a person.
  *
  * Analytics: quiz_started / quiz_step_completed / quiz_completed via
  * trackContent (client-owned). The lead submission is POSTed to
@@ -16,9 +24,13 @@ import Link from 'next/link';
 import {
   QUIZ_CONCERNS,
   QUIZ_FORMS,
+  QUIZ_SCREENING_QUESTIONS,
+  QUIZ_SAFETY_BANNER,
   QUIZ_STEP_NAMES,
   getQuizResult,
+  type QuizScreening,
 } from '../../lib/quiz/quiz';
+import { FDA_STATEMENT } from '../../lib/safety/product-safety';
 import { trackContent, trackContentOnce } from '../../lib/analytics/content-posthog';
 import { recordInterestNow } from '../../lib/personalization/client';
 import { fetchAccountProfile } from '../../lib/accounts/client';
@@ -26,7 +38,16 @@ import { ProfileInvite } from '../personalization/ProfileInvite';
 import { PRODUCTS } from '../../lib/catalog/products';
 import { BRAND_NAME } from '../../lib/seo/config';
 
-type Phase = 'intro' | 'concern' | 'form' | 'results';
+type Phase = 'intro' | 'concern' | 'form' | 'screening' | 'results';
+
+/** Screening answers in progress: null = not answered yet. */
+type ScreeningAnswers = Record<keyof QuizScreening, boolean | null>;
+
+const EMPTY_SCREENING_ANSWERS: ScreeningAnswers = {
+  pregnantOrNursing: null,
+  takingMedication: null,
+  managingCondition: null,
+};
 
 interface LeadState {
   name: string;
@@ -42,6 +63,8 @@ export default function Quiz() {
   const [phase, setPhase] = useState<Phase>('intro');
   const [concernId, setConcernId] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
+  const [screeningAnswers, setScreeningAnswers] =
+    useState<ScreeningAnswers>(EMPTY_SCREENING_ANSWERS);
   const [lead, setLead] = useState<LeadState>({ name: '', email: '', consent: false });
   const [leadStatus, setLeadStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [leadErrors, setLeadErrors] = useState<string[]>([]);
@@ -62,6 +85,16 @@ export default function Quiz() {
     };
   }, [phase]);
 
+  const screeningComplete =
+    screeningAnswers.pregnantOrNursing !== null &&
+    screeningAnswers.takingMedication !== null &&
+    screeningAnswers.managingCondition !== null;
+  const screening: QuizScreening = {
+    pregnantOrNursing: screeningAnswers.pregnantOrNursing === true,
+    takingMedication: screeningAnswers.takingMedication === true,
+    managingCondition: screeningAnswers.managingCondition === true,
+  };
+
   const saveToProfile = async () => {
     if (!concernId || !formId) return;
     setProfileSave('saving');
@@ -69,7 +102,7 @@ export default function Quiz() {
       const res = await fetch('/api/account/quiz-result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ concernId, formId }),
+        body: JSON.stringify({ concernId, formId, screening }),
       });
       const json = await res.json();
       setProfileSave(res.ok && json.ok ? 'saved' : 'error');
@@ -97,7 +130,13 @@ export default function Quiz() {
     if (!concernId) return;
     setFormId(id);
     trackContent('quiz_step_completed', { step: 2, step_name: QUIZ_STEP_NAMES[1], concern_id: concernId });
-    trackContent('quiz_completed', { concern_id: concernId, form_id: id });
+    setPhase('screening');
+  };
+
+  const submitScreening = () => {
+    if (!concernId || !formId || !screeningComplete) return;
+    trackContent('quiz_step_completed', { step: 3, step_name: QUIZ_STEP_NAMES[2], concern_id: concernId });
+    trackContent('quiz_completed', { concern_id: concernId, form_id: formId });
     // Interest profile (2026-10-14): completing the quiz is a +3 quiz
     // signal. Consent-gated inside recordInterest.
     recordInterestNow('quiz', 3);
@@ -108,6 +147,7 @@ export default function Quiz() {
     setPhase('intro');
     setConcernId(null);
     setFormId(null);
+    setScreeningAnswers(EMPTY_SCREENING_ANSWERS);
     setLead({ name: '', email: '', consent: false });
     setLeadStatus('idle');
     setLeadErrors([]);
@@ -128,6 +168,7 @@ export default function Quiz() {
           consent: lead.consent,
           concernId,
           formId,
+          screening,
         }),
       });
       const json = await res.json();
@@ -143,27 +184,29 @@ export default function Quiz() {
     }
   };
 
-  const result = concernId && formId ? getQuizResult(concernId, formId) : null;
+  const result =
+    concernId && formId ? getQuizResult(concernId, formId, screening) : null;
 
   return (
     <section className="quiz" aria-label={`${BRAND_NAME} Herbal Allies Quiz`}>
       {phase === 'intro' && (
         <div className="quiz-intro">
-          <h2>✦ Find My Remedy ✦</h2>
+          <h2>✦ Explore Herbal Allies by Focus Area ✦</h2>
           <p>
-            Not sure where to begin? Answer two questions and discover the
-            herbal allies best suited to your body right now.
+            Not sure where to begin? Choose a focus area and a form you
+            enjoy, answer a few safety questions, and explore herbal
+            allies that are traditionally used to support that area.
           </p>
           <button className="btn-primary" onClick={start}>
-            Start My Quiz ✦
+            Start the Quiz ✦
           </button>
         </div>
       )}
 
       {phase === 'concern' && (
         <div className="quiz-step">
-          <p className="quiz-progress">Step 1 of 2</p>
-          <h2>What is your primary concern right now?</h2>
+          <p className="quiz-progress">Step 1 of 3</p>
+          <h2>Which focus area would you like to explore?</h2>
           <div className="quiz-options">
             {QUIZ_CONCERNS.map((c) => (
               <button
@@ -180,8 +223,8 @@ export default function Quiz() {
 
       {phase === 'form' && (
         <div className="quiz-step">
-          <p className="quiz-progress">Step 2 of 2</p>
-          <h2>How would you prefer to take your remedy?</h2>
+          <p className="quiz-progress">Step 2 of 3</p>
+          <h2>Which form would you like to explore?</h2>
           <div className="quiz-options">
             {QUIZ_FORMS.map((f) => (
               <button key={f.id} className="quiz-opt" onClick={() => pickForm(f.id)}>
@@ -195,10 +238,72 @@ export default function Quiz() {
         </div>
       )}
 
+      {phase === 'screening' && (
+        <div className="quiz-step quiz-screening">
+          <p className="quiz-progress">Step 3 of 3</p>
+          <h2>A few safety questions first</h2>
+          <p>
+            Herbs are not right for everyone. Your answers shape which
+            product suggestions we show, and they are saved with your
+            results only if you choose to save them.
+          </p>
+          {QUIZ_SCREENING_QUESTIONS.map((q) => (
+            <fieldset key={q.key} className="quiz-screening-question">
+              <legend>{q.question}</legend>
+              <div className="quiz-options">
+                <button
+                  type="button"
+                  className="quiz-opt"
+                  aria-pressed={screeningAnswers[q.key] === true}
+                  onClick={() =>
+                    setScreeningAnswers({ ...screeningAnswers, [q.key]: true })
+                  }
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="quiz-opt"
+                  aria-pressed={screeningAnswers[q.key] === false}
+                  onClick={() =>
+                    setScreeningAnswers({ ...screeningAnswers, [q.key]: false })
+                  }
+                >
+                  No
+                </button>
+              </div>
+            </fieldset>
+          ))}
+          <button
+            className="btn-primary"
+            onClick={submitScreening}
+            disabled={!screeningComplete}
+          >
+            See My Results
+          </button>
+          <button className="btn-secondary" onClick={() => setPhase('form')}>
+            ← Back
+          </button>
+        </div>
+      )}
+
       {phase === 'results' && result && (
         <div className="quiz-step quiz-results">
           <h2>✦ Your Herbal Allies ✦</h2>
           <p className="quiz-reason">{result.productReason}</p>
+
+          {result.hasSafetyFlags && (
+            <div className="quiz-safety-banner" role="alert">
+              <p>{QUIZ_SAFETY_BANNER}</p>
+              {result.withheld.length > 0 && (
+                <p>
+                  Some product suggestions were withheld based on your
+                  answers — the botanicals below remain yours to explore
+                  and discuss with your clinician or pharmacist.
+                </p>
+              )}
+            </div>
+          )}
 
           <h3>Botanicals to explore</h3>
           <ul className="quiz-allies">
@@ -323,7 +428,8 @@ export default function Quiz() {
 
           <p className="quiz-disclaimer">
             Educational only — these suggestions are not medical advice and are
-            not intended to diagnose, treat, cure, or prevent any disease.
+            not intended to diagnose, treat, cure, or prevent any disease.{' '}
+            {FDA_STATEMENT}
           </p>
           <div className="quiz-actions">
             <Link href="/custom-formula" className="btn-primary">

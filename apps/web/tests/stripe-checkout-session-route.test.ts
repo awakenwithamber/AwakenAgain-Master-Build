@@ -6,9 +6,9 @@
  *   'stripe_card_embedded', looked up by order ID + ordering email.
  * - Session params come from the SERVER order record (unit amounts,
  *   order binding in metadata) — the client never supplies an amount.
- * - Wrong email → generic 404; a Bookipi order → 409 (backup path
- *   untouched); Stripe unconfigured → GET reports unavailable and POST
- *   degrades with 503 + steering copy, never a crash.
+ * - Wrong email → generic 404; a non-card order → 409 (no session);
+ *   Stripe unconfigured → GET reports unavailable and POST degrades
+ *   with 503 + steering copy, never a crash.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync } from 'node:fs';
@@ -179,8 +179,8 @@ describe('POST /api/stripe/checkout-session', () => {
     expect(hoisted.sessionParams).toHaveLength(0);
   });
 
-  it('leaves the Bookipi backup path untouched (409, no session)', async () => {
-    const orderId = await seedOrder('bookipi_card_invoice');
+  it('leaves non-card orders untouched (409, no session)', async () => {
+    const orderId = await seedOrder('cash_app_or_venmo');
     const { status } = await postSession({
       order_id: orderId,
       email: CUSTOMER.email,
@@ -210,7 +210,7 @@ describe('Stripe unconfigured — graceful degradation', () => {
       email: CUSTOMER.email,
     });
     expect(status).toBe(503);
-    expect(String((json.errors as string[]).join(' '))).toMatch(/Bookipi/);
+    expect(String((json.errors as string[]).join(' '))).toMatch(/Cash App/);
     expect(String((json.errors as string[]).join(' '))).toMatch(/Venmo/);
   });
 

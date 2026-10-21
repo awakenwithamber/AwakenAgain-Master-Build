@@ -36,11 +36,22 @@ import {
   GRIMOIRE_TITLE,
   PARACELSUS_QUOTE,
   EVIDENCE_FOOTNOTE,
-  buildGrimoirePages,
+  ANCESTOR_NOTE_ATTRIBUTION,
+  ANCESTOR_NOTE_PROSE_PARAGRAPHS,
+  ANCESTOR_NOTE_QUOTE_PARAGRAPHS,
+  ANCESTOR_PULL_QUOTE,
+  ANCESTOR_PULL_QUOTE_ATTRIBUTION,
+  GRIMOIRE_OVERVIEW_CLOSING,
+  GRIMOIRE_OVERVIEW_ITEMS,
+  GRIMOIRE_OVERVIEW_PARAGRAPHS,
+  GRIMOIRE_TEASER_HEADING,
+  GRIMOIRE_TEASER_PARAGRAPHS,
   categoryLabel,
+  displayPageTitle,
+  FREE_PREVIEW_LAST_PAGE,
   herbDisplayName,
-  herbPageNumber,
-  pageTitle,
+  type GrimoireDisplayPage,
+  type GrimoireLockedPage,
   type GrimoirePage,
 } from './grimoireContent';
 import {
@@ -75,16 +86,24 @@ interface TurnState {
  */
 const ScrollMemoryContext = createContext<Map<number, number>>(new Map());
 
+/**
+ * Per-viewer watermark (Stage 2): the entitled viewer's own email,
+ * rendered subtly on gated pages (17+) they are entitled to read.
+ * Null for anonymous/preview viewers — locked placeholders carry none.
+ */
+const WatermarkContext = createContext<string | null>(null);
+
 function PageShell({
   page,
   side,
   children,
 }: {
-  page: GrimoirePage;
+  page: GrimoireDisplayPage;
   side: 'left' | 'right';
   children: React.ReactNode;
 }) {
   const scrollMemory = useContext(ScrollMemoryContext);
+  const watermarkEmail = useContext(WatermarkContext);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   /* Restore this page's remembered position whenever it (re)appears. */
@@ -114,6 +133,13 @@ function PageShell({
         >
           {children}
         </div>
+        {watermarkEmail &&
+        page.pageNumber > FREE_PREVIEW_LAST_PAGE &&
+        page.kind !== 'locked' ? (
+          <p className={styles.watermark} aria-hidden="true">
+            {watermarkEmail}
+          </p>
+        ) : null}
         <p className={styles.pageNum} aria-hidden="true">
           · {page.pageNumber} ·
         </p>
@@ -131,7 +157,7 @@ function TitlePageView({
 }) {
   return (
     <PageShell page={page} side={side}>
-      <p className={styles.categoryRow}>✦ Volume One ✦</p>
+      <p className={styles.categoryRow}>✦ Living Grimoire — 333-page edition ✦</p>
       <h2 className={styles.handTitle}>{GRIMOIRE_TITLE}</h2>
       <p className={styles.quote}>“{PARACELSUS_QUOTE}”</p>
       <p className={styles.attribution}>— Paracelsus</p>
@@ -158,22 +184,284 @@ function AboutPageView({
         Turn these pages as you would a real book. Tap a bottom page corner,
         use the brass arrows, swipe left or right, or press your ← → keys.
         Longer entries scroll gently within their own page — scrolling never
-        turns the page. Each entry holds a botanical illustration, the
-        herb&apos;s Latin name, its traditional wisdom, and the allies it
-        keeps company with.
+        turns the page. Ahead lie the family edition complete — all 333
+        pages — and the collected works in full; the oldest books are shown
+        as facsimiles of their own printed pages, exactly as they were
+        handed down.
       </p>
       <h3 className={styles.handHeading}>A note on these words</h3>
       <p className={styles.handBody}>
-        Everything written here is framed as <em>traditional use</em> and early
+        The herbal wisdom here is framed as <em>traditional use</em> and early
         findings — the way herbalists have spoken of these plants for
-        generations — never as proven medical claims. New entries are still
-        being written and verified for this new site; what you read here is
-        real, and what isn&apos;t ready is simply left unwritten.
+        generations — never as proven medical claims. The collected works are
+        historical texts, kept whole and unedited, as a keeper keeps them.
       </p>
       <p className={styles.handBody}>
-        When a page is finished, its ribbon will point you to the fuller entry
-        in the herb library.
+        About this book — the Overview — stands in the front matter, ahead of
+        the table of contents, together with the ancestor&apos;s note and the
+        framing: {GRIMOIRE_TEASER_HEADING}
       </p>
+    </PageShell>
+  );
+}
+
+function AncestorNotePageView({
+  page,
+  side,
+}: {
+  page: GrimoirePage;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>✦ Front Matter ✦</p>
+      <h2 className={styles.handHeading}>The Ancestor&apos;s Note</h2>
+      {/* VERBATIM owner content (T.H. Arthur) — never paraphrase. */}
+      <p className={styles.quote}>
+        “{ANCESTOR_NOTE_QUOTE_PARAGRAPHS.join(' ')}”
+      </p>
+      <p className={styles.attribution}>{ANCESTOR_NOTE_ATTRIBUTION}</p>
+    </PageShell>
+  );
+}
+
+function AncestorProsePageView({
+  page,
+  side,
+}: {
+  page: GrimoirePage;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>✦ Front Matter ✦</p>
+      <h2 className={styles.handHeading}>The Ancestor&apos;s Note</h2>
+      {/* VERBATIM owner prose closing the ancestor's-note section
+          (grimoire-book-overview-th-arthur-2026-10-21.md). This is
+          the preview's 16th-page reconciliation: the note's second
+          page, from the assembly front-matter budget (pp. 2–3). */}
+      {ANCESTOR_NOTE_PROSE_PARAGRAPHS.map((p) => (
+        <p key={p.slice(0, 32)} className={styles.handBody}>
+          {p}
+        </p>
+      ))}
+    </PageShell>
+  );
+}
+
+function OverviewPageView({
+  page,
+  side,
+}: {
+  page: GrimoirePage;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>✦ Front Matter ✦</p>
+      <h2 className={styles.handHeading}>About this Book</h2>
+      {/* Owner copy 2026-10-21 (VERBATIM): the Overview of "Grimoire
+          of the Ancient Witchcraft" — see grimoireContent.ts. */}
+      {GRIMOIRE_OVERVIEW_PARAGRAPHS.map((p) => (
+        <p key={p.slice(0, 32)} className={styles.handBody}>
+          {p}
+        </p>
+      ))}
+      <ul className={styles.handList}>
+        {GRIMOIRE_OVERVIEW_ITEMS.map((item) => (
+          <li key={item.slice(0, 32)}>{item}</li>
+        ))}
+      </ul>
+      <p className={styles.handBody}>{GRIMOIRE_OVERVIEW_CLOSING}</p>
+      <p className={styles.quote}>“{ANCESTOR_PULL_QUOTE}”</p>
+      <p className={styles.attribution}>{ANCESTOR_PULL_QUOTE_ATTRIBUTION}</p>
+    </PageShell>
+  );
+}
+
+function FramingFullPageView({
+  page,
+  side,
+}: {
+  page: Extract<GrimoirePage, { kind: 'framing-full' }>;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>✦ Front Matter ✦</p>
+      <h2 className={styles.handHeading}>What a True Grimoire Is</h2>
+      {/* VERBATIM full framing version (owner, 2026-10-21) — the
+          gated front matter of the full edition. */}
+      {page.paragraphs.map((p) => (
+        <p key={p.slice(0, 32)} className={styles.handBody}>
+          {p}
+        </p>
+      ))}
+    </PageShell>
+  );
+}
+
+function FramingPageView({
+  page,
+  side,
+}: {
+  page: GrimoirePage;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>✦ Front Matter ✦</p>
+      <h2 className={styles.handHeading}>{GRIMOIRE_TEASER_HEADING}</h2>
+      {/* VERBATIM teaser framing (owner, 2026-10-21). The FULL framing
+          version is reserved for the full edition's front matter. */}
+      {GRIMOIRE_TEASER_PARAGRAPHS.map((p) => (
+        <p key={p.slice(0, 32)} className={styles.handBody}>
+          {p}
+        </p>
+      ))}
+    </PageShell>
+  );
+}
+
+function TocPageView({
+  page,
+  side,
+}: {
+  page: Extract<GrimoirePage, { kind: 'toc' }>;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <h2 className={styles.handHeading}>Table of Contents</h2>
+      <p className={styles.handBody}>
+        The Living Grimoire — 333-page edition, together with the
+        owner&apos;s collected works. The full book may grow beyond 333
+        pages as the collection is added.
+      </p>
+      <ul className={styles.handList}>
+        {page.entries.map((e) => (
+          <li key={e.label}>
+            {e.label} — {e.detail}
+          </li>
+        ))}
+      </ul>
+    </PageShell>
+  );
+}
+
+function BookIndexPageView({
+  page,
+  side,
+}: {
+  page: Extract<GrimoirePage, { kind: 'book-index' }>;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <h2 className={styles.handHeading}>Index of the Full Book</h2>
+      <p className={styles.handBody}>
+        What the full book holds — generated from the edition manifest.
+      </p>
+      <ul className={styles.handList}>
+        {page.entries.map((e) => (
+          <li key={e.label}>
+            {e.label} — {e.detail}
+          </li>
+        ))}
+      </ul>
+    </PageShell>
+  );
+}
+
+function CollectionPageView({
+  page,
+  side,
+}: {
+  page: Extract<GrimoirePage, { kind: 'collection-sample' | 'collection-page' }>;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>
+        {page.kind === 'collection-sample'
+          ? `✦ A taste of — ${page.bookTitle} ✦`
+          : `✦ ${page.bookTitle} ✦`}
+      </p>
+      <h2 className={styles.handHeading}>{page.heading}</h2>
+      {page.pageImage ? (
+        <img
+          src={page.pageImage}
+          alt={`${page.bookTitle} — facsimile of the printed page`}
+          className={styles.pageImage}
+          loading="lazy"
+        />
+      ) : null}
+      {page.paragraphs.map((p) => (
+        <p key={p.slice(0, 32)} className={styles.handBody}>
+          {p}
+        </p>
+      ))}
+      {page.images?.map((src) => (
+        <img
+          key={src}
+          src={src}
+          alt={`${page.bookTitle} — illustration from the book`}
+          className={styles.bookFigure}
+          loading="lazy"
+        />
+      ))}
+      {page.attribution ? (
+        <p className={styles.footnote}>{page.attribution}</p>
+      ) : null}
+    </PageShell>
+  );
+}
+
+function EditionPageView({
+  page,
+  side,
+}: {
+  page: Extract<GrimoirePage, { kind: 'edition-page' }>;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>
+        ✦ The Grimoire of Remembered Light — Part {page.part} · {page.partTitle}{' '}
+        ✦
+      </p>
+      <h2 className={styles.handHeading}>{page.heading}</h2>
+      {page.paragraphs.map((p) => (
+        <p key={p.slice(0, 32)} className={styles.handBody}>
+          {p}
+        </p>
+      ))}
+      <p className={styles.footnote}>
+        Edition page {page.editionPageNumber} of 333 — the family edition,
+        complete.
+      </p>
+    </PageShell>
+  );
+}
+
+function OriginalLessonPageView({
+  page,
+  side,
+}: {
+  page: Extract<GrimoirePage, { kind: 'original-lesson' }>;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>
+        ✦ From the Keeper&apos;s Hand — an original lesson ✦
+      </p>
+      <h2 className={styles.handHeading}>{page.heading}</h2>
+      {page.paragraphs.map((p) => (
+        <p key={p.slice(0, 32)} className={styles.handBody}>
+          {p}
+        </p>
+      ))}
     </PageShell>
   );
 }
@@ -185,7 +473,7 @@ function IndexPageView({
   setQuery,
   onJump,
 }: {
-  page: GrimoirePage;
+  page: Extract<GrimoirePage, { kind: 'index' }>;
   side: 'left' | 'right';
   query: string;
   setQuery: (q: string) => void;
@@ -231,9 +519,9 @@ function IndexPageView({
                 key={h}
                 type="button"
                 className={styles.concernHerbBtn}
-                onClick={() => onJump(herbPageNumber(h) - 1)}
+                onClick={() => onJump(page.targetPage - 1)}
               >
-                {herbDisplayName(h)} · p.{herbPageNumber(h)}
+                {herbDisplayName(h)} · Herbal Allies, p.{page.targetPage}
               </button>
             ))}
           </div>
@@ -308,10 +596,11 @@ function ColophonPageView({
     <PageShell page={page} side={side}>
       <h2 className={styles.handHeading}>Colophon</h2>
       <p className={`${styles.handBody} ${styles.dropcap}`}>
-        Here ends the first volume of the Living Grimoire of Light & Magic — twelve herbs,
-        written by hand and bound in leather. More entries are being written
-        and verified as this new site grows; the book is alive, and it will
-        keep growing.
+        Here ends this volume of the Living Grimoire of Light & Magic — the
+        family edition complete in its 333 pages, the keeper&apos;s own
+        lessons, and the collected works in full, kept together as one book.
+        The book is alive, and it will keep growing as more of the family
+        archive is transcribed and verified.
       </p>
       <p className={styles.handBody}>
         Keepers of the Living Grimoire of Light & Magic receive new entries, monthly rituals,
@@ -335,6 +624,46 @@ function ColophonPageView({
   );
 }
 
+function LockedPageView({
+  page,
+  side,
+}: {
+  page: GrimoireLockedPage;
+  side: 'left' | 'right';
+}) {
+  return (
+    <PageShell page={page} side={side}>
+      <p className={styles.categoryRow}>✦ Living Grimoire — 333-page edition ✦</p>
+      {page.herbName ? (
+        <h2 className={`${styles.hand} ${styles.herbName}`}>{page.herbName}</h2>
+      ) : page.bookTitle ? (
+        <h2 className={styles.handHeading}>{page.bookTitle}</h2>
+      ) : page.sectionLabel ? (
+        <h2 className={styles.handHeading}>{page.sectionLabel}</h2>
+      ) : page.lockedKind === 'colophon' ? (
+        <h2 className={styles.handHeading}>Colophon</h2>
+      ) : (
+        <h2 className={styles.handHeading}>A Kept Page</h2>
+      )}
+      <p className={`${styles.handBody} ${styles.dropcap}`}>
+        This page is kept for members of the Living Grimoire — 333-page
+        edition. Subscribers and permanent-unlock holders who have verified
+        their email see it in full; everyone else sees the first sixteen
+        pages freely.
+      </p>
+      <p className={styles.handBody}>
+        Unlock it once for $8.88, or subscribe for $7.77/month — and if you
+        already have access, verify your email below the book to open it.
+      </p>
+      <p style={{ marginTop: '1em' }}>
+        <Link href="/grimoire/subscribe" className={styles.entryLink}>
+          See the unlock &amp; subscription options →
+        </Link>
+      </p>
+    </PageShell>
+  );
+}
+
 function PageView({
   page,
   side,
@@ -342,13 +671,37 @@ function PageView({
   setQuery,
   onJump,
 }: {
-  page: GrimoirePage;
+  page: GrimoireDisplayPage;
   side: 'left' | 'right';
   query: string;
   setQuery: (q: string) => void;
   onJump: (pageIndex: number) => void;
 }) {
+  if (page.kind === 'locked') {
+    return <LockedPageView page={page} side={side} />;
+  }
   switch (page.kind) {
+    case 'ancestor-note':
+      return <AncestorNotePageView page={page} side={side} />;
+    case 'ancestor-prose':
+      return <AncestorProsePageView page={page} side={side} />;
+    case 'framing':
+      return <FramingPageView page={page} side={side} />;
+    case 'overview':
+      return <OverviewPageView page={page} side={side} />;
+    case 'toc':
+      return <TocPageView page={page} side={side} />;
+    case 'book-index':
+      return <BookIndexPageView page={page} side={side} />;
+    case 'collection-sample':
+    case 'collection-page':
+      return <CollectionPageView page={page} side={side} />;
+    case 'framing-full':
+      return <FramingFullPageView page={page} side={side} />;
+    case 'edition-page':
+      return <EditionPageView page={page} side={side} />;
+    case 'original-lesson':
+      return <OriginalLessonPageView page={page} side={side} />;
     case 'title':
       return <TitlePageView page={page} side={side} />;
     case 'about':
@@ -374,8 +727,19 @@ function PageView({
 /* Book                                                                */
 /* ------------------------------------------------------------------ */
 
-export function GrimoireBook() {
-  const [pages] = useState<GrimoirePage[]>(buildGrimoirePages);
+export interface GrimoireBookProps {
+  /**
+   * Pages as resolved SERVER-SIDE (Stage 2): entitled viewers receive
+   * all composed pages in full; everyone else receives pages 1–16 in full and
+   * locked placeholders for 17+. This component never builds content
+   * itself — gated body text is simply absent from its props.
+   */
+  pages: GrimoireDisplayPage[];
+  /** The entitled viewer's email (their watermark); null otherwise. */
+  viewerEmail?: string | null;
+}
+
+export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   const [coverState, setCoverState] = useState<'closed' | 'opening' | 'open'>(
     'closed',
   );
@@ -457,7 +821,7 @@ export function GrimoireBook() {
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => {
         setTurn(null);
-        setAnnounce(`Page ${t + 1} of ${pages.length} — ${pageTitle(pages[t])}`);
+        setAnnounce(`Page ${t + 1} of ${pages.length} — ${displayPageTitle(pages[t])}`);
       }, turnMs);
     },
     [isDesktop, maxPage, pages, turnMs],
@@ -474,7 +838,7 @@ export function GrimoireBook() {
       () => {
         setCoverState('open');
         setAnnounce(
-          `The grimoire is open. Page 1 of ${pages.length} — ${pageTitle(pages[0])}`,
+          `The grimoire is open. Page 1 of ${pages.length} — ${displayPageTitle(pages[0])}`,
         );
       },
       reducedMotion ? TURN_MS_REDUCED : COVER_OPEN_MS,
@@ -622,6 +986,7 @@ export function GrimoireBook() {
 
   return (
     <ScrollMemoryContext.Provider value={scrollMemoryRef.current}>
+    <WatermarkContext.Provider value={viewerEmail}>
     <section
       className={styles.stage}
       role="region"
@@ -761,6 +1126,7 @@ export function GrimoireBook() {
         {announce}
       </p>
     </section>
+    </WatermarkContext.Provider>
     </ScrollMemoryContext.Provider>
   );
 }

@@ -350,6 +350,33 @@
   background: #e5d5b5;
 }
 
+/* Full-page facsimile (page-image books: Albertus Magnus scans, the
+   Raziel and Sepher Sephiroth page renders). Natural aspect — the
+   whole historical page is the content. */
+.pageImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto 0.6em;
+  border: 6px solid #e9d9b8;
+  outline: 2px solid #8a6a35;
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(60, 35, 10, 0.35);
+  background: #e5d5b5;
+}
+
+/* Wired illustrations on collected-work pages (natural aspect). */
+.bookFigure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.6em auto;
+  border: 4px solid #e9d9b8;
+  outline: 1px solid #8a6a35;
+  border-radius: 4px;
+  background: #e5d5b5;
+}
+
 .allyRow {
   display: flex;
   flex-wrap: wrap;
@@ -722,5 +749,39 @@
   .sheetBack,
   .coverOpening {
     animation-duration: 0.01s;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Watermark + print deterrent (Stage 2)                               */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Per-viewer watermark: the entitled viewer's own email, subtle and
+ * diagonal-ish at the foot of gated pages. A deterrent/traceability
+ * aid only — it cannot prevent screenshots, and nothing claims it can.
+ */
+.watermark {
+  position: absolute;
+  bottom: 34px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  color: rgba(122, 74, 30, 0.38);
+  pointer-events: none;
+  user-select: none;
+}
+
+/*
+ * Print deterrent: printing the book yields no book content. (Screen
+ * capture cannot be prevented on the web — this only closes the
+ * print / save-as-PDF path for the rendered pages.)
+ */
+@media print {
+  .stage {
+    display: none !important;
   }
 }

@@ -31,7 +31,7 @@ import { isSupersededProduct } from '../lib/catalog/status';
 import sitemap from '../app/sitemap';
 import { CANONICAL_ROUTES } from '../lib/seo/routes';
 import { JOURNAL_ARTICLES } from '../lib/content/journal';
-import { HERB_INDEX } from '../lib/content/herbs';
+import { herbalRouteParams } from '../lib/herbal-index/cards';
 import { SERVICE_PAGES } from '../lib/content/service-pages';
 import { searchProducts } from '../lib/search/search';
 import type { Product } from '../types';
@@ -185,7 +185,10 @@ describe('sitemap excludes superseded products', () => {
       CANONICAL_ROUTES.length +
         liveProducts.length +
         JOURNAL_ARTICLES.length +
-        HERB_INDEX.length +
+        // Herb detail routes (Stage 4, 2026-10-21): the sitemap emits
+        // the Herbal Index workstream's full route set (310), not just
+        // the 29 legacy HERB_INDEX slugs.
+        herbalRouteParams().length +
         // Service landing pages (Phase 2, 2026-10-14) emit from their
         // content registry — part of the honest total.
         SERVICE_PAGES.length,

@@ -4,15 +4,15 @@
  * The server Route Handler recomputes every total from canonical data and
  * rejects any mismatch (CLIENT=PREVIEW, SERVER=AUTHORITY).
  *
- * Payments (owner decisions 2026-10-13 + 2026-10-19): card through the
- * embedded Stripe checkout on this page (primary card path — the order
- * is recorded first, unpaid; a session is bound to it; only the
- * signature-verified webhook marks it paid), card via an emailed Bookipi
- * invoice (backup), or Cash App $AmberPatten347 / Venmo @AwakenwithAmber.
- * The customer picks the method here; the server records it on the order
- * and returns the matching payment instructions; this UI renders exactly
- * what the server returned. When Stripe is not configured, the card
- * option says so and steers to invoice / Venmo / Cash App.
+ * Payments (owner decisions 2026-10-13 + 2026-10-19 + 2026-10-21): card
+ * through the embedded Stripe checkout on this page (the order is
+ * recorded first, unpaid; a session is bound to it; only the
+ * signature-verified webhook marks it paid), or Cash App $AmberPatten347
+ * / Venmo @AwakenwithAmber. The customer picks the method here; the
+ * server records it on the order and returns the matching payment
+ * instructions; this UI renders exactly what the server returned. When
+ * Stripe is not configured, the card option says so and steers to
+ * Venmo / Cash App.
  * No PII in analytics — order_completed carries order_id/total/item count only.
  */
 'use client';
@@ -27,21 +27,17 @@ import { StripeEmbeddedCheckout } from './StripeEmbeddedCheckout';
 import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 import type { CartItem } from '../../types';
 
-type PaymentMethodChoice =
-  | 'cash_app_or_venmo'
-  | 'bookipi_card_invoice'
-  | 'stripe_card_embedded';
+type PaymentMethodChoice = 'cash_app_or_venmo' | 'stripe_card_embedded';
 
 /**
  * Payment instructions as returned by the server for the method recorded
- * on the order: handles for Cash App / Venmo, invoice destination for
- * card-by-Bookipi. Rendered from the response, never from local state.
+ * on the order: handles for Cash App / Venmo; the note only for card.
+ * Rendered from the response, never from local state.
  */
 interface PaymentInstructions {
   method: string;
   cash_app?: string;
   venmo?: string;
-  invoice_email?: string;
   order_id?: string;
   note: string;
 }
@@ -178,12 +174,12 @@ export function CheckoutForm() {
             } else {
               setStripeError(
                 sessionData.errors?.join(' ') ??
-                  'Card payment could not be started. You can pay by invoice, Venmo, or Cash App instead.',
+                  'Card payment could not be started. You can pay with Venmo or Cash App instead.',
               );
             }
           } catch {
             setStripeError(
-              'Card payment could not be started. You can pay by invoice, Venmo, or Cash App instead.',
+              'Card payment could not be started. You can pay with Venmo or Cash App instead.',
             );
           }
         }
@@ -235,11 +231,7 @@ export function CheckoutForm() {
             ) : stripeError ? (
               <>
                 <p role="alert">{stripeError}</p>
-                <p>
-                  Your order is saved. You can pay instead by emailed
-                  Bookipi invoice (just contact Amber and mention your
-                  order ID), or send your total now:
-                </p>
+                <p>Your order is saved. You can send your total now:</p>
                 <ul>
                   <li>
                     <strong>Cash App:</strong> {CASH_APP_HANDLE}
@@ -252,12 +244,6 @@ export function CheckoutForm() {
             ) : (
               <p>Preparing your secure card payment…</p>
             )
-          ) : (result.payment?.method ?? result.payment_method) ===
-            'bookipi_card_invoice' ? (
-            <p>
-              Your Bookipi invoice will be sent to:{' '}
-              <strong>{result.payment?.invoice_email}</strong>
-            </p>
           ) : (
             <ul>
               <li>
@@ -288,12 +274,9 @@ export function CheckoutForm() {
           <p>
             Order ID: <strong>{result.order_id}</strong>
             {(result.payment?.method ?? result.payment_method) ===
-            'bookipi_card_invoice'
-              ? ' — it will appear on your invoice.'
-              : (result.payment?.method ?? result.payment_method) ===
-                  'stripe_card_embedded'
-                ? ' — your payment confirmation will show here as soon as it is confirmed.'
-                : ' — please include this in your payment note so we can match it to your order.'}
+            'stripe_card_embedded'
+              ? ' — your payment confirmation will show here as soon as it is confirmed.'
+              : ' — please include this in your payment note so we can match it to your order.'}
           </p>
           <p>
             <small>
@@ -435,24 +418,10 @@ export function CheckoutForm() {
                 <p>
                   <small>
                     Card checkout is not available right now — please pay
-                    by invoice, Venmo, or Cash App below; those work as
-                    always.
+                    with Venmo or Cash App below; those work as always.
                   </small>
                 </p>
               ) : null}
-              <label>
-                <input
-                  type="radio"
-                  name="payment-method"
-                  value="bookipi_card_invoice"
-                  checked={paymentMethod === 'bookipi_card_invoice'}
-                  onChange={() => setPaymentMethod('bookipi_card_invoice')}
-                />
-                <strong>Pay by invoice instead</strong> — place your order
-                now, and we&apos;ll email you a secure Bookipi invoice to
-                pay by card. Your order is prepared once the invoice is
-                paid.
-              </label>
               <label>
                 <input
                   type="radio"
@@ -518,10 +487,10 @@ export function CheckoutForm() {
             </section>
             <p>
               <small>
-                Payment is by card right here on this page, Cash App,
-                Venmo, or card by emailed Bookipi invoice — you&apos;ll get
-                the payment details for your chosen method, and your order
-                ID, right after placing your order.
+                Payment is by card right here on this page, or with Cash
+                App or Venmo — you&apos;ll get the payment details for
+                your chosen method, and your order ID, right after placing
+                your order.
               </small>
             </p>
           </>

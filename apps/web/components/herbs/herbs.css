@@ -388,3 +388,168 @@
     width: 100%;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Herbal Index cards (owner directive 2026-10-21)                     */
+/*                                                                     */
+/* Parchment cards on the dark site theme, per the owner's standing    */
+/* card design: parchment ground (#f4e8d0 family, as in the Grimoire   */
+/* book interior), deep-brown ink, display-serif herb name in the      */
+/* site's existing Cinzel Decorative face (no new webfonts), gold      */
+/* rule details. Illustration slot contract: 4:3 (see                  */
+/* lib/herbal-index ILLUSTRATION_SLOT).                                */
+/* ------------------------------------------------------------------ */
+.aa-herbal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.25rem;
+  list-style: none;
+  margin: 1.5rem 0;
+  padding: 0;
+}
+.aa-herbal-card {
+  background: linear-gradient(165deg, #f7ecd2 0%, #f1e2bd 55%, #e8d5a9 100%);
+  color: #3a2415;
+  border: 1px solid #b8945a;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 0 0 4px rgba(184, 148, 90, 0.18);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Cormorant', Georgia, serif;
+}
+.aa-herbal-media {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(138, 106, 53, 0.5);
+  background: radial-gradient(120% 120% at 50% 0%, #efe0ba 0%, #e2cd97 100%);
+}
+.aa-herbal-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.aa-herbal-media--monogram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.aa-herbal-media--large {
+  border: 1px solid rgba(138, 106, 53, 0.5);
+  border-radius: 14px;
+}
+.aa-herbal-monogram {
+  font-family: 'Cinzel Decorative', Georgia, serif;
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #8a6a35;
+  width: 6.5rem;
+  height: 6.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px double rgba(138, 106, 53, 0.75);
+  border-radius: 50%;
+  background: rgba(247, 236, 210, 0.65);
+}
+.aa-herbal-media--large .aa-herbal-monogram {
+  font-size: 5.5rem;
+  width: 8.5rem;
+  height: 8.5rem;
+}
+.aa-herbal-art-note {
+  font-size: 0.85rem;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: #7a5c2e;
+}
+.aa-herbal-body {
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.aa-herbal-name {
+  font-family: 'Cinzel Decorative', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+  color: #3a2415;
+}
+.aa-herbal-name a {
+  color: inherit;
+  text-decoration: none;
+}
+.aa-herbal-name a:hover {
+  text-decoration: underline;
+}
+.aa-herbal-latin {
+  font-style: italic;
+  font-size: 1.05rem;
+  color: #7a5c2e;
+  margin: 0;
+}
+.aa-herbal-cats {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #5a4020;
+  margin: 0 0 0.4rem;
+}
+.aa-herbal-props-title {
+  font-family: 'Cinzel Decorative', Georgia, serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  margin: 0.4rem 0 0;
+  color: #3a2415;
+}
+.aa-herbal-framing {
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #7a5c2e;
+  margin: 0;
+}
+.aa-herbal-props {
+  margin: 0.15rem 0 0.35rem;
+  padding-left: 1.2rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.aa-herbal-props-empty,
+.aa-herbal-incomplete {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #7a5c2e;
+  margin: 0;
+}
+.aa-herbal-note {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0.35rem 0 0;
+  border-top: 1px solid rgba(138, 106, 53, 0.4);
+  padding-top: 0.6rem;
+}
+.aa-herbal-caution {
+  font-size: 0.95rem;
+  margin: 0.35rem 0 0;
+  border: 1px solid rgba(138, 60, 35, 0.55);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  background: rgba(190, 90, 50, 0.08);
+}
+.aa-herbal-detail-link {
+  margin-top: 0.6rem;
+  font-weight: 700;
+  color: #7a5c2e;
+}
+.aa-herbal-detail {
+  max-width: 720px;
+}
+.aa-herbal-detail .aa-herbal-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}

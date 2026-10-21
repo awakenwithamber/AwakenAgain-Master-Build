@@ -139,6 +139,14 @@ export interface Herb {
   priceCents: number;
   traditionalNote: string;
   traditionalBenefits: string[];
+  /**
+   * Per-herb caution (Fix-All Stage 4, audit R-21) — OPTIONAL. Populated
+   * ONLY where text already in this repo states a caution naming the
+   * herb (see lib/catalog/herb-cautions.ts for the sourced values and
+   * their provenance). Absent = no caution is rendered anywhere; a
+   * missing caution is never filled in by invention.
+   */
+  caution?: string;
 }
 
 /* ------------------------------------------------------------------ */
