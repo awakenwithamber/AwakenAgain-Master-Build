@@ -10,23 +10,21 @@
  * from CANONICAL_PRICES.grimoireMonthlyCents, but the record is built and
  * priced here only. Price lives in lib/pricing/pricing.ts — never hard-coded.
  *
- * Payments: Cash App $AmberPatten347 + Venmo @AwakenwithAmber ONLY.
- * No other payment provider appears in code, imports, or copy anywhere.
+ * Payments: Stripe Checkout subscription (card, auto-renews monthly)
+ * is the recurring processor — owner decision 2026-10-21 §13(3) — with
+ * Cash App $AmberPatten347 + Venmo @AwakenwithAmber retained as the
+ * manual fallback (signup + owner confirmation, unchanged).
  *
- * Lifecycle: a new signup creates a record in `pending_payment` status.
- * It becomes `active` only when the owner confirms the first payment
- * (Amber confirms every order/subscription personally — see checkout).
- *
- * ┌──────────────────────────────────────────────────────────────────┐
- * │ NEEDS VERIFICATION — recurring-billing mechanics (owner call):    │
- * │ Cash App / Venmo have no native recurring-billing rail. HOW      │
- * │ month-2+ is collected — manual monthly payment by the subscriber, │
- * │ owner-issued payment request, or another mechanic — is GENUINELY │
- * │ UNDECIDED and must come from Amber. This module records the      │
- * │ signup and the first-payment confirmation only; it does NOT      │
- * │ invent a billing process, and MUST NOT grow one without her      │
- * │ explicit approval. See RECURRING_BILLING_MECHANIC below.          │
- * └──────────────────────────────────────────────────────────────────┘
+ * Lifecycle: a manual signup creates a record in `pending_payment`
+ * status; it becomes `active` only when the owner confirms the first
+ * payment. A Stripe subscription is created by Checkout
+ * (lib/subscriptions/subscription-checkout.ts) and its lifecycle is
+ * driven ONLY by signature-verified webhook events
+ * (lib/subscriptions/stripe-lifecycle.ts): invoice.paid → active,
+ * invoice.payment_failed → past_due (3-day grace, owner decision
+ * 2026-10-21 §13(4)), customer.subscription.updated/deleted → sync /
+ * end-at-paid-through. Manual `active` records remain entitled until
+ * owner-cancelled, exactly as before Stage 3.
  */
 import { CANONICAL_PRICES, formatPrice } from '../pricing/pricing';
 import {
@@ -66,26 +64,62 @@ export function grimoirePlanPriceLabel(): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* NEEDS VERIFICATION marker — recurring-billing mechanics              */
+/* Recurring-billing mechanic — owner decisions 2026-10-21             */
 /* ------------------------------------------------------------------ */
 
 /**
- * NEEDS VERIFICATION (owner decision required).
- *
- * The mechanics of recurring collection on Cash App/Venmo are genuinely
- * undecided: manual monthly send vs. owner-issued request vs. something
- * else. Until Amber rules, the code paths that would act on "billing is
- * due" do not exist. This constant is the grep-able marker; a stage-gate
- * test asserts it stays 'NEEDS_VERIFICATION' until she decides.
+ * Owner decisions applied 2026-10-21 (§13(3) + §13(4), Stage 3):
+ * - §13(3) ANSWERED: Stripe is the subscription processor. Recurring
+ *   billing runs through Stripe Checkout in subscription mode
+ *   (price from env STRIPE_GRIMOIRE_PRICE_ID) + the Stripe webhook
+ *   lifecycle. The manual Cash App/Venmo + owner-confirmation flow
+ *   remains as the fallback for members who do not pay by card.
+ * - §13(4) ANSWERED 2026-10-21: failed-payment grace = 3 days.
+ *   PAST_DUE keeps access for 3 days from the failed payment
+ *   (env GRIMOIRE_GRACE_DAYS, default 3); success inside the window
+ *   restores ACTIVE seamlessly; after 3 days unpaid access pauses
+ *   until a successful payment reactivates.
+ * This constant is the grep-able marker stamped on NEW records.
+ * Records written before Stage 3 carry 'NEEDS_VERIFICATION'; they
+ * stay readable and valid — the value is provenance, not a gate.
  */
 export const RECURRING_BILLING_MECHANIC_STATUS =
-  'NEEDS_VERIFICATION' as const;
+  'STRIPE_SUBSCRIPTION_WITH_MANUAL_FALLBACK' as const;
+
+/** Failed-payment grace window in days (env GRIMOIRE_GRACE_DAYS, default 3). */
+export function grimoireGraceDays(
+  env: Record<string, string | undefined> = process.env,
+): number {
+  const raw = env.GRIMOIRE_GRACE_DAYS?.trim();
+  if (!raw) return 3;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 0) return 3;
+  return Math.floor(parsed);
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** ISO deadline through which a past-due member keeps access, or null. */
+export function graceDeadlineIso(
+  record: Pick<SubscriptionRecord, 'past_due_since' | 'failed_at'>,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  const since = record.past_due_since ?? record.failed_at ?? null;
+  if (!since) return null;
+  const start = Date.parse(since);
+  if (Number.isNaN(start)) return null;
+  return new Date(start + grimoireGraceDays(env) * DAY_MS).toISOString();
+}
 
 /* ------------------------------------------------------------------ */
 /* Subscription record                                                  */
 /* ------------------------------------------------------------------ */
 
-export type SubscriptionStatus = 'pending_payment' | 'active' | 'cancelled';
+export type SubscriptionStatus =
+  | 'pending_payment'
+  | 'active'
+  | 'past_due'
+  | 'cancelled';
 
 export interface SubscriptionRecord {
   subscription_id: string;
@@ -98,17 +132,49 @@ export interface SubscriptionRecord {
   status: SubscriptionStatus;
   customer: { name: string; email: string; phone?: string };
   /**
-   * Set when the owner confirms the first payment. The record is NEVER
-   * auto-activated — confirmation is always Amber's explicit action.
+   * Set when the owner confirms the first (manual) payment. Manual
+   * records are activated only by Amber's explicit action; Stripe
+   * records are activated by the verified webhook instead and leave
+   * this null (their paid state lives in the Stripe fields below).
    */
   confirmed_at: string | null;
   confirmed_by: 'owner' | null;
   /**
-   * NEEDS VERIFICATION: how months 2+ are collected. Absent by design —
-   * do not invent a billing process. Present so the absence is explicit.
+   * How recurring billing runs for NEW records (Stage 3, owner
+   * decisions 2026-10-21 §13(3)/(4)). Older records carry
+   * 'NEEDS_VERIFICATION' here and remain valid — see the constant.
    */
-  recurring_mechanic: typeof RECURRING_BILLING_MECHANIC_STATUS;
+  recurring_mechanic: string;
   ledger_version: 1;
+  /* -- Stripe linkage + lifecycle (Stage 3; optional so every ---- */
+  /* -- pre-Stage-3 manual record stays readable and valid) ------- */
+  /** Billing source: absent on legacy records means 'manual'. */
+  billing_source?: 'manual' | 'stripe';
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  /** Raw Stripe subscription status last synced, when known. */
+  stripe_status?: string | null;
+  /** When the current paid period ends (ISO), from Stripe. */
+  current_period_end?: string | null;
+  /** Access is paid through this ISO instant (period end). */
+  paid_through?: string | null;
+  /** Stripe will cancel at period end; access continues until then. */
+  cancel_at_period_end?: boolean;
+  /** When the latest invoice payment failed (ISO). */
+  past_due_since?: string | null;
+  /** Alias kept alongside past_due_since for the failure instant. */
+  failed_at?: string | null;
+  /** When Stripe deleted the subscription (ISO), when it did. */
+  stripe_deleted_at?: string | null;
+  /** When an invoice was last paid (ISO), from the webhook. */
+  stripe_last_paid_at?: string | null;
+  /**
+   * Monotonic guard: ISO time (from the Stripe event `created`) of
+   * the newest Stripe event applied to this record. An older event
+   * must never regress a newer state.
+   */
+  last_stripe_event_at?: string | null;
+  last_stripe_event_type?: string | null;
 }
 
 export interface SubscriptionSignupInput {
@@ -198,4 +264,146 @@ export function cancelSubscription(
 ): SubscriptionRecord {
   if (record.status === 'cancelled') return record;
   return { ...record, status: 'cancelled' };
+}
+
+/* ------------------------------------------------------------------ */
+/* Entitlement evaluation (Stage 3)                                    */
+/*                                                                     */
+/* Pure + clock-injectable: `now` decides every time-based branch, so  */
+/* tests walk the lifecycle by moving the clock, never by waiting.   */
+/* Fail-closed: missing/unparseable timestamps deny the time-based   */
+/* branches they guard.                                              */
+/* ------------------------------------------------------------------ */
+
+/** True when the record carries Stripe subscription linkage. */
+export function hasStripeSubscription(
+  record: Pick<
+    SubscriptionRecord,
+    'stripe_subscription_id' | 'stripe_customer_id' | 'billing_source'
+  > | null | undefined,
+): boolean {
+  if (!record) return false;
+  return Boolean(
+    record.stripe_subscription_id ||
+      record.stripe_customer_id ||
+      record.billing_source === 'stripe',
+  );
+}
+
+function parseTime(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const t = Date.parse(value);
+  return Number.isNaN(t) ? null : t;
+}
+
+/**
+ * Is this (latest) record entitled at `now`?
+ * - manual active → entitled forever, until owner-cancelled (the
+ *   cancelled line then becomes latest and this returns false).
+ * - stripe active → entitled; with cancel_at_period_end, only until
+ *   the period end (paid_through ?? current_period_end).
+ * - past_due → entitled only inside the grace window
+ *   (past_due_since + GRIMOIRE_GRACE_DAYS, default 3 — §13(4)).
+ * - cancelled via Stripe deletion → entitled until paid_through.
+ * - everything else (pending, manual cancelled, unreadable) → false.
+ */
+export function isSubscriptionRecordEntitled(
+  record: SubscriptionRecord | null | undefined,
+  now: Date = new Date(),
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  if (!record || typeof record.status !== 'string') return false;
+  const nowMs = now.getTime();
+  if (Number.isNaN(nowMs)) return false;
+  switch (record.status) {
+    case 'active': {
+      if (record.cancel_at_period_end) {
+        const end = parseTime(record.paid_through ?? record.current_period_end);
+        if (end === null) return false; // fail closed on unreadable period
+        return nowMs < end;
+      }
+      return true;
+    }
+    case 'past_due': {
+      const deadline = graceDeadlineIso(record, env);
+      const deadlineMs = parseTime(deadline);
+      if (deadlineMs === null) return false;
+      return nowMs < deadlineMs;
+    }
+    case 'cancelled': {
+      // Only a Stripe deletion keeps paid-through access; a manual /
+      // owner cancellation is immediate, as it has always been.
+      if (!record.stripe_deleted_at) return false;
+      const end = parseTime(record.paid_through ?? record.current_period_end);
+      if (end === null) return false;
+      return nowMs < end;
+    }
+    default:
+      return false;
+  }
+}
+
+export type SubscriptionDisplayStatus =
+  | 'none'
+  | 'pending_payment'
+  | 'active'
+  | 'past_due'
+  | 'past_due_lapsed'
+  | 'cancel_at_period_end'
+  | 'ending_paid_through'
+  | 'lapsed'
+  | 'cancelled';
+
+export interface SubscriptionStateView {
+  display_status: SubscriptionDisplayStatus;
+  entitled: boolean;
+  /** True when there is a Stripe subscription to manage in the Portal. */
+  has_stripe_subscription: boolean;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  current_period_end: string | null;
+  paid_through: string | null;
+  cancel_at_period_end: boolean;
+  past_due_since: string | null;
+  grace_deadline: string | null;
+  record_status: SubscriptionStatus | null;
+}
+
+/** Member-facing state derived from the latest record at `now`. */
+export function describeSubscriptionState(
+  record: SubscriptionRecord | null | undefined,
+  now: Date = new Date(),
+  env: Record<string, string | undefined> = process.env,
+): SubscriptionStateView {
+  const base: SubscriptionStateView = {
+    display_status: 'none',
+    entitled: false,
+    has_stripe_subscription: hasStripeSubscription(record),
+    stripe_customer_id: record?.stripe_customer_id ?? null,
+    stripe_subscription_id: record?.stripe_subscription_id ?? null,
+    current_period_end: record?.current_period_end ?? null,
+    paid_through: record?.paid_through ?? record?.current_period_end ?? null,
+    cancel_at_period_end: Boolean(record?.cancel_at_period_end),
+    past_due_since: record?.past_due_since ?? record?.failed_at ?? null,
+    grace_deadline: record ? graceDeadlineIso(record, env) : null,
+    record_status: record?.status ?? null,
+  };
+  if (!record) return base;
+  const entitled = isSubscriptionRecordEntitled(record, now, env);
+  let display: SubscriptionDisplayStatus;
+  if (record.status === 'past_due') {
+    display = entitled ? 'past_due' : 'past_due_lapsed';
+  } else if (record.status === 'active' && record.cancel_at_period_end) {
+    display = entitled ? 'cancel_at_period_end' : 'lapsed';
+  } else if (record.status === 'cancelled' && record.stripe_deleted_at) {
+    display = entitled ? 'ending_paid_through' : 'lapsed';
+  } else if (record.status === 'cancelled') {
+    display = hasStripeSubscription(record) ? 'lapsed' : 'cancelled';
+    // A Stripe record cancelled by the owner with no paid-through
+    // window reads as lapsed to the member; manual stays 'cancelled'.
+    if (!hasStripeSubscription(record)) display = 'cancelled';
+  } else {
+    display = record.status;
+  }
+  return { ...base, display_status: display, entitled };
 }

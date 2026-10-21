@@ -6,17 +6,19 @@
  * storewide discount) require a subscription record the SERVER holds for
  * the order's email whose status means entitled.
  *
- * Entitled status set — evidence from this codebase:
- * `SubscriptionStatus` (lib/subscriptions/subscriptions.ts) is exactly
- * 'pending_payment' | 'active' | 'cancelled', and a record becomes
- * 'active' ONLY through `confirmSubscription()` — owner confirmation of
- * the first payment. There is no client path to 'active' and no 'paid' /
- * 'comped' status anywhere in the subscription code. Therefore:
+ * Entitled states (Stage 3 extends the original 'active'-only rule):
+ * a record becomes 'active' through `confirmSubscription()` (owner
+ * confirmation of a manual payment) or through the verified Stripe
+ * webhook lifecycle. Evaluation is the pure, clock-injectable
+ * `isSubscriptionRecordEntitled` (lib/subscriptions/subscriptions.ts):
  *
- *   ENTITLED = { 'active' }   — and nothing else.
- *
- * 'pending_payment' (signed up, payment not yet confirmed by Amber) is
- * NOT entitled; 'cancelled' is NOT entitled.
+ *   manual active            → entitled (until owner-cancelled)
+ *   stripe active            → entitled (cancel_at_period_end: until
+ *                              the period end)
+ *   past_due                 → entitled inside the 3-day grace window
+ *                              (owner decision 2026-10-21 §13(4))
+ *   stripe-deleted cancelled → entitled until paid_through
+ *   pending / other          → NOT entitled
  *
  * Source of truth today: the append-only JSONL subscription ledger — the
  * same file POST /api/subscriptions appends to
@@ -37,9 +39,10 @@
 import { readFileSync } from 'node:fs';
 import { appendFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type {
-  SubscriptionRecord,
-  SubscriptionStatus,
+import {
+  isSubscriptionRecordEntitled,
+  type SubscriptionRecord,
+  type SubscriptionStatus,
 } from './subscriptions';
 import {
   EVENT_STREAMS,
@@ -48,9 +51,15 @@ import {
   readStreamEvents,
 } from '../events/event-store';
 
-/** The only subscription statuses that grant checkout benefits. */
+/**
+ * Statuses that CAN grant benefits — final entitlement is the
+ * time-aware evaluation in subscriptions.ts (past_due only inside
+ * the grace window; active with cancel_at_period_end only until the
+ * period end), never this list alone.
+ */
 export const SUBSCRIBER_ENTITLED_STATUSES: readonly SubscriptionStatus[] = [
   'active',
+  'past_due',
 ];
 
 /** Ledger path — the single source of truth, shared with the subscribe route. */
@@ -166,22 +175,53 @@ export function findLatestSubscriptionRecord(
 
 /**
  * True only when the server holds a subscription record for this email
- * whose LATEST status is entitled (see the status-set evidence above).
+ * whose LATEST record is entitled at `now` (default: the real clock;
+ * injectable for tests — Stage 3). Fail-closed on any unreadable data.
  */
 export function isEntitledSubscriber(
   email: unknown,
   ledgerPath?: string,
+  now: Date = new Date(),
 ): boolean {
   const target = normalizeSubscriptionEmail(email);
   if (!target) return false;
-  let latest: SubscriptionLedgerEntry | undefined;
-  for (const entry of readSubscriptionLedger(ledgerPath)) {
-    if (entry.email === target) latest = entry;
+  try {
+    const latest = findLatestSubscriptionRecord(target, ledgerPath);
+    return isSubscriptionRecordEntitled(latest, now);
+  } catch {
+    return false;
   }
-  return (
-    latest !== undefined &&
-    (SUBSCRIBER_ENTITLED_STATUSES as readonly string[]).includes(latest.status)
-  );
+}
+
+/** Every full subscription record in append order (JSONL driver). */
+export function readSubscriptionRecordsSync(
+  ledgerPath: string = subscriptionsLedgerPath(),
+): SubscriptionRecord[] {
+  let raw: string;
+  try {
+    raw = readFileSync(ledgerPath, 'utf8');
+  } catch {
+    return [];
+  }
+  const records: SubscriptionRecord[] = [];
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const parsed = JSON.parse(trimmed) as SubscriptionRecord;
+      if (
+        parsed !== null &&
+        typeof parsed === 'object' &&
+        typeof parsed.status === 'string' &&
+        normalizeSubscriptionEmail(parsed.customer?.email)
+      ) {
+        records.push(parsed);
+      }
+    } catch {
+      // skip malformed line
+    }
+  }
+  return records;
 }
 
 /* ------------------------------------------------------------------ */
@@ -256,19 +296,61 @@ export async function findLatestSubscriptionRecordAsync(
   return latest;
 }
 
-/** isEntitledSubscriber, driver-aware. Entitlement semantics unchanged. */
+/** Every full subscription record, driver-aware, in append order. */
+export async function readSubscriptionRecordsAsync(): Promise<
+  SubscriptionRecord[]
+> {
+  if (!postgresEnabled()) return readSubscriptionRecordsSync();
+  const events = await readStreamEvents(EVENT_STREAMS.subscriptions);
+  const records: SubscriptionRecord[] = [];
+  for (const event of events) {
+    const parsed = event.payload as unknown as SubscriptionRecord;
+    if (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      typeof parsed.status === 'string' &&
+      normalizeSubscriptionEmail(parsed.customer?.email)
+    ) {
+      records.push(parsed);
+    }
+  }
+  return records;
+}
+
+/**
+ * The latest record carrying a Stripe subscription or customer id —
+ * the webhook's member resolution when an event carries ids but no
+ * email (invoice/subscription events after the first).
+ */
+export async function findLatestSubscriptionByStripeIdAsync(
+  stripeSubscriptionId?: string | null,
+  stripeCustomerId?: string | null,
+): Promise<SubscriptionRecord | undefined> {
+  if (!stripeSubscriptionId && !stripeCustomerId) return undefined;
+  const records = await readSubscriptionRecordsAsync();
+  for (let i = records.length - 1; i >= 0; i--) {
+    const r = records[i];
+    if (
+      (stripeSubscriptionId && r.stripe_subscription_id === stripeSubscriptionId) ||
+      (stripeCustomerId && r.stripe_customer_id === stripeCustomerId)
+    ) {
+      return r;
+    }
+  }
+  return undefined;
+}
+
+/** isEntitledSubscriber, driver-aware (Stage 3 time-aware evaluation). */
 export async function isEntitledSubscriberAsync(
   email: unknown,
+  now: Date = new Date(),
 ): Promise<boolean> {
-  if (!postgresEnabled()) return isEntitledSubscriber(email);
   const target = normalizeSubscriptionEmail(email);
   if (!target) return false;
-  let latest: SubscriptionLedgerEntry | undefined;
-  for (const entry of await readSubscriptionLedgerAsync()) {
-    if (entry.email === target) latest = entry;
+  try {
+    const latest = await findLatestSubscriptionRecordAsync(target);
+    return isSubscriptionRecordEntitled(latest, now);
+  } catch {
+    return false; // fail closed, exactly as before
   }
-  return (
-    latest !== undefined &&
-    (SUBSCRIBER_ENTITLED_STATUSES as readonly string[]).includes(latest.status)
-  );
 }

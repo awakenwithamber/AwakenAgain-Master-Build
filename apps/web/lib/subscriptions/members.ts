@@ -48,6 +48,13 @@ export interface SubscriptionMember {
   cancelled_at: string | null;
   price_cents: number;
   plan_name: string;
+  /* Stage 3 Stripe lifecycle fields (null for manual members). */
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  past_due_since: string | null;
+  current_period_end: string | null;
+  paid_through: string | null;
+  cancel_at_period_end: boolean;
 }
 
 /**
@@ -87,8 +94,9 @@ export function readSubscriptionRecords(
 
 const STATUS_ORDER: Record<SubscriptionStatus, number> = {
   pending_payment: 0,
-  active: 1,
-  cancelled: 2,
+  past_due: 1,
+  active: 2,
+  cancelled: 3,
 };
 
 /** Project latest-per-email records to sorted member rows. */
@@ -107,6 +115,12 @@ function projectMembers(
       cancelled_at: record.cancelled_at ?? null,
       price_cents: record.price_cents,
       plan_name: record.plan_name,
+      stripe_customer_id: record.stripe_customer_id ?? null,
+      stripe_subscription_id: record.stripe_subscription_id ?? null,
+      past_due_since: record.past_due_since ?? record.failed_at ?? null,
+      current_period_end: record.current_period_end ?? null,
+      paid_through: record.paid_through ?? record.current_period_end ?? null,
+      cancel_at_period_end: Boolean(record.cancel_at_period_end),
     });
   }
   members.sort((a, b) => {

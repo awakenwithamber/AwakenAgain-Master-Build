@@ -46,6 +46,7 @@ export const CANONICAL_ROUTES: CanonicalRoute[] = [
   { path: '/legal', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/terms', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/returns', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/cart', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/order-status', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/checkout', priority: 0.3, changeFrequency: 'yearly' },

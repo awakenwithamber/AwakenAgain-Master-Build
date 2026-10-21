@@ -8,7 +8,8 @@
  * - Client-supplied price fields are ignored, never trusted.
  * - Owner confirmation transitions pending_payment → active; nothing else
  *   can be confirmed. Cancellation is idempotent.
- * - Recurring-billing mechanics stay NEEDS VERIFICATION (stage gate).
+ * - Recurring-billing mechanic = the built Stripe subscription +
+ *   manual fallback (Stage 3, owner decisions 2026-10-21 §13(3)/(4)).
  */
 import { describe, expect, it } from 'vitest';
 import { CANONICAL_PRICES, formatPrice } from '../pricing/pricing';
@@ -103,11 +104,16 @@ describe('cancelSubscription', () => {
 });
 
 describe('recurring-billing mechanics stage gate', () => {
-  it('remains NEEDS_VERIFICATION — no billing process may be invented', () => {
-    // Owner decision required on Cash App/Venmo recurring mechanics.
-    // Flip this only when Amber rules; the flip itself is the gate.
-    expect(RECURRING_BILLING_MECHANIC_STATUS).toBe('NEEDS_VERIFICATION');
+  it('records the built mechanic — Stripe subscription + manual fallback (Stage 3)', () => {
+    // Owner decisions 2026-10-21 §13(3) (Stripe is the processor) and
+    // §13(4) (3-day failed-payment grace) authorized the real mechanic;
+    // this flip is the gate the earlier NEEDS_VERIFICATION test held.
+    expect(RECURRING_BILLING_MECHANIC_STATUS).toBe(
+      'STRIPE_SUBSCRIPTION_WITH_MANUAL_FALLBACK',
+    );
     const record = validateAndBuildSubscription({ name: 'Test Customer', email: 'x@y.com' });
-    expect(record.recurring_mechanic).toBe('NEEDS_VERIFICATION');
+    expect(record.recurring_mechanic).toBe(
+      'STRIPE_SUBSCRIPTION_WITH_MANUAL_FALLBACK',
+    );
   });
 });

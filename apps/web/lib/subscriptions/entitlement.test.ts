@@ -51,8 +51,10 @@ function record(email: string, status: string) {
 }
 
 describe('subscriber entitlement', () => {
-  it('entitles only the active status (owner-confirmed)', () => {
-    expect(SUBSCRIBER_ENTITLED_STATUSES).toEqual(['active']);
+  it('entitled-capable statuses are active + past_due (time-gated, Stage 3)', () => {
+    // past_due entitles only inside the grace window — the full
+    // time-aware walk lives in stripe-lifecycle.test.ts.
+    expect(SUBSCRIBER_ENTITLED_STATUSES).toEqual(['active', 'past_due']);
   });
 
   it('grants for an active record; denies pending and cancelled', () => {
