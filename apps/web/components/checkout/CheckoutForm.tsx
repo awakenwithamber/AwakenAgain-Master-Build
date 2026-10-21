@@ -270,7 +270,7 @@ export function CheckoutForm() {
           )}
           {(result.subscriber_discount_cents ?? 0) > 0 ? (
             <p>
-              Living Grimoire subscriber discount (10%): −
+              Living Grimoire of Light & Magic subscriber discount (10%): −
               {formatPrice(result.subscriber_discount_cents ?? 0)}
             </p>
           ) : null}
@@ -333,7 +333,7 @@ export function CheckoutForm() {
               <p>Subtotal: {formatPrice(preview.subtotalCents)}</p>
               {preview.subscriberDiscountCents > 0 ? (
                 <p>
-                  Living Grimoire subscriber discount (10%): −
+                  Living Grimoire of Light & Magic subscriber discount (10%): −
                   {formatPrice(preview.subscriberDiscountCents)}{' '}
                   <small>
                     (applied when your membership is confirmed — the server
@@ -345,9 +345,9 @@ export function CheckoutForm() {
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
                   ? isSubscriber
-                    ? 'Free — Living Grimoire subscribers always ship free.'
+                    ? 'Free — Living Grimoire of Light & Magic subscribers always ship free.'
                     : `Free — shipping is free on orders of ${formatPrice(preview.freeShippingThresholdCents)} or more.`
-                  : `${formatPrice(preview.shippingCents)} — flat standard shipping, included in the total below. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire subscribers.`}
+                  : `${formatPrice(preview.shippingCents)} — flat standard shipping, included in the total below. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire of Light & Magic subscribers.`}
               </p>
               <p>
                 <strong>Total: {formatPrice(preview.totalCents)}</strong> (preview —
@@ -400,7 +400,7 @@ export function CheckoutForm() {
                   checked={isSubscriber}
                   onChange={(e) => setIsSubscriber(e.target.checked)}
                 />
-                I&apos;m a Living Grimoire subscriber (always free shipping)
+                I&apos;m a Living Grimoire of Light & Magic subscriber (always free shipping)
               </label>
               <p>
                 <small>
