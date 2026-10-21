@@ -34,7 +34,7 @@ function record(overrides: Partial<OrderRecord> = {}): OrderRecord {
     subtotal_cents: 1800,
     subscriber_discount_cents: 0,
     shipping_cents: 0,
-    shipping_status: 'TO_BE_CONFIRMED',
+    shipping_status: 'FLAT',
     free_shipping_threshold_cents: 4500,
     total_cents: 1800,
     is_subscriber_asserted: false,
