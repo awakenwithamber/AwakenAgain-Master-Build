@@ -17,7 +17,7 @@ interface OrderSummary {
   created_at: string;
   customer_name: string;
   status: 'pending_payment' | 'paid' | 'cancelled';
-  shipping_status: 'FREE' | 'TO_BE_CONFIRMED';
+  shipping_status: 'FREE' | 'FLAT';
   payment_method:
     | 'cash_app_or_venmo'
     | 'bookipi_card_invoice'
