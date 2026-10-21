@@ -12,8 +12,22 @@
  *
  * Content comes from ./grimoireContent (real catalog text — never invented).
  * Does NOT touch the /grimoire/subscribe route or globals.css.
+ *
+ * PROJECT 1 FIX (2026-10-20): pages carry an internal scroll region
+ * (.pageScroll) so long entries scroll inside the page; a touch turns a
+ * page only when ./pageTurnGesture classifies it as an unmistakable
+ * horizontal swipe — vertical scrolling never turns a page. Each page's
+ * scroll position is remembered and restored when the reader returns.
+ * Turn zones are the bottom page corners only, not full-height edges.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import Link from 'next/link';
 import styles from './grimoire.module.css';
 import { HerbChip } from '../herbs/HerbChip';
@@ -35,10 +49,14 @@ import {
   sheetPageIndices,
   spreadBaseFor,
 } from './grimoirePagination';
+import { classifyPageTurnGesture } from './pageTurnGesture';
 
 const DESKTOP_QUERY = '(min-width: 900px)';
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const TURN_MS = 600;
-const SWIPE_PX = 48;
+/** JS lockout matching the CSS 0.01s animation under reduced motion. */
+const TURN_MS_REDUCED = 10;
+const COVER_OPEN_MS = 650;
 
 interface TurnState {
   dir: 'fwd' | 'back';
@@ -50,6 +68,13 @@ interface TurnState {
 /* Page renderers                                                      */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Per-page scroll positions (pageNumber → scrollTop), shared by every
+ * PageShell in the book so a reader who turns away from a half-read page
+ * returns to where they left off. Session-only, in-memory by design.
+ */
+const ScrollMemoryContext = createContext<Map<number, number>>(new Map());
+
 function PageShell({
   page,
   side,
@@ -59,12 +84,36 @@ function PageShell({
   side: 'left' | 'right';
   children: React.ReactNode;
 }) {
+  const scrollMemory = useContext(ScrollMemoryContext);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  /* Restore this page's remembered position whenever it (re)appears. */
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const saved = scrollMemory.get(page.pageNumber);
+    if (typeof saved === 'number' && el.scrollTop !== saved) {
+      el.scrollTop = saved;
+    }
+  }, [page.pageNumber, scrollMemory]);
+
   return (
     <div className={styles.pageSlot}>
       <div
         className={`${styles.page} ${side === 'left' ? styles.pageLeft : styles.pageRight}`}
       >
-        {children}
+        <div
+          ref={scrollRef}
+          className={styles.pageScroll}
+          data-grimoire-scroll=""
+          tabIndex={0}
+          aria-label={`Page ${page.pageNumber} — scrollable page content`}
+          onScroll={(e) => {
+            scrollMemory.set(page.pageNumber, e.currentTarget.scrollTop);
+          }}
+        >
+          {children}
+        </div>
         <p className={styles.pageNum} aria-hidden="true">
           · {page.pageNumber} ·
         </p>
@@ -106,10 +155,12 @@ function AboutPageView({
     <PageShell page={page} side={side}>
       <h2 className={styles.handHeading}>How to read this grimoire</h2>
       <p className={`${styles.handBody} ${styles.dropcap}`}>
-        Turn these pages as you would a real book. Tap the page edges, use the
-        brass arrows, swipe left or right, or press your ← → keys. Each entry
-        holds a botanical illustration, the herb&apos;s Latin name, its
-        traditional wisdom, and the allies it keeps company with.
+        Turn these pages as you would a real book. Tap a bottom page corner,
+        use the brass arrows, swipe left or right, or press your ← → keys.
+        Longer entries scroll gently within their own page — scrolling never
+        turns the page. Each entry holds a botanical illustration, the
+        herb&apos;s Latin name, its traditional wisdom, and the allies it
+        keeps company with.
       </p>
       <h3 className={styles.handHeading}>A note on these words</h3>
       <p className={styles.handBody}>
@@ -333,8 +384,18 @@ export function GrimoireBook() {
   const [turn, setTurn] = useState<TurnState | null>(null);
   const [query, setQuery] = useState('');
   const [announce, setAnnounce] = useState('');
-  const touchX = useRef<number | null>(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const touchRef = useRef<{
+    x: number;
+    y: number;
+    startedAt: number;
+    scrollEl: HTMLElement | null;
+    scrollTopAtStart: number;
+  } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollMemoryRef = useRef<Map<number, number>>(new Map());
+
+  const turnMs = reducedMotion ? TURN_MS_REDUCED : TURN_MS;
 
   const maxPage = pages.length - 1;
   const bookOpen = coverState === 'open';
@@ -371,6 +432,16 @@ export function GrimoireBook() {
     };
   }, []);
 
+  /* Reduced-motion tracking — the JS turn lockout must shrink with the
+     CSS animation, or reduced-motion readers get a 600ms dead pause. */
+  useEffect(() => {
+    const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+    const apply = () => setReducedMotion(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
   const goTo = useCallback(
     (target: number) => {
       const g = guardRef.current;
@@ -387,9 +458,9 @@ export function GrimoireBook() {
       timer.current = setTimeout(() => {
         setTurn(null);
         setAnnounce(`Page ${t + 1} of ${pages.length} — ${pageTitle(pages[t])}`);
-      }, TURN_MS);
+      }, turnMs);
     },
-    [isDesktop, maxPage, pages],
+    [isDesktop, maxPage, pages, turnMs],
   );
 
   const step = isDesktop ? 2 : 1;
@@ -399,23 +470,30 @@ export function GrimoireBook() {
   const openBook = useCallback(() => {
     if (coverState !== 'closed') return;
     setCoverState('opening');
-    window.setTimeout(() => {
-      setCoverState('open');
-      setAnnounce(
-        `The grimoire is open. Page 1 of ${pages.length} — ${pageTitle(pages[0])}`,
-      );
-    }, 650);
-  }, [coverState, pages]);
+    window.setTimeout(
+      () => {
+        setCoverState('open');
+        setAnnounce(
+          `The grimoire is open. Page 1 of ${pages.length} — ${pageTitle(pages[0])}`,
+        );
+      },
+      reducedMotion ? TURN_MS_REDUCED : COVER_OPEN_MS,
+    );
+  }, [coverState, pages, reducedMotion]);
 
   const goToIndex = useCallback(() => {
     if (!guardRef.current.bookOpen) {
       openBook();
-      // The book finishes opening at ~650ms; goTo reads live guard state.
-      window.setTimeout(() => goTo(2), 750);
+      // The book finishes opening at ~650ms (near-instant under reduced
+      // motion); goTo reads live guard state.
+      window.setTimeout(
+        () => goTo(2),
+        reducedMotion ? TURN_MS_REDUCED + 50 : COVER_OPEN_MS + 100,
+      );
     } else {
       goTo(2);
     }
-  }, [goTo, openBook]);
+  }, [goTo, openBook, reducedMotion]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     // Let focused buttons/links handle their own keys (avoids double-open).
@@ -442,15 +520,49 @@ export function GrimoireBook() {
     }
   };
 
+  /*
+   * Touch handling (PROJECT 1 FIX): record where the touch began, which
+   * scroll region it began in, and that region's scrollTop. On release,
+   * the pure classifier in ./pageTurnGesture decides — and it can only
+   * ever say yes to an unmistakable horizontal swipe that did not scroll
+   * the page content. Vertical scrolling can never turn a page.
+   */
   const onTouchStart = (e: React.TouchEvent) => {
-    touchX.current = e.touches[0].clientX;
+    if (e.touches.length !== 1) {
+      touchRef.current = null;
+      return;
+    }
+    const t = e.touches[0];
+    const scrollEl = (e.target as HTMLElement).closest?.(
+      '[data-grimoire-scroll]',
+    ) as HTMLElement | null;
+    touchRef.current = {
+      x: t.clientX,
+      y: t.clientY,
+      startedAt: Date.now(),
+      scrollEl,
+      scrollTopAtStart: scrollEl ? scrollEl.scrollTop : 0,
+    };
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchX.current === null || !bookOpen || turn) return;
-    const dx = e.changedTouches[0].clientX - touchX.current;
-    touchX.current = null;
-    if (dx < -SWIPE_PX) next();
-    else if (dx > SWIPE_PX) prev();
+    const start = touchRef.current;
+    touchRef.current = null;
+    if (!start || !bookOpen || turn) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const contentScrolled =
+      start.scrollEl !== null &&
+      start.scrollEl.scrollTop !== start.scrollTopAtStart;
+    const intent = classifyPageTurnGesture({
+      startX: start.x,
+      startY: start.y,
+      endX: t.clientX,
+      endY: t.clientY,
+      durationMs: Date.now() - start.startedAt,
+      contentScrolled,
+    });
+    if (intent === 'next') next();
+    else if (intent === 'prev') prev();
   };
 
   /* Which pages are visible under the (possibly turning) sheet. */
@@ -509,6 +621,7 @@ export function GrimoireBook() {
   const atEnd = page >= lastSpreadBase(pages.length, isDesktop);
 
   return (
+    <ScrollMemoryContext.Provider value={scrollMemoryRef.current}>
     <section
       className={styles.stage}
       role="region"
@@ -601,7 +714,7 @@ export function GrimoireBook() {
                   className={`${styles.edgeZone} ${styles.edgeZoneLeft}`}
                   onClick={prev}
                   disabled={atStart || !!turn}
-                  aria-label="Previous page"
+                  aria-label="Previous page — turn from the bottom-left page corner"
                   tabIndex={-1}
                 />
                 <button
@@ -609,7 +722,7 @@ export function GrimoireBook() {
                   className={`${styles.edgeZone} ${styles.edgeZoneRight}`}
                   onClick={next}
                   disabled={atEnd || !!turn}
-                  aria-label="Next page"
+                  aria-label="Next page — turn from the bottom-right page corner"
                   tabIndex={-1}
                 />
               </>
@@ -648,5 +761,6 @@ export function GrimoireBook() {
         {announce}
       </p>
     </section>
+    </ScrollMemoryContext.Provider>
   );
 }

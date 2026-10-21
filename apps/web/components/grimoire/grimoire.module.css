@@ -141,6 +141,8 @@
   flex: 1 1 auto;
   min-width: 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
   background:
     linear-gradient(165deg, #f8eed8 0%, #f4e8d0 35%, #ecdcb8 75%, #e5d5b5 100%);
   color: #2a1a10;
@@ -148,6 +150,44 @@
   overflow: hidden;
   font-size: 18px;
   line-height: 1.55;
+}
+
+/*
+ * PROJECT 1 FIX (2026-10-20): the page's content lives in its own scroll
+ * region inside the fixed parchment frame. Long entries scroll here —
+ * the page itself never moves while reading.
+ * - overflow-y: auto gives every long entry a reachable bottom.
+ * - overscroll-behavior: contain stops an inner scroll from chaining
+ *   into a page-level gesture or the document scroll.
+ * - touch-action: pan-y hands vertical panning to the browser's native
+ *   scroll; horizontal intent is left for the swipe classifier, which
+ *   additionally requires the scroll region NOT to have scrolled.
+ */
+.pageScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 74, 30, 0.55) transparent;
+  padding-right: 6px;
+}
+
+.pageScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pageScroll::-webkit-scrollbar-thumb {
+  background: rgba(122, 74, 30, 0.45);
+  border-radius: 3px;
+}
+
+.pageScroll:focus-visible {
+  outline: 3px solid rgba(122, 74, 30, 0.55);
+  outline-offset: -3px;
+  border-radius: 4px;
 }
 
 /* Aged-paper vignette */
@@ -623,11 +663,17 @@
   text-align: center;
 }
 
+/*
+ * PROJECT 1 FIX (2026-10-20): turn zones are the designated bottom page
+ * CORNERS only (72 × 104px) — no longer full-height edge strips, which
+ * intercepted taps and touches meant for reading and scrolling.
+ */
 .edgeZone {
   position: absolute;
-  top: 0;
+  top: auto;
   bottom: 0;
-  width: 11%;
+  width: 72px;
+  height: 104px;
   z-index: 15;
   background: transparent;
   border: 0;
