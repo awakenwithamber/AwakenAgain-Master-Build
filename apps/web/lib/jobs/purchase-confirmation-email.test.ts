@@ -34,7 +34,7 @@ function data(
     ],
     subtotal_cents: 5377,
     subscriber_discount_cents: 0,
-    shipping_status: 'TO_BE_CONFIRMED',
+    shipping_status: 'FLAT',
     payment_method: 'cash_app_or_venmo',
     cash_app_handle: '$AmberPatten347',
     venmo_handle: '@AwakenwithAmber',
