@@ -16,10 +16,12 @@ interface OrderSummary {
   order_id: string;
   created_at: string;
   customer_name: string;
-  status: 'pending_payment' | 'paid' | 'cancelled';
+  status: 'pending_payment' | 'paid' | 'cancelled' | 'refunded' | 'disputed';
   shipping_status: 'FREE' | 'FLAT';
   payment_method:
     | 'cash_app_or_venmo'
+    // Legacy value from the removed backup path (removed 2026-10-21)
+    // that can still appear on orders placed before the removal.
     | 'bookipi_card_invoice'
     | 'stripe_card_embedded';
   item_count: number;
@@ -68,8 +70,21 @@ function statusLine(order: OrderSummary): string {
       return 'Payment confirmed — Amber is preparing your order.';
     case 'cancelled':
       return 'This order was cancelled. If that is unexpected, please contact Amber.';
+    case 'refunded':
+      return 'This order was refunded through Stripe. If you have questions about your refund, please contact Amber.';
+    case 'disputed':
+      return 'A payment dispute was opened on this order through Stripe. If that is unexpected, please contact Amber.';
     default:
-      return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. If you chose to pay by card, your Bookipi invoice arrives by email.';
+      if (order.payment_method === 'stripe_card_embedded') {
+        return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. If you have not completed your card payment yet, you can finish it from the checkout page.';
+      }
+      // Legacy orders placed before the Bookipi path was removed
+      // (2026-10-21) were invoiced by email — that wording stays
+      // accurate for those records only.
+      if (order.payment_method === 'bookipi_card_invoice') {
+        return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. If you chose to pay by card, your Bookipi invoice arrives by email.';
+      }
+      return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation.';
   }
 }
 

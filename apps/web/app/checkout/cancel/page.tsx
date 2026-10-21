@@ -49,8 +49,8 @@ export default async function CheckoutCancelPage({
         </h1>
         <p style={{ fontSize: '1.1rem', lineHeight: 1.7, margin: '0 0 2rem' }}>
           No worries — nothing was charged and your cart is still saved. You
-          can try again whenever you&apos;re ready — pay with Cash App or
-          Venmo, or by card with an emailed Bookipi invoice.
+          can try again whenever you&apos;re ready — pay by card right here
+          on this site, or with Cash App or Venmo.
         </p>
         <div
           style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}

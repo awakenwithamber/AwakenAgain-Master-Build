@@ -11,8 +11,8 @@
  *
  * GET returns card availability so the checkout UI can degrade
  * gracefully when Stripe is not configured: the card option explains
- * itself and steers to the Bookipi invoice / Venmo / Cash App paths,
- * which keep working untouched.
+ * itself and steers to the Venmo / Cash App paths, which keep working
+ * untouched.
  */
 import { NextResponse } from 'next/server';
 import {
@@ -53,9 +53,8 @@ export async function POST(request: Request) {
   if (!config.cardAvailable) {
     return fail(
       [
-        'Card checkout is not available right now. You can pay by ' +
-          'invoice instead (we email you a secure Bookipi invoice), ' +
-          'or with Venmo or Cash App.',
+        'Card checkout is not available right now. You can pay with ' +
+          'Venmo or Cash App instead.',
       ],
       503,
     );

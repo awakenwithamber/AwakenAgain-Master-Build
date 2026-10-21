@@ -12,6 +12,14 @@
  * POST /api/admin/orders/payment; an order shows as paid when a
  * confirmation event exists for it. Payment methods render as human
  * labels, never the raw enum (audit POLISH-1).
+ *
+ * Stage 1 (audit G-5): payment state here resolves through the ONE
+ * shared resolver (lib/orders/paid-state.ts) fed by bulk ledger
+ * reads — the manual confirmation ledger AND the Stripe webhook
+ * paid ledger, plus Stripe refund/dispute transitions. Card orders
+ * paid by the verified webhook show as paid here without any manual
+ * confirmation, and a refunded/disputed order shows that state
+ * instead of paid — the same answer the customer surfaces give.
  */
 import type { Metadata } from 'next';
 import { AdminGate } from '../../../components/admin/AdminGate';
@@ -31,6 +39,14 @@ import {
   readPaymentEventsAsync,
   type OrderPaymentEvent,
 } from '../../../lib/orders/payments';
+import {
+  readStripeOrderStatusEvents,
+  readStripePaymentsAsync,
+  readStripeWebhookEvents,
+  type StripeOrderStatusEvent,
+  type StripePaymentRecord,
+} from '../../../lib/payments/stripe';
+import { resolvePaidStateFromEvidence } from '../../../lib/orders/paid-state';
 import { formatPrice } from '../../../lib/pricing/pricing';
 import Link from 'next/link';
 
@@ -67,6 +83,26 @@ export default async function AdminOrdersPage() {
   for (const event of await readPaymentEventsAsync()) {
     paymentByOrder.set(event.order_id, event);
   }
+
+  // Stripe webhook evidence, same latest-wins bulk join: the paid
+  // ledger (card orders the verified webhook marked paid) and the
+  // refund/dispute transition ledger. Together with the manual
+  // confirmations above these feed the shared paid-state resolver,
+  // so this table answers exactly like the customer surfaces.
+  const stripePaymentByOrder = new Map<string, StripePaymentRecord>();
+  for (const payment of await readStripePaymentsAsync()) {
+    stripePaymentByOrder.set(payment.order_id, payment);
+  }
+  const stripeStatusByOrder = new Map<string, StripeOrderStatusEvent>();
+  for (const event of await readStripeOrderStatusEvents()) {
+    stripeStatusByOrder.set(event.order_id, event);
+  }
+
+  // Stage 5 (admin visibility): the Stage 1 webhook event ledger,
+  // newest first, capped — read-only, and only the ledger's summary
+  // fields (event id, type, outcome, timestamp). Payload bodies are
+  // never stored in that ledger and never rendered here.
+  const webhookEvents = (await readStripeWebhookEvents()).slice(-25).reverse();
 
   return (
     <AdminGate>
@@ -132,18 +168,54 @@ export default async function AdminOrdersPage() {
                     {paymentMethodLabel(o.payment_method)}
                     <br />
                     {(() => {
-                      const payment = paymentByOrder.get(o.order_id);
-                      return payment ? (
-                        <small>
-                          ✓ Paid — confirmed{' '}
-                          {payment.recorded_at.slice(0, 10)}
-                          {payment.reference
-                            ? ` · ref ${payment.reference}`
-                            : ''}
-                        </small>
-                      ) : (
-                        <small>Awaiting payment</small>
-                      );
+                      const state = resolvePaidStateFromEvidence(o, {
+                        stripePayment:
+                          stripePaymentByOrder.get(o.order_id) ?? null,
+                        manualPayment:
+                          paymentByOrder.get(o.order_id) ?? null,
+                        statusEvent:
+                          stripeStatusByOrder.get(o.order_id) ?? null,
+                      });
+                      if (state.status === 'refunded') {
+                        return (
+                          <small>
+                            ↩ Refunded — Stripe refund recorded{' '}
+                            {state.status_event?.recorded_at.slice(0, 10)}
+                          </small>
+                        );
+                      }
+                      if (state.status === 'disputed') {
+                        return (
+                          <small>
+                            ⚠ Disputed — Stripe dispute opened{' '}
+                            {state.status_event?.recorded_at.slice(0, 10)}
+                          </small>
+                        );
+                      }
+                      if (state.status === 'cancelled') {
+                        return <small>Cancelled</small>;
+                      }
+                      if (state.is_paid) {
+                        const manual = state.manual_payment;
+                        if (manual) {
+                          return (
+                            <small>
+                              ✓ Paid — confirmed{' '}
+                              {manual.recorded_at.slice(0, 10)}
+                              {manual.reference
+                                ? ` · ref ${manual.reference}`
+                                : ''}
+                            </small>
+                          );
+                        }
+                        return (
+                          <small>
+                            ✓ Paid — card payment confirmed by Stripe{' '}
+                            {state.stripe_payment?.paid_at.slice(0, 10)}
+                          </small>
+                        );
+                      }
+                      return <small>Awaiting payment</small>;
                     })()}
                   </td>
                   <td>
@@ -174,18 +246,61 @@ export default async function AdminOrdersPage() {
           </table>
         )}
 
+        <section aria-label="Stripe webhook events" style={{ marginTop: '2.5rem' }}>
+          <h2>Stripe webhook events</h2>
+          <p>
+            The most recent events the verified Stripe webhook processed
+            (Stage 1 event ledger) — event id, type, outcome, and when it
+            was recorded. Deliveries that fail verification or processing
+            are not recorded here; they appear in the server logs instead.
+          </p>
+          {webhookEvents.length === 0 ? (
+            <p>No webhook events recorded yet.</p>
+          ) : (
+            <table>
+              <caption>Stripe webhook events, newest first</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Event</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Outcome</th>
+                  <th scope="col">Recorded</th>
+                </tr>
+              </thead>
+              <tbody>
+                {webhookEvents.map((event) => (
+                  <tr key={event.stripe_event_id}>
+                    <td>
+                      <code>{event.stripe_event_id}</code>
+                    </td>
+                    <td>{event.event_type}</td>
+                    <td>{event.outcome}</td>
+                    <td>{event.recorded_at}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
         <section aria-label="Confirm payment received" style={{ marginTop: '2.5rem' }}>
           <h2>Confirm payment received</h2>
           <p>
-            When an order&apos;s payment lands — BookiPay shows the Bookipi
-            invoice paid, or the Cash App / Venmo payment arrives — confirm
-            it here. The confirmation is appended to the payment ledger
-            (the order record is never edited), the table above marks the
-            order paid, and the customer sees “Payment confirmed” on the{' '}
-            <Link href="/order-status">order-status page</Link>. Bookipi
-            sends no automatic signal, so this step is what moves an order
-            out of “awaiting payment”. See the Bookipi owner runbook for
-            the full per-order loop.
+            When an order&apos;s payment lands — the Cash App / Venmo
+            payment arrives — confirm it here. The confirmation is
+            appended to the payment ledger (the order record is never
+            edited), the table above marks the order paid, and the
+            customer sees it as paid on the{' '}
+            <Link href="/order-status">order-status page</Link> and in
+            their account order history. Manual payments send no
+            automatic signal, so this step is what moves an order out of
+            “awaiting payment”. Card orders paid through the on-site
+            Stripe checkout need no confirmation here — the verified
+            Stripe webhook marks them paid automatically, and a Stripe
+            refund or dispute moves them to “Refunded” / “Disputed”
+            above. (Orders placed before 2026-10-21 via the removed
+            emailed-invoice path are confirmed the same way, under the
+            method recorded on the order.)
           </p>
           <PaymentConfirmForm configured={ownerSecretConfigured()} />
         </section>

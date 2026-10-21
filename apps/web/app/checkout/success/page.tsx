@@ -2,7 +2,7 @@
  * /checkout/success — order confirmation page.
  *
  * A general "order confirmed" landing page. Payment on this site is by
- * Cash App / Venmo or by an emailed Bookipi card invoice, and Amber
+ * card (embedded Stripe checkout) or by Cash App / Venmo, and Amber
  * confirms every order personally — so this page simply thanks the
  * customer, points them to their email for confirmation, and links the
  * order-status lookup (/order-status) where shipment tracking appears
@@ -48,8 +48,8 @@ export default function CheckoutSuccessPage() {
         </h1>
         <p style={{ fontSize: '1.1rem', lineHeight: 1.7, margin: '0 0 1rem' }}>
           Thank you! Your order is in. Amber will confirm it personally via
-          email before fulfillment — and if you chose to pay by card, your
-          secure Bookipi invoice will arrive by email shortly.
+          email before fulfillment — watch your inbox for your confirmation
+          and payment details.
         </p>
         <div
           style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}

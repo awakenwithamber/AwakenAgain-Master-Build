@@ -1,17 +1,19 @@
 /**
  * /checkout/return — landing page after the embedded card checkout.
  *
- * DISPLAY ONLY. This page reads the order + the webhook-written Stripe
- * payment ledger and shows where things stand. It never marks anything
- * paid: paid state is written exclusively by the signature-verified
- * webhook (app/api/stripe/webhook). If the webhook has not landed yet,
+ * DISPLAY ONLY. This page reads the order + its paid state through
+ * the shared resolver (lib/orders/paid-state.ts) and shows where
+ * things stand — including a Stripe refund/dispute when one has been
+ * recorded. It never marks anything paid: paid state is written
+ * exclusively by the signature-verified webhook
+ * (app/api/stripe/webhook). If the webhook has not landed yet,
  * the page says payment is being confirmed and points at the
  * order-status lookup — it does not guess.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { defaultOrderStore } from '../../../lib/stores/order-store';
-import { findStripePayment } from '../../../lib/payments/stripe';
+import { resolveOrderPaidState } from '../../../lib/orders/paid-state';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
@@ -32,7 +34,8 @@ export default async function CheckoutReturnPage({
     ? await defaultOrderStore().listOrders({ limit: 1000 })
     : [];
   const order = orders.find((o) => o.order_id === orderId) ?? null;
-  const payment = order ? await findStripePayment(order.order_id) : null;
+  const paidState = order ? await resolveOrderPaidState(order) : null;
+  const payment = paidState?.is_paid ? paidState.stripe_payment : null;
 
   return (
     <main
@@ -47,7 +50,41 @@ export default async function CheckoutReturnPage({
         minHeight: '60vh',
       }}
     >
-      {payment ? (
+      {paidState?.status === 'refunded' || paidState?.status === 'disputed' ? (
+        <>
+          <h1
+            style={{
+              fontFamily: "'Cinzel Decorative', 'Cinzel', serif",
+              fontSize: '2rem',
+              margin: '0 0 1.5rem',
+            }}
+          >
+            {paidState.status === 'refunded'
+              ? 'Payment Refunded'
+              : 'Payment Disputed'}
+          </h1>
+          <p style={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
+            {paidState.status === 'refunded' ? (
+              <>
+                Your card payment for order <strong>{order?.order_id}</strong>{' '}
+                was refunded through Stripe. If you have questions about
+                your refund, please contact Amber.
+              </>
+            ) : (
+              <>
+                A payment dispute was opened through Stripe for order{' '}
+                <strong>{order?.order_id}</strong>. If that is unexpected,
+                please contact Amber.
+              </>
+            )}{' '}
+            You can check any time on the{' '}
+            <Link href="/order-status" style={{ color: '#d4af37' }}>
+              order status page
+            </Link>{' '}
+            with your order ID and email.
+          </p>
+        </>
+      ) : payment ? (
         <>
           <p aria-hidden="true" style={{ fontSize: '3rem', margin: '0 0 1rem' }}>
             ✨

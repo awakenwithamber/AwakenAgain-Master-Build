@@ -17,7 +17,7 @@ import { CANONICAL_ROUTES, canonicalUrl } from '../lib/seo/routes';
 import { PRODUCTS } from '../lib/catalog/products';
 import { isSupersededProduct } from '../lib/catalog/status';
 import { JOURNAL_ARTICLES } from '../lib/content/journal';
-import { HERB_INDEX } from '../lib/content/herbs';
+import { herbalRouteParams } from '../lib/herbal-index/cards';
 import {
   SERVICE_PAGES,
   servicePagePath,
@@ -46,8 +46,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }));
-  const herbRoutes: MetadataRoute.Sitemap = HERB_INDEX.map((h) => ({
-    url: canonicalUrl(`/herbal-library/${h.slug}`, base),
+  // Herb detail routes come from the Herbal Index workstream's full
+  // route set (every catalog record + the canonical HERB_INDEX alias
+  // slugs = 310 routes), not just the 29 legacy index slugs.
+  const herbRoutes: MetadataRoute.Sitemap = herbalRouteParams().map((p) => ({
+    url: canonicalUrl(`/herbal-library/${p.herb}`, base),
     lastModified: now,
     changeFrequency: 'monthly' as const,
     priority: 0.5,

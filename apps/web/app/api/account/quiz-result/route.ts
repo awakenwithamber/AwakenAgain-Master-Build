@@ -2,16 +2,19 @@
  * POST /api/account/quiz-result — save a quiz result to the signed-in
  * profile (Phase 3 Step 3).
  *
- * Body: { concernId, formId }. The snapshot is computed SERVER-side
- * from the ids (lib/quiz) — the client's copy of its own result is
- * never trusted as the stored record. Saving also stamps the profile's
- * quiz-completion progress marker (in the store's save path).
+ * Body: { concernId, formId, screening? }. The snapshot is computed
+ * SERVER-side from the ids (lib/quiz) — the client's copy of its own
+ * result is never trusted as the stored record. The Stage 4 screening
+ * answers are normalized server-side and stored on the snapshot.
+ * Saving also stamps the profile's quiz-completion progress marker
+ * (in the store's save path).
  */
 import { NextResponse } from 'next/server';
 import {
   getQuizResult,
   isValidConcernId,
   isValidFormId,
+  normalizeQuizScreening,
   toQuizResultSnapshot,
 } from '../../../../lib/quiz/quiz';
 import { saveQuizResultAsync } from '../../../../lib/accounts/accounts';
@@ -39,7 +42,11 @@ export async function POST(request: Request) {
   if (!isValidConcernId(body.concernId) || !isValidFormId(body.formId)) {
     return accountFail(['Unknown quiz answers — please retake the quiz.']);
   }
-  const result = getQuizResult(body.concernId, body.formId);
+  const result = getQuizResult(
+    body.concernId,
+    body.formId,
+    normalizeQuizScreening(body.screening),
+  );
   if (!result) {
     return accountFail(['Unknown quiz answers — please retake the quiz.']);
   }

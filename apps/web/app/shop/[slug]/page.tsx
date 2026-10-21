@@ -26,6 +26,10 @@ import {
   type ProductDisplayImage,
 } from '../../../lib/media/product-image';
 import type { Product } from '../../../types';
+import {
+  ProductDisclaimerSections,
+  ProductIngredientsSections,
+} from '../../../components/shop/ProductSafetySections';
 import Link from 'next/link';
 
 export function generateStaticParams() {
@@ -241,6 +245,11 @@ export default async function ProductPage({
           </section>
         ) : null}
 
+        {/* Complete ingredients + allergen statement (R-18): the
+            record's FULL ingredient data, and its allergen statement
+            only when the record carries a real determination. */}
+        <ProductIngredientsSections product={product} />
+
         {product.directions ? (
           <section aria-label="Directions">
             <h2>Directions</h2>
@@ -259,11 +268,11 @@ export default async function ProductPage({
           </section>
         ) : null}
 
-        {product.disclaimer ? (
-          <p>
-            <small>{String(product.disclaimer)}</small>
-          </p>
-        ) : null}
+        {/* Record disclaimer + FDA statement (R-07): the full statutory
+            sentence on every ingestible product, in addition to the
+            record's own disclaimer — several bundle/ritual records
+            carry only the short "educational purposes" text. */}
+        <ProductDisclaimerSections product={product} />
       </main>
     </>
   );

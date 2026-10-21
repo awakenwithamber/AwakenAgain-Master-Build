@@ -1,15 +1,24 @@
 /**
- * /herb-index — Herb Explorer + botanical archive index (workstream E, G7).
+ * /herb-index — the Herbal Index (owner directive 2026-10-21).
  *
- * Search the archive by symptom/concern, then open any result's botanical
- * index card. Below the explorer, the full canonical index links out to the
- * per-herb library entries (29 herbs; full entries are being written and
- * render honest "in preparation" states until verified).
+ * Its OWN public store surface, fully separate from the Grimoire: no
+ * entitlement, subscription, or gating code is involved in this route.
+ *
+ * Search the archive with the Herb Explorer, then browse the full card
+ * grid: one parchment card per catalog record (built to reach 333 herb
+ * cards as approved additions land in the catalog — the grid is derived
+ * from the records, so additions appear with no code change). Card
+ * content is verbatim from each record; entries whose archive record is
+ * still incomplete say so on the card itself.
  */
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { HERB_CATEGORIES, HERB_INDEX } from '../../lib/content/herbs';
+import { HERB_CATEGORIES } from '../../lib/content/herbs';
+import {
+  HERBAL_CARDS,
+  herbalIndexManifest,
+} from '../../lib/herbal-index/cards';
 import { HerbExplorer } from '../../components/herbs/HerbExplorer';
+import { HerbalIndexCardView } from '../../components/herbs/HerbalIndexCard';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata: Metadata = {
@@ -19,14 +28,25 @@ export const metadata: Metadata = {
 };
 
 export default function HerbIndexPage() {
+  const manifest = herbalIndexManifest();
   return (
     <main id="main-content" className="page content-page">
       <InterestTracker category="herbs" signalKey="herb-index" />
       <h1>🌿 Herb Index</h1>
       <p>
-        Our botanical archive holds 300+ herbs, roots, flowers, and mushrooms
-        from traditions around the world. Start with the explorer below, or
-        browse the archive.
+        Our botanical archive holds herbs, roots, flowers, and mushrooms from
+        traditions around the world. Start with the explorer below, or browse
+        the full card index.
+      </p>
+      <p>
+        The index is being built to {manifest.targetCards} herb cards. It
+        currently holds {manifest.totalRecords} archive entries —{' '}
+        {manifest.herbRecords} of them herbs, roots, flowers, resins, oils,
+        and mushrooms, the rest other traditional ingredients (vitamins,
+        minerals, and the like) kept in the archive for the formula builders.
+        Every card shows only what its archive record actually holds:
+        properties are listed verbatim as traditional &amp; folkloric uses,
+        and an entry that is still being completed says so on its card.
       </p>
 
       <HerbExplorer />
@@ -37,17 +57,13 @@ export default function HerbIndexPage() {
           <li key={c}>{c}</li>
         ))}
       </ul>
-      <h2>Featured herbs</h2>
-      <ul className="herb-index-list">
-        {HERB_INDEX.map((h) => (
-          <li key={h.slug}>
-            <Link href={`/herbal-library/${h.slug}`}>
-              {h.name} <em>({h.latin})</em>
-            </Link>
-            <span className="herb-index-cats">{h.categories.join(' · ')}</span>
-          </li>
+
+      <h2>All index cards</h2>
+      <div className="aa-herbal-grid">
+        {HERBAL_CARDS.map((card) => (
+          <HerbalIndexCardView key={card.slug} card={card} />
         ))}
-      </ul>
+      </div>
     </main>
   );
 }

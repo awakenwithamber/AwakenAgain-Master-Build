@@ -14,9 +14,11 @@
  * payment instructions for the first month.
  *
  * The record becomes `active` ONLY through owner confirmation of the first
- * payment — there is no client path to confirmation. Recurring-billing
- * mechanics on Cash App/Venmo are NEEDS VERIFICATION (owner decision);
- * nothing here invents a billing process.
+ * payment — there is no client path to confirmation. This is the MANUAL
+ * fallback rail (Stage 3): card subscribers subscribe through Stripe
+ * Checkout instead (/api/subscriptions/stripe-checkout) and are billed
+ * automatically by Stripe; manual members renew by sending each month's
+ * payment, which Amber confirms the same way as the first.
  *
  * NOTE: only HTTP handlers and route config may be exported from a route
  * module — validateAndBuildSubscription lives in
@@ -58,9 +60,10 @@ function paymentInstructions() {
     amount: grimoirePlanPriceLabel(),
     note:
       'Send your first month with Cash App or Venmo — whichever you prefer. ' +
-      'Amber confirms every subscription personally. ' +
-      'Monthly renewal mechanics are being finalized — ' +
-      'Amber will contact you directly before any renewal is due.',
+      'Amber confirms every manual subscription personally. For manual ' +
+      'memberships, send $7.77 each month to stay active; if you would ' +
+      'rather renew automatically by card, use the card subscription ' +
+      'option on the subscribe page instead.',
   };
 }
 

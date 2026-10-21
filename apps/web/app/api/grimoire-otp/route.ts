@@ -5,18 +5,20 @@
  *  provider is UNDECIDED — the code is never logged and never sent in the
  *  response), emits server-owned `otp_requested`.
  * POST { action: 'verify', request_id, code } → single-use verification;
- *  on success issues a 24h session token, emits server-owned `otp_verified`.
+ *  on success issues a 24h session token, emits server-owned `otp_verified`,
+ *  and sets the token as an httpOnly cookie (Stage 2) so the
+ *  server-rendered /grimoire page can resolve the session itself.
  *  ENTITLEMENT (audit 2026-10-15 GAP-4): verification also resolves
- *  subscription entitlement (lib/subscriptions/entitlement — the latest
- *  record for the email must be 'active', fail-closed). A correct code
- *  for a non-member email is answered 403 with an honest explanation and
+ *  Grimoire entitlement (lib/grimoire/entitlement — subscription ∪
+ *  PERMANENT_UNLOCK ∪ keeper, fail-closed). A correct code for a
+ *  non-entitled email is answered 403 with an honest explanation and
  *  grants NO session — a code proves inbox possession, not membership.
- * GET ?token= → session validity (for the GrimoireGate component).
+ * GET ?token= → session validity (for the GrimoireGate component);
+ *  with no token param it reads the session cookie instead.
  *
- * Bound store: InMemoryOtpStore (dev/preview). It does NOT survive
- * serverless instance recycling — the durable binding is a Supabase-backed
- * OtpStore, which stays behind the interface until the Supabase project /
- * table / RLS design is verified (NEEDS VERIFICATION; see lib/grimoire/otp).
+ * Bound store: getSharedOtpStore() — Postgres event store when
+ * DATABASE_URL is configured, in-memory otherwise (Stage 2; Supabase
+ * is dropped from the stack).
  *
  * NOTE: only HTTP handlers and route config may be exported from a route
  * module — requestOtp/verifyOtp/getValidSession live in
@@ -29,18 +31,25 @@ import {
   resolveGrimoireServerDistinctId,
 } from '../../../lib/analytics/grimoire-events';
 import {
-  InMemoryOtpStore,
+  GRIMOIRE_SESSION_COOKIE,
   OTP_PURPOSE,
+  OTP_SESSION_TTL_SECONDS,
+  getSharedOtpStore,
   getValidSession,
+  grimoireSessionCookieOptions,
   parseOtpRequestBody,
   requestOtp,
   verifyOtp,
 } from '../../../lib/grimoire/otp';
-import { isEntitledSubscriberAsync } from '../../../lib/subscriptions/entitlement';
+import { isGrimoireEntitled } from '../../../lib/grimoire/entitlement';
+import { cookieValueFromHeader } from '../../../lib/accounts/session';
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
+import { createLogger } from '../../../lib/observability/logger';
 
-/** Bound store — in-memory until the Supabase binding is verified. */
-const store = new InMemoryOtpStore();
+const log = createLogger('api:grimoire-otp');
+
+/** Bound store — Postgres when DATABASE_URL is set, in-memory otherwise. */
+const store = getSharedOtpStore();
 
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
@@ -82,10 +91,11 @@ export async function POST(request: Request) {
     // included in analytics — only the fact of issuance is logged. No
     // delivery provider is bound yet (UNDECIDED), so until one is, an
     // issued code cannot reach the customer through any channel here.
-    console.info(
-      `[grimoire-otp] code issued for request ${result.request.request_id} ` +
-        `(delivery provider not yet bound).`,
-    );
+    // Only the FACT of issuance is logged (never the code) — now via
+    // the structured logger (Stage 5).
+    log.info('code issued (delivery provider not yet bound)', {
+      request_id: result.request.request_id,
+    });
 
     captureGrimoireServerEvent(
       GRIMOIRE_ANALYTICS_EVENT_NAMES.otpRequested,
@@ -104,7 +114,7 @@ export async function POST(request: Request) {
   // required before a session exists (entitlement semantics live in
   // lib/subscriptions/entitlement; fail-closed).
   const verified = await verifyOtp(store, parsed.request_id, parsed.code, {
-    entitlementCheck: isEntitledSubscriberAsync,
+    entitlementCheck: isGrimoireEntitled,
   });
   if (!verified.ok) {
     if (verified.reason === 'not_entitled') {
@@ -112,8 +122,9 @@ export async function POST(request: Request) {
       // membership for that email.
       return fail(
         [
-          "That email doesn't have an active Living Grimoire membership. " +
-            'If you recently subscribed, sign in with the same email you subscribed with.',
+          "That email doesn't have Living Grimoire access — no active " +
+            'subscription, permanent unlock, or keeper access is recorded for it. ' +
+            'If you recently subscribed or unlocked the book, sign in with the same email you used.',
         ],
         403,
       );
@@ -137,18 +148,32 @@ export async function POST(request: Request) {
     sessionDistinctId(request, `otp-session:${verified.session.session_token.slice(0, 12)}`),
   );
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     ok: true,
     session_token: verified.session.session_token,
     expires_at: verified.session.expires_at,
   });
+  // Stage 2: the session also travels as an httpOnly cookie so the
+  // server-rendered /grimoire page can read it — the client-side gate
+  // no longer has to hold the only copy of the token.
+  response.cookies.set(
+    GRIMOIRE_SESSION_COOKIE,
+    verified.session.session_token,
+    grimoireSessionCookieOptions(OTP_SESSION_TTL_SECONDS),
+  );
+  return response;
 }
 
 export async function GET(request: Request) {
   const limited = enforceRateLimit(request, 'grimoire-otp-session');
   if (limited) return limited;
 
-  const token = new URL(request.url).searchParams.get('token');
+  const token =
+    new URL(request.url).searchParams.get('token') ??
+    cookieValueFromHeader(
+      request.headers.get('cookie'),
+      GRIMOIRE_SESSION_COOKIE,
+    );
   const session = await getValidSession(store, token);
   if (!session) {
     return NextResponse.json({ ok: true, valid: false }, { status: 200 });

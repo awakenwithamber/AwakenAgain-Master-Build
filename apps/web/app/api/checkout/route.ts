@@ -15,13 +15,10 @@
  * On success: an order record is created with a generated order ID and
  * appended to the local JSONL ledger (reversible; production persistence is
  * Supabase — UNDECIDED, NEEDS VERIFICATION). Payment follows the owner's
- * decisions (2026-10-13 + 2026-10-19): Cash App + Venmo handles; card via
- * the embedded Stripe checkout (primary card path — the order is recorded
+ * decisions (2026-10-13 + 2026-10-19 + 2026-10-21): Cash App + Venmo
+ * handles; card via the embedded Stripe checkout (the order is recorded
  * UNPAID here, a session is bound by POST /api/stripe/checkout-session,
- * and only the signature-verified webhook marks it paid); or — as the
- * backup card path — an emailed Bookipi invoice (Bookipi has no public
- * API; the owner sends the invoice from her own account and the order
- * waits under the same owner-confirmation gate). The response
+ * and only the signature-verified webhook marks it paid). The response
  * instructions always match the method recorded on the order. On success
  * a purchase_confirmation email job is also queued for the customer
  * (lib/jobs/order-confirmation — Resend when RESEND_API_KEY is set,
@@ -40,6 +37,9 @@ import {
 } from '../../../lib/checkout/order';
 import { createOrderStore } from '../../../lib/orders/store';
 import { queueOrderConfirmation } from '../../../lib/jobs/order-confirmation';
+import { createLogger } from '../../../lib/observability/logger';
+
+const log = createLogger('api:checkout');
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
 import { isEntitledSubscriberAsync } from '../../../lib/subscriptions/entitlement';
 import {
@@ -87,9 +87,9 @@ function persistOrder(record: OrderRecord) {
 /**
  * Payment instructions for the method recorded on the order. The
  * Cash App / Venmo shape is unchanged from the original flow. The card
- * shape carries NO handles: the customer will be emailed a secure
- * Bookipi invoice referencing this order, at the email they ordered
- * with, and the order is prepared once that invoice is paid.
+ * shape carries NO handles: the customer completes payment in the
+ * embedded checkout on this site, and the order is prepared once that
+ * payment is confirmed.
  */
 function paymentInstructions(record: OrderRecord) {
   if (record.payment_method === 'stripe_card_embedded') {
@@ -100,19 +100,6 @@ function paymentInstructions(record: OrderRecord) {
         'You chose to pay by card. Your order is placed and in review — ' +
         'complete your card payment in the secure embedded checkout on ' +
         'this page. Your order is prepared once payment is confirmed.',
-    };
-  }
-  if (record.payment_method === 'bookipi_card_invoice') {
-    return {
-      method: record.payment_method,
-      order_id: record.order_id,
-      invoice_email: record.customer.email,
-      note:
-        'You chose to pay by card. We will email you a secure Bookipi ' +
-        'invoice for this order — just follow the link in that email to ' +
-        'pay by credit or debit card. Your order is prepared once the ' +
-        'invoice is paid, and Amber confirms every order personally ' +
-        'before fulfillment.',
     };
   }
   return {
@@ -168,8 +155,16 @@ export async function POST(request: Request) {
   // Fire-and-forget with a catch: email can never fail or delay an
   // accepted order. Delivery is real when RESEND_API_KEY is set
   // (Resend provider), and a recorded no-send otherwise.
-  void queueOrderConfirmation(record).catch(() => {
-    // Intentionally swallowed — the ledger is the order system of record.
+  // Stage 5: the failure is no longer swallowed silently — it is
+  // logged (order id + error class, redacted) so a lost confirmation
+  // email is visible to the owner. The order flow is unchanged: email
+  // can still never fail or delay an accepted order — the ledger is
+  // the order system of record.
+  void queueOrderConfirmation(record).catch((err: unknown) => {
+    log.error('order confirmation email failed (order saved)', {
+      order_id: record.order_id,
+      error: err,
+    });
   });
 
   // Authoritative order event (server-owned, exactly once per accepted

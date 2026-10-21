@@ -34,6 +34,9 @@ import {
   SIGNIN_UNAVAILABLE_MESSAGE,
 } from '../../../../lib/accounts/http';
 import { sanitizeEmail } from '../../../../lib/security/validation';
+import { createLogger } from '../../../../lib/observability/logger';
+
+const log = createLogger('api:account-request-code');
 import {
   buildAccountSigninCodeJob,
   createEmailProvider,
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
     const result = await createEmailProvider().send(job);
     if (!result.ok) delivery = 'preview';
   } catch (err) {
-    console.error('[account] sign-in code delivery failed:', err);
+    log.error('sign-in code delivery failed', { error: err });
     delivery = 'preview';
   }
 

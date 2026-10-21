@@ -23,6 +23,9 @@ import { buildQuizResultsJob, createEmailProvider } from '../../../lib/jobs/emai
 import { captureContentServerEventSoon } from '../../../lib/analytics/content-posthog-server';
 import { resolveServerDistinctId } from '../../../lib/analytics/posthog-server';
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
+import { createLogger } from '../../../lib/observability/logger';
+
+const log = createLogger('api:quiz-lead');
 
 export async function POST(req: Request) {
   const limited = enforceRateLimit(req, 'quiz-lead');
@@ -48,7 +51,9 @@ export async function POST(req: Request) {
 
   const v = validation.value!;
   // Validation guarantees the ids resolve, so the result always exists.
-  const result = getQuizResult(v.concernId, v.formId)!;
+  // The screening answers ride along so the stored snapshot is the
+  // screened result the visitor actually saw (Stage 4, R-14).
+  const result = getQuizResult(v.concernId, v.formId, v.screening)!;
   const snapshot = toQuizResultSnapshot(result);
   const record = await leadStore.append({
     kind: 'quiz_lead',
@@ -69,7 +74,7 @@ export async function POST(req: Request) {
     const job = buildQuizResultsJob(v.email, { name: v.name, result: snapshot });
     await createEmailProvider().send(job);
   } catch (err) {
-    console.error('[quiz-lead] results email job failed (lead saved):', err);
+    log.error('results email job failed (lead saved)', { error: err });
   }
 
   // Server-owned: the store is the authority; this records the fact.

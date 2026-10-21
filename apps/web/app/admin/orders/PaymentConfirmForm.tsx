@@ -91,8 +91,8 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
         setOutcome({
           kind: 'success',
           message: data.already_recorded
-            ? `That payment was already confirmed for ${data.order_id} — nothing new was added. The customer sees it as paid on the order-status page.`
-            : `Confirmed — ${data.order_id} is now marked paid (${data.payment?.method_label ?? 'payment recorded'}). The customer sees “Payment confirmed” on the order-status page.`,
+            ? `That payment was already confirmed for ${data.order_id} — nothing new was added. The customer sees it as paid on the order-status page and in their account order history.`
+            : `Confirmed — ${data.order_id} is now marked paid (${data.payment?.method_label ?? 'payment recorded'}). The customer sees “Payment confirmed” on the order-status page and “Paid” in their account order history.`,
         });
         setReference('');
         setNote('');
@@ -175,7 +175,6 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
         >
           <option value="">As recorded on the order</option>
           <option value="cash_app_or_venmo">Cash App / Venmo</option>
-          <option value="bookipi_card_invoice">Card — Bookipi invoice</option>
         </select>
       </div>
       <div style={{ marginBottom: '1.25rem' }}>
@@ -190,7 +189,7 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
           value={reference}
           onChange={(event) => setReference(event.target.value)}
           style={inputStyle}
-          placeholder="Bookipi invoice # or Cash App / Venmo reference"
+          placeholder="Cash App / Venmo reference"
         />
       </div>
       <div style={{ marginBottom: '1.25rem' }}>

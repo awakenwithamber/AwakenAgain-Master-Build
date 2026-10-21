@@ -58,6 +58,7 @@ const hintStyle: CSSProperties = {
 const STATUS_LABEL: Record<SubscriptionMember['status'], string> = {
   pending_payment: 'Pending payment',
   active: 'Active',
+  past_due: 'Past due (grace)',
   cancelled: 'Cancelled',
 };
 

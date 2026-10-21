@@ -10,15 +10,16 @@
  * or probe which emails ordered what.
  *
  * Response is a minimal summary (status, totals, item count) plus — once
- * the owner has recorded them — the payment confirmation from the
- * append-only payment ledger (lib/orders/payments.ts; an order is 'paid'
- * iff a confirmation event exists — audit 2026-10-15 GAP-1) and the
+ * the owner has recorded them — the payment confirmation and the
  * shipment's carrier tracking number and public carrier link from the
- * append-only tracking ledger (lib/orders/tracking.ts). Embedded-card
- * orders additionally resolve 'paid' from the webhook-written Stripe
- * payment ledger (lib/payments/stripe.ts — the only writer of paid
- * state for card orders). No address, phone, or notes ever leave the
- * order record through this route.
+ * append-only tracking ledger (lib/orders/tracking.ts). Payment state
+ * itself resolves through the ONE shared resolver
+ * (lib/orders/paid-state.ts — audit G-5): BOTH the owner-confirmed
+ * manual payment ledger (lib/orders/payments.ts) and the
+ * webhook-written Stripe payment ledger (lib/payments/stripe.ts) are
+ * checked for every order, and a recorded Stripe refund/dispute
+ * transition supersedes 'paid'. No address, phone, or notes ever leave
+ * the order record through this route.
  *
  * Rate-limited on the 'orders' group (moderate): a human checking a
  * parcel uses this a handful of times; scripted probing is throttled.
@@ -31,15 +32,11 @@ import {
 } from '../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../lib/security/rate-limit';
 import { defaultOrderStore } from '../../../../lib/stores/order-store';
-import { findLatestPaymentAsync } from '../../../../lib/orders/payments';
 import {
   findLatestTrackingAsync,
   toTrackingView,
 } from '../../../../lib/orders/tracking';
-import {
-  findStripePayment,
-  resolveOrderStatus,
-} from '../../../../lib/payments/stripe';
+import { resolveOrderPaidState } from '../../../../lib/orders/paid-state';
 import { normalizeSubscriptionEmail } from '../../../../lib/subscriptions/entitlement';
 
 function fail(errors: string[], status = 422) {
@@ -84,15 +81,11 @@ export async function POST(request: Request) {
   }
 
   const tracking = await findLatestTrackingAsync(order.order_id);
-  const payment = await findLatestPaymentAsync(order.order_id);
-  // Card orders also resolve 'paid' from the webhook-written Stripe
-  // payment ledger — the only writer of paid state for the embedded
-  // checkout. Cash App / Venmo / Bookipi orders resolve from the owner
-  // payment-confirmation ledger above (GAP-1).
-  const stripePayment =
-    order.payment_method === 'stripe_card_embedded'
-      ? await findStripePayment(order.order_id)
-      : null;
+  // ONE shared paid-state resolver (lib/orders/paid-state.ts): both
+  // paid ledgers are checked for every order regardless of its
+  // recorded payment method, and a Stripe refund/dispute transition
+  // supersedes 'paid'.
+  const paidState = await resolveOrderPaidState(order);
 
   return NextResponse.json({
     ok: true,
@@ -102,17 +95,14 @@ export async function POST(request: Request) {
       customer_name: order.customer.name,
       /**
        * Order lifecycle — 'pending_payment' until payment is confirmed:
-       * by the owner's append-only confirmation event (any method) or,
-       * for embedded-card orders, by the verified Stripe webhook. The
-       * confirmation is joined at read time, never an edit to the
-       * order record (audit 2026-10-15 GAP-1).
+       * by the owner's append-only confirmation event (any method) or
+       * by the verified Stripe webhook; a verified refund/dispute
+       * event moves a paid order to 'refunded' / 'disputed'. The
+       * state is joined at read time, never an edit to the order
+       * record (audit 2026-10-15 GAP-1, Stage 1 G-4/G-5).
        */
-      status: payment ? 'paid' : resolveOrderStatus(order, stripePayment),
-      payment_confirmed_at: payment
-        ? payment.recorded_at
-        : stripePayment
-          ? stripePayment.paid_at
-          : null,
+      status: paidState.status,
+      payment_confirmed_at: paidState.payment_confirmed_at,
       shipping_status: order.shipping_status,
       payment_method: order.payment_method,
       item_count:

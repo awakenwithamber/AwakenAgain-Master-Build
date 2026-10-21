@@ -7,8 +7,11 @@
  * sign-in. When sign-in is not configured on this server, the sign-in
  * island shows the honest not-yet-open state instead of a dead form.
  *
- * This account is NOT Living Grimoire membership — the Grimoire keeps
- * its own gate, and nothing here reads subscription entitlement.
+ * The Grimoire keeps its own gate (OTP + entitlement); this page
+ * additionally SHOWS the member's subscription state (Stage 3:
+ * active / past-due grace / cancelling / lapsed, composed by
+ * lib/accounts/profile.ts) and offers Stripe Customer Portal
+ * management for card subscribers. Display never grants entitlement.
  */
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
