@@ -40,8 +40,8 @@ export function orderItemSummary(record: OrderRecord): string {
 /**
  * Build the confirmation job for an accepted order. The data matches the
  * payment method recorded on the order: Cash App / Venmo jobs carry the
- * payment handles; Bookipi card jobs carry NO handles — the customer is
- * waiting for the emailed invoice, and the confirmation must say so.
+ * payment handles; embedded-card jobs carry NO handles — payment happens
+ * on the site, and the confirmation must say so.
  */
 export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
   const items = record.items.map((line) => ({

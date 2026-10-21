@@ -6,7 +6,12 @@
  * LeadStore. Rules: RFC-ish email shape, explicit consent required, answers
  * must reference real quiz ids. No PII leaves the validation layer.
  */
-import { isValidConcernId, isValidFormId } from '../quiz/quiz';
+import {
+  isValidConcernId,
+  isValidFormId,
+  normalizeQuizScreening,
+  type QuizScreening,
+} from '../quiz/quiz';
 import { isValidProjectSlug, NETWORK_PROJECT_SLUGS } from '../content/network';
 import { isValidContributionType } from '../content/partnerships';
 
@@ -41,6 +46,8 @@ export interface QuizLeadInput {
   consent: true;
   concernId: string;
   formId: string;
+  /** Stage 4 screening answers (absent → all "no", the legacy shape). */
+  screening: QuizScreening;
 }
 
 export function validateQuizLead(body: unknown): ValidationResult<QuizLeadInput> {
@@ -69,6 +76,7 @@ export function validateQuizLead(body: unknown): ValidationResult<QuizLeadInput>
       consent: true,
       concernId: b.concernId as string,
       formId: b.formId as string,
+      screening: normalizeQuizScreening(b.screening),
     },
   };
 }

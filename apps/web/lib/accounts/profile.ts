@@ -14,7 +14,11 @@
  *   once, as the profile save.
  * - Order history: the orders store, filtered to the account email,
  *   display only. Payment state composes exactly like the public
- *   order-status route (latest payment-confirmation event wins).
+ *   order-status route — through the ONE shared resolver
+ *   (lib/orders/paid-state.ts), which checks BOTH the manual
+ *   owner-confirmed ledger and the Stripe webhook ledger for every
+ *   order (Stage 1, audit G-5: this module previously joined only
+ *   the manual ledger, so Stripe-paid orders showed unpaid here).
  *
  * Export (GET /api/account/export) returns EVERYTHING stored for the
  * account: the folded profile, every lead record for the email, and
@@ -34,16 +38,46 @@ import {
 } from './accounts';
 import { readLeadsForEmailAsync, type LeadRecord } from '../leads/lead-store';
 import { defaultOrderStore } from '../stores/order-store';
-import { findLatestPaymentAsync } from '../orders/payments';
+import {
+  resolveOrderPaidState,
+  type OrderStatus,
+} from '../orders/paid-state';
 import { getProductByHandle } from '../catalog/products';
 import type { OrderRecord } from '../checkout/order';
+import { findLatestSubscriptionRecordAsync } from '../subscriptions/entitlement';
+import {
+  describeSubscriptionState,
+  type SubscriptionStateView,
+} from '../subscriptions/subscriptions';
+
+/** Member-facing subscription state for /account (Stage 3). */
+export type ProfileSubscriptionView = SubscriptionStateView & {
+  /** The member's raw latest-record status, for copy branching. */
+  status: SubscriptionStateView['record_status'];
+};
+
+export async function getSubscriptionViewAsync(
+  emailInput: unknown,
+  now: Date = new Date(),
+): Promise<ProfileSubscriptionView | null> {
+  const email = normalizeAccountEmail(emailInput);
+  if (!email) return null;
+  try {
+    const record = await findLatestSubscriptionRecordAsync(email);
+    if (!record) return null;
+    const view = describeSubscriptionState(record, now);
+    return { ...view, status: view.record_status };
+  } catch {
+    return null; // fail closed: no subscription surface on unreadable data
+  }
+}
 
 export interface ProfileOrderSummary {
   order_id: string;
   created_at: string;
   item_count: number;
   total_cents: number;
-  status: 'pending_payment' | 'paid' | 'cancelled';
+  status: OrderStatus;
   payment_method: OrderRecord['payment_method'];
 }
 
@@ -56,6 +90,8 @@ export interface ProfileView {
   quiz_results: SavedQuizResult[];
   progress: AccountProgress | null;
   orders: ProfileOrderSummary[];
+  /** Living Grimoire subscription state, or null when none is held. */
+  subscription: ProfileSubscriptionView | null;
 }
 
 /** Same-sitting window for the lead/profile-save dedupe (see header). */
@@ -115,13 +151,13 @@ export async function listOrdersForEmailAsync(
   );
   const summaries: ProfileOrderSummary[] = [];
   for (const order of mine) {
-    const payment = await findLatestPaymentAsync(order.order_id);
+    const paidState = await resolveOrderPaidState(order);
     summaries.push({
       order_id: order.order_id,
       created_at: order.created_at,
       item_count: order.items.reduce((sum, item) => sum + item.quantity, 0),
       total_cents: order.total_cents,
-      status: payment ? 'paid' : (order.status ?? 'pending_payment'),
+      status: paidState.status,
       payment_method: order.payment_method,
     });
   }
@@ -138,6 +174,7 @@ export async function getProfileViewAsync(
   if (!state.exists || state.deleted) return null;
   const leads = await readLeadsForEmailAsync(email);
   const orders = await listOrdersForEmailAsync(email);
+  const subscription = await getSubscriptionViewAsync(email);
   return {
     email,
     display_name: state.display_name,
@@ -150,6 +187,7 @@ export async function getProfileViewAsync(
     quiz_results: composeQuizResults(state, leads),
     progress: state.progress,
     orders,
+    subscription,
   };
 }
 

@@ -81,6 +81,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       { href: '/legal', label: 'Legal' },
       { href: '/privacy', label: 'Privacy' },
       { href: '/terms', label: 'Terms' },
+      { href: '/returns', label: 'Returns & Refunds' },
     ],
   },
 ];

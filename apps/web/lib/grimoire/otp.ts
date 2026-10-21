@@ -9,12 +9,13 @@
  *   verifyCode(request_id, code) → { session_token, expires_at }  (single use)
  *   getSession(session_token) → session | null
  *
- * IMPLEMENTED NOW: in-memory implementation (dev/preview only — no
- * durability, no multi-instance fan-out). SHIPPED CONTRACT: the OtpStore
- * interface, behind which a Supabase-backed store binds later. The Supabase
- * binding is NOT verified yet — `createSupabaseOtpStore` stays behind the
- * interface and is NOT imported anywhere; Supabase table names, policies,
- * and client wiring are NEEDS VERIFICATION.
+ * IMPLEMENTED: in-memory implementation (dev/preview only — no
+ * durability, no multi-instance fan-out) AND a Postgres-backed store
+ * (Stage 2: PgOtpStore over the append-only event store, following
+ * the repo's PgRecordStore pattern; Supabase is dropped from the
+ * stack, so the old Supabase stub is removed). `createOtpStore()`
+ * selects Postgres when DATABASE_URL is configured, in-memory
+ * otherwise — the same factory shape as the other stores.
  *
  * Security properties:
  * - 6-digit numeric codes, 10-minute TTL, single use, max 5 attempts per
@@ -33,12 +34,37 @@
  */
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { isRecord, sanitizeEmail } from '../security/validation';
+import {
+  EVENT_STREAMS,
+  appendEvent,
+  postgresEnabled,
+  readLatestEvent,
+} from '../events/event-store';
 
 export const OTP_CODE_LENGTH = 6;
 export const OTP_TTL_SECONDS = 10 * 60;
 export const OTP_MAX_ATTEMPTS = 5;
 export const OTP_SESSION_TTL_SECONDS = 24 * 60 * 60;
 export const OTP_PURPOSE = 'grimoire_gate' as const;
+
+/**
+ * httpOnly cookie carrying the OTP session token (Stage 2). The OTP
+ * verify route sets it so the SERVER-rendered /grimoire page can
+ * resolve the viewer's session + entitlements; the client never
+ * reads it. (Account sessions use their own cookie in
+ * lib/accounts/session.ts — this one is the Grimoire gate's.)
+ */
+export const GRIMOIRE_SESSION_COOKIE = 'aa_grimoire_session';
+
+export function grimoireSessionCookieOptions(maxAgeSeconds: number) {
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: maxAgeSeconds,
+  };
+}
 
 /* ------------------------------------------------------------------ */
 /* Contract (provider-neutral)                                          */
@@ -81,21 +107,105 @@ export interface PersistedCodeRequest {
   consumed: boolean;
 }
 
-/**
- * Supabase-shaped store contract (NOT bound yet).
- *
- * NEEDS VERIFICATION: Supabase project/table/RLS policy for OTP is not
- * verified. When it is, implement OtpStore against a `grimoire_otp`
- * table + `grimoire_sessions` table and swap the factory — no route or
- * component code changes. Until then this factory refuses to run so no
- * one can mistake the interface for a working backend.
- */
-export function createSupabaseOtpStore(): OtpStore {
-  throw new Error(
-    'Supabase OTP store is not configured — NEEDS VERIFICATION of the ' +
-      'Supabase project/table/RLS design. The in-memory store is the only ' +
-      'bound implementation.',
+/* ------------------------------------------------------------------ */
+/* Postgres implementation (Stage 2 — PgRecordStore/events pattern)   */
+/*                                                                    */
+/* Code requests and sessions live in the append-only event store:    */
+/* saves append an event keyed by request_id / session_token, and a   */
+/* delete appends a TOMBSTONE event (history is never edited). Reads  */
+/* fold the latest event for the key — same TTL / attempt-burn /      */
+/* single-use semantics as the in-memory store, because those live    */
+/* in requestOtp/verifyOtp/getValidSession, not in the store.        */
+/* ------------------------------------------------------------------ */
+
+interface OtpTombstone {
+  deleted: true;
+  key: string;
+}
+
+function isTombstone(v: unknown): v is OtpTombstone {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    (v as Record<string, unknown>).deleted === true
   );
+}
+
+export class PgOtpStore implements OtpStore {
+  async saveCodeRequest(record: PersistedCodeRequest): Promise<void> {
+    await appendEvent(
+      EVENT_STREAMS.grimoireOtpCodes,
+      record.request_id,
+      'grimoire_otp.code_request_saved',
+      record,
+    );
+  }
+  async getCodeRequest(
+    requestId: string,
+  ): Promise<PersistedCodeRequest | null> {
+    const event = await readLatestEvent<PersistedCodeRequest | OtpTombstone>(
+      EVENT_STREAMS.grimoireOtpCodes,
+      requestId,
+    );
+    if (!event || isTombstone(event.payload)) return null;
+    return event.payload;
+  }
+  async deleteCodeRequest(requestId: string): Promise<void> {
+    await appendEvent(
+      EVENT_STREAMS.grimoireOtpCodes,
+      requestId,
+      'grimoire_otp.code_request_deleted',
+      { deleted: true, key: requestId } satisfies OtpTombstone,
+    );
+  }
+  async saveSession(session: OtpSession): Promise<void> {
+    await appendEvent(
+      EVENT_STREAMS.grimoireOtpSessions,
+      session.session_token,
+      'grimoire_otp.session_saved',
+      session,
+    );
+  }
+  async getSession(sessionToken: string): Promise<OtpSession | null> {
+    const event = await readLatestEvent<OtpSession | OtpTombstone>(
+      EVENT_STREAMS.grimoireOtpSessions,
+      sessionToken,
+    );
+    if (!event || isTombstone(event.payload)) return null;
+    return event.payload;
+  }
+  async deleteSession(sessionToken: string): Promise<void> {
+    await appendEvent(
+      EVENT_STREAMS.grimoireOtpSessions,
+      sessionToken,
+      'grimoire_otp.session_deleted',
+      { deleted: true, key: sessionToken } satisfies OtpTombstone,
+    );
+  }
+}
+
+/**
+ * Store factory — same shape as createOrderStore: DATABASE_URL set →
+ * Postgres event store; unset → in-memory (graceful degradation).
+ */
+export function createOtpStore(): OtpStore {
+  return postgresEnabled() ? new PgOtpStore() : new InMemoryOtpStore();
+}
+
+let sharedStore: { pg: boolean; store: OtpStore } | null = null;
+
+/**
+ * The route's bound store. The in-memory driver must be a SINGLETON
+ * across requests (a fresh map per request would lose codes between
+ * the request and verify calls), so the shared instance is cached —
+ * keyed by driver so an env change rebinds cleanly (tests).
+ */
+export function getSharedOtpStore(): OtpStore {
+  const pg = postgresEnabled();
+  if (!sharedStore || sharedStore.pg !== pg) {
+    sharedStore = { pg, store: createOtpStore() };
+  }
+  return sharedStore.store;
 }
 
 /* ------------------------------------------------------------------ */

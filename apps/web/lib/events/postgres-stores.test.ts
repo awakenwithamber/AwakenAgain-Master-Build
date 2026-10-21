@@ -66,10 +66,27 @@ import {
 import { leadStore } from '../leads/lead-store';
 import { reviewStore } from '../reviews/reviews';
 import {
+  findLatestStripeOrderStatus,
   findStripePayment,
+  findStripeWebhookEvent,
+  hasProcessedStripeEvent,
+  recordStripeOrderStatus,
   recordStripePayment,
+  recordStripeWebhookEvent,
   type StripePaymentRecord,
 } from '../payments/stripe';
+import {
+  PgOtpStore,
+  getValidSession,
+  requestOtp,
+  verifyOtp,
+} from '../grimoire/otp';
+import {
+  findLatestUnlock,
+  grantUnlock,
+  isUnlockEntitled,
+  revokeUnlockByTransactionRef,
+} from '../grimoire/unlock';
 
 const PG_URL = process.env.AWAKEN_PG_TEST_URL;
 const describePg = PG_URL ? describe : describe.skip;
@@ -602,6 +619,136 @@ describePg('pg stripe payments (equivalence)', () => {
     expect(found?.amount_total_cents).toBe(5931);
     expect(found?.stripe_session_id).toBe('cs_test_pg_1');
     expect(await findStripePayment('AWK-PG-UNKNOWN')).toBeNull();
+  });
+
+  it('the payment record carries the Stripe event id', async () => {
+    const payment: StripePaymentRecord = {
+      order_id: 'AWK-PG-STRIPE-2',
+      stripe_session_id: 'cs_test_pg_2',
+      payment_intent_id: 'pi_test_pg_2',
+      amount_total_cents: 100,
+      tax_cents: 0,
+      currency: 'usd',
+      paid_at: '2026-10-21T01:00:00.000Z',
+      source: 'stripe_webhook',
+      stripe_event_id: 'evt_pg_2',
+    };
+    await recordStripePayment(payment);
+    const found = await findStripePayment('AWK-PG-STRIPE-2');
+    expect(found?.stripe_event_id).toBe('evt_pg_2');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Stripe webhook events + order status (Stage 1, G-7/G-4)           */
+/* ------------------------------------------------------------------ */
+
+describePg('pg stripe webhook events + order status (equivalence)', () => {
+  it('webhook events record once per event id', async () => {
+    const rec = {
+      stripe_event_id: 'evt_pg_1',
+      event_type: 'checkout.session.completed',
+      order_id: 'AWK-PG-EVT-1',
+      outcome: 'marked_paid',
+      recorded_at: '2026-10-21T01:00:00.000Z',
+    };
+    expect(await hasProcessedStripeEvent('evt_pg_1')).toBe(false);
+    await recordStripeWebhookEvent(rec);
+    expect(await hasProcessedStripeEvent('evt_pg_1')).toBe(true);
+    const again = await recordStripeWebhookEvent({
+      ...rec,
+      outcome: 'already_paid',
+    });
+    expect(again.outcome).toBe('marked_paid');
+    const events = await readStreamEvents(EVENT_STREAMS.stripeEvents);
+    expect(events).toHaveLength(1);
+    const found = await findStripeWebhookEvent('evt_pg_1');
+    expect(found?.order_id).toBe('AWK-PG-EVT-1');
+  });
+
+  it('order-status transitions: latest per order wins', async () => {
+    await recordStripeOrderStatus({
+      order_id: 'AWK-PG-STAT-1',
+      status: 'disputed',
+      stripe_event_id: 'evt_pg_dispute',
+      charge_id: 'ch_pg_1',
+      payment_intent_id: 'pi_pg_1',
+      recorded_at: '2026-10-21T01:00:00.000Z',
+      source: 'stripe_webhook',
+    });
+    await recordStripeOrderStatus({
+      order_id: 'AWK-PG-STAT-1',
+      status: 'refunded',
+      stripe_event_id: 'evt_pg_refund',
+      charge_id: 'ch_pg_1',
+      payment_intent_id: 'pi_pg_1',
+      recorded_at: '2026-10-21T02:00:00.000Z',
+      source: 'stripe_webhook',
+    });
+    const latest = await findLatestStripeOrderStatus('AWK-PG-STAT-1');
+    expect(latest?.status).toBe('refunded');
+    expect(await findLatestStripeOrderStatus('AWK-PG-UNKNOWN')).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Grimoire OTP store + PERMANENT_UNLOCK ledger (Stage 2)              */
+/* ------------------------------------------------------------------ */
+
+describePg('pg grimoire otp store (equivalence)', () => {
+  it('full flow: request → verify → session; single use; delete tombstones', async () => {
+    const store = new PgOtpStore();
+    const { request, code } = await requestOtp(store, 'member@example.com');
+    const persisted = await store.getCodeRequest(request.request_id);
+    expect(persisted?.email).toBe('member@example.com');
+    expect(persisted!.code_hash).not.toContain(code);
+
+    const verified = await verifyOtp(store, request.request_id, code);
+    expect(verified.ok).toBe(true);
+    if (!verified.ok) throw new Error('setup failed');
+    expect(
+      await getValidSession(store, verified.session.session_token),
+    ).not.toBeNull();
+    // Single use: the code request was consumed (deleted).
+    expect(await store.getCodeRequest(request.request_id)).toBeNull();
+    const again = await verifyOtp(store, request.request_id, code);
+    expect(again.ok).toBe(false);
+
+    // Session deletion is a tombstone — reads resolve null.
+    await store.deleteSession(verified.session.session_token);
+    expect(await store.getSession(verified.session.session_token)).toBeNull();
+  });
+
+  it('attempt increments fold latest-wins (5 attempts burn the request)', async () => {
+    const store = new PgOtpStore();
+    const { request, code } = await requestOtp(store, 'member@example.com');
+    const wrong = code === '000000' ? '000001' : '000000';
+    for (let i = 0; i < 5; i++) {
+      expect((await verifyOtp(store, request.request_id, wrong)).ok).toBe(false);
+    }
+    const burned = await verifyOtp(store, request.request_id, code);
+    expect(burned.ok).toBe(false);
+  });
+});
+
+describePg('pg grimoire unlock ledger (equivalence)', () => {
+  it('grant → entitled; idempotent grant; revoke by transaction ref', async () => {
+    const input = {
+      email: 'buyer@example.com',
+      stripe_session_id: 'cs_pg_1',
+      payment_intent_id: 'pi_pg_1',
+      charge_id: 'ch_pg_1',
+    };
+    await grantUnlock(input);
+    await grantUnlock(input);
+    expect(await isUnlockEntitled('buyer@example.com')).toBe(true);
+    const events = await readStreamEvents(EVENT_STREAMS.grimoireUnlocks);
+    expect(events).toHaveLength(1);
+
+    const revoked = await revokeUnlockByTransactionRef('ch_pg_1', 'refund');
+    expect(revoked?.revoked_reason).toBe('refund');
+    expect(await isUnlockEntitled('buyer@example.com')).toBe(false);
+    expect((await findLatestUnlock('buyer@example.com'))?.state).toBe('revoked');
   });
 });
 

@@ -10,8 +10,8 @@
  * - the customer will be notified when it ships;
  * - the actual order items + totals from the order record;
  * - a payment block that matches the method recorded on the order
- *   (Bookipi = emailed secure invoice, NO handles; Venmo / Cash App =
- *   the handles; embedded card = complete/confirm on the site).
+ *   (Venmo / Cash App = the handles; embedded card = complete/confirm
+ *   on the site).
  *
  * No medical or efficacy claims anywhere — this is a transactional
  * receipt, rendered from the job data the checkout server built.
@@ -59,14 +59,6 @@ function itemLines(data: PurchaseConfirmationData): ItemLine[] {
 
 /** The payment paragraph(s) for the method recorded on the order. */
 function paymentBlockText(data: PurchaseConfirmationData): string[] {
-  if (data.payment_method === 'bookipi_card_invoice') {
-    return [
-      'Payment: you chose to pay by card. We will email you a secure ' +
-        'Bookipi invoice for this order — just follow the link in that ' +
-        'email to pay by credit or debit card. Your order is prepared ' +
-        'once the invoice is paid.',
-    ];
-  }
   if (data.payment_method === 'stripe_card_embedded') {
     return [
       'Payment: you chose to pay by card on our website. If your card ' +

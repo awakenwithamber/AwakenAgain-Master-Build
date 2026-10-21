@@ -4,7 +4,7 @@
  * Law under test: every accepted order produces exactly one
  * purchase_confirmation job addressed to the customer, and its payment
  * content matches the method recorded on the order (handles for
- * Cash App / Venmo; NO handles for Bookipi card-by-invoice).
+ * Cash App / Venmo; NO handles for embedded-card orders).
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -69,12 +69,12 @@ describe('order confirmation trigger', () => {
     expect(data.venmo_handle).toBe('@AwakenwithAmber');
   });
 
-  it('Bookipi card orders carry NO handles — the invoice is the payment path', () => {
+  it('embedded-card orders carry NO handles — payment happens on the site', () => {
     const job = buildOrderConfirmationJob(
-      record({ payment_method: 'bookipi_card_invoice' }),
+      record({ payment_method: 'stripe_card_embedded' }),
     );
     const data = job.data as PurchaseConfirmationData;
-    expect(data.payment_method).toBe('bookipi_card_invoice');
+    expect(data.payment_method).toBe('stripe_card_embedded');
     expect(data.cash_app_handle).toBeUndefined();
     expect(data.venmo_handle).toBeUndefined();
   });

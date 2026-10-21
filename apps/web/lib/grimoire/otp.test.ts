@@ -8,7 +8,9 @@
  *   (consumed); 5 failed attempts burn the request; expiry honored.
  * - Codes are stored hashed, never plaintext.
  * - getValidSession: valid → session; expired → pruned/null; unknown → null.
- * - createSupabaseOtpStore refuses to run (binding NEEDS VERIFICATION).
+ * - Store driver selection (Stage 2): createOtpStore() returns the
+ *   Postgres store when DATABASE_URL is set, in-memory otherwise
+ *   (Supabase is dropped from the stack — its stub is removed).
  * - Contract is store-agnostic: flows work against the OtpStore interface.
  * - Entitlement (audit 2026-10-15 GAP-4): with an entitlement check bound,
  *   a correct code for a non-entitled email grants NO session
@@ -24,7 +26,8 @@ import {
   OTP_CODE_LENGTH,
   OTP_MAX_ATTEMPTS,
   OTP_TTL_SECONDS,
-  createSupabaseOtpStore,
+  PgOtpStore,
+  createOtpStore,
   getValidSession,
   requestOtp,
   verifyOtp,
@@ -246,8 +249,18 @@ describe('getValidSession', () => {
   });
 });
 
-describe('supabase binding', () => {
-  it('createSupabaseOtpStore refuses to run — binding NEEDS VERIFICATION', () => {
-    expect(() => createSupabaseOtpStore()).toThrow(/NEEDS VERIFICATION/);
+describe('store driver selection (Stage 2)', () => {
+  afterEach(() => {
+    delete process.env.DATABASE_URL;
+  });
+
+  it('in-memory store when DATABASE_URL is unset', () => {
+    delete process.env.DATABASE_URL;
+    expect(createOtpStore()).toBeInstanceOf(InMemoryOtpStore);
+  });
+
+  it('Postgres store when DATABASE_URL is set (no connection is made)', () => {
+    process.env.DATABASE_URL = 'postgres://unused.invalid:5432/never-connected';
+    expect(createOtpStore()).toBeInstanceOf(PgOtpStore);
   });
 });

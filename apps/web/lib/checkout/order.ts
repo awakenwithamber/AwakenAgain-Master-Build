@@ -142,10 +142,29 @@ export interface OrderRecord {
    * boolean alone never grants them.
    */
   is_subscriber_verified: boolean;
-  payment_method: PaymentMethod;
+  /** Stored type: legacy records may carry the removed Bookipi value. */
+  payment_method: StoredPaymentMethod;
   /** Order lifecycle — 'pending_payment' until payment confirmed. */
-  status?: 'pending_payment' | 'paid' | 'cancelled';
+  status?: OrderStatus;
 }
+
+/**
+ * Order display/lifecycle status (Stage 1, audit G-4/G-5/G-7).
+ *
+ * 'pending_payment' | 'paid' | 'cancelled' are the original states.
+ * 'refunded' and 'disputed' were added when the Stripe webhook gained
+ * charge.refunded / charge.dispute.created handlers: they are NOT
+ * written onto the order record (paid state is a read-time join — see
+ * lib/orders/paid-state.ts); the values live here so every surface
+ * (order-status route, account profile, admin, return page) shares
+ * one status vocabulary.
+ */
+export type OrderStatus =
+  | 'pending_payment'
+  | 'paid'
+  | 'cancelled'
+  | 'refunded'
+  | 'disputed';
 
 /* ------------------------------------------------------------------ */
 /* Server-side pricing + validation                                     */
@@ -164,7 +183,8 @@ export const CASH_APP_HANDLE = '$AmberPatten347';
 export const VENMO_HANDLE = '@AwakenwithAmber';
 
 /**
- * How an order is paid (owner decisions 2026-10-13 + 2026-10-19):
+ * How an order is paid (owner decisions 2026-10-13 + 2026-10-19 +
+ * 2026-10-21):
  * - 'cash_app_or_venmo' — the customer sends payment to the handles above
  *   after ordering (the default; existing clients unchanged).
  * - 'stripe_card_embedded' — card payment through the embedded Stripe
@@ -173,39 +193,38 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
  *   Checkout Session is then created from the server-computed totals,
  *   and the order is marked paid ONLY by the signature-verified Stripe
  *   webhook — never by a client-side return.
- * - 'bookipi_card_invoice' — the BACKUP card path (kept 2026-10-19):
- *   a Bookipi invoice the owner emails from her own Bookipi account
- *   after the order is placed. Bookipi has no public API or webhooks:
- *   nothing is charged at checkout, the order record carries the
- *   choice, and fulfillment waits for the paid invoice under the same
- *   owner-confirmation gate as every other order.
- * Any other value is rejected.
+ * Any other value is rejected. (The former 'bookipi_card_invoice'
+ * backup path was REMOVED by owner directive 2026-10-21 — "Remove
+ * Bookipi. Stripe works great." — see StoredPaymentMethod below.)
  */
-export type PaymentMethod =
-  | 'cash_app_or_venmo'
-  | 'bookipi_card_invoice'
-  | 'stripe_card_embedded';
+export type PaymentMethod = 'cash_app_or_venmo' | 'stripe_card_embedded';
+
+/**
+ * Payment methods as they can appear on a STORED order record. New
+ * orders can only carry a PaymentMethod; 'bookipi_card_invoice' is a
+ * legacy value from the removed backup path (removed 2026-10-21) that
+ * can still exist on records written before the removal. It stays in
+ * this stored-record type ONLY so those historical records remain
+ * readable (admin views, order-status lookups, review entries) — it is
+ * never accepted for a new order and is offered nowhere in the UI.
+ */
+export type StoredPaymentMethod = PaymentMethod | 'bookipi_card_invoice';
 
 export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'cash_app_or_venmo';
 
 export const PAYMENT_METHODS: readonly PaymentMethod[] = [
   'cash_app_or_venmo',
-  'bookipi_card_invoice',
   'stripe_card_embedded',
 ];
 
 /** Validate the optional payment_method field; absent means the default. */
 export function parsePaymentMethod(raw: unknown): PaymentMethod {
   if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
-  if (
-    raw === 'cash_app_or_venmo' ||
-    raw === 'bookipi_card_invoice' ||
-    raw === 'stripe_card_embedded'
-  ) {
+  if (raw === 'cash_app_or_venmo' || raw === 'stripe_card_embedded') {
     return raw;
   }
   throw new Error(
-    `Unknown payment method: ${String(raw)}. Choose Cash App or Venmo, card on this site, or card by emailed invoice.`,
+    `Unknown payment method: ${String(raw)}. Choose Cash App or Venmo, or card on this site.`,
   );
 }
 

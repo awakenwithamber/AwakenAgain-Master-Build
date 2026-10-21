@@ -27,6 +27,10 @@ import {
 } from './profile';
 import { leadStore } from '../leads/lead-store';
 import { foldAccountRecords } from './accounts';
+import {
+  recordStripeOrderStatus,
+  recordStripePayment,
+} from '../payments/stripe';
 import type { QuizResultSnapshot } from '../quiz/quiz';
 
 const EMAIL = 'friend@example.com';
@@ -55,6 +59,8 @@ const ENVS = [
   'LEAD_STORE_DIR',
   'ORDERS_LEDGER_PATH',
   'ORDER_PAYMENTS_LEDGER_PATH',
+  'STRIPE_PAYMENTS_LEDGER_PATH',
+  'STRIPE_ORDER_STATUS_LEDGER_PATH',
 ] as const;
 
 let dir: string;
@@ -102,6 +108,8 @@ beforeEach(() => {
   process.env.LEAD_STORE_DIR = join(dir, 'leads');
   process.env.ORDERS_LEDGER_PATH = join(dir, 'orders.jsonl');
   process.env.ORDER_PAYMENTS_LEDGER_PATH = join(dir, 'payments.jsonl');
+  process.env.STRIPE_PAYMENTS_LEDGER_PATH = join(dir, 'stripe-payments.jsonl');
+  process.env.STRIPE_ORDER_STATUS_LEDGER_PATH = join(dir, 'stripe-status.jsonl');
   delete process.env.DATABASE_URL;
 });
 
@@ -220,6 +228,58 @@ describe('order history', () => {
     expect(orders[0].status).toBe('pending_payment');
     expect(orders[1].status).toBe('paid');
     expect(orders[1].item_count).toBe(2);
+  });
+
+  it('a Stripe-webhook-paid order shows paid in the profile (G-5 mirror gap)', async () => {
+    writeFileSync(
+      process.env.ORDERS_LEDGER_PATH!,
+      orderLine('AWK-STRIPE-1', EMAIL, 2000) + '\n',
+      'utf8',
+    );
+    // No manual confirmation exists — only the webhook paid ledger.
+    await recordStripePayment({
+      order_id: 'AWK-STRIPE-1',
+      stripe_session_id: 'cs_profile_1',
+      payment_intent_id: 'pi_profile_1',
+      amount_total_cents: 2000,
+      tax_cents: 0,
+      currency: 'usd',
+      paid_at: '2026-10-14T12:00:00.000Z',
+      source: 'stripe_webhook',
+    });
+    const orders = await listOrdersForEmailAsync(EMAIL);
+    expect(orders).toHaveLength(1);
+    expect(orders[0].status).toBe('paid');
+  });
+
+  it('a refunded Stripe order shows refunded in the profile, not paid', async () => {
+    writeFileSync(
+      process.env.ORDERS_LEDGER_PATH!,
+      orderLine('AWK-STRIPE-2', EMAIL, 2000) + '\n',
+      'utf8',
+    );
+    await recordStripePayment({
+      order_id: 'AWK-STRIPE-2',
+      stripe_session_id: 'cs_profile_2',
+      payment_intent_id: 'pi_profile_2',
+      amount_total_cents: 2000,
+      tax_cents: 0,
+      currency: 'usd',
+      paid_at: '2026-10-14T12:00:00.000Z',
+      source: 'stripe_webhook',
+    });
+    await recordStripeOrderStatus({
+      order_id: 'AWK-STRIPE-2',
+      status: 'refunded',
+      stripe_event_id: 'evt_profile_refund',
+      charge_id: 'ch_profile_2',
+      payment_intent_id: 'pi_profile_2',
+      recorded_at: '2026-10-15T12:00:00.000Z',
+      source: 'stripe_webhook',
+    });
+    const orders = await listOrdersForEmailAsync(EMAIL);
+    expect(orders).toHaveLength(1);
+    expect(orders[0].status).toBe('refunded');
   });
 });
 

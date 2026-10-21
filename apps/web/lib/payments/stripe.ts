@@ -1,9 +1,10 @@
 /**
  * Stripe embedded checkout — server side (owner directive 2026-10-19).
  *
- * The PRIMARY card path: the customer pays by card inside an embedded
- * Stripe Checkout rendered on awakenagain.com. Bookipi invoice stays
- * selectable as the backup card path; Cash App / Venmo unchanged.
+ * The card path: the customer pays by card inside an embedded
+ * Stripe Checkout rendered on awakenagain.com. Cash App / Venmo
+ * unchanged. (The former Bookipi invoice backup path was removed by
+ * owner directive 2026-10-21.)
  *
  * Money-path laws:
  * - The order is created FIRST by the server-authoritative checkout
@@ -32,11 +33,21 @@
  * stores fix: this ledger originally shipped file-only, which on
  * Vercel's read-only filesystem meant the webhook could never durably
  * mark an order paid in production.)
+ *
+ * Stage 1 (audit G-6/G-7/G-4): the same driver selection also backs two
+ * sibling ledgers in this module — the webhook EVENT ledger
+ * ('stripe_events' stream / .stripe-webhook-events.jsonl), which
+ * records every successfully processed event by its Stripe event id
+ * so webhook idempotency is by event id, not only by order id; and
+ * the order-STATUS ledger ('stripe_order_status' stream /
+ * .stripe-order-status.jsonl), which records refund/dispute
+ * transitions ('refunded' | 'disputed') written by the verified
+ * webhook's charge.refunded / charge.dispute.created handlers.
  */
 import Stripe from 'stripe';
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { OrderRecord } from '../checkout/order';
+import type { OrderRecord, OrderStatus } from '../checkout/order';
 import {
   EVENT_STREAMS,
   appendEvent,
@@ -81,6 +92,10 @@ export function getStripeConfig(
 export interface StripeEventLike {
   id: string;
   type: string;
+  /** Unix seconds the event was created (monotonic guard, Stage 3). */
+  created?: number;
+  /** Test vs live mode flag on the event (Stage 3, audit G-9 log-only). */
+  livemode?: boolean;
   data: { object: Record<string, unknown> };
 }
 
@@ -89,11 +104,23 @@ export interface StripeClientLike {
     sessions: {
       create(
         params: Record<string, unknown>,
-      ): Promise<{ id: string; client_secret: string | null }>;
+      ): Promise<{
+        id: string;
+        client_secret: string | null;
+        url?: string | null;
+      }>;
     };
   };
   coupons: {
     create(params: Record<string, unknown>): Promise<{ id: string }>;
+  };
+  /** Billing Portal — optional so existing test fakes stay valid. */
+  billingPortal?: {
+    sessions: {
+      create(
+        params: Record<string, unknown>,
+      ): Promise<{ id: string; url: string }>;
+    };
   };
   webhooks: {
     constructEvent(
@@ -261,6 +288,19 @@ export interface StripePaymentRecord {
   order_id: string;
   stripe_session_id: string;
   payment_intent_id: string | null;
+  /**
+   * The Stripe charge id, when the session event carried one
+   * (latest_charge / charge). Optional: sessions usually expose only
+   * the payment intent, which is the primary refund/dispute linkage.
+   */
+  charge_id?: string | null;
+  /**
+   * The Stripe event id (evt_…) of the checkout.session.completed
+   * delivery that recorded this payment (Stage 1, audit G-7).
+   * Optional for backward compatibility with records written before
+   * event ids were stored.
+   */
+  stripe_event_id?: string;
   /** Full amount Stripe charged: order total (pre-tax) + tax. */
   amount_total_cents: number;
   /** The Stripe Tax portion of the charge (session total_details.amount_tax). */
@@ -277,6 +317,12 @@ export function defaultStripePaymentsLedgerPath(): string {
   );
 }
 
+function isStripePaymentRecord(v: unknown): v is StripePaymentRecord {
+  if (typeof v !== 'object' || v === null) return false;
+  const r = v as Record<string, unknown>;
+  return typeof r.order_id === 'string' && typeof r.stripe_session_id === 'string';
+}
+
 async function readStripePayments(): Promise<StripePaymentRecord[]> {
   if (postgresEnabled()) {
     const events = await readStreamEvents<StripePaymentRecord>(
@@ -284,8 +330,7 @@ async function readStripePayments(): Promise<StripePaymentRecord[]> {
     );
     const records: StripePaymentRecord[] = [];
     for (const event of events) {
-      const parsed = event.payload;
-      if (parsed && typeof parsed.order_id === 'string') records.push(parsed);
+      if (isStripePaymentRecord(event.payload)) records.push(event.payload);
     }
     return records;
   }
@@ -300,10 +345,19 @@ async function readStripePayments(): Promise<StripePaymentRecord[]> {
   for (const line of raw.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    const parsed = JSON.parse(trimmed) as StripePaymentRecord;
-    if (parsed && typeof parsed.order_id === 'string') records.push(parsed);
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (isStripePaymentRecord(parsed)) records.push(parsed);
+    } catch {
+      // skip malformed line — same tolerance as the other ledger readers
+    }
   }
   return records;
+}
+
+/** Every recorded Stripe payment, in append order (bulk read for admin joins). */
+export async function readStripePaymentsAsync(): Promise<StripePaymentRecord[]> {
+  return readStripePayments();
 }
 
 /** The payment record for an order, or null if the webhook has not marked it paid. */
@@ -313,6 +367,37 @@ export async function findStripePayment(
   const records = await readStripePayments();
   for (let i = records.length - 1; i >= 0; i--) {
     if (records[i].order_id === orderId) return records[i];
+  }
+  return null;
+}
+
+/**
+ * The payment record carrying a payment_intent id, or null. This is
+ * the linkage the refund/dispute webhook handlers resolve through:
+ * charge.refunded and charge.dispute.created carry the charge's
+ * payment_intent, which was recorded here at payment time.
+ */
+export async function findStripePaymentByPaymentIntent(
+  paymentIntentId: string,
+): Promise<StripePaymentRecord | null> {
+  if (!paymentIntentId) return null;
+  const records = await readStripePayments();
+  for (let i = records.length - 1; i >= 0; i--) {
+    if (records[i].payment_intent_id === paymentIntentId) return records[i];
+  }
+  return null;
+}
+
+/** The payment record carrying a charge id, or null (see above). */
+export async function findStripePaymentByChargeId(
+  chargeId: string,
+): Promise<StripePaymentRecord | null> {
+  if (!chargeId) return null;
+  const records = await readStripePayments();
+  for (let i = records.length - 1; i >= 0; i--) {
+    if (records[i].charge_id && records[i].charge_id === chargeId) {
+      return records[i];
+    }
   }
   return null;
 }
@@ -346,7 +431,227 @@ export async function recordStripePayment(
 export function resolveOrderStatus(
   record: OrderRecord,
   payment: StripePaymentRecord | null,
-): 'pending_payment' | 'paid' | 'cancelled' {
+): OrderStatus {
   if (payment) return 'paid';
   return record.status ?? 'pending_payment';
+}
+
+/* ------------------------------------------------------------------ */
+/* Webhook event ledger — idempotency by Stripe event id (G-7)          */
+/* ------------------------------------------------------------------ */
+
+export interface StripeWebhookEventRecord {
+  /** Stripe event id (evt_…) — the idempotency key. */
+  stripe_event_id: string;
+  event_type: string;
+  /** The order the event resolved to, when it bound one. */
+  order_id: string | null;
+  /**
+   * What processing did: 'marked_paid' | 'already_paid' |
+   * 'status_refunded' | 'status_disputed' | 'acknowledged' (verified
+   * but no state change — unknown types, payment_intent.succeeded,
+   * unresolvable refund/dispute linkage).
+   */
+  outcome: string;
+  recorded_at: string;
+  /** Event livemode when Stripe sent it (Stage 3, audit G-9 log-only). */
+  livemode?: boolean | null;
+}
+
+export function defaultStripeWebhookEventsLedgerPath(): string {
+  return (
+    process.env.STRIPE_WEBHOOK_EVENTS_LEDGER_PATH ??
+    join(process.cwd(), '.stripe-webhook-events.jsonl')
+  );
+}
+
+function isWebhookEventRecord(v: unknown): v is StripeWebhookEventRecord {
+  if (typeof v !== 'object' || v === null) return false;
+  const r = v as Record<string, unknown>;
+  return (
+    typeof r.stripe_event_id === 'string' &&
+    typeof r.event_type === 'string' &&
+    typeof r.recorded_at === 'string'
+  );
+}
+
+export async function readStripeWebhookEvents(): Promise<
+  StripeWebhookEventRecord[]
+> {
+  if (postgresEnabled()) {
+    const events = await readStreamEvents<StripeWebhookEventRecord>(
+      EVENT_STREAMS.stripeEvents,
+    );
+    const records: StripeWebhookEventRecord[] = [];
+    for (const event of events) {
+      if (isWebhookEventRecord(event.payload)) records.push(event.payload);
+    }
+    return records;
+  }
+  let raw: string;
+  try {
+    raw = await readFile(defaultStripeWebhookEventsLedgerPath(), 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw err;
+  }
+  const records: StripeWebhookEventRecord[] = [];
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (isWebhookEventRecord(parsed)) records.push(parsed);
+    } catch {
+      // skip malformed line — same tolerance as the other ledger readers
+    }
+  }
+  return records;
+}
+
+/** The recorded outcome for a Stripe event id, or null if never processed. */
+export async function findStripeWebhookEvent(
+  eventId: string,
+): Promise<StripeWebhookEventRecord | null> {
+  if (!eventId) return null;
+  const records = await readStripeWebhookEvents();
+  for (let i = records.length - 1; i >= 0; i--) {
+    if (records[i].stripe_event_id === eventId) return records[i];
+  }
+  return null;
+}
+
+/** True when this Stripe event id was already successfully processed. */
+export async function hasProcessedStripeEvent(eventId: string): Promise<boolean> {
+  return (await findStripeWebhookEvent(eventId)) !== null;
+}
+
+/**
+ * Record one successfully processed webhook event. Idempotent by
+ * event id: an already-recorded id is returned as-is, never
+ * double-recorded. Failed processing (the route answers 400) is
+ * deliberately NOT recorded, so Stripe's redelivery is processed —
+ * and fails loudly — again instead of being swallowed as a duplicate.
+ */
+export async function recordStripeWebhookEvent(
+  record: StripeWebhookEventRecord,
+): Promise<StripeWebhookEventRecord> {
+  const existing = await findStripeWebhookEvent(record.stripe_event_id);
+  if (existing) return existing;
+  if (postgresEnabled()) {
+    await appendEvent(
+      EVENT_STREAMS.stripeEvents,
+      record.stripe_event_id,
+      'stripe_event.processed',
+      record,
+      record.recorded_at,
+    );
+    return record;
+  }
+  const path = defaultStripeWebhookEventsLedgerPath();
+  await mkdir(dirname(path), { recursive: true });
+  await appendFile(path, `${JSON.stringify(record)}\n`, 'utf8');
+  return record;
+}
+
+/* ------------------------------------------------------------------ */
+/* Order-status ledger — refund / dispute transitions (G-4)             */
+/* ------------------------------------------------------------------ */
+
+export type StripeOrderStatus = 'refunded' | 'disputed';
+
+export interface StripeOrderStatusEvent {
+  order_id: string;
+  status: StripeOrderStatus;
+  /** Stripe event id (evt_…) of the delivery that caused the transition. */
+  stripe_event_id: string;
+  charge_id: string | null;
+  payment_intent_id: string | null;
+  recorded_at: string;
+  source: 'stripe_webhook';
+}
+
+export function defaultStripeOrderStatusLedgerPath(): string {
+  return (
+    process.env.STRIPE_ORDER_STATUS_LEDGER_PATH ??
+    join(process.cwd(), '.stripe-order-status.jsonl')
+  );
+}
+
+function isOrderStatusEvent(v: unknown): v is StripeOrderStatusEvent {
+  if (typeof v !== 'object' || v === null) return false;
+  const r = v as Record<string, unknown>;
+  return (
+    typeof r.order_id === 'string' &&
+    (r.status === 'refunded' || r.status === 'disputed') &&
+    typeof r.recorded_at === 'string'
+  );
+}
+
+export async function readStripeOrderStatusEvents(): Promise<
+  StripeOrderStatusEvent[]
+> {
+  if (postgresEnabled()) {
+    const events = await readStreamEvents<StripeOrderStatusEvent>(
+      EVENT_STREAMS.stripeOrderStatus,
+    );
+    const records: StripeOrderStatusEvent[] = [];
+    for (const event of events) {
+      if (isOrderStatusEvent(event.payload)) records.push(event.payload);
+    }
+    return records;
+  }
+  let raw: string;
+  try {
+    raw = await readFile(defaultStripeOrderStatusLedgerPath(), 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw err;
+  }
+  const records: StripeOrderStatusEvent[] = [];
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (isOrderStatusEvent(parsed)) records.push(parsed);
+    } catch {
+      // skip malformed line — same tolerance as the other ledger readers
+    }
+  }
+  return records;
+}
+
+/** The latest refund/dispute transition for an order, or null. */
+export async function findLatestStripeOrderStatus(
+  orderId: string,
+): Promise<StripeOrderStatusEvent | null> {
+  const records = await readStripeOrderStatusEvents();
+  for (let i = records.length - 1; i >= 0; i--) {
+    if (records[i].order_id === orderId) return records[i];
+  }
+  return null;
+}
+
+/**
+ * Append one refund/dispute transition. Append-only, latest-wins —
+ * mirroring the payment ledgers; history is never edited.
+ */
+export async function recordStripeOrderStatus(
+  event: StripeOrderStatusEvent,
+): Promise<StripeOrderStatusEvent> {
+  if (postgresEnabled()) {
+    await appendEvent(
+      EVENT_STREAMS.stripeOrderStatus,
+      event.order_id,
+      `stripe_order.${event.status}`,
+      event,
+      event.recorded_at,
+    );
+    return event;
+  }
+  const path = defaultStripeOrderStatusLedgerPath();
+  await mkdir(dirname(path), { recursive: true });
+  await appendFile(path, `${JSON.stringify(event)}\n`, 'utf8');
+  return event;
 }

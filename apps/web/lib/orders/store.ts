@@ -18,8 +18,8 @@ import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type {
   OrderRecord,
-  PaymentMethod,
   ShippingStatus,
+  StoredPaymentMethod,
 } from '../checkout/order';
 import {
   EVENT_STREAMS,
@@ -83,7 +83,8 @@ export interface OrderReviewEntry {
   subtotal_cents: number;
   total_cents: number;
   shipping_status: ShippingStatus;
-  payment_method: PaymentMethod;
+  /** Stored type: legacy entries may carry the removed Bookipi value. */
+  payment_method: StoredPaymentMethod;
   /** Fulfillment triage state — 'pending_review' until the admin flow (G12) confirms. */
   review_status: 'pending_review';
 }

@@ -49,6 +49,36 @@ export const EVENT_STREAMS = {
    * read-only filesystem.
    */
   stripePayments: 'stripe_payments',
+  /**
+   * Stripe webhook event ledger (Stage 1, audit G-7) — lib/payments/stripe.
+   * One event per signature-verified webhook delivery that was
+   * successfully processed, keyed by the Stripe event id. This is the
+   * idempotency authority for webhook handling: a redelivery whose
+   * event id is already recorded here is a no-op.
+   */
+  stripeEvents: 'stripe_events',
+  /**
+   * Stripe order-status transitions (Stage 1, audit G-4) —
+   * lib/payments/stripe. Append-only refund/dispute transitions keyed
+   * by order_id ('refunded' | 'disputed'), written only by the
+   * signature-verified webhook's charge.refunded /
+   * charge.dispute.created handlers and joined at read time by
+   * lib/orders/paid-state.ts. Latest event per order wins.
+   */
+  stripeOrderStatus: 'stripe_order_status',
+  /**
+   * Grimoire PERMANENT_UNLOCK entitlement ledger (Stage 2) —
+   * lib/grimoire/unlock.ts. Append-only grant/revoke records keyed by
+   * normalized email ('living-grimoire-333' edition); latest wins.
+   */
+  grimoireUnlocks: 'grimoire_unlocks',
+  /**
+   * Grimoire OTP durable store (Stage 2) — lib/grimoire/otp.ts.
+   * Code requests and sessions as append-only events keyed by
+   * request_id / session_token; deletion is a tombstone event.
+   */
+  grimoireOtpCodes: 'grimoire_otp_codes',
+  grimoireOtpSessions: 'grimoire_otp_sessions',
 } as const;
 
 export type EventStream = (typeof EVENT_STREAMS)[keyof typeof EVENT_STREAMS];

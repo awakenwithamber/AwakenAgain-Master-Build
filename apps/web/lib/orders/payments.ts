@@ -20,10 +20,11 @@
  * codebase's ledger style: a missing file means "no payments confirmed
  * yet" and malformed lines are skipped, never thrown into a render.
  *
- * Bookipi note: Bookipi has no public API or webhooks, so nothing can
- * auto-confirm a card payment — the owner confirms here after BookiPay
- * shows the invoice paid (see the owner runbook). Cash App / Venmo
- * payments are confirmed the same way when the money lands.
+ * Manual-confirmation note: Cash App / Venmo payments auto-confirm
+ * nothing — the owner confirms here when the money lands. The former
+ * Bookipi card-invoice path was removed by owner directive 2026-10-21;
+ * payment events recorded before the removal may carry its legacy
+ * method value, which stays readable here (see STORED_PAYMENT_METHODS).
  *
  * SERVER-ONLY: uses node:fs. Never import from a client component.
  */
@@ -32,8 +33,20 @@ import { appendFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import {
   PAYMENT_METHODS,
-  type PaymentMethod,
+  type StoredPaymentMethod,
 } from '../checkout/order';
+
+/**
+ * Every method value a STORED payment event may carry: the live
+ * PAYMENT_METHODS plus the legacy 'bookipi_card_invoice' value from the
+ * card-invoice path removed 2026-10-21. Ledger reads and labels use
+ * this stored union so historical events never silently drop; only
+ * parsePaymentMethod (new orders) rejects the legacy value.
+ */
+const STORED_PAYMENT_METHODS: readonly StoredPaymentMethod[] = [
+  ...PAYMENT_METHODS,
+  'bookipi_card_invoice',
+];
 import {
   EVENT_STREAMS,
   appendEvent,
@@ -51,13 +64,13 @@ import { sanitizePlainText } from '../security/validation';
  * table printed the raw enum). The enum stays the storage/wire value;
  * this is display-only.
  */
-const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+const PAYMENT_METHOD_LABELS: Record<StoredPaymentMethod, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
   bookipi_card_invoice: 'Card — Bookipi invoice',
   stripe_card_embedded: 'Card — embedded checkout',
 };
 
-export function paymentMethodLabel(method: PaymentMethod): string {
+export function paymentMethodLabel(method: StoredPaymentMethod): string {
   return PAYMENT_METHOD_LABELS[method];
 }
 
@@ -67,10 +80,14 @@ export function paymentMethodLabel(method: PaymentMethod): string {
  * that is not one of the known methods — the route maps that to 422
  * rather than guessing.
  */
-export function sanitizePaymentMethod(input: unknown): PaymentMethod | null {
+export function sanitizePaymentMethod(
+  input: unknown,
+): StoredPaymentMethod | null {
   if (input === undefined || input === null) return null;
-  return (PAYMENT_METHODS as readonly string[]).includes(input as string)
-    ? (input as PaymentMethod)
+  return (STORED_PAYMENT_METHODS as readonly string[]).includes(
+    input as string,
+  )
+    ? (input as StoredPaymentMethod)
     : null;
 }
 
@@ -92,8 +109,8 @@ export interface OrderPaymentEvent {
   event_id: string;
   order_id: string;
   /** How the payment actually arrived (defaults to the order's method). */
-  method: PaymentMethod;
-  /** Bookipi invoice number / Cash App or Venmo reference, when given. */
+  method: StoredPaymentMethod;
+  /** Cash App or Venmo reference (or legacy invoice number), when given. */
   reference: string | null;
   /** Owner note (e.g. "paid in two parts"), when given. */
   note: string | null;
@@ -120,7 +137,7 @@ function generatePaymentEventId(): string {
 /** Build the event the route appends. Inputs must already be sanitized. */
 export function buildPaymentEvent(input: {
   order_id: string;
-  method: PaymentMethod;
+  method: StoredPaymentMethod;
   reference: string | null;
   note: string | null;
 }): OrderPaymentEvent {
@@ -143,7 +160,7 @@ function isPaymentEvent(v: unknown): v is OrderPaymentEvent {
     typeof r.event_id === 'string' &&
     typeof r.order_id === 'string' &&
     typeof r.recorded_at === 'string' &&
-    (PAYMENT_METHODS as readonly string[]).includes(r.method as string)
+    (STORED_PAYMENT_METHODS as readonly string[]).includes(r.method as string)
   );
 }
 
@@ -237,7 +254,7 @@ export async function findLatestPaymentAsync(
 
 /** API-facing shape of a payment confirmation. */
 export interface PaymentView {
-  method: PaymentMethod;
+  method: StoredPaymentMethod;
   method_label: string;
   reference: string | null;
   note: string | null;

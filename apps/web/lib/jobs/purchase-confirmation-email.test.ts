@@ -6,8 +6,7 @@
  * love and care, 100% natural and organic ingredients; ships within
  * 3 to 5 business days; notified when it ships), the actual items and
  * totals from the order, and the payment block for the recorded method
- * (Bookipi = emailed invoice with NO handles; Venmo/Cash App = handles;
- * embedded card = no handles either).
+ * (Venmo/Cash App = handles; embedded card = no handles either).
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -85,20 +84,6 @@ describe('purchase confirmation renderer (Template 1)', () => {
     const { text } = renderPurchaseConfirmation(data());
     expect(text).toContain('Venmo: @AwakenwithAmber');
     expect(text).toContain('Cash App: $AmberPatten347');
-  });
-
-  it('Bookipi orders point at the emailed invoice and show NO handles', () => {
-    const { text, html } = renderPurchaseConfirmation(
-      data({
-        payment_method: 'bookipi_card_invoice',
-        cash_app_handle: undefined,
-        venmo_handle: undefined,
-      }),
-    );
-    expect(text).toContain('secure Bookipi invoice');
-    expect(text).not.toContain('@AwakenwithAmber');
-    expect(text).not.toContain('$AmberPatten347');
-    expect(html).not.toContain('@AwakenwithAmber');
   });
 
   it('embedded-card orders show the card block and NO handles', () => {

@@ -14,9 +14,24 @@
  * - "Tincture" never appears; the concentrated-liquid form is a
  *   "Botanical Oil Infusion".
  *
+ * SAFETY SCREENING (Fix-All Stage 4, audit R-14/R-15): before results,
+ * the quiz asks three plain screening questions (pregnant or nursing?
+ * taking prescription medication? managing a medical condition with a
+ * clinician?). Answers are stored on the result snapshot and drive
+ * data-driven exclusions only — pregnancy/nursing withholds ingestible
+ * product recommendations, and the medication flag withholds any SKU
+ * whose own catalog record safety text mentions medication. The quiz
+ * is educational framing throughout: it explores herbal allies by
+ * focus area; it does not assess a body or match a remedy to a person.
+ *
  * All copy lives here so the client island (components/quiz/Quiz.tsx) and
  * the server API (app/api/quiz-lead/route.ts) share one source of truth.
  */
+import { getProductByHandle } from '../catalog/products';
+import {
+  isIngestibleProduct,
+  safetyTextMentionsMedication,
+} from '../safety/product-safety';
 
 /** Evidence context for an herbal note — never collapsed to "proven". */
 export type EvidenceContext = 'traditional' | 'lab' | 'human';
@@ -67,7 +82,87 @@ export const QUIZ_FORMS: readonly QuizForm[] = [
   { id: 'any', label: 'Any form', icon: '🌿' },
 ];
 
-export const QUIZ_STEP_NAMES = ['concern', 'form', 'results'] as const;
+export const QUIZ_STEP_NAMES = ['concern', 'form', 'screening', 'results'] as const;
+
+/* ------------------------------------------------------------------ */
+/* Safety screening (Stage 4, R-14)                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The three screening answers, asked before results are shown. Stored
+ * verbatim on the result snapshot. All-false (or absent, for legacy
+ * callers) means the unflagged flow: results exactly as before.
+ */
+export interface QuizScreening {
+  pregnantOrNursing: boolean;
+  takingMedication: boolean;
+  managingCondition: boolean;
+}
+
+export const NO_QUIZ_SCREENING: QuizScreening = {
+  pregnantOrNursing: false,
+  takingMedication: false,
+  managingCondition: false,
+};
+
+/** The screening questions, in display order (plain language). */
+export const QUIZ_SCREENING_QUESTIONS: readonly {
+  key: keyof QuizScreening;
+  question: string;
+}[] = [
+  { key: 'pregnantOrNursing', question: 'Are you pregnant or nursing?' },
+  {
+    key: 'takingMedication',
+    question: 'Are you taking prescription medication?',
+  },
+  {
+    key: 'managingCondition',
+    question: 'Are you managing a medical condition with a clinician?',
+  },
+];
+
+/** True when any screening answer is yes. */
+export function hasScreeningFlag(screening: QuizScreening): boolean {
+  return (
+    screening.pregnantOrNursing ||
+    screening.takingMedication ||
+    screening.managingCondition
+  );
+}
+
+/**
+ * Normalize untrusted input (API bodies) into a QuizScreening. Only a
+ * literal `true` counts as yes; anything else is no — fail-safe toward
+ * the unflagged shape's data type, never toward inventing answers.
+ */
+export function normalizeQuizScreening(input: unknown): QuizScreening {
+  if (typeof input !== 'object' || input === null) {
+    return { ...NO_QUIZ_SCREENING };
+  }
+  const record = input as Record<string, unknown>;
+  return {
+    pregnantOrNursing: record.pregnantOrNursing === true,
+    takingMedication: record.takingMedication === true,
+    managingCondition: record.managingCondition === true,
+  };
+}
+
+/** Banner shown whenever any screening flag is set (R-14). */
+export const QUIZ_SAFETY_BANNER =
+  'These are educational suggestions, not medical advice. Based on your answers, talk to your clinician or pharmacist before using any herbal product.';
+
+/**
+ * Why a recommended SKU was withheld under the screening rules:
+ * 'pregnancy-ingestible' (ingestible form + pregnancy/nursing flag) or
+ * 'medication-interaction' (the record's own safety text mentions
+ * medication + medication flag).
+ */
+export type QuizWithheldReason = 'pregnancy-ingestible' | 'medication-interaction';
+
+export interface QuizWithheldProduct {
+  handle: string;
+  reason: QuizWithheldReason;
+}
 
 interface ConcernEntry {
   concern: QuizConcern;
@@ -330,6 +425,12 @@ export interface QuizResult {
   allies: HerbalAlly[];
   productHandles: string[];
   productReason: string;
+  /** The screening answers this result was computed under. */
+  screening: QuizScreening;
+  /** SKUs the screening rules withheld, with the rule that held them. */
+  withheld: QuizWithheldProduct[];
+  /** True when any screening flag is set (banner must be shown). */
+  hasSafetyFlags: boolean;
 }
 
 /**
@@ -347,6 +448,13 @@ export interface QuizResultSnapshot {
   allies: HerbalAlly[];
   productHandles: string[];
   productReason: string;
+  /**
+   * Screening answers the result was computed under (Stage 4, R-14).
+   * Optional so snapshots stored before screening existed stay valid.
+   */
+  screening?: QuizScreening;
+  /** SKUs withheld by the screening rules (Stage 4). Optional, as above. */
+  withheld?: QuizWithheldProduct[];
 }
 
 export function toQuizResultSnapshot(result: QuizResult): QuizResultSnapshot {
@@ -358,6 +466,8 @@ export function toQuizResultSnapshot(result: QuizResult): QuizResultSnapshot {
     allies: result.allies.map((a) => ({ ...a })),
     productHandles: [...result.productHandles],
     productReason: result.productReason,
+    screening: { ...result.screening },
+    withheld: result.withheld.map((w) => ({ ...w })),
   };
 }
 
@@ -378,22 +488,63 @@ export function getForm(id: string): QuizForm | undefined {
 }
 
 /**
- * Pure recommendation engine: (concern, form) → allies + product handles.
- * Returns null for invalid inputs — callers surface a friendly error.
+ * Pure recommendation engine: (concern, form, screening) → allies +
+ * product handles. Returns null for invalid inputs — callers surface a
+ * friendly error.
+ *
+ * Screening exclusions are data-driven, applied to the candidate SKU
+ * list in order (the first matching rule is the recorded reason):
+ * - pregnancy/nursing flag → ingestible products are withheld
+ *   (ingestibility derives from the record's own format fields via
+ *   lib/safety/product-safety — capsule/tea/tincture/edible forms);
+ *   non-ingestible forms may still show.
+ * - medication flag → any SKU whose own catalog record safety text
+ *   mentions medication is withheld. No hand-built drug lists.
+ * With no flags set, the result is exactly the pre-Stage-4 result.
  */
 export function getQuizResult(
   concernId: string,
   formId: string,
+  screening: QuizScreening = NO_QUIZ_SCREENING,
 ): QuizResult | null {
   const entry = QUIZ_MAP[concernId];
   const form = getForm(formId);
   if (!entry || !form) return null;
   const handle = entry.products[form.id] ?? entry.products.any;
+  const candidates = [handle, 'alchemy-tea-blend', 'custom-remedy-consultation'];
+  const flagged = hasScreeningFlag(screening);
+  const productHandles: string[] = [];
+  const withheld: QuizWithheldProduct[] = [];
+  for (const candidate of candidates) {
+    const product = getProductByHandle(candidate);
+    if (
+      screening.pregnantOrNursing &&
+      product &&
+      isIngestibleProduct(product)
+    ) {
+      withheld.push({ handle: candidate, reason: 'pregnancy-ingestible' });
+      continue;
+    }
+    if (
+      screening.takingMedication &&
+      product &&
+      safetyTextMentionsMedication(product)
+    ) {
+      withheld.push({ handle: candidate, reason: 'medication-interaction' });
+      continue;
+    }
+    productHandles.push(candidate);
+  }
   return {
     concern: entry.concern,
     form,
     allies: entry.allies,
-    productHandles: [handle, 'alchemy-tea-blend', 'custom-remedy-consultation'],
-    productReason: `Matched to your ${entry.concern.label.toLowerCase()} focus and your preference for ${form.label.toLowerCase()} forms.`,
+    productHandles,
+    productReason: flagged
+      ? `Educational suggestions for your ${entry.concern.label.toLowerCase()} focus area, in ${form.label.toLowerCase()} forms — herbs are traditionally used to support this area, and these are starting points to explore, not a personal match.`
+      : `Matched to your ${entry.concern.label.toLowerCase()} focus and your preference for ${form.label.toLowerCase()} forms.`,
+    screening: { ...screening },
+    withheld,
+    hasSafetyFlags: flagged,
   };
 }

@@ -94,7 +94,7 @@ describe('ResendEmailProvider', () => {
     expect(sent[0].html).toContain('#2a1a40');
   });
 
-  it('a placed Bookipi order produces a sendable job with NO handles', async () => {
+  it('a placed embedded-card order produces a sendable job with NO handles', async () => {
     const sent: ResendSendArgs[] = [];
     const provider = new ResendEmailProvider(
       async (args) => {
@@ -104,11 +104,11 @@ describe('ResendEmailProvider', () => {
       'orders@awakenagain.com',
     );
     await queueOrderConfirmation(
-      record({ payment_method: 'bookipi_card_invoice' }),
+      record({ payment_method: 'stripe_card_embedded' }),
       provider,
     );
     expect(sent).toHaveLength(1);
-    expect(sent[0].text).toContain('secure Bookipi invoice');
+    expect(sent[0].text).toContain('pay by card on our website');
     expect(sent[0].text).not.toContain('@AwakenwithAmber');
     expect(sent[0].text).not.toContain('$AmberPatten347');
   });

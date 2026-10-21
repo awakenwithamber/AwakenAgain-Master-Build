@@ -19,9 +19,15 @@ import {
   buildShippingOptions,
   createEmbeddedCheckoutSession,
   expectedSessionTotalCents,
+  findLatestStripeOrderStatus,
   findStripePayment,
+  findStripePaymentByPaymentIntent,
+  findStripeWebhookEvent,
   getStripeConfig,
+  hasProcessedStripeEvent,
+  recordStripeOrderStatus,
   recordStripePayment,
+  recordStripeWebhookEvent,
   resolveOrderStatus,
   STRIPE_TAX_CODE_GENERAL,
   type StripeClientLike,
@@ -299,6 +305,165 @@ describe('paid ledger', () => {
       ).rejects.toThrow();
       const after = existsSync(LEDGER) ? readFileSync(LEDGER, 'utf8') : '';
       expect(after).not.toContain('AWK-20261019-PGSEL');
+    } finally {
+      if (savedUrl === undefined) {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = savedUrl;
+      }
+      await closeAllEventPools();
+    }
+  });
+
+  it('resolves a payment by its payment_intent linkage (refund/dispute path)', async () => {
+    await recordStripePayment({
+      order_id: 'AWK-20261021-LINK01',
+      stripe_session_id: 'cs_test_link',
+      payment_intent_id: 'pi_test_link',
+      charge_id: 'ch_test_link',
+      stripe_event_id: 'evt_test_link',
+      amount_total_cents: 2500,
+      tax_cents: 100,
+      currency: 'usd',
+      paid_at: '2026-10-21T01:00:00.000Z',
+      source: 'stripe_webhook' as const,
+    });
+    const byPi = await findStripePaymentByPaymentIntent('pi_test_link');
+    expect(byPi?.order_id).toBe('AWK-20261021-LINK01');
+    expect(byPi?.stripe_event_id).toBe('evt_test_link');
+    expect(await findStripePaymentByPaymentIntent('pi_unknown')).toBeNull();
+    expect(await findStripePaymentByPaymentIntent('')).toBeNull();
+  });
+});
+
+describe('webhook event ledger (event-id idempotency, G-7)', () => {
+  const EVENTS_LEDGER = join(DIR, 'webhook-events.jsonl');
+  let savedEventsPath: string | undefined;
+  beforeEach(() => {
+    savedEventsPath = process.env.STRIPE_WEBHOOK_EVENTS_LEDGER_PATH;
+    process.env.STRIPE_WEBHOOK_EVENTS_LEDGER_PATH = EVENTS_LEDGER;
+  });
+  afterEach(() => {
+    if (savedEventsPath === undefined) {
+      delete process.env.STRIPE_WEBHOOK_EVENTS_LEDGER_PATH;
+    } else {
+      process.env.STRIPE_WEBHOOK_EVENTS_LEDGER_PATH = savedEventsPath;
+    }
+  });
+
+  it('records once per event id; hasProcessed reflects the record', async () => {
+    const rec = {
+      stripe_event_id: 'evt_unit_1',
+      event_type: 'checkout.session.completed',
+      order_id: 'AWK-20261021-EVT001',
+      outcome: 'marked_paid',
+      recorded_at: '2026-10-21T01:00:00.000Z',
+    };
+    expect(await hasProcessedStripeEvent('evt_unit_1')).toBe(false);
+    await recordStripeWebhookEvent(rec);
+    expect(await hasProcessedStripeEvent('evt_unit_1')).toBe(true);
+    const again = await recordStripeWebhookEvent({
+      ...rec,
+      outcome: 'already_paid',
+    });
+    expect(again.outcome).toBe('marked_paid');
+    const lines = readFileSync(EVENTS_LEDGER, 'utf8')
+      .trim()
+      .split('\n')
+      .filter((l) => l.includes('evt_unit_1'));
+    expect(lines).toHaveLength(1);
+    const found = await findStripeWebhookEvent('evt_unit_1');
+    expect(found?.event_type).toBe('checkout.session.completed');
+    expect(await findStripeWebhookEvent('evt_never_seen')).toBeNull();
+  });
+
+  it('selects Postgres for the event ledger when DATABASE_URL is set', async () => {
+    const savedUrl = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = 'postgres://127.0.0.1:1/awaken_unreachable';
+    try {
+      await expect(
+        recordStripeWebhookEvent({
+          stripe_event_id: 'evt_pg_sel',
+          event_type: 'checkout.session.completed',
+          order_id: null,
+          outcome: 'marked_paid',
+          recorded_at: '2026-10-21T01:00:00.000Z',
+        }),
+      ).rejects.toThrow();
+      const after = existsSync(EVENTS_LEDGER)
+        ? readFileSync(EVENTS_LEDGER, 'utf8')
+        : '';
+      expect(after).not.toContain('evt_pg_sel');
+    } finally {
+      if (savedUrl === undefined) {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = savedUrl;
+      }
+      await closeAllEventPools();
+    }
+  });
+});
+
+describe('order-status ledger (refund/dispute transitions, G-4)', () => {
+  const STATUS_LEDGER = join(DIR, 'order-status.jsonl');
+  let savedStatusPath: string | undefined;
+  beforeEach(() => {
+    savedStatusPath = process.env.STRIPE_ORDER_STATUS_LEDGER_PATH;
+    process.env.STRIPE_ORDER_STATUS_LEDGER_PATH = STATUS_LEDGER;
+  });
+  afterEach(() => {
+    if (savedStatusPath === undefined) {
+      delete process.env.STRIPE_ORDER_STATUS_LEDGER_PATH;
+    } else {
+      process.env.STRIPE_ORDER_STATUS_LEDGER_PATH = savedStatusPath;
+    }
+  });
+
+  it('latest transition per order wins; unknown order is null', async () => {
+    await recordStripeOrderStatus({
+      order_id: 'AWK-20261021-STAT01',
+      status: 'disputed',
+      stripe_event_id: 'evt_dispute_stat',
+      charge_id: 'ch_stat',
+      payment_intent_id: 'pi_stat',
+      recorded_at: '2026-10-21T01:00:00.000Z',
+      source: 'stripe_webhook',
+    });
+    await recordStripeOrderStatus({
+      order_id: 'AWK-20261021-STAT01',
+      status: 'refunded',
+      stripe_event_id: 'evt_refund_stat',
+      charge_id: 'ch_stat',
+      payment_intent_id: 'pi_stat',
+      recorded_at: '2026-10-21T02:00:00.000Z',
+      source: 'stripe_webhook',
+    });
+    const latest = await findLatestStripeOrderStatus('AWK-20261021-STAT01');
+    expect(latest?.status).toBe('refunded');
+    expect(latest?.stripe_event_id).toBe('evt_refund_stat');
+    expect(await findLatestStripeOrderStatus('AWK-UNKNOWN')).toBeNull();
+  });
+
+  it('selects Postgres for the status ledger when DATABASE_URL is set', async () => {
+    const savedUrl = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = 'postgres://127.0.0.1:1/awaken_unreachable';
+    try {
+      await expect(
+        recordStripeOrderStatus({
+          order_id: 'AWK-20261021-PGSTAT',
+          status: 'refunded',
+          stripe_event_id: 'evt_pg_stat',
+          charge_id: null,
+          payment_intent_id: null,
+          recorded_at: '2026-10-21T01:00:00.000Z',
+          source: 'stripe_webhook',
+        }),
+      ).rejects.toThrow();
+      const after = existsSync(STATUS_LEDGER)
+        ? readFileSync(STATUS_LEDGER, 'utf8')
+        : '';
+      expect(after).not.toContain('AWK-20261021-PGSTAT');
     } finally {
       if (savedUrl === undefined) {
         delete process.env.DATABASE_URL;

@@ -33,6 +33,9 @@
  */
 import { Resend } from 'resend';
 import { isRecord, sanitizeEmail } from '../security/validation';
+import { createLogger } from '../observability/logger';
+
+const log = createLogger('jobs:email');
 import { formatPrice } from '../pricing/pricing';
 import { siteUrl } from '../seo/config';
 import type { QuizResultSnapshot } from '../quiz/quiz';
@@ -61,14 +64,14 @@ export interface PurchaseConfirmationData {
   subscriber_discount_cents?: number;
   shipping_status?: string;
   /**
-   * Payment rails for the Cash App / Venmo method. Optional because a
-   * Bookipi card-invoice order must NOT carry the handles — its
-   * confirmation points at the emailed invoice instead (see
-   * payment_method). Older jobs always carried both handles.
+   * Payment rails for the Cash App / Venmo method. Optional because an
+   * embedded-card order must NOT carry the handles — its confirmation
+   * points at the on-site card payment instead (see payment_method).
+   * Older jobs always carried both handles.
    */
   cash_app_handle?: string;
   venmo_handle?: string;
-  /** 'cash_app_or_venmo' | 'bookipi_card_invoice' | 'stripe_card_embedded' — as recorded on the order. */
+  /** Payment method as recorded on the order. */
   payment_method?: string;
 }
 
@@ -215,9 +218,13 @@ export class LoggingEmailProvider implements EmailProvider {
       return { ok: false, error: `job ${job.id} is not queued` };
     }
     this.outbox.push({ ...job, status: 'sent', attempts: job.attempts + 1 });
-    console.info(
-      `[email] PREVIEW (no provider bound): queued ${job.template} → ${job.to} (job ${job.id})`,
-    );
+    // Stage 5: structured log via lib/observability/logger (the
+    // recipient address is email-masked by the logger's redaction).
+    log.info('email preview (no provider bound): job queued', {
+      template: job.template,
+      to: job.to,
+      job_id: job.id,
+    });
     return { ok: true, provider_message_id: `preview-${job.id}` };
   }
 
@@ -262,7 +269,9 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
           `Total: ${formatPrice(d.total_cents)}\n\n` +
           `Payment options on file for this order:\n` +
           (handleLines.length > 0 ? `${handleLines.join('\n')}\n` : '') +
-          `Card: pay the secure Bookipi invoice we email you for this order.\n\n` +
+          (d.payment_method === 'stripe_card_embedded'
+            ? `Card: complete your card payment in the secure checkout on our website.\n\n`
+            : '') +
           `Questions about your order? Reply to this email and we'll help.` +
           SIGN_OFF,
       };
@@ -545,16 +554,22 @@ export class ResendEmailProvider implements EmailProvider {
       const error = safeProviderError(
         err instanceof Error ? err.message : 'network error',
       );
-      console.error(
-        `[email] resend send failed: ${job.template} → ${job.to} (job ${job.id}): ${error}`,
-      );
+      log.error('resend send failed', {
+        template: job.template,
+        to: job.to,
+        job_id: job.id,
+        error,
+      });
       return { ok: false, error };
     }
     if (!response.ok) {
       const error = await describeResendError(response);
-      console.error(
-        `[email] resend send failed: ${job.template} → ${job.to} (job ${job.id}): ${error}`,
-      );
+      log.error('resend send failed', {
+        template: job.template,
+        to: job.to,
+        job_id: job.id,
+        error,
+      });
       return { ok: false, error };
     }
     let messageId: string | undefined;
@@ -567,9 +582,11 @@ export class ResendEmailProvider implements EmailProvider {
       messageId = undefined;
     }
     this.sent.push({ ...job, status: 'sent', attempts: job.attempts + 1 });
-    console.info(
-      `[email] sent via resend: ${job.template} → ${job.to} (job ${job.id})`,
-    );
+    log.info('email sent via resend', {
+      template: job.template,
+      to: job.to,
+      job_id: job.id,
+    });
     return { ok: true, provider_message_id: messageId };
   }
 
