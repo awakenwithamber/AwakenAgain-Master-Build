@@ -4,11 +4,13 @@
  * checkout (CLIENT=PREVIEW, SERVER=AUTHORITY). These functions mirror the
  * server rule deterministically in integer cents.
  *
- * Shipping rule (owner-confirmed 2026-10-10): free at $45+ general,
- * always free for Living Grimoire subscribers. Below threshold there is no
- * flat rate established in source — shipping is confirmed with the
- * customer before fulfillment and NOT added to the order total.
- * Status vocabulary: FREE / TO_BE_CONFIRMED.
+ * Shipping rule (owner decision 2026-10-20, superseding 2026-10-10):
+ * free at $45+ general, always free for Living Grimoire subscribers;
+ * below the threshold a FLAT $5.95 shipping is charged and added to the
+ * total. Status vocabulary: FREE / FLAT. This preview mirrors
+ * lib/checkout/order.ts (FLAT_SHIPPING_CENTS there is the authority).
+ * Sales tax is never previewed here: for card orders Stripe Tax
+ * calculates it from the customer's address at payment time.
  */
 import { BUNDLE_PRICE_CENTS } from '../../lib/pricing/pricing';
 import type { CartItem } from '../../types';
@@ -16,8 +18,9 @@ import type { StoredBundle } from './cart-store';
 
 export const FREE_SHIPPING_GENERAL_CENTS = 4500;
 export const FREE_SHIPPING_SUBSCRIBER_CENTS = 0;
+export const FLAT_SHIPPING_CENTS = 595;
 
-export type ShippingStatus = 'FREE' | 'TO_BE_CONFIRMED';
+export type ShippingStatus = 'FREE' | 'FLAT';
 
 export interface CartPreview {
   itemsTotalCents: number;
@@ -70,16 +73,17 @@ export function previewCartTotals(
   const freeShippingThresholdCents = isSubscriber
     ? FREE_SHIPPING_SUBSCRIBER_CENTS
     : FREE_SHIPPING_GENERAL_CENTS;
-  const shippingStatus: ShippingStatus =
-    subtotalCents >= freeShippingThresholdCents ? 'FREE' : 'TO_BE_CONFIRMED';
+  const shippingCents =
+    subtotalCents >= freeShippingThresholdCents ? 0 : FLAT_SHIPPING_CENTS;
+  const shippingStatus: ShippingStatus = shippingCents === 0 ? 'FREE' : 'FLAT';
   return {
     itemsTotalCents,
     bundleTotalCents,
     subtotalCents,
     subscriberDiscountCents,
-    shippingCents: 0,
+    shippingCents,
     shippingStatus,
     freeShippingThresholdCents,
-    totalCents: subtotalCents - subscriberDiscountCents,
+    totalCents: subtotalCents - subscriberDiscountCents + shippingCents,
   };
 }
