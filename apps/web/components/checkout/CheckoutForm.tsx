@@ -270,12 +270,20 @@ export function CheckoutForm() {
           )}
           {(result.subscriber_discount_cents ?? 0) > 0 ? (
             <p>
-              Living Grimoire of Light & Magic subscriber discount (10%): −
+              Living Grimoire subscriber discount (10%): −
               {formatPrice(result.subscriber_discount_cents ?? 0)}
             </p>
           ) : null}
           <p>
             Amount: <strong>{formatPrice(result.total_cents ?? 0)}</strong>
+            {(result.payment?.method ?? result.payment_method) ===
+            'stripe_card_embedded' ? (
+              <small>
+                {' '}
+                — plus sales tax, calculated from your shipping address in
+                the card form below.
+              </small>
+            ) : null}
           </p>
           <p>
             Order ID: <strong>{result.order_id}</strong>
@@ -325,7 +333,7 @@ export function CheckoutForm() {
               <p>Subtotal: {formatPrice(preview.subtotalCents)}</p>
               {preview.subscriberDiscountCents > 0 ? (
                 <p>
-                  Living Grimoire of Light & Magic subscriber discount (10%): −
+                  Living Grimoire subscriber discount (10%): −
                   {formatPrice(preview.subscriberDiscountCents)}{' '}
                   <small>
                     (applied when your membership is confirmed — the server
@@ -337,14 +345,24 @@ export function CheckoutForm() {
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
                   ? isSubscriber
-                    ? 'Free — Living Grimoire of Light & Magic subscribers always ship free.'
+                    ? 'Free — Living Grimoire subscribers always ship free.'
                     : `Free — shipping is free on orders of ${formatPrice(preview.freeShippingThresholdCents)} or more.`
-                  : `To be confirmed — no shipping charge is added to this order; we confirm the shipping cost with you before fulfillment. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire of Light & Magic subscribers.`}
+                  : `${formatPrice(preview.shippingCents)} — flat standard shipping, included in the total below. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire subscribers.`}
               </p>
               <p>
                 <strong>Total: {formatPrice(preview.totalCents)}</strong> (preview —
                 the server recomputes this when you place your order)
               </p>
+              {paymentMethod === 'stripe_card_embedded' ? (
+                <p>
+                  <small>
+                    Paying by card: sales tax is calculated at payment from
+                    your shipping address (via Stripe Tax) and added to
+                    this total in the secure card form — it is not included
+                    in the preview above.
+                  </small>
+                </p>
+              ) : null}
             </section>
 
             <section aria-label="Your details">
@@ -382,7 +400,7 @@ export function CheckoutForm() {
                   checked={isSubscriber}
                   onChange={(e) => setIsSubscriber(e.target.checked)}
                 />
-                I&apos;m a Living Grimoire of Light & Magic subscriber (always free shipping)
+                I&apos;m a Living Grimoire subscriber (always free shipping)
               </label>
               <p>
                 <small>
