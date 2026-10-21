@@ -130,7 +130,7 @@ export interface OrderRecord {
   /** 10% Living Grimoire subscriber discount — VERIFIED subscribers only. */
   subscriber_discount_cents: number;
   shipping_cents: number;
-  shipping_status: 'FREE' | 'TO_BE_CONFIRMED';
+  shipping_status: ShippingStatus;
   free_shipping_threshold_cents: number;
   total_cents: number;
   /** The client claimed subscriber status (body.is_subscriber === true). */
@@ -211,6 +211,18 @@ export function parsePaymentMethod(raw: unknown): PaymentMethod {
 
 export const FREE_SHIPPING_GENERAL_CENTS = 4500;
 export const FREE_SHIPPING_SUBSCRIBER_CENTS = 0;
+
+/**
+ * Shipping model (owner decision 2026-10-20, superseding the
+ * 2026-10-10 "shipping never added to the total" rule): orders at or
+ * above the free-shipping threshold ship FREE; verified Living Grimoire
+ * subscribers always ship FREE; every other order is charged a FLAT
+ * $5.95 shipping, added to the order total. 'FLAT' replaces the old
+ * 'TO_BE_CONFIRMED' status (nothing is left to confirm — the rate is
+ * fixed and charged at checkout).
+ */
+export const FLAT_SHIPPING_CENTS = 595;
+export type ShippingStatus = 'FREE' | 'FLAT';
 
 /**
  * The advertised Living Grimoire subscriber discount: 10% off, storewide.
@@ -502,18 +514,30 @@ export function validateAndBuildOrder(
   const threshold = isSubscriberVerified
     ? FREE_SHIPPING_SUBSCRIBER_CENTS
     : FREE_SHIPPING_GENERAL_CENTS;
-  const shippingStatus = subtotalCents >= threshold ? 'FREE' : 'TO_BE_CONFIRMED';
-  // Shipping is never added to the total — see shipping rule. The total
-  // is the subtotal minus any VERIFIED subscriber discount.
-  const totalCents = subtotalCents - subscriberDiscountCents;
+  // Shipping (owner decision 2026-10-20): flat $5.95 below the general
+  // threshold, FREE at/above it; verified subscribers always ship FREE
+  // (their threshold is 0, so the general rule already yields 0 — the
+  // standard figure below is what a NON-subscriber pays for the same
+  // cart, used by the client-total check).
+  const standardShippingCents =
+    subtotalCents >= FREE_SHIPPING_GENERAL_CENTS ? 0 : FLAT_SHIPPING_CENTS;
+  const shippingCents = isSubscriberVerified ? 0 : standardShippingCents;
+  const shippingStatus: ShippingStatus = shippingCents === 0 ? 'FREE' : 'FLAT';
+  // The total is the subtotal minus any VERIFIED subscriber discount,
+  // plus the shipping charged for this order. Sales tax is NOT part of
+  // this total: for card orders Stripe Tax computes it from the
+  // customer's address inside the Stripe session (owner decision
+  // 2026-10-20); the webhook verifies total + tax (see stripe webhook).
+  const totalCents = subtotalCents - subscriberDiscountCents + shippingCents;
 
   // Total check. Without a subscriber claim the client total must equal
   // the server total exactly (tamper rejection, unchanged). With a claim,
   // the client preview legitimately shows one of two server-computable
-  // figures — the standard total or the claimed-subscriber total — so both
+  // figures — the standard total (no discount, standard shipping) or the
+  // claimed-subscriber total (claimed discount, free shipping) — so both
   // are accepted; the RECORDED total is always the server's own figure for
   // the verification outcome. Any other client total is still rejected.
-  const standardTotalCents = subtotalCents;
+  const standardTotalCents = subtotalCents + standardShippingCents;
   const claimedSubscriberTotalCents = subtotalCents - claimedDiscountCents;
   const totalMatches = isSubscriberAsserted
     ? body.client_total_cents === standardTotalCents ||
@@ -540,7 +564,7 @@ export function validateAndBuildOrder(
     bundle,
     subtotal_cents: subtotalCents,
     subscriber_discount_cents: subscriberDiscountCents,
-    shipping_cents: 0,
+    shipping_cents: shippingCents,
     shipping_status: shippingStatus,
     free_shipping_threshold_cents: threshold,
     total_cents: totalCents,
