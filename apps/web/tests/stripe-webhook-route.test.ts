@@ -6,8 +6,12 @@
  *   signature is rejected (400) and marks nothing.
  * - A verified checkout.session.completed marks EXACTLY the bound
  *   order paid (the order-status lookup then resolves 'paid').
- * - An amount that differs from the persisted server total marks
- *   nothing (400).
+ * - Amounts are verified as order total (pre-tax) + the Stripe Tax
+ *   amount on the session (total_details.amount_tax), and the tax is
+ *   stored on the payment record (2026-10-20). An amount that differs
+ *   marks nothing (400); a session event with NO tax breakdown fails
+ *   safe (400, nothing marked); payment_intent.succeeded carries no
+ *   tax breakdown and never marks an order paid by itself.
  * - Duplicate deliveries are idempotent (one payment record).
  * - Unconfigured webhook → 503, marks nothing.
  */
@@ -86,6 +90,13 @@ afterEach(() => {
   }
 });
 
+// The seeded order: $19.77 capsule, under the $45 free-shipping
+// threshold → server total 1977 + 595 flat shipping = 2572 (pre-tax).
+// Stripe Tax adds tax on top inside the session; the webhook verifies
+// amount_total == 2572 + amount_tax and stores the tax.
+const ORDER_TOTAL_CENTS = 1977 + 595;
+const TAX_CENTS = 187;
+
 async function seedOrder(): Promise<string> {
   const res = await postCheckout(
     new Request('http://localhost/api/checkout', {
@@ -95,7 +106,7 @@ async function seedOrder(): Promise<string> {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
         payment_method: 'stripe_card_embedded',
-        client_total_cents: 1977,
+        client_total_cents: ORDER_TOTAL_CENTS,
       }),
     }),
   );
@@ -104,7 +115,11 @@ async function seedOrder(): Promise<string> {
   return json.order_id;
 }
 
-function completedEvent(orderId: string, amountTotal = 1977) {
+function completedEvent(
+  orderId: string,
+  amountTotal = ORDER_TOTAL_CENTS + TAX_CENTS,
+  amountTax: number | null = TAX_CENTS,
+) {
   return {
     id: `evt_${orderId}`,
     type: 'checkout.session.completed',
@@ -117,6 +132,9 @@ function completedEvent(orderId: string, amountTotal = 1977) {
         payment_intent: 'pi_test_123',
         client_reference_id: orderId,
         metadata: { order_id: orderId },
+        ...(amountTax === null
+          ? {}
+          : { total_details: { amount_tax: amountTax } }),
       },
     },
   };
@@ -162,7 +180,8 @@ describe('POST /api/stripe/webhook', () => {
     expect(json.order_id).toBe(orderId);
 
     const payment = await findStripePayment(orderId);
-    expect(payment?.amount_total_cents).toBe(1977);
+    expect(payment?.amount_total_cents).toBe(ORDER_TOTAL_CENTS + TAX_CENTS);
+    expect(payment?.tax_cents).toBe(TAX_CENTS);
     expect(payment?.stripe_session_id).toBe('cs_test_123');
     expect(await orderStatus(orderId)).toBe('paid');
     // Exactly the bound order — the other order is untouched.
@@ -191,6 +210,53 @@ describe('POST /api/stripe/webhook', () => {
       /does not match/,
     );
     expect(await findStripePayment(orderId)).toBeNull();
+  });
+
+  it('rejects the pre-tax total alone — tax must be included (400)', async () => {
+    const orderId = await seedOrder();
+    // amount_total == order total WITHOUT the tax Stripe reported.
+    const { status, json } = await postWebhook(
+      completedEvent(orderId, ORDER_TOTAL_CENTS),
+    );
+    expect(status).toBe(400);
+    expect(String((json.errors as string[]).join(' '))).toMatch(
+      /does not match/,
+    );
+    expect(await findStripePayment(orderId)).toBeNull();
+    expect(await orderStatus(orderId)).toBe('pending_payment');
+  });
+
+  it('fails safe when the session carries no tax breakdown (400, nothing marked)', async () => {
+    const orderId = await seedOrder();
+    const { status, json } = await postWebhook(
+      completedEvent(orderId, ORDER_TOTAL_CENTS + TAX_CENTS, null),
+    );
+    expect(status).toBe(400);
+    expect(String((json.errors as string[]).join(' '))).toMatch(
+      /no tax breakdown/,
+    );
+    expect(await findStripePayment(orderId)).toBeNull();
+    expect(await orderStatus(orderId)).toBe('pending_payment');
+  });
+
+  it('payment_intent.succeeded alone never marks an order paid (no tax breakdown)', async () => {
+    const orderId = await seedOrder();
+    const { status, json } = await postWebhook({
+      id: `evt_pi_${orderId}`,
+      type: 'payment_intent.succeeded',
+      data: {
+        object: {
+          id: 'pi_test_123',
+          amount_received: ORDER_TOTAL_CENTS + TAX_CENTS,
+          currency: 'usd',
+          metadata: { order_id: orderId },
+        },
+      },
+    });
+    expect(status).toBe(200);
+    expect(json.marked_paid).toBe(false);
+    expect(await findStripePayment(orderId)).toBeNull();
+    expect(await orderStatus(orderId)).toBe('pending_payment');
   });
 
   it('duplicate deliveries are idempotent — one payment record', async () => {
