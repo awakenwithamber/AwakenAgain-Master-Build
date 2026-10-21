@@ -8,7 +8,8 @@
  *   Natural/Clear restricted to translucent bases, per-slot bundle integrity.
  * - Unknown products / variants / unpriced products rejected.
  * - Order record schema: order_id, computed_by: 'server', integer-cent
- *   totals, payment_method, shipping rule (FREE / TO_BE_CONFIRMED).
+ *   totals, payment_method, shipping rule (FREE / FLAT $5.95, owner
+ *   decision 2026-10-20).
  * - Payment instructions contain ONLY Cash App + Venmo — no other provider
  *   names, handles, or links.
  * - Successful orders append exactly one JSON line to the ledger.
@@ -124,7 +125,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [VALID_SOAP_ITEM],
       customer: CUSTOMER,
-      client_total_cents: 1, // server computes 2354
+      client_total_cents: 1, // server computes 2354 + 595 shipping = 2949
     });
     expect(status).toBe(422);
     expect(String((json.errors as string[]).join(' '))).toMatch(/Total mismatch/);
@@ -257,10 +258,11 @@ describe('checkout route', () => {
   });
 
   it('applies subscriber benefits only when the claim is server-verified', () => {
-    // Owner decision 2026-10-10: general free shipping at $45;
-    // Living Grimoire subscribers get free shipping with no minimum.
-    // $19.77 order: below the $45 general threshold, so general shipping
-    // is confirmed later, while a VERIFIED subscriber ships free.
+    // Owner decisions: general free shipping at $45 (2026-10-10);
+    // Living Grimoire subscribers get free shipping with no minimum;
+    // below the threshold a FLAT $5.95 shipping is charged and added to
+    // the total (2026-10-20). $19.77 order: standard total is
+    // 1977 + 595 = 2572, while a VERIFIED subscriber pays 1779.
     const item = {
       product_handle: 'chill-pill-capsules',
       variant_id: 'chill-pill-capsules-2wk',
@@ -271,9 +273,11 @@ describe('checkout route', () => {
       items: [{ ...item }],
       customer: CUSTOMER,
       is_subscriber: false,
-      client_total_cents: 1977,
+      client_total_cents: 2572,
     });
-    expect(general.shipping_status).toBe('TO_BE_CONFIRMED');
+    expect(general.shipping_status).toBe('FLAT');
+    expect(general.shipping_cents).toBe(595);
+    expect(general.total_cents).toBe(2572);
 
     // A bare is_subscriber claim (no server verification) grants NOTHING:
     // standard shipping treatment, no discount — but the order is not
@@ -283,11 +287,12 @@ describe('checkout route', () => {
       items: [{ ...item }],
       customer: CUSTOMER,
       is_subscriber: true,
-      client_total_cents: 1977,
+      client_total_cents: 2572,
     });
-    expect(unverified.shipping_status).toBe('TO_BE_CONFIRMED');
+    expect(unverified.shipping_status).toBe('FLAT');
+    expect(unverified.shipping_cents).toBe(595);
     expect(unverified.subscriber_discount_cents).toBe(0);
-    expect(unverified.total_cents).toBe(1977);
+    expect(unverified.total_cents).toBe(2572);
     expect(unverified.is_subscriber_asserted).toBe(true);
     expect(unverified.is_subscriber_verified).toBe(false);
     const unverifiedDiscountedClaim = validateAndBuildOrder({
@@ -296,8 +301,8 @@ describe('checkout route', () => {
       is_subscriber: true,
       client_total_cents: 1779, // round(1977 * 0.9) — the claimed preview total
     });
-    expect(unverifiedDiscountedClaim.total_cents).toBe(1977);
-    expect(unverifiedDiscountedClaim.shipping_status).toBe('TO_BE_CONFIRMED');
+    expect(unverifiedDiscountedClaim.total_cents).toBe(2572);
+    expect(unverifiedDiscountedClaim.shipping_status).toBe('FLAT');
 
     // Verified subscriber: free shipping with no minimum + the advertised
     // 10% discount. 1977 - round(1977 * 0.9) = 198 discount → 1779 total.
@@ -312,11 +317,39 @@ describe('checkout route', () => {
     );
     expect(subscriber.shipping_status).toBe('FREE');
     expect(subscriber.shipping_cents).toBe(0);
-    // shipping is never added to the total — no flat rate exists in source
+    // verified subscribers ship free — no flat charge in their total
     expect(subscriber.subscriber_discount_cents).toBe(198);
     expect(subscriber.total_cents).toBe(1779);
     expect(subscriber.is_subscriber_verified).toBe(true);
     expect(subscriber.free_shipping_threshold_cents).toBe(0);
+  });
+
+  it('charges the flat $5.95 shipping under $45 and includes it in the total', async () => {
+    // $19.77 capsule: below the $45 threshold → 595 shipping, 2572 total.
+    const { status, json } = await postCheckout({
+      items: [VALID_CAPSULE_ITEM],
+      customer: CUSTOMER,
+      client_total_cents: 1977 + 595,
+    });
+    expect(status).toBe(200);
+    expect(json.shipping_status).toBe('FLAT');
+    expect(json.total_cents).toBe(1977 + 595);
+    const lines = readFileSync(LEDGER, 'utf8').trim().split('\n');
+    const last = JSON.parse(lines[lines.length - 1]) as Record<string, unknown>;
+    expect(last.shipping_cents).toBe(595);
+    expect(last.shipping_status).toBe('FLAT');
+    expect(last.total_cents).toBe(1977 + 595);
+
+    // A client total that OMITS the shipping charge is tampering now.
+    const omitted = await postCheckout({
+      items: [VALID_CAPSULE_ITEM],
+      customer: CUSTOMER,
+      client_total_cents: 1977,
+    });
+    expect(omitted.status).toBe(422);
+    expect(String((omitted.json.errors as string[]).join(' '))).toMatch(
+      /Total mismatch/,
+    );
   });
 
   it('stores exact oil IDs in the order record, never "custom scent"', () => {
@@ -331,7 +364,7 @@ describe('checkout route', () => {
         },
       ],
       customer: CUSTOMER,
-      client_total_cents: 2354,
+      client_total_cents: 2354 + 595,
     });
     const scent = record.items[0].customization!.scent;
     expect(scent).toEqual({
@@ -427,10 +460,10 @@ describe('checkout route', () => {
         },
       ],
       customer: CUSTOMER,
-      client_total_cents: 1177,
+      client_total_cents: 1177 + 595,
     });
     expect(status).toBe(200);
-    expect(json.total_cents).toBe(1177);
+    expect(json.total_cents).toBe(1177 + 595);
     const lines = readFileSync(LEDGER, 'utf8').trim().split('\n');
     const last = JSON.parse(lines[lines.length - 1]) as Record<string, unknown>;
     const line = (last.items as Record<string, unknown>[])[0];
@@ -466,10 +499,10 @@ describe('checkout route', () => {
       items: [],
       bundle,
       customer: CUSTOMER,
-      client_total_cents: 3577,
+      client_total_cents: 3577 + 595,
     });
     expect(status).toBe(200);
-    expect(json.total_cents).toBe(3577);
+    expect(json.total_cents).toBe(3577 + 595);
     const lines = readFileSync(LEDGER, 'utf8').trim().split('\n');
     const last = JSON.parse(lines[lines.length - 1]) as Record<string, unknown>;
     const saved = (last.bundle as Record<string, unknown>).slots as Record<
@@ -500,7 +533,7 @@ describe('checkout route', () => {
         phone: '(801) 819-6795',
         notes: 'x'.repeat(2000),
       },
-      client_total_cents: 2354,
+      client_total_cents: 2354 + 595,
     });
     expect(record.customer.name).toBe('Amber Patten');
     expect(record.customer.email).toBe('amber@example.com');
