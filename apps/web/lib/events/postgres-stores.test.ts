@@ -582,6 +582,7 @@ describePg('pg stripe payments (equivalence)', () => {
       stripe_session_id: 'cs_test_pg_1',
       payment_intent_id: 'pi_test_pg_1',
       amount_total_cents: 5931,
+      tax_cents: 0,
       currency: 'usd',
       paid_at: '2026-10-19T01:00:00.000Z',
       source: 'stripe_webhook',
