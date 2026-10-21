@@ -90,7 +90,10 @@ async function seedOrder(paymentMethod: string): Promise<string> {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
         payment_method: paymentMethod,
-        client_total_cents: 1977,
+        // $19.77 is under the $45 free-shipping threshold: the server
+        // total includes the flat $5.95 shipping (owner decision
+        // 2026-10-20).
+        client_total_cents: 1977 + 595,
       }),
     }),
   );
@@ -133,12 +136,36 @@ describe('POST /api/stripe/checkout-session', () => {
     expect(params.client_reference_id).toBe(orderId);
     expect(String(params.return_url)).toContain('{CHECKOUT_SESSION_ID}');
     const lineItems = params.line_items as {
-      price_data: { unit_amount: number };
+      price_data: {
+        unit_amount: number;
+        tax_behavior?: string;
+        tax_code?: string;
+      };
       quantity: number;
     }[];
     expect(lineItems).toHaveLength(1);
     expect(lineItems[0].price_data.unit_amount).toBe(1977);
     expect(lineItems[0].quantity).toBe(1);
+    // Stripe Tax (2026-10-20): tax-exclusive line items with the
+    // general tax code; tax calculated from the collected US address.
+    expect(lineItems[0].price_data.tax_behavior).toBe('exclusive');
+    expect(lineItems[0].price_data.tax_code).toBe('txcd_99999999');
+    expect(params.automatic_tax).toEqual({ enabled: true });
+    expect(params.shipping_address_collection).toEqual({
+      allowed_countries: ['US'],
+    });
+    // Shipping rides as a shipping_option matching the order (flat
+    // $5.95 — the order is under the free-shipping threshold), never
+    // as an extra line item.
+    expect(params.shipping_options).toEqual([
+      {
+        shipping_rate_data: {
+          type: 'fixed_amount',
+          fixed_amount: { amount: 595, currency: 'usd' },
+          display_name: 'Standard shipping',
+        },
+      },
+    ]);
   });
 
   it('rejects a mismatched email with the generic 404', async () => {
