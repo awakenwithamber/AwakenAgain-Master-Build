@@ -10,33 +10,27 @@
  *   (lib/checkout/order) and persisted UNPAID. Only then is a Checkout
  *   Session created, from the SERVER-computed order record — client
  *   amounts never reach Stripe.
+ * - Shipping + tax (owner decision 2026-10-20): the order total is
+ *   PRE-TAX (items − discount + flat/free shipping from the record).
+ *   Shipping reaches Stripe as a session shipping_option matching the
+ *   record — never as a line item — and Stripe Tax (automatic_tax)
+ *   computes sales tax from the collected US shipping address.
  * - An order is marked paid ONLY here, from a signature-verified
- *   webhook event whose amount matches the persisted order total. The
+ *   webhook event whose amount equals the persisted order total PLUS
+ *   the tax Stripe reports (session total_details.amount_tax). The
  *   client-side return page can display status; it can never set it.
  * - Everything is env-gated: without STRIPE_SECRET_KEY +
  *   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY the card option reports itself
  *   unavailable and the rest of checkout works untouched. Webhook
  *   handling additionally requires STRIPE_WEBHOOK_SECRET.
  *
- * Paid state lives in its own append-only ledger (the same pattern as
- * order tracking), keyed by order_id, written once per order. Driver
- * selection is the codebase standard (Phase 3 Step 1): DATABASE_URL set
- * → the Postgres event store ('stripe_payments' stream); unset → the
- * local JSONL file, byte-identical to before. (2026-10-19 durable-
- * stores fix: this ledger originally shipped file-only, which on
- * Vercel's read-only filesystem meant the webhook could never durably
- * mark an order paid in production.)
+ * Paid state lives in its own append-only JSONL ledger (the same
+ * pattern as order tracking), keyed by order_id, written once per order.
  */
 import Stripe from 'stripe';
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { OrderRecord } from '../checkout/order';
-import {
-  EVENT_STREAMS,
-  appendEvent,
-  postgresEnabled,
-  readStreamEvents,
-} from '../events/event-store';
 
 /* ------------------------------------------------------------------ */
 /* Configuration (env-gated)                                            */
@@ -111,11 +105,21 @@ export function createStripeClient(
 /* Checkout Session creation — from the SERVER order record only        */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Stripe Tax code applied to every line item (owner decision
+ * 2026-10-20): 'txcd_99999999' is Stripe's general / tangible-goods
+ * code. Prices are tax-EXCLUSIVE — Stripe Tax adds tax on top, computed
+ * from the shipping address collected in the session.
+ */
+export const STRIPE_TAX_CODE_GENERAL = 'txcd_99999999';
+
 export interface CheckoutSessionLineItem {
   quantity: number;
   price_data: {
     currency: 'usd';
     unit_amount: number;
+    tax_behavior: 'exclusive';
+    tax_code: string;
     product_data: { name: string };
   };
 }
@@ -128,6 +132,8 @@ export function buildSessionLineItems(
     price_data: {
       currency: 'usd',
       unit_amount: line.unit_price_cents,
+      tax_behavior: 'exclusive',
+      tax_code: STRIPE_TAX_CODE_GENERAL,
       product_data: { name: line.title },
     },
   }));
@@ -137,30 +143,48 @@ export function buildSessionLineItems(
       price_data: {
         currency: 'usd',
         unit_amount: record.bundle.price_cents,
+        tax_behavior: 'exclusive',
+        tax_code: STRIPE_TAX_CODE_GENERAL,
         product_data: { name: 'The Alchemy Soap Collection (5 soaps)' },
       },
     });
   }
-  if (record.shipping_cents > 0) {
-    lineItems.push({
-      quantity: 1,
-      price_data: {
-        currency: 'usd',
-        unit_amount: record.shipping_cents,
-        product_data: { name: 'Shipping' },
-      },
-    });
-  }
+  // NOTE: shipping is deliberately NOT a line item — it is charged via
+  // shipping_options (below) so Stripe Tax treats it as a delivery
+  // charge and the session total composition stays verifiable.
   return lineItems;
 }
 
-/** The total the session MUST charge, recomputed from the record. */
+/**
+ * The single shipping option offered in the session, matching the
+ * order record exactly: FREE (0¢, 'Free shipping') when the record
+ * ships free, otherwise the record's flat charge ('Standard shipping').
+ */
+export function buildShippingOptions(record: OrderRecord) {
+  return [
+    {
+      shipping_rate_data: {
+        type: 'fixed_amount' as const,
+        fixed_amount: { amount: record.shipping_cents, currency: 'usd' },
+        display_name:
+          record.shipping_cents === 0 ? 'Free shipping' : 'Standard shipping',
+      },
+    },
+  ];
+}
+
+/**
+ * The PRE-TAX total the session must charge, recomputed from the
+ * record: line items − subscriber discount + shipping. Stripe Tax adds
+ * tax on top of this inside the session; the webhook verifies
+ * amount_total == this figure + the reported tax.
+ */
 export function expectedSessionTotalCents(record: OrderRecord): number {
   const lines = buildSessionLineItems(record).reduce(
     (sum, item) => sum + item.price_data.unit_amount * item.quantity,
     0,
   );
-  return lines - record.subscriber_discount_cents;
+  return lines - record.subscriber_discount_cents + record.shipping_cents;
 }
 
 export function buildEmbeddedSessionParams(
@@ -182,6 +206,13 @@ export function buildEmbeddedSessionParams(
     metadata: { order_id: record.order_id },
     payment_intent_data: { metadata: { order_id: record.order_id } },
     line_items: buildSessionLineItems(record),
+    // Stripe Tax (owner decision 2026-10-20): tax is calculated from
+    // the collected US shipping address; requires Stripe Tax to be
+    // activated in the Stripe Dashboard (with a tax registration) or
+    // session creation fails — see the go-live checklist.
+    automatic_tax: { enabled: true },
+    shipping_address_collection: { allowed_countries: ['US'] },
+    shipping_options: buildShippingOptions(record),
     ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
   };
 }
@@ -218,7 +249,10 @@ export interface StripePaymentRecord {
   order_id: string;
   stripe_session_id: string;
   payment_intent_id: string | null;
+  /** Full amount Stripe charged: order total (pre-tax) + tax. */
   amount_total_cents: number;
+  /** The Stripe Tax portion of the charge (session total_details.amount_tax). */
+  tax_cents: number;
   currency: string;
   paid_at: string;
   source: 'stripe_webhook';
@@ -232,17 +266,6 @@ export function defaultStripePaymentsLedgerPath(): string {
 }
 
 async function readStripePayments(): Promise<StripePaymentRecord[]> {
-  if (postgresEnabled()) {
-    const events = await readStreamEvents<StripePaymentRecord>(
-      EVENT_STREAMS.stripePayments,
-    );
-    const records: StripePaymentRecord[] = [];
-    for (const event of events) {
-      const parsed = event.payload;
-      if (parsed && typeof parsed.order_id === 'string') records.push(parsed);
-    }
-    return records;
-  }
   let raw: string;
   try {
     raw = await readFile(defaultStripePaymentsLedgerPath(), 'utf8');
@@ -280,16 +303,6 @@ export async function recordStripePayment(
 ): Promise<StripePaymentRecord> {
   const existing = await findStripePayment(record.order_id);
   if (existing) return existing;
-  if (postgresEnabled()) {
-    await appendEvent(
-      EVENT_STREAMS.stripePayments,
-      record.order_id,
-      'stripe_payment.recorded',
-      record,
-      record.paid_at,
-    );
-    return record;
-  }
   const path = defaultStripePaymentsLedgerPath();
   await mkdir(dirname(path), { recursive: true });
   await appendFile(path, `${JSON.stringify(record)}\n`, 'utf8');
