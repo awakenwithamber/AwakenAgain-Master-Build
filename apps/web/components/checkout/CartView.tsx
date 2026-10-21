@@ -14,7 +14,6 @@ import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart, cartItemTitle } from './cart-store';
 import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 import { ProfileInvite } from '../personalization/ProfileInvite';
-import Link from 'next/link';
 
 export function CartView() {
   const { items, bundle, loaded, removeItem, updateQuantity, setBundle, clear } =
@@ -32,7 +31,7 @@ export function CartView() {
         <h1>Your Cart</h1>
         {empty ? (
           <p>
-            Your cart is empty. <Link href="/shop">Browse the shop</Link>
+            Your cart is empty. <a href="/shop">Browse the shop</a>
           </p>
         ) : (
           <>
@@ -135,7 +134,7 @@ export function CartView() {
                 checked={isSubscriber}
                 onChange={(e) => setIsSubscriber(e.target.checked)}
               />
-              I&apos;m a Living Grimoire of Light & Magic subscriber (always free shipping)
+              I&apos;m a Living Grimoire subscriber (always free shipping)
             </label>
 
             <section aria-label="Order summary (preview)" className="cart-summary">
@@ -143,7 +142,7 @@ export function CartView() {
               <p>Subtotal: {formatPrice(preview.subtotalCents)}</p>
               {preview.subscriberDiscountCents > 0 ? (
                 <p>
-                  Living Grimoire of Light & Magic subscriber discount (10%): −
+                  Living Grimoire subscriber discount (10%): −
                   {formatPrice(preview.subscriberDiscountCents)}{' '}
                   <small>
                     (applied when your membership is confirmed — verified at
@@ -155,9 +154,9 @@ export function CartView() {
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
                   ? isSubscriber
-                    ? 'Free — Living Grimoire of Light & Magic subscribers always ship free.'
+                    ? 'Free — Living Grimoire subscribers always ship free.'
                     : `Free — shipping is free on orders of ${formatPrice(preview.freeShippingThresholdCents)} or more.`
-                  : `To be confirmed — no shipping charge is added to this order; we confirm the shipping cost with you before fulfillment. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire of Light & Magic subscribers.`}
+                  : `${formatPrice(preview.shippingCents)} — flat standard shipping, included in the total below. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire subscribers.`}
               </p>
               <p>
                 <strong>Total (preview): {formatPrice(preview.totalCents)}</strong>
@@ -173,9 +172,9 @@ export function CartView() {
             <ProfileInvite moment="cart" />
 
             <p>
-              <Link href="/checkout" className="btn-primary">
+              <a href="/checkout" className="btn-primary">
                 Proceed to checkout
-              </Link>
+              </a>
             </p>
             <p>
               <button type="button" className="cart-btn" onClick={clear}>
