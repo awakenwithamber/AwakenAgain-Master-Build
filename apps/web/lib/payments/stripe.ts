@@ -242,7 +242,12 @@ export function buildEmbeddedSessionParams(
   }
   return {
     mode: 'payment',
-    ui_mode: 'embedded',
+    // Stripe API 2026-04-22 (account default) removed ui_mode
+    // 'embedded' — the same embedded checkout is now 'embedded_page'
+    // (found by the 2026-10-22 live E2E test order, second layer after
+    // the tax_code fix). The client mounts it identically via
+    // EmbeddedCheckoutProvider + clientSecret.
+    ui_mode: 'embedded_page',
     return_url: returnUrl,
     customer_email: record.customer.email,
     client_reference_id: record.order_id,

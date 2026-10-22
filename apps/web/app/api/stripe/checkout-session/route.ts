@@ -4,7 +4,7 @@
  * The order already exists (created by the server-authoritative
  * POST /api/checkout with payment_method 'stripe_card_embedded' and
  * persisted UNPAID). This route binds a Stripe Checkout Session
- * (ui_mode 'embedded') to that persisted order, building line items
+ * (ui_mode 'embedded_page') to that persisted order, building line items
  * from the SERVER-computed order record — the client sends only the
  * order ID + the email it ordered with (the same anti-enumeration pair
  * the order-status lookup uses), never an amount.

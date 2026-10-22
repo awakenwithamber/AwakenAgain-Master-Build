@@ -121,7 +121,7 @@ describe('session construction from the server record', () => {
       rec,
       'https://example.com/checkout/return?session_id={CHECKOUT_SESSION_ID}',
     );
-    expect(params.ui_mode).toBe('embedded');
+    expect(params.ui_mode).toBe('embedded_page');
     expect(params.mode).toBe('payment');
     expect(params.customer_email).toBe('customer@example.com');
     expect(params.metadata).toEqual({ order_id: 'AWK-20261019-TEST03' });
