@@ -25,7 +25,17 @@
  *   https://us-assets.i.posthog.com (the SDK fetches its remote config
  *   from the assets host via XHR/fetch — owner-directed fix, 2026-10-15).
  * - frame-src https://player.vimeo.com — the welcome-video iframe in
- *   components/home/WelcomeVideo.tsx (the only embed in the app).
+ *   components/home/WelcomeVideo.tsx.
+ * - Stripe (embedded card checkout, lib/payments/stripe.ts +
+ *   components/checkout/StripeEmbeddedCheckout.tsx; Stripe's official
+ *   CSP guidance): script-src https://js.stripe.com (the Stripe.js
+ *   loader), connect-src https://api.stripe.com (Stripe.js calls),
+ *   frame-src https://js.stripe.com + https://hooks.stripe.com +
+ *   https://checkout.stripe.com (the embedded checkout iframe and the
+ *   3-D Secure hooks iframe). Without the frame-src entries the
+ *   embedded checkout renders Stripe's "This content is blocked"
+ *   placeholder — found by the 2026-10-22 live E2E test order (third
+ *   layer, after the tax_code and ui_mode fixes).
  *
  * 'upgrade-insecure-requests' is included so browsers auto-upgrade any
  * http:// subresource request to https:// (HTTPS-upgrade enforcement,
@@ -41,13 +51,13 @@
 export function buildContentSecurityPolicy(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://us-assets.i.posthog.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://us-assets.i.posthog.com https://js.stripe.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://d2xsxph8kpxj0f.cloudfront.net https://files.manuscdn.com",
     "media-src 'self'",
-    "connect-src 'self' https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com",
-    'frame-src https://player.vimeo.com',
+    "connect-src 'self' https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.stripe.com",
+    'frame-src https://player.vimeo.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com',
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
