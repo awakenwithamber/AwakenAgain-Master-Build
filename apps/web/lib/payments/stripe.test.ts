@@ -132,7 +132,8 @@ describe('session construction from the server record', () => {
     const items = buildSessionLineItems(record());
     for (const item of items) {
       expect(item.price_data.tax_behavior).toBe('exclusive');
-      expect(item.price_data.tax_code).toBe('txcd_99999999');
+      expect(item.price_data).not.toHaveProperty('tax_code');
+      expect(item.price_data.product_data.tax_code).toBe('txcd_99999999');
     }
     expect(STRIPE_TAX_CODE_GENERAL).toBe('txcd_99999999');
   });

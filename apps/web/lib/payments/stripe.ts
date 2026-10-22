@@ -158,8 +158,11 @@ export interface CheckoutSessionLineItem {
     currency: 'usd';
     unit_amount: number;
     tax_behavior: 'exclusive';
-    tax_code: string;
-    product_data: { name: string };
+    // Stripe API: the tax code belongs on product_data (it becomes the
+    // Product's tax code) — tax_code is NOT a price_data parameter and
+    // Stripe rejects the session when it is sent there (found by the
+    // 2026-10-22 live E2E test order).
+    product_data: { name: string; tax_code: string };
   };
 }
 
@@ -172,8 +175,7 @@ export function buildSessionLineItems(
       currency: 'usd',
       unit_amount: line.unit_price_cents,
       tax_behavior: 'exclusive',
-      tax_code: STRIPE_TAX_CODE_GENERAL,
-      product_data: { name: line.title },
+      product_data: { name: line.title, tax_code: STRIPE_TAX_CODE_GENERAL },
     },
   }));
   if (record.bundle) {
@@ -183,8 +185,10 @@ export function buildSessionLineItems(
         currency: 'usd',
         unit_amount: record.bundle.price_cents,
         tax_behavior: 'exclusive',
-        tax_code: STRIPE_TAX_CODE_GENERAL,
-        product_data: { name: 'The Alchemy Soap Collection (5 soaps)' },
+        product_data: {
+          name: 'The Alchemy Soap Collection (5 soaps)',
+          tax_code: STRIPE_TAX_CODE_GENERAL,
+        },
       },
     });
   }
