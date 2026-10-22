@@ -147,6 +147,7 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
   const [error, setError] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const seasonal = useMemo(() => {
     const d = new Date();
@@ -215,7 +216,13 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
   };
 
   // Focus the step heading on navigation (screen-reader + keyboard users).
+  // Reveal fix (2026-10-22): also reset the scroll region to its top on
+  // every step change. Focusing the heading made the browser auto-scroll
+  // .body to an unpredictable offset — at Reveal the summary could land
+  // above the visible slice. Setting scrollTop BEFORE focus() keeps the
+  // focus scroll a no-op: the heading sits at the top of the region.
   useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
     headingRef.current?.focus();
   }, [stepKey]);
 
@@ -770,7 +777,7 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
           </div>
         )}
 
-        <div className={styles.body}>
+        <div className={styles.body} ref={bodyRef}>
           <section className={styles.stepPanel} aria-labelledby="step-heading">
             <h2 id="step-heading" ref={headingRef} tabIndex={-1} className={styles.stepHeading}>
               {STEP_HEADLINES[stepKey]}

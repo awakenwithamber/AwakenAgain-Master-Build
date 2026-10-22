@@ -266,7 +266,14 @@
 
 @media (max-width: 959px) {
   .previewPanel {
-    order: -1;
+    /* Reveal fix (2026-10-22): was order:-1, which queued this ~400px
+       preview ahead of the step panel inside the modal's only scroll
+       region. On phones that buried the Step 6 summary ~1,300px deep
+       in a ~70px-tall window, so the finished soap was invisible.
+       Keep DOM order on mobile: step panel (heading + summary) first,
+       preview after. Desktop (≥960px, side-by-side + sticky) is
+       unaffected. */
+    order: 0;
   }
 }
 
@@ -1077,6 +1084,48 @@
     padding-right: 18px;
   }
 
+  /* Reveal fix (2026-10-22): compact the fixed chrome so .body — the
+     modal's only scroll region — gets a usable height on phones. The
+     header, progress nav, bottom bar, and footer previously consumed
+     nearly the whole viewport, leaving .body ~70px tall. */
+  .dialogHeader {
+    padding-top: 14px;
+  }
+
+  .eyebrow {
+    margin-bottom: 2px;
+  }
+
+  .progressNav {
+    padding-top: 8px;
+  }
+
+  .stepStatus {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+
+  /* Progress pills: one scrollable row instead of wrapping to three. */
+  .progress {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .step {
+    flex: none;
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
+
+  .stepNum {
+    width: 22px;
+    height: 22px;
+    font-size: 0.7rem;
+    margin-right: 5px;
+  }
+
   .body {
     padding: 16px 18px 8px;
   }
@@ -1137,7 +1186,13 @@
   .bottomBar {
     flex-direction: column;
     align-items: stretch;
-    padding: 12px 18px calc(16px + env(safe-area-inset-bottom));
+    /* Reveal fix (2026-10-22): slimmer than the 12/16px version so the
+       scroll region above keeps more of the phone viewport. */
+    padding: 8px 18px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .builderFooter p {
+    margin: 6px 0;
   }
 
   .bottomHint {
