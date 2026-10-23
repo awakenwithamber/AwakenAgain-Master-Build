@@ -438,6 +438,151 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
     },
   ),
 
+  // — Owner-supplied service + brand artwork (owner-approved assignments,
+  // image-mapping report 2026-10-22, applied 2026-10-23). Each entry below
+  // fills a slot that was MISSING_ASSET / UNVERIFIED before this pass; the
+  // filled handles were removed from productSlots() in the same change. —
+  real(
+    'asset_service_energy_work',
+    '/images/products/energy-work.webp',
+    'Energy Work — owner-supplied artwork: elemental triangles diagram (fire, water, earth, air) in gold linework on deep plum',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'energy-work',
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19586_6_ga12.webp`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #6 of the 2026-10-22 mapping report). Replaces the legacy images/elements-metaphysics.webp association, which the manifest marked UNVERIFIED — do not render. Artwork for a service; not a photograph.',
+    },
+  ),
+  real(
+    'asset_service_home_aura_space_cleansing',
+    '/images/products/home-aura-space-cleansing.webp',
+    'Home / Aura & Space Cleansing — owner-supplied artwork: a lit ritual smoking bowl with botanicals, candlelit apothecary styling',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'home-aura-space-cleansing',
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19592_9_47yw.webp`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #9 of the 2026-10-22 mapping report): a smoking cleansing bowl is the literal visual of this service. Replaces the former UNVERIFIED legacy association. Artwork for a service; not a photograph.',
+    },
+  ),
+  real(
+    'asset_service_personalized_botanical_consultation',
+    '/images/products/personalized-botanical-consultation.webp',
+    'Personalized Botanical Consultation — owner-supplied artwork: apothecary bottles and a mortar on a candlelit workbench',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'personalized-botanical-consultation',
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19591_8_y4kk.webp`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #8 of the 2026-10-22 mapping report). Replaces the legacy images/apothecary-shop.webp association, which the manifest marked UNVERIFIED — do not render. The same artwork also serves Custom Remedy Consultation (asset_service_custom_remedy_consultation), per the mapping report. Artwork for a service; not a photograph.',
+    },
+  ),
+  real(
+    'asset_service_custom_remedy_consultation',
+    '/images/products/custom-remedy-consultation.webp',
+    'Custom Remedy Consultation — owner-supplied artwork: apothecary bottles and a mortar on a candlelit workbench (shared with Personalized Botanical Consultation)',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'custom-remedy-consultation',
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19591_8_y4kk.webp`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #8 of the 2026-10-22 mapping report, shared with Personalized Botanical Consultation — the apothecary-workbench artwork fits both consultation slots). The record formerly carried images: []. Overwrites a 19,602-byte placeholder fallback file previously deployed at this path. Artwork for a service; not a photograph.',
+    },
+  ),
+  real(
+    'asset_service_tarot_readings',
+    '/images/products/tarot-readings.webp',
+    'Tarot Readings — owner-supplied artwork: tarot cards fanned on a candlelit apothecary table',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'tarot-readings',
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19590_10_zvwd.webp`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #10 of the 2026-10-22 mapping report): the record carried images: [] exactly — a verified-empty slot. Overwrites a 15,884-byte catalog-safe placeholder fallback file previously deployed at this path. The same artwork also serves Tarot + Rune Reading (asset_service_tarot_rune_reading), per the mapping report. Artwork for a service; not a photograph.',
+    },
+  ),
+  real(
+    'asset_service_tarot_rune_reading',
+    '/images/products/tarot-rune-reading.webp',
+    'Tarot + Rune Reading — owner-supplied artwork: tarot cards fanned on a candlelit apothecary table (shared with Tarot Readings)',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'tarot-rune-reading',
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19590_10_zvwd.webp`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #10 of the 2026-10-22 mapping report, shared with Tarot Readings). Replaces the former UNVERIFIED legacy association (images/elements-metaphysics.webp). Artwork for a service; not a photograph.',
+    },
+  ),
+  real(
+    'asset_soap_small_rose_promo',
+    '/images/soap/small-rose-soap-promo.png',
+    'Small Rose Soap promo card — red rose double-layer soap in candlelit apothecary styling, with corrected canon text baked in: "Small Rose Soap — 2 OZ | $5.77"',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'gaias-rose-soap',
+      stagedFrom:
+        '~/workspace/goals/amber-s-alchemy-apothecary-next-js-migration/files/regenerated-art/small-rose-soap-promo-corrected.png',
+      deployed: true,
+      notes:
+        'Regenerated 2026-10-22 from owner upload #3, whose baked-in text read "3 OZ | $4.77" (superseded); the corrected values (2 oz, $5.77) were verified string-by-string against canon before deployment, and the owner approved deployment 2026-10-23. Renders as the figure in the Five Signature Shapes section of /soap-shop and as a gallery image on the Gaia\'s Rose Soap record (the Small Rose is that product\'s 2 oz / $5.77 variant). The product\'s primary image remains asset_product_gaias_rose_soap. Promo artwork with prices baked in: if per-shape canon prices ever change, this file must be regenerated or retired in the same change.',
+    },
+  ),
+  real(
+    'asset_soap_collection_grid',
+    '/images/soap/soap-collection-grid.png',
+    'The Alchemy Soap Collection grid — the five soap styles with canon sizes and prices baked in: Small Rose 2 oz $5.77, Medium Rose 3 oz $8.77, Classic Chic Rectangle 4 oz $9.77, Large Floral Round 4.5 oz $11.77, Wave Art Rectangle 4.5 oz $11.77',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'soap-style-collection-5',
+      stagedFrom:
+        '~/workspace/goals/amber-s-alchemy-apothecary-next-js-migration/files/regenerated-art/soap-collection-grid-corrected.png',
+      deployed: true,
+      notes:
+        'Regenerated 2026-10-22 from owner upload #4, whose baked-in sizes/prices were superseded (Small Rose 3 oz/$4.77, Medium Rose 4 oz/$7.88, Classic Chic Rectangle 4 oz/$8.44, both large bars 5 oz); all ten corrected values were verified string-by-string against canon before deployment, and the owner approved deployment 2026-10-23. Renders in the Bundle section of /soap-shop and as a gallery image on the Collection record. The Collection\'s primary representation remains the text-free asset_soap_lineup_5. Promo artwork with prices baked in: if per-shape canon prices ever change, this file must be regenerated or retired in the same change.',
+    },
+  ),
+  real(
+    'asset_brand_living_grimoire_cover',
+    '/images/brand/living-grimoire-cover.jpg',
+    'Living Grimoire cover art — a gilt grimoire with a moon-and-sun emblem beside a candle and crystals, deep plum and gold (owner-supplied artwork; its baked-in title band is cropped off the placed copy — see notes)',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_20375_1_ys90.jpg`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #1 of the 2026-10-22 mapping report, §3). The upload carries the words "THE LIVING GRIMOIRE" in a black band along its bottom edge; because GrimoireBook renders its own cover brand/title/subtitle, the placed copy is cropped at y=1000 of 1184 (band excluded — the same text-band-exclusion crop technique as the soap shape crops) and set as the .cover background-image in components/grimoire/grimoire.module.css, with the component text on top. The original upload is retained untouched in ~/workspace/user/files.',
+    },
+  ),
+  real(
+    'asset_brand_herbal_library_header',
+    '/images/brand/herbal-library-header.jpg',
+    'Herb & Ingredient Library header art — an open botanical herbal under a moon-phase arch, with the words "Herb & Ingredient Library" (owner-supplied artwork)',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_20377_2_8xuk.jpg`,
+      deployed: true,
+      notes:
+        'Owner-approved assignment 2026-10-23 (upload #2 of the 2026-10-22 mapping report): header art for the Herb Index (/herb-index), which previously had no imagery. The artwork\'s own title band names this section and is retained in the file. Placed whole (no crop); displayed as a centered header plate via .herb-index-header-art in app/globals.css.',
+    },
+  ),
+
   // — MISSING_ASSET slots: product photography gaps (label + slot, never a fake image) —
   ...productSlots(),
   // — MISSING_ASSET slots: builder experience —
@@ -466,16 +611,15 @@ function productSlots(): ImageAssetEntry[] {
     ['seasonal-gut-reset', 'Seasonal Gut Reset', 'Product photo slot — capsules'],
     ['wild-caught-omega-3-fish-oil', 'Wild-Caught Omega-3 Fish Oil', 'Product photo slot — supplement bottle', 'EXPLICITLY no stock-bottle substitution per catalog note.'],
     ['custom-herbal-capsules', 'Custom Herbal Capsules', 'Product photo slot — consultation/service'],
-    ['custom-remedy-consultation', 'Custom Remedy Consultation', 'Service visual slot'],
     ['personalized-herbal-protocols', 'Personalized Herbal Protocols', 'Service visual slot'],
-    ['tarot-readings', 'Tarot Readings', 'Service visual slot'],
-    ['energy-work', 'Energy Work', 'Service visual slot', 'Legacy association images/elements-metaphysics.webp is UNVERIFIED — do not render as representative.'],
-    ['home-aura-space-cleansing', 'Home / Aura / Space Cleansing', 'Service visual slot', 'Legacy association unverified.'],
+    // Filled 2026-10-23 (owner-approved assignments, mapping report
+    // 2026-10-22) and registered as real entries above — no longer missing:
+    // custom-remedy-consultation, tarot-readings, energy-work,
+    // home-aura-space-cleansing, personalized-botanical-consultation,
+    // tarot-rune-reading.
     ['hypnotherapy-guided-relaxation', 'Hypnotherapy & Guided Relaxation', 'Service visual slot', 'Legacy association images/guided-meditation.webp is UNVERIFIED.'],
     ['past-life-inspired-guided-exploration', 'Past-Life-Inspired Guided Exploration', 'Service visual slot', 'Legacy association unverified.'],
-    ['personalized-botanical-consultation', 'Personalized Botanical Consultation', 'Service visual slot', 'Legacy association images/apothecary-shop.webp is UNVERIFIED.'],
     ['rune-readings', 'Rune Readings', 'Service visual slot', 'Legacy association unverified.'],
-    ['tarot-rune-reading', 'Tarot + Rune Reading', 'Service visual slot', 'Legacy association unverified.'],
     ['citrus-goddess-glow-soap', 'Citrus Goddess Glow Soap', 'Formula photo slot — shape references staged', 'No formula-specific photo; 5 shape crops registered above.'],
     ['custom-botanical-soap', 'Custom Botanical Soap', 'Builder visual slot', '6 of 8 v3 "mapped_photo" files do not exist — do not render v3 file list. Use staged shape crops.'],
     ['fresh-mountain-air-soap', 'Fresh Mountain Air Soap', 'Formula photo slot — shape references staged'],

@@ -143,6 +143,13 @@ export const RECORD: Product = {
       "status": "mapped_photo",
       "provenance": "products/IMAGE_MAP.md (2026-10-04); merged catalog image_manifest.csv (2026-09-27)",
       "note": "Deployed storefront primary. Verified 2026-10-13: pixel-identical to the gallery file 17297_5_ncac.webp above (owner-supplied, AI-styled artwork — not a verified documentary photo; manifest asset_product_gaias_rose_soap). Corrects the former 'placeholder_fallback / catalog-safe generated fallback' registration."
+    },
+    {
+      "src": "/images/soap/small-rose-soap-promo.png",
+      "alt": "Small Rose Soap promo card — the red rose double-layer Small Rose soap (2 oz, $5.77) in candlelit apothecary styling (illustrated representation)",
+      "role": "gallery",
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Promo artwork for this product's Small Rose variant (2 oz, $5.77). Regenerated 2026-10-22 from the owner's promo upload with the superseded baked-in text (3 OZ | $4.77) corrected to canon and verified string-by-string; owner approved deployment 2026-10-23. Registered in lib/media/image-manifest.ts as asset_soap_small_rose_promo (GENERATED_PRODUCT_REPRESENTATION, notDocumentaryPhoto). Renders as the figure in the Five Signature Shapes section of /soap-shop."
     }
   ],
   "short_description": "A romantic rose-and-hibiscus bar for goddess skin and heart-opening showers.",

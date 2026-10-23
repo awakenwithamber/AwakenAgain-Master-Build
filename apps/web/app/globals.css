@@ -532,6 +532,17 @@ html {
   padding: 0.4rem 1.05rem;
 }
 
+/* Herb Index header art — owner-supplied Herb & Ingredient Library plate
+   (2026-10-23; asset_brand_herbal_library_header in the image manifest).
+   Shown whole as a centered header plate, never cropped. */
+.herb-index-header-art {
+  display: block;
+  width: min(100%, 540px);
+  height: auto;
+  margin: 0 auto 1.5rem;
+  border-radius: 12px;
+}
+
 /* ------------------------------------------------------------------ */
 /* Header (spec §4 nav)                                                */
 /* ------------------------------------------------------------------ */

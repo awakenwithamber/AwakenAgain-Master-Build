@@ -19,8 +19,12 @@ export const RECORD: Product = {
   "variants": [],
   "images": [
     {
-      "path": "images/apothecary-shop.webp",
-      "status": "mapped from merged-catalog services.csv; association unverified — not confirmed as representative service photography"
+      "src": "/images/products/personalized-botanical-consultation.webp",
+      "alt": "Personalized Botanical Consultation — apothecary bottles and a mortar on a candlelit workbench (illustrated representation)",
+      "role": "primary",
+      "status": "mapped_photo",
+      "asset_status": "MAPPED",
+      "note": "Deployed storefront primary. Owner-supplied artwork registered 2026-10-23 in lib/media/image-manifest.ts as asset_service_personalized_botanical_consultation (OWNER_UPLOADED, not a documentary photo; upload #8 of the 2026-10-22 mapping report). Replaces the former UNVERIFIED legacy association (images/apothecary-shop.webp), which is no longer referenced."
     }
   ],
   "short_description": "Educational discussion of botanical traditions, sensory preferences, and custom apothecary options.",

@@ -67,8 +67,9 @@ export const SERVICE_PAGES: ServicePageEntry[] = [
     metaDescription:
       'Reflective astrology readings from Amber’s Alchemy Apothecary — your birth chart explored as a map of symbolism, cycles, and intention. Prepared in Salt Lake City, Utah and delivered wherever you are.',
     catalogHandle: null,
-    image: null,
-    imageAlt: 'Astrology reading illustration',
+    image: 'astrology.webp',
+    imageAlt:
+      'Zodiac wheel in gold linework on deep plum — owner-supplied illustration for Astrology Readings',
     interestCategory: 'readings',
     deliveryNote:
       'Prepared from your birth details and shared with you remotely; Salt Lake City locals are welcome to ask about meeting in person.',
@@ -199,8 +200,9 @@ export const SERVICE_PAGES: ServicePageEntry[] = [
     metaDescription:
       'Spirit resolution in Salt Lake City, Utah — calm, grounded spiritual support for homes and people experiencing a heaviness or presence they cannot shake. A ritual of intention, prayer, and clearing with Amber.',
     catalogHandle: null,
-    image: null,
-    imageAlt: 'Spirit resolution illustration',
+    image: 'spirit-resolution.webp',
+    imageAlt:
+      'Golden hands cupping light within sacred geometry — owner-supplied illustration for Spirit Resolution',
     interestCategory: 'readings',
     deliveryNote:
       'Begins with a conversation; in-person work is in Salt Lake City and along the Wasatch Front.',

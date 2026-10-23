@@ -44,6 +44,13 @@ export const RECORD: Product = {
       "role": "primary",
       "asset_status": "GENERATED_REPRESENTATION",
       "note": "Deployed storefront primary. The file is the AI-generated five-bar lineup registered in lib/media/image-manifest.ts as asset_soap_lineup_5 (GENERATED_PRODUCT_REPRESENTATION, notDocumentaryPhoto) — a generated representation with no text or prices baked in, NOT bundle photography. No bundle photography on file; collage image 15316_227_zkei.jpg carries superseded prices and is archive-only. Corrected 2026-10-13: the record formerly claimed MISSING_ASSET with src null while this registered lineup file was already deployed."
+    },
+    {
+      "src": "/images/soap/soap-collection-grid.png",
+      "alt": "The Alchemy Soap Collection grid — the five soap styles with sizes and prices: Small Rose 2 oz $5.77, Medium Rose 3 oz $8.77, Classic Chic Rectangle 4 oz $9.77, Large Floral Round 4.5 oz $11.77, Wave Art Rectangle 4.5 oz $11.77 (illustrated representation)",
+      "role": "gallery",
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Promo grid for the Collection's five styles. Regenerated 2026-10-22 from the owner's collection-grid upload with all ten baked-in sizes/prices corrected to canon and verified string-by-string; owner approved deployment 2026-10-23. Registered in lib/media/image-manifest.ts as asset_soap_collection_grid (GENERATED_PRODUCT_REPRESENTATION, notDocumentaryPhoto). Renders in the Bundle section of /soap-shop. The primary representation above remains the text-free lineup."
     }
   ],
   "short_description": "All five soap styles in one collection — you choose the scent, color, herbs, or botanical character of each bar.",

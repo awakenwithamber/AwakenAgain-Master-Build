@@ -19,8 +19,12 @@ export const RECORD: Product = {
   "variants": [],
   "images": [
     {
-      "path": "images/elements-metaphysics.webp",
-      "status": "mapped from merged-catalog services.csv; association unverified — not confirmed as representative service photography"
+      "src": "/images/products/energy-work.webp",
+      "alt": "Energy Work — elemental triangles diagram in gold linework on deep plum (illustrated representation)",
+      "role": "primary",
+      "status": "mapped_photo",
+      "asset_status": "MAPPED",
+      "note": "Deployed storefront primary. Owner-supplied artwork registered 2026-10-23 in lib/media/image-manifest.ts as asset_service_energy_work (OWNER_UPLOADED, not a documentary photo; upload #6 of the 2026-10-22 mapping report). Replaces the former UNVERIFIED legacy association (images/elements-metaphysics.webp), which is no longer referenced."
     }
   ],
   "short_description": "A quiet intention-based spiritual wellness session designed around reflection and personal ritual.",

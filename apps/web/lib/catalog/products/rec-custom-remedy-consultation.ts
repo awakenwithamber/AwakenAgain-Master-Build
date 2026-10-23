@@ -27,7 +27,16 @@ export const RECORD: Product = {
     }
   ],
   "tags": [],
-  "images": [],
+  "images": [
+    {
+      "src": "/images/products/custom-remedy-consultation.webp",
+      "alt": "Custom Remedy Consultation — apothecary bottles and a mortar on a candlelit workbench (illustrated representation)",
+      "role": "primary",
+      "status": "mapped_photo",
+      "asset_status": "MAPPED",
+      "note": "Deployed storefront primary. Owner-supplied artwork registered 2026-10-23 in lib/media/image-manifest.ts as asset_service_custom_remedy_consultation (OWNER_UPLOADED, not a documentary photo; upload #8 of the 2026-10-22 mapping report, shared with Personalized Botanical Consultation). This record formerly carried images: []."
+    }
+  ],
   "short_description": "A custom consultation for customers who want a personalized herbal direction, product match, or full apothecary protocol.",
   "extended_description": "A custom consultation for customers who want a personalized herbal direction, product match, or full apothecary protocol. (Sourced.) This is a service offering — no botanicals are assigned, and no fixed deliverables beyond the consultation itself are published in the source.",
   "featured_ingredients": [],

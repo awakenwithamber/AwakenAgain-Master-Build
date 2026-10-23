@@ -35,7 +35,16 @@ export const RECORD: Product = {
     }
   ],
   "tags": [],
-  "images": [],
+  "images": [
+    {
+      "src": "/images/products/tarot-readings.webp",
+      "alt": "Tarot Readings — tarot cards fanned on a candlelit apothecary table (illustrated representation)",
+      "role": "primary",
+      "status": "mapped_photo",
+      "asset_status": "MAPPED",
+      "note": "Deployed storefront primary. Owner-supplied artwork registered 2026-10-23 in lib/media/image-manifest.ts as asset_service_tarot_readings (OWNER_UPLOADED, not a documentary photo; upload #10 of the 2026-10-22 mapping report). This record formerly carried images: [] — a verified-empty slot; the placeholder fallback file previously deployed at this path was overwritten by the assigned artwork."
+    }
+  ],
   "short_description": "Mystical tarot readings for insight, reflection, and intuitive guidance through the Awaken Again experience.",
   "extended_description": "Reflective tarot sessions using symbolism and archetypes for personal insight and intention-setting. (Sourced from services.csv.) Readings are framed as a reflective, spiritual practice — for personal insight and intention-setting, not as predictions with guaranteed outcomes. Card count, spread type, session length, and delivery format are not published in the source and are flagged NEEDS_VERIFICATION.",
   "featured_ingredients": [],

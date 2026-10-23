@@ -33,6 +33,17 @@ export default function HerbIndexPage() {
     <main id="main-content" className="page content-page">
       <InterestTracker category="herbs" signalKey="herb-index" />
       <h1>🌿 Herb Index</h1>
+      {/* Owner-supplied Herb & Ingredient Library header art (2026-10-23;
+          registered as asset_brand_herbal_library_header in
+          lib/media/image-manifest.ts). */}
+      <img
+        className="herb-index-header-art"
+        src="/images/brand/herbal-library-header.jpg"
+        alt="Herb & Ingredient Library — an open botanical herbal under a moon-phase arch (owner-supplied artwork)"
+        width={1012}
+        height={1196}
+        loading="lazy"
+      />
       <p>
         Our botanical archive holds herbs, roots, flowers, and mushrooms from
         traditions around the world. Start with the explorer below, or browse

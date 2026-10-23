@@ -19,8 +19,12 @@ export const RECORD: Product = {
   "variants": [],
   "images": [
     {
-      "path": "images/elements-metaphysics.webp",
-      "status": "mapped from merged-catalog services.csv; association unverified — not confirmed as representative service photography"
+      "src": "/images/products/home-aura-space-cleansing.webp",
+      "alt": "Home, Aura & Space Cleansing — a lit ritual smoking bowl with botanicals in candlelit apothecary styling (illustrated representation)",
+      "role": "primary",
+      "status": "mapped_photo",
+      "asset_status": "MAPPED",
+      "note": "Deployed storefront primary. Owner-supplied artwork registered 2026-10-23 in lib/media/image-manifest.ts as asset_service_home_aura_space_cleansing (OWNER_UPLOADED, not a documentary photo; upload #9 of the 2026-10-22 mapping report). Replaces the former UNVERIFIED legacy association (images/elements-metaphysics.webp), which is no longer referenced."
     }
   ],
   "short_description": "A personalized spiritual cleansing ritual using intention, symbolism, and selected aromatic or botanical elements.",

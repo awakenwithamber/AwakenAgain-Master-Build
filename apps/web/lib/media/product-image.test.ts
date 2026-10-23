@@ -70,6 +70,28 @@ describe('generated / styled artwork — honest framing', () => {
       expect(img!.caption, handle).toBe(REPRESENTATION_CAPTION);
     }
   });
+
+  it('owner-supplied service artwork resolves as non-documentary (assignments of 2026-10-23)', () => {
+    // These six service slots were MISSING_ASSET / UNVERIFIED-legacy until
+    // the owner supplied on-topic artwork for each (mapping report
+    // 2026-10-22, owner approval 2026-10-23). They now resolve — framed as
+    // artwork, never as documentary photos.
+    for (const handle of [
+      'energy-work',
+      'home-aura-space-cleansing',
+      'personalized-botanical-consultation',
+      'custom-remedy-consultation',
+      'tarot-readings',
+      'tarot-rune-reading',
+    ]) {
+      const img = getProductDisplayImage(must(handle));
+      expect(img, handle).not.toBeNull();
+      expect(img!.src, handle).toBe(`/images/products/${handle}.webp`);
+      expect(img!.documentaryPhoto, handle).toBe(false);
+      expect(img!.caption, handle).toBe(REPRESENTATION_CAPTION);
+      expect(img!.provenance, handle).toBe('OWNER_UPLOADED');
+    }
+  });
 });
 
 describe('regenerated graphics — owner decision executed 2026-10-13', () => {
@@ -104,7 +126,6 @@ describe('products with no genuine imagery resolve to null', () => {
       'wild-caught-omega-3-fish-oil', // no stock substitution allowed
       'root-scalp-revival-serum', // only an ART_DIRECTION_ONLY candidate exists
       'custom-botanical-soap', // v3 file list must not render
-      'energy-work', // legacy service association is UNVERIFIED
       'custom-herbal-capsules', // images: [] — no registered imagery
     ]) {
       expect(getProductDisplayImage(must(handle)), handle).toBeNull();
@@ -113,7 +134,7 @@ describe('products with no genuine imagery resolve to null', () => {
 });
 
 describe('catalog-wide resolution census', () => {
-  it('exactly the 14 honestly-registered products resolve an image', () => {
+  it('exactly the 20 honestly-registered products resolve an image', () => {
     const resolved = PRODUCTS.filter(
       (p) => getProductDisplayImage(p) !== null,
     ).map((p) => p.handle);
@@ -121,15 +142,21 @@ describe('catalog-wide resolution census', () => {
       [
         'alchemy-tea-blend',
         'chill-pill-capsules',
+        'custom-remedy-consultation',
         'dreamease-capsules',
+        'energy-work',
         'eucalyptus-mint-spa-renewal-soap',
         'gaias-rose-soap',
         'grimoire-subscription',
         'happy-pill-capsules',
+        'home-aura-space-cleansing',
         'immune-at-ease-capsules',
         'lavender-fairy-dream-soap',
+        'personalized-botanical-consultation',
         'sacred-balance-capsules',
         'soap-style-collection-5',
+        'tarot-readings',
+        'tarot-rune-reading',
         'vital-connect-capsules',
         'vital-flow-capsules',
         'vital-vitality-capsules',

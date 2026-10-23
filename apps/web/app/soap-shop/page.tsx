@@ -118,6 +118,16 @@ export default function SoapShopPage() {
             </li>
           ))}
         </ul>
+        {/* Small Rose promo card (owner-approved 2026-10-23; registered as
+            asset_soap_small_rose_promo in the image manifest — regenerated
+            with canon text, 2 oz / $5.77). */}
+        <img
+          src="/images/soap/small-rose-soap-promo.png"
+          alt="Small Rose Soap promo card — the red rose double-layer Small Rose soap (2 oz, $5.77) in candlelit apothecary styling (illustrated representation)"
+          loading="lazy"
+          width={1600}
+          height={1600}
+        />
       </section>
 
       <section aria-label="Bundle">
@@ -126,6 +136,16 @@ export default function SoapShopPage() {
           One of each design — <PriceDisplay cents={BUNDLE_PRICE_CENTS} />
         </p>
         <SavingsDisplay componentSumCents={componentSum} />
+        {/* Collection grid (owner-approved 2026-10-23; registered as
+            asset_soap_collection_grid in the image manifest — regenerated
+            with all ten sizes/prices corrected to canon). */}
+        <img
+          src="/images/soap/soap-collection-grid.png"
+          alt="The Alchemy Soap Collection grid — the five soap styles with sizes and prices: Small Rose 2 oz $5.77, Medium Rose 3 oz $8.77, Classic Chic Rectangle 4 oz $9.77, Large Floral Round 4.5 oz $11.77, Wave Art Rectangle 4.5 oz $11.77 (illustrated representation)"
+          loading="lazy"
+          width={1920}
+          height={1280}
+        />
       </section>
     </main>
   );

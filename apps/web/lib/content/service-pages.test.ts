@@ -112,8 +112,13 @@ describe('service landing page registry', () => {
   it('images follow the per-service illustration convention and exist on disk', () => {
     for (const page of SERVICE_PAGES) {
       if (page.image === null) continue;
-      // A page with an illustration uses the mapped service's own file.
-      expect(page.image, page.slug).toBe(`${page.catalogHandle}.webp`);
+      // A page with an illustration uses the mapped service's own file;
+      // a brand-new service with no catalog record uses its slug (the
+      // owner-supplied illustrations of 2026-10-23 for astrology and
+      // spirit-resolution follow the slug form).
+      expect(page.image, page.slug).toBe(
+        page.catalogHandle ? `${page.catalogHandle}.webp` : `${page.slug}.webp`,
+      );
       const file = join(
         process.cwd(),
         'public',
@@ -126,12 +131,10 @@ describe('service landing page registry', () => {
   });
 
   it('pages without a genuine illustration use the placeholder (image null)', () => {
-    for (const slug of [
-      'astrology',
-      'spirit-resolution',
-      'business-setup',
-      'web-development',
-    ]) {
+    // Astrology and Spirit Resolution left this list on 2026-10-23: the
+    // owner supplied genuine illustrations for both (zodiac wheel; golden
+    // hands with sacred geometry).
+    for (const slug of ['business-setup', 'web-development']) {
       expect(getServicePage(slug)?.image, slug).toBeNull();
     }
   });
