@@ -26,7 +26,7 @@
  * defined monogram slot (see ILLUSTRATION_SLOT).
  */
 import { HERBS } from '../catalog/herbs';
-import type { Herb } from '../../types';
+import type { Herb, HerbReference } from '../../types';
 import { HERB_INDEX } from '../content/herbs';
 import {
   HERB_ILLUSTRATIONS,
@@ -187,6 +187,15 @@ export interface HerbalCard {
    * invented here.
    */
   caution: string | null;
+  /**
+   * References slot (Herbal Index Phase 1) — the record's sourced
+   * references, passed through untouched from the optional
+   * Herb.references field (populated from lib/catalog/herb-references.ts).
+   * Rendered ONLY on the detail page ("References & further reading");
+   * the compact card carries no citation block (plan D6). Records
+   * without references stay null and render nothing.
+   */
+  references: readonly HerbReference[] | null;
   detailHref: string;
   /** The HERB_INDEX slug that names this record, if any (alias-aware). */
   indexSlug: string | null;
@@ -228,6 +237,8 @@ export function cardForHerb(herb: Herb): HerbalCard {
       typeof rawCaution === 'string' && rawCaution.trim() !== ''
         ? rawCaution
         : null,
+    references:
+      herb.references && herb.references.length > 0 ? herb.references : null,
     detailHref: `/herbal-library/${herb.id}`,
     indexSlug: indexSlugFor(herb.id),
   };

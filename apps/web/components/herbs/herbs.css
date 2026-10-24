@@ -542,6 +542,25 @@
   padding: 0.5rem 0.75rem;
   background: rgba(190, 90, 50, 0.08);
 }
+.aa-herbal-references {
+  margin: 0.6rem 0 0;
+  border-top: 1px solid rgba(138, 106, 53, 0.4);
+  padding-top: 0.6rem;
+}
+.aa-herbal-refs {
+  margin: 0.15rem 0 0.35rem;
+  padding-left: 1.2rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #4a3418;
+}
+.aa-herbal-refs li {
+  margin-bottom: 0.3rem;
+}
+.aa-herbal-refs a {
+  color: #5a4020;
+  font-weight: 600;
+}
 .aa-herbal-detail-link {
   margin-top: 0.6rem;
   font-weight: 700;

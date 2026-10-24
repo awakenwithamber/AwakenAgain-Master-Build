@@ -40,8 +40,17 @@ describe('HerbalIndexCardView', () => {
     expect(html).toContain(getHerb('lavender')!.traditionalNote);
   });
 
-  it('flags the incomplete benefits honestly (3 of 5 today)', () => {
-    expect(html).toContain('3 of 5 properties recorded so far');
+  it('flags the incomplete benefits honestly on a record still at 3 of 5', () => {
+    const oregano = getHerbalCard('oregano')!;
+    const out = renderToStaticMarkup(
+      createElement(HerbalIndexCardView, { card: oregano }),
+    );
+    expect(out).toContain('3 of 5 properties recorded so far');
+  });
+
+  it('shows no incomplete flag on a Phase 1-completed record (lavender, 5 of 5)', () => {
+    expect(html).not.toContain('properties recorded so far');
+    expect(html).toContain('Traditionally used in baths to support functional circulation');
   });
 
   it('renders the monogram slot, not an image, for a dead-CDN reference', () => {

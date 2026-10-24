@@ -123,6 +123,33 @@ export type HerbCategory =
   | 'mood'
   | 'emotional';
 
+/** Reference kinds for Herb.references (Herbal Index Phase 1 plan §3.1). */
+export type HerbReferenceKind =
+  | 'monograph'
+  | 'safety'
+  | 'taxonomy'
+  | 'evidence'
+  | 'traditional';
+
+/**
+ * One sourced reference for a herb record (Herbal Index Phase 1).
+ * Populated ONLY from the sourced overlay in lib/catalog/herb-references.ts
+ * and rendered on herb detail pages as "References & further reading".
+ * `url` is absent when no canonical URL could be verified; such entries
+ * carry `unverified: true` and render with the honest marking
+ * "unverified — search by title" instead of a link.
+ */
+export interface HerbReference {
+  /** Which tier of the Phase 1 reference set this source belongs to. */
+  kind: HerbReferenceKind;
+  /** Short citation title (the link text when `url` is set). */
+  label: string;
+  /** Publisher / issuing body, plus what the source supports. */
+  body: string;
+  url?: string;
+  unverified?: boolean;
+}
+
 /**
  * One botanical from the apothecary encyclopedia, as used by the custom
  * formula builders. Descriptions are framed as TRADITIONAL USE — not
@@ -147,6 +174,14 @@ export interface Herb {
    * missing caution is never filled in by invention.
    */
   caution?: string;
+  /**
+   * Sourced references (Herbal Index Phase 1) — OPTIONAL. Populated
+   * ONLY from the overlay in lib/catalog/herb-references.ts, applied
+   * in lib/catalog/herbs.ts; rendered on herb detail pages only.
+   * Absent = no references are rendered; a missing reference is never
+   * filled in by invention.
+   */
+  references?: HerbReference[];
 }
 
 /* ------------------------------------------------------------------ */

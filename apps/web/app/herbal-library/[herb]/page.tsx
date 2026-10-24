@@ -11,7 +11,10 @@
  * record's traditionalNote. Records whose data is incomplete carry an
  * honest "entry in preparation" label; a canonical slug with no
  * catalog record at all renders the honest InPreparation state.
- * Unknown slugs 404 via notFound().
+ * Unknown slugs 404 via notFound(). Records carrying sourced
+ * references (Herbal Index Phase 1 overlay) render a "References &
+ * further reading" list here — detail pages only, never on the
+ * compact index cards.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -133,6 +136,31 @@ export default async function HerbDetailPage({
             <p className="aa-herbal-caution">
               <strong>Caution:</strong> {card.caution}
             </p>
+          )}
+
+          {card.references && card.references.length > 0 && (
+            <section className="aa-herbal-references">
+              <h2 className="aa-herbal-props-title">
+                References &amp; further reading
+              </h2>
+              <ul className="aa-herbal-refs">
+                {card.references.map((ref) => (
+                  <li key={`${ref.kind}-${ref.label}`}>
+                    {ref.url ? (
+                      <a href={ref.url} target="_blank" rel="noreferrer">
+                        {ref.label}
+                      </a>
+                    ) : (
+                      ref.label
+                    )}
+                    {` — ${ref.body}`}
+                    {ref.unverified && (
+                      <em> (unverified — search by title)</em>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           {entry && (

@@ -75,6 +75,15 @@ describe('derivation rules', () => {
     expect(populated.length).toBeLessThan(HERBAL_CARDS.length);
   });
 
+  it('references slot mirrors the record exactly: populated only where the record carries them (Phase 1)', () => {
+    for (const card of HERBAL_CARDS) {
+      const record = getHerb(card.slug)!;
+      expect(card.references).toEqual(record.references ?? null);
+    }
+    const populated = HERBAL_CARDS.filter((c) => c.references !== null);
+    expect(populated).toHaveLength(24); // Phase 1 Batch 01, owner-approved 2026-10-23
+  });
+
   it('derives identity fields from the record', () => {
     const lavender = getHerbalCard('lavender')!;
     const record = getHerb('lavender')!;
@@ -181,8 +190,8 @@ describe('manifest integrity', () => {
     expect(manifest.totalRecords).toBe(306);
     expect(manifest.herbRecords).toBe(287);
     expect(manifest.nonHerbRecords).toBe(19);
-    expect(manifest.fullBenefits).toBe(0); // every record carries exactly 3 today
-    expect(manifest.partialBenefits).toBe(306);
+    expect(manifest.fullBenefits).toBe(24); // Phase 1 Batch 01 (owner-approved 2026-10-23)
+    expect(manifest.partialBenefits).toBe(282);
     expect(manifest.noBenefits).toBe(0);
     expect(manifest.shortfallToTarget).toBe(46);
     expect(manifest.withIllustrationEntry).toBe(306);
