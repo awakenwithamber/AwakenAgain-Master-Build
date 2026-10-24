@@ -2,7 +2,7 @@
  * /checkout/success — order confirmation page.
  *
  * A general "order confirmed" landing page. Payment on this site is by
- * card (embedded Stripe checkout) or by Cash App / Venmo, and Amber
+ * emailed invoice or by Cash App / Venmo, and Amber
  * confirms every order personally — so this page simply thanks the
  * customer, points them to their email for confirmation, and links the
  * order-status lookup (/order-status) where shipment tracking appears

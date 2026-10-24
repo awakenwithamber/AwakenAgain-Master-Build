@@ -1,11 +1,10 @@
 /**
  * Legacy card checkout endpoint — INACTIVE, fails closed.
  *
- * The ACTIVE embedded card checkout is bound by
- * app/api/stripe/checkout-session to an order created by
- * POST /api/checkout (owner directive 2026-10-19). This stub from the
- * set-aside 2026-10-13 implementation remains so stale callers fail
- * loudly with a pointer to the working paths.
+ * Card checkout is PARKED DORMANT (owner directive 2026-10-24): no
+ * customer flow offers card payment. This stub remains so stale
+ * callers fail loudly with a pointer to the working paths (emailed
+ * invoice, Cash App, Venmo).
  */
 import { NextResponse } from 'next/server';
 
@@ -14,7 +13,7 @@ export async function POST() {
     {
       ok: false,
       errors: [
-        'Card checkout has moved: place your order at checkout and pay by card on that page, or use Cash App, Venmo, or an emailed invoice.',
+        'Card checkout is not offered. Place your order at checkout and pay by emailed invoice, Cash App, or Venmo.',
       ],
     },
     { status: 503 },

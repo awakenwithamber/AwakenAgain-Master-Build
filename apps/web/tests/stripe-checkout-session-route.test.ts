@@ -131,7 +131,9 @@ describe('POST /api/stripe/checkout-session', () => {
 
     expect(hoisted.sessionParams).toHaveLength(1);
     const params = hoisted.sessionParams[0];
-    expect(params.ui_mode).toBe('embedded');
+    // ui_mode is 'embedded_page' per the Stripe API 2026-04-22 change
+    // (live-verified fix 2026-10-22); the assertion lagged the code.
+    expect(params.ui_mode).toBe('embedded_page');
     expect(params.metadata).toEqual({ order_id: orderId });
     expect(params.client_reference_id).toBe(orderId);
     expect(String(params.return_url)).toContain('{CHECKOUT_SESSION_ID}');
@@ -139,7 +141,7 @@ describe('POST /api/stripe/checkout-session', () => {
       price_data: {
         unit_amount: number;
         tax_behavior?: string;
-        tax_code?: string;
+        product_data?: { name?: string; tax_code?: string };
       };
       quantity: number;
     }[];
@@ -148,8 +150,12 @@ describe('POST /api/stripe/checkout-session', () => {
     expect(lineItems[0].quantity).toBe(1);
     // Stripe Tax (2026-10-20): tax-exclusive line items with the
     // general tax code; tax calculated from the collected US address.
+    // The tax code rides on product_data (Stripe API — the live-verified
+    // fix 2026-10-22 moved it out of price_data); assertion updated.
     expect(lineItems[0].price_data.tax_behavior).toBe('exclusive');
-    expect(lineItems[0].price_data.tax_code).toBe('txcd_99999999');
+    expect(lineItems[0].price_data.product_data?.tax_code).toBe(
+      'txcd_99999999',
+    );
     expect(params.automatic_tax).toEqual({ enabled: true });
     expect(params.shipping_address_collection).toEqual({
       allowed_countries: ['US'],

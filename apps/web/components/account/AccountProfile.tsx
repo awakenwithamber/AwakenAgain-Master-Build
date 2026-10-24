@@ -27,6 +27,7 @@ import styles from './account.module.css';
  */
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
+  bookipi_invoice: 'Invoice — Bookipi (ACH / Venmo / Cash App)',
   bookipi_card_invoice: 'Card — Bookipi invoice',
   stripe_card_embedded: 'Card — embedded checkout',
 };

@@ -53,6 +53,9 @@ function event(orderId: string, method: string, reference: string | null = null)
 describe('paymentMethodLabel (POLISH-1)', () => {
   it('humanizes both methods', () => {
     expect(paymentMethodLabel('cash_app_or_venmo')).toBe('Cash App / Venmo');
+    expect(paymentMethodLabel('bookipi_invoice')).toBe(
+      'Invoice — Bookipi (ACH / Venmo / Cash App)',
+    );
     expect(paymentMethodLabel('bookipi_card_invoice')).toBe(
       'Card — Bookipi invoice',
     );

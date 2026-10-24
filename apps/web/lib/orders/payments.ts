@@ -39,9 +39,11 @@ import {
 /**
  * Every method value a STORED payment event may carry: the live
  * PAYMENT_METHODS plus the legacy 'bookipi_card_invoice' value from the
- * card-invoice path removed 2026-10-21. Ledger reads and labels use
- * this stored union so historical events never silently drop; only
- * parsePaymentMethod (new orders) rejects the legacy value.
+ * 2026-10-13 card-invoice path (removed 2026-10-21; the invoice method
+ * returned 2026-10-24 as 'bookipi_invoice', without card payment).
+ * Ledger reads and labels use this stored union so historical events
+ * never silently drop; only parsePaymentMethod (new orders) rejects
+ * the legacy value.
  */
 const STORED_PAYMENT_METHODS: readonly StoredPaymentMethod[] = [
   ...PAYMENT_METHODS,
@@ -66,6 +68,7 @@ import { sanitizePlainText } from '../security/validation';
  */
 const PAYMENT_METHOD_LABELS: Record<StoredPaymentMethod, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
+  bookipi_invoice: 'Invoice — Bookipi (ACH / Venmo / Cash App)',
   bookipi_card_invoice: 'Card — Bookipi invoice',
   stripe_card_embedded: 'Card — embedded checkout',
 };

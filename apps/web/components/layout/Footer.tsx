@@ -3,8 +3,9 @@
  *
  * Columns: shop, learn, services, legal, contact. Newsletter signup (G15)
  * embedded. Contact identity per owner verification: awaken@consultant.com,
- * (801) 819-6795. Payments: card on this site, Cash App, or Venmo —
- * stated plainly.
+ * (801) 819-6795. Payments: emailed invoice (ACH bank transfer,
+ * Venmo, or Cash App) or Cash App / Venmo directly — stated plainly
+ * (owner directive 2026-10-24; no card payment is offered).
  */
 import Link from 'next/link';
 import NewsletterSignup from './NewsletterSignup';
@@ -56,9 +57,9 @@ export default function Footer() {
             City, Utah.
           </p>
           <p className="footer-payments">
-            Payments: pay by card right here on this site · Cash App{' '}
-            <strong>$AmberPatten347</strong> · Venmo{' '}
-            <strong>@AwakenwithAmber</strong>
+            Payments: pay by emailed invoice (ACH bank transfer, Venmo,
+            or Cash App) · Cash App <strong>$AmberPatten347</strong> ·
+            Venmo <strong>@AwakenwithAmber</strong>
           </p>
         </div>
         <nav className="footer-col" aria-label="Shop">

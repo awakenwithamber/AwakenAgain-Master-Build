@@ -59,6 +59,21 @@ function itemLines(data: PurchaseConfirmationData): ItemLine[] {
 
 /** The payment paragraph(s) for the method recorded on the order. */
 function paymentBlockText(data: PurchaseConfirmationData): string[] {
+  if (data.payment_method === 'bookipi_invoice') {
+    const lines = [
+      'Payment: your invoice will be emailed to you. You can pay it ' +
+        'by ACH bank transfer to our Bluevine account (the invoice ' +
+        'shows the details), or with Venmo or Cash App:',
+    ];
+    if (data.venmo_handle) lines.push(`Venmo: ${data.venmo_handle}`);
+    if (data.cash_app_handle) lines.push(`Cash App: ${data.cash_app_handle}`);
+    lines.push(
+      'Please use your order ID as the payment reference so we can ' +
+        'match it to your order. Your order is prepared once payment ' +
+        'is confirmed.',
+    );
+    return lines;
+  }
   if (data.payment_method === 'stripe_card_embedded') {
     return [
       'Payment: you chose to pay by card on our website. If your card ' +

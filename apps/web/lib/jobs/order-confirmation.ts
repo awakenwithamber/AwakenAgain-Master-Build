@@ -39,9 +39,10 @@ export function orderItemSummary(record: OrderRecord): string {
 
 /**
  * Build the confirmation job for an accepted order. The data matches the
- * payment method recorded on the order: Cash App / Venmo jobs carry the
- * payment handles; embedded-card jobs carry NO handles — payment happens
- * on the site, and the confirmation must say so.
+ * payment method recorded on the order: Cash App / Venmo and invoice
+ * (Bookipi, 2026-10-24) jobs carry the payment handles — the invoice is
+ * also paid by ACH bank transfer to Bluevine; dormant embedded-card
+ * jobs carry NO handles.
  */
 export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
   const items = record.items.map((line) => ({
@@ -66,7 +67,8 @@ export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
     subscriber_discount_cents: record.subscriber_discount_cents,
     shipping_status: record.shipping_status,
     payment_method: record.payment_method,
-    ...(record.payment_method === 'cash_app_or_venmo'
+    ...(record.payment_method === 'cash_app_or_venmo' ||
+    record.payment_method === 'bookipi_invoice'
       ? { cash_app_handle: CASH_APP_HANDLE, venmo_handle: VENMO_HANDLE }
       : {}),
   };

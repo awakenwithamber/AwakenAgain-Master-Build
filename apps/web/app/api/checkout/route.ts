@@ -24,6 +24,13 @@
  * (lib/jobs/order-confirmation — Resend when RESEND_API_KEY is set,
  * logging provider otherwise).
  *
+ * PAYMENT SWITCH (owner directive 2026-10-24, staged): the customer
+ * flow is now the emailed Bookipi invoice (pay by ACH bank transfer to
+ * Bluevine, Venmo, or Cash App — see paymentInstructions below) or the
+ * Cash App / Venmo handles directly. Stripe is PARKED DORMANT: the
+ * embedded card branch below is retained for historical/dormant
+ * records only and is no longer offered by the checkout UI.
+ *
  * NOTE: only HTTP handlers and route config may be exported from a route
  * module — validateAndBuildOrder lives in lib/checkout/order.ts (imported
  * here and by the regression tests).
@@ -86,12 +93,26 @@ function persistOrder(record: OrderRecord) {
 
 /**
  * Payment instructions for the method recorded on the order. The
- * Cash App / Venmo shape is unchanged from the original flow. The card
- * shape carries NO handles: the customer completes payment in the
- * embedded checkout on this site, and the order is prepared once that
- * payment is confirmed.
+ * Cash App / Venmo shape is unchanged from the original flow. The
+ * invoice shape (primary since 2026-10-24) carries the handles plus
+ * the order id: the invoice is emailed and paid by ACH bank transfer
+ * to Bluevine, Venmo, or Cash App with the order number as reference.
+ * The dormant card shape carries NO handles (historical records only).
  */
 function paymentInstructions(record: OrderRecord) {
+  if (record.payment_method === 'bookipi_invoice') {
+    return {
+      method: record.payment_method,
+      cash_app: CASH_APP_HANDLE,
+      venmo: VENMO_HANDLE,
+      order_id: record.order_id,
+      note:
+        'You chose to pay by invoice. Your invoice will be emailed to ' +
+        'you — pay it by ACH bank transfer to Bluevine, or with Venmo ' +
+        'or Cash App, using your order number as the payment ' +
+        'reference. Your order is prepared once payment is confirmed.',
+    };
+  }
   if (record.payment_method === 'stripe_card_embedded') {
     return {
       method: record.payment_method,

@@ -1,23 +1,33 @@
 /**
- * REGRESSION SUITE — payment method at checkout (owner decision, final,
- * 2026-10-13).
+ * REGRESSION SUITE — payment method at checkout (owner decisions
+ * 2026-10-13 + 2026-10-21, SUPERSEDED by the owner directive
+ * 2026-10-24: Stripe parked dormant, Bookipi invoices + Bluevine
+ * direct ACH become the customer payment flow).
  *
  * Laws under test:
- * - 'bookipi_card_invoice' is REJECTED (422) — the Bookipi backup path
- *   was removed by owner directive 2026-10-21 ("Remove Bookipi. Stripe
- *   works great."); it is never accepted, recorded, or coerced.
+ * - 'bookipi_invoice' is ACCEPTED — the primary method since
+ *   2026-10-24 (order placed on site, Bookipi invoice emailed, paid by
+ *   ACH bank transfer to Bluevine, Venmo, or Cash App with the order
+ *   number as reference; order prepared once payment is confirmed).
+ * - 'bookipi_card_invoice' (the legacy 2026-10-13 name) is REJECTED
+ *   (422) for new orders — it survives only on stored historical
+ *   records; it is never accepted, recorded, or coerced.
  * - An unknown payment_method is REJECTED (422) — never silently coerced.
  * - An absent payment_method defaults to 'cash_app_or_venmo' with the
  *   exact instruction shape the original flow returned.
  * - The payment method NEVER affects pricing: a verified subscriber gets
  *   identical totals/discount/shipping via either method.
+ * - The checkout UI no longer offers the Stripe card method: the form
+ *   source carries no stripe_card_embedded choice, no embedded Stripe
+ *   component, and no checkout-session call (Stripe is parked dormant,
+ *   its routes/library retained but unreachable from the UI).
  * - The order-intake pipeline (POST /api/orders) accepts the same field
  *   with the same default and carries it to the review-queue entry.
  */
 import { describe, expect, it } from 'vitest';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { POST } from '../app/api/checkout/route';
 import { validateAndBuildOrder } from '../lib/checkout/order';
 import { intakeOrder } from '../lib/orders/intake';
@@ -57,7 +67,43 @@ function lastOrder(): Record<string, unknown> {
 }
 
 describe('checkout payment method', () => {
-  it('rejects a bookipi card-invoice order: the Bookipi path was removed (2026-10-21)', async () => {
+  it('accepts a bookipi invoice order with honest invoice instructions (primary, 2026-10-24)', async () => {
+    const { status, json } = await postCheckout({
+      items: [CAPSULE_ITEM],
+      customer: CUSTOMER,
+      payment_method: 'bookipi_invoice',
+      client_total_cents: 1977 + 595,
+    });
+    expect(status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.payment_method).toBe('bookipi_invoice');
+    expect(json.total_cents).toBe(1977 + 595);
+    const payment = json.payment as Record<string, unknown>;
+    expect(payment.method).toBe('bookipi_invoice');
+    expect(payment.cash_app).toBe('$AmberPatten347');
+    expect(payment.venmo).toBe('@AwakenwithAmber');
+    expect(payment.order_id).toBe(json.order_id);
+    expect(String(payment.note)).toMatch(/invoice will be emailed/i);
+    expect(String(payment.note)).toMatch(/ACH bank transfer to Bluevine/);
+    expect(String(payment.note)).toMatch(/order number as the payment reference/);
+    expect(String(payment.note)).toMatch(/prepared once payment is confirmed/);
+    expect(String(payment.note)).not.toMatch(/card/i);
+    expect(lastOrder().payment_method).toBe('bookipi_invoice');
+  });
+
+  it('the checkout UI offers no Stripe card method (parked dormant, 2026-10-24)', () => {
+    const form = readFileSync(
+      resolve(__dirname, '../components/checkout/CheckoutForm.tsx'),
+      'utf8',
+    );
+    expect(form).toContain('bookipi_invoice');
+    expect(form).not.toContain('stripe_card_embedded');
+    expect(form).not.toContain('StripeEmbeddedCheckout');
+    expect(form).not.toContain('/api/stripe/checkout-session');
+    expect(form).not.toMatch(/credit or debit card/i);
+  });
+
+  it('rejects the legacy bookipi card-invoice name for new orders (removed 2026-10-21)', async () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
@@ -162,23 +208,23 @@ describe('checkout payment method', () => {
       is_subscriber: true,
       client_total_cents: 1779,
     });
-    const viaStripe = await postCheckout({
+    const viaInvoice = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
       is_subscriber: true,
-      payment_method: 'stripe_card_embedded',
+      payment_method: 'bookipi_invoice',
       client_total_cents: 1779,
     });
     expect(viaHandles.status).toBe(200);
-    expect(viaStripe.status).toBe(200);
-    for (const json of [viaHandles.json, viaStripe.json]) {
+    expect(viaInvoice.status).toBe(200);
+    for (const json of [viaHandles.json, viaInvoice.json]) {
       expect(json.subtotal_cents).toBe(1977);
       expect(json.subscriber_discount_cents).toBe(198);
       expect(json.total_cents).toBe(1779);
       expect(json.shipping_status).toBe('FREE');
       expect(json.is_subscriber_verified).toBe(true);
     }
-    expect(viaStripe.json.payment_method).toBe('stripe_card_embedded');
+    expect(viaInvoice.json.payment_method).toBe('bookipi_invoice');
 
     // Core-level: the two persisted records differ ONLY in payment method
     // (and their generated ids/timestamps).
@@ -190,10 +236,10 @@ describe('checkout payment method', () => {
     };
     const a = validateAndBuildOrder(base, { isSubscriberVerified: true });
     const b = validateAndBuildOrder(
-      { ...base, payment_method: 'stripe_card_embedded' },
+      { ...base, payment_method: 'bookipi_invoice' },
       { isSubscriberVerified: true },
     );
-    expect(b.payment_method).toBe('stripe_card_embedded');
+    expect(b.payment_method).toBe('bookipi_invoice');
     expect(b.subtotal_cents).toBe(a.subtotal_cents);
     expect(b.subscriber_discount_cents).toBe(a.subscriber_discount_cents);
     expect(b.total_cents).toBe(a.total_cents);
@@ -219,11 +265,26 @@ describe('checkout payment method', () => {
       },
       store,
     );
-    // Removed 2026-10-21: the Bookipi method fails intake validation.
+    // The LEGACY name fails intake validation (removed 2026-10-21);
+    // new invoice orders use 'bookipi_invoice' (accepted — next test).
     expect(bookipi.ok).toBe(false);
     if (!bookipi.ok) {
       expect(bookipi.stage).toBe('validation');
       expect(bookipi.errors.join(' ')).toMatch(/Unknown payment method/);
+    }
+
+    const invoice = await intakeOrder(
+      {
+        items: [CAPSULE_ITEM],
+        customer: CUSTOMER,
+        payment_method: 'bookipi_invoice',
+        client_total_cents: 1977 + 595,
+      },
+      store,
+    );
+    expect(invoice.ok).toBe(true);
+    if (invoice.ok) {
+      expect(invoice.reviewEntry.payment_method).toBe('bookipi_invoice');
     }
 
     const defaulted = await intakeOrder(

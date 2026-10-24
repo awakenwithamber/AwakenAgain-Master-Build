@@ -184,35 +184,55 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
 
 /**
  * How an order is paid (owner decisions 2026-10-13 + 2026-10-19 +
- * 2026-10-21):
- * - 'cash_app_or_venmo' — the customer sends payment to the handles above
- *   after ordering (the default; existing clients unchanged).
- * - 'stripe_card_embedded' — card payment through the embedded Stripe
- *   checkout on this site (owner directive 2026-10-19: embedded checkout
- *   is the primary card path). The order is recorded FIRST, unpaid; a
- *   Checkout Session is then created from the server-computed totals,
- *   and the order is marked paid ONLY by the signature-verified Stripe
- *   webhook — never by a client-side return.
- * Any other value is rejected. (The former 'bookipi_card_invoice'
- * backup path was REMOVED by owner directive 2026-10-21 — "Remove
- * Bookipi. Stripe works great." — see StoredPaymentMethod below.)
+ * 2026-10-21, SUPERSEDED for the customer flow by the owner directive
+ * 2026-10-24 — "Use bookipi and bluevine", Stripe parked dormant):
+ * - 'bookipi_invoice' — the PRIMARY method (owner directive 2026-10-24).
+ *   The order is placed on the site; a Bookipi invoice is emailed to
+ *   the customer; the customer pays the invoice by ACH bank transfer
+ *   (to Bluevine), Venmo @AwakenwithAmber, or Cash App
+ *   $AmberPatten347, using the order number as the payment reference.
+ *   The order is prepared once payment is confirmed. No card payment
+ *   is offered anywhere in this flow.
+ * - 'cash_app_or_venmo' — the customer sends payment to the handles
+ *   above after ordering (unchanged; still offered at checkout and
+ *   still the server default when the field is absent, so API clients
+ *   that predate the invoice flow keep their exact behavior).
+ * - 'stripe_card_embedded' — DORMANT (parked 2026-10-24, NOT deleted):
+ *   no longer offered in the checkout UI and no new customer flow
+ *   routes to it. The value stays accepted by this parser ONLY so the
+ *   dormant Stripe code path (session route, webhook, paid-state
+ *   joins) and its regression suites keep working against historical
+ *   records; the checkout UI never sends it.
+ * Any other value is rejected. The 2026-10-13 'bookipi_card_invoice'
+ * value is the LEGACY name of the invoice path: it was removed as a
+ * new-order method on 2026-10-21 and stays a stored-record value only
+ * (see StoredPaymentMethod below); new invoice orders carry
+ * 'bookipi_invoice'.
  */
-export type PaymentMethod = 'cash_app_or_venmo' | 'stripe_card_embedded';
+export type PaymentMethod =
+  | 'cash_app_or_venmo'
+  | 'bookipi_invoice'
+  | 'stripe_card_embedded';
 
 /**
  * Payment methods as they can appear on a STORED order record. New
- * orders can only carry a PaymentMethod; 'bookipi_card_invoice' is a
- * legacy value from the removed backup path (removed 2026-10-21) that
- * can still exist on records written before the removal. It stays in
- * this stored-record type ONLY so those historical records remain
- * readable (admin views, order-status lookups, review entries) — it is
- * never accepted for a new order and is offered nowhere in the UI.
+ * orders can only carry a PaymentMethod; 'bookipi_card_invoice' is the
+ * legacy 2026-10-13 name of the invoice method (removed 2026-10-21,
+ * replaced by 'bookipi_invoice' on 2026-10-24) that can still exist on
+ * records written in that window. It stays in this stored-record type
+ * ONLY so those historical records remain readable (admin views,
+ * order-status lookups, review entries) — it is never accepted for a
+ * new order and is offered nowhere in the UI.
  */
 export type StoredPaymentMethod = PaymentMethod | 'bookipi_card_invoice';
 
 export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'cash_app_or_venmo';
 
+/** The primary customer-facing method (owner directive 2026-10-24). */
+export const PRIMARY_PAYMENT_METHOD: PaymentMethod = 'bookipi_invoice';
+
 export const PAYMENT_METHODS: readonly PaymentMethod[] = [
+  'bookipi_invoice',
   'cash_app_or_venmo',
   'stripe_card_embedded',
 ];
@@ -220,11 +240,15 @@ export const PAYMENT_METHODS: readonly PaymentMethod[] = [
 /** Validate the optional payment_method field; absent means the default. */
 export function parsePaymentMethod(raw: unknown): PaymentMethod {
   if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
-  if (raw === 'cash_app_or_venmo' || raw === 'stripe_card_embedded') {
+  if (
+    raw === 'cash_app_or_venmo' ||
+    raw === 'bookipi_invoice' ||
+    raw === 'stripe_card_embedded'
+  ) {
     return raw;
   }
   throw new Error(
-    `Unknown payment method: ${String(raw)}. Choose Cash App or Venmo, or card on this site.`,
+    `Unknown payment method: ${String(raw)}. Choose the emailed invoice, or Cash App or Venmo.`,
   );
 }
 

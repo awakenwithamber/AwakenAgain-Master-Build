@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     methodOverride = sanitizePaymentMethod(body.method);
     if (!methodOverride) {
       return fail([
-        'Payment method must be one of: cash_app_or_venmo, stripe_card_embedded, bookipi_card_invoice (legacy orders only).',
+        'Payment method must be one of: bookipi_invoice, cash_app_or_venmo, stripe_card_embedded (dormant), bookipi_card_invoice (legacy orders only).',
       ]);
     }
   }

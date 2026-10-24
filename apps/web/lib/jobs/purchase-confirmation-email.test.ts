@@ -86,6 +86,19 @@ describe('purchase confirmation renderer (Template 1)', () => {
     expect(text).toContain('Cash App: $AmberPatten347');
   });
 
+  it('invoice (Bookipi) orders show the invoice block with ACH + both handles, no card language', () => {
+    const { text } = renderPurchaseConfirmation(
+      data({ payment_method: 'bookipi_invoice' }),
+    );
+    expect(text).toContain('your invoice will be emailed to you');
+    expect(text).toContain('ACH bank transfer to our Bluevine account');
+    expect(text).toContain('Venmo: @AwakenwithAmber');
+    expect(text).toContain('Cash App: $AmberPatten347');
+    expect(text).toContain('use your order ID as the payment reference');
+    expect(text).toContain('prepared once payment is confirmed');
+    expect(text).not.toMatch(/pay by card/i);
+  });
+
   it('embedded-card orders show the card block and NO handles', () => {
     const { text } = renderPurchaseConfirmation(
       data({

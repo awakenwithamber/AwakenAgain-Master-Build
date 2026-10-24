@@ -20,7 +20,8 @@ interface OrderSummary {
   shipping_status: 'FREE' | 'FLAT';
   payment_method:
     | 'cash_app_or_venmo'
-    // Legacy value from the removed backup path (removed 2026-10-21)
+    | 'bookipi_invoice'
+    // Legacy value from the 2026-10-13 invoice path (removed 2026-10-21)
     // that can still appear on orders placed before the removal.
     | 'bookipi_card_invoice'
     | 'stripe_card_embedded';
@@ -75,6 +76,9 @@ function statusLine(order: OrderSummary): string {
     case 'disputed':
       return 'A payment dispute was opened on this order through Stripe. If that is unexpected, please contact Amber.';
     default:
+      if (order.payment_method === 'bookipi_invoice') {
+        return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. Your invoice arrives by email — you can pay it by ACH bank transfer, Venmo, or Cash App, using your order number as the reference.';
+      }
       if (order.payment_method === 'stripe_card_embedded') {
         return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. If you have not completed your card payment yet, you can finish it from the checkout page.';
       }
