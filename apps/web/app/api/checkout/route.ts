@@ -43,6 +43,12 @@ import {
   type OrderRecord,
 } from '../../../lib/checkout/order';
 import { createOrderStore } from '../../../lib/orders/store';
+import { defaultOrderStore } from '../../../lib/stores/order-store';
+import {
+  normalizeCouponCode,
+  COUPON_CODE_FIRST10,
+} from '../../../lib/checkout/order';
+import { normalizeSubscriptionEmail } from '../../../lib/subscriptions/entitlement';
 import { queueOrderConfirmation } from '../../../lib/jobs/order-confirmation';
 import { createLogger } from '../../../lib/observability/logger';
 
@@ -79,6 +85,62 @@ async function verifySubscriberClaim(body: unknown): Promise<boolean> {
   if (!isRecord(body) || body.is_subscriber !== true) return false;
   const customer = isRecord(body.customer) ? body.customer : undefined;
   return isEntitledSubscriberAsync(customer?.email);
+}
+
+/**
+ * Coupon eligibility for this order (FIRST10, 2026-10-24): first-time
+ * customers only, once per customer. Computed from the order store —
+ * the SAME read-only store abstraction the order-status route uses
+ * (lib/stores/order-store: JSONL ledger locally, Postgres event store
+ * when DATABASE_URL is set), scanned for the customer email
+ * (normalized the same way as the subscription lookups).
+ *
+ * - hasPriorOrder: any prior recorded order for the email. Order
+ *   records are append-only placements; a stored record's lifecycle
+ *   status is a read-time join (lib/orders/paid-state), so a record
+ *   that carries an explicit stored status of 'cancelled' is the only
+ *   kind excluded — every other recorded order counts as a prior
+ *   order. (Noted limitation: the scan is capped at the newest 1000
+ *   orders, matching the order-status route's lookup bound.)
+ * - hasUsedCoupon: any prior recorded order for the email already
+ *   carries coupon_code FIRST10 with a discount.
+ *
+ * Returns undefined when no coupon was entered (validation never
+ * consults it then). A store read failure fails CLOSED for the coupon
+ * (both flags true) rather than granting a discount it cannot verify;
+ * the order itself then fails with the friendly coupon error.
+ */
+async function couponEligibility(
+  body: unknown,
+): Promise<{ hasPriorOrder: boolean; hasUsedCoupon: boolean } | undefined> {
+  if (!isRecord(body)) return undefined;
+  if (normalizeCouponCode(body.coupon_code) === null) return undefined;
+  const customer = isRecord(body.customer) ? body.customer : undefined;
+  const target = normalizeSubscriptionEmail(customer?.email);
+  if (!target) return { hasPriorOrder: true, hasUsedCoupon: false };
+  try {
+    const orders = await defaultOrderStore().listOrders({ limit: 1000 });
+    let hasPriorOrder = false;
+    let hasUsedCoupon = false;
+    for (const order of orders) {
+      if (normalizeSubscriptionEmail(order.customer?.email) !== target) {
+        continue;
+      }
+      if (
+        normalizeCouponCode(order.coupon_code) === COUPON_CODE_FIRST10 &&
+        (order.coupon_discount_cents ?? 0) > 0
+      ) {
+        hasUsedCoupon = true;
+      }
+      if (order.status !== 'cancelled') hasPriorOrder = true;
+    }
+    return { hasPriorOrder, hasUsedCoupon };
+  } catch (err) {
+    log.error('coupon eligibility lookup failed (failing closed)', {
+      error: err,
+    });
+    return { hasPriorOrder: true, hasUsedCoupon: false };
+  }
 }
 
 /**
@@ -152,6 +214,7 @@ export async function POST(request: Request) {
   try {
     record = validateAndBuildOrder(body, {
       isSubscriberVerified: await verifySubscriberClaim(body),
+      couponEligibility: await couponEligibility(body),
     });
   } catch (err) {
     return fail([err instanceof Error ? err.message : 'Invalid order.']);
@@ -213,6 +276,11 @@ export async function POST(request: Request) {
     order_id: record.order_id,
     subtotal_cents: record.subtotal_cents,
     subscriber_discount_cents: record.subscriber_discount_cents,
+    coupon_code: record.coupon_code ?? null,
+    coupon_discount_cents: record.coupon_discount_cents ?? 0,
+    ...(record.coupon_message
+      ? { coupon_message: record.coupon_message }
+      : {}),
     is_subscriber_verified: record.is_subscriber_verified,
     shipping_status: record.shipping_status,
     total_cents: record.total_cents,

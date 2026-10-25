@@ -100,6 +100,13 @@ export interface CheckoutRequestBody {
   client_total_cents: number;
   /** Optional — defaults to 'cash_app_or_venmo' when absent. */
   payment_method?: PaymentMethod;
+  /**
+   * Optional coupon code entered at checkout (owner request 2026-10-24).
+   * A CLAIM, never proof: the server normalizes + validates it here and
+   * the checkout route supplies the first-time/once-per-customer
+   * eligibility lookup (see ValidateOrderOptions.couponEligibility).
+   */
+  coupon_code?: string;
 }
 
 export interface OrderLine {
@@ -129,6 +136,21 @@ export interface OrderRecord {
   subtotal_cents: number;
   /** 10% Living Grimoire subscriber discount — VERIFIED subscribers only. */
   subscriber_discount_cents: number;
+  /**
+   * Coupon applied to this order (2026-10-24): the normalized code
+   * ('FIRST10') or null. Optional on the type because records written
+   * before the coupon feature omit both coupon fields — readers must
+   * treat absent as no coupon (coupon_discount_cents ?? 0).
+   */
+  coupon_code?: string | null;
+  /** 10% FIRST10 coupon discount — first-time customers only, never stacked with the subscriber discount. */
+  coupon_discount_cents?: number;
+  /**
+   * Customer-facing note when a coupon was entered but not applied
+   * (the subscriber no-stack case). Absent when no coupon was entered
+   * or the coupon applied cleanly.
+   */
+  coupon_message?: string;
   shipping_cents: number;
   shipping_status: ShippingStatus;
   free_shipping_threshold_cents: number;
@@ -285,6 +307,69 @@ export function subscriberDiscountedCents(cents: number): number {
   return Math.round(cents * 0.9);
 }
 
+/* ------------------------------------------------------------------ */
+/* Coupon codes (owner request 2026-10-24)                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * FIRST10 — the first-order welcome code from the owner's social post
+ * (2026-10-24): 10% off the product subtotal for FIRST-TIME customers,
+ * once per customer. Rules, all enforced server-side:
+ * - same discountable base + rounding as the subscriber discount
+ *   (membership fee exempt; shipping is NEVER discounted);
+ * - first-time only: the checkout route looks the customer email up in
+ *   the order store and reports prior orders / prior coupon use via
+ *   ValidateOrderOptions.couponEligibility — any prior recorded order
+ *   for the email makes the customer not-first-time;
+ * - NO STACKING: a verified Living Grimoire subscriber already gets
+ *   the same 10% — the coupon is not applied on top (the larger single
+ *   discount is kept; both are 10% today, so the subscriber discount
+ *   is the one that stands) and the order carries a coupon_message
+ *   explaining that, which the checkout response surfaces to the
+ *   customer. The total is exactly the subscriber-only total.
+ */
+export const COUPON_CODE_FIRST10 = 'FIRST10';
+
+export const COUPON_CODES: readonly string[] = [COUPON_CODE_FIRST10];
+
+/** Normalize a raw coupon entry: trim + uppercase; empty → null. */
+export function normalizeCouponCode(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const normalized = raw.trim().toUpperCase();
+  return normalized ? normalized : null;
+}
+
+/**
+ * Resolve a raw coupon entry to a known code. Absent/blank → null (no
+ * coupon claimed). An unknown non-blank code is a hard error with a
+ * friendly message — the order is NOT placed and no total changes.
+ */
+export function parseCouponCode(raw: unknown): string | null {
+  const normalized = normalizeCouponCode(raw);
+  if (normalized === null) return null;
+  if (COUPON_CODES.includes(normalized)) return normalized;
+  throw new Error(
+    `That coupon code doesn't look right — please check the code and try again, or place your order without a code.`,
+  );
+}
+
+export const COUPON_MESSAGE_SUBSCRIBER_NO_STACK =
+  'FIRST10 can\u2019t be combined with your Living Grimoire subscriber ' +
+  'discount — your 10% subscriber discount (the larger single discount) ' +
+  'has been applied instead, and FIRST10 stays unused for a future ' +
+  'first order as a non-subscriber.';
+
+export const COUPON_ERROR_ALREADY_USED =
+  'FIRST10 has already been used with this email address — it\u2019s a ' +
+  'one-time welcome code, so it can\u2019t be applied again. Your order ' +
+  'has not been placed; you can place it without the code.';
+
+export const COUPON_ERROR_NOT_FIRST_TIME =
+  'FIRST10 is a welcome treat for first-time customers, and an order ' +
+  'is already on file for this email address, so it can\u2019t be ' +
+  'applied here. Your order has not been placed; you can place it ' +
+  'without the code.';
+
 export interface ValidateOrderOptions {
   /**
    * Server-verified subscriber entitlement for the order email. The
@@ -295,6 +380,20 @@ export interface ValidateOrderOptions {
    * blocking the order.
    */
   isSubscriberVerified?: boolean;
+  /**
+   * First-time / once-per-customer eligibility for a coupon claim,
+   * computed by the checkout route from the order store (the same
+   * read-only store the order-status route uses). Only consulted when
+   * the body carries a coupon code. Defaults (direct/unit callers):
+   * eligible — the route ALWAYS supplies this in production, the same
+   * way it always supplies isSubscriberVerified.
+   */
+  couponEligibility?: {
+    /** Any prior recorded order exists for the customer email. */
+    hasPriorOrder?: boolean;
+    /** A prior recorded order for the email already used FIRST10. */
+    hasUsedCoupon?: boolean;
+  };
 }
 
 function generateOrderId(): string {
@@ -554,6 +653,35 @@ export function validateAndBuildOrder(
     ? claimedDiscountCents
     : 0;
 
+  // Coupon (FIRST10) — server-validated, never trusted from the client.
+  // Unknown code → hard error (above, in parseCouponCode). Already-used
+  // or not-first-time → hard error: no order is recorded and no total
+  // changes. Verified subscriber → NO STACKING: the coupon is not
+  // applied, the subscriber discount (same 10% today — the larger
+  // single discount) stands, and a clear message rides the record +
+  // the checkout response.
+  const requestedCoupon = parseCouponCode(
+    (body as Record<string, unknown>).coupon_code,
+  );
+  let couponCode: string | null = null;
+  let couponDiscountCents = 0;
+  let couponMessage: string | undefined;
+  if (requestedCoupon !== null) {
+    if (options.couponEligibility?.hasUsedCoupon === true) {
+      throw new Error(COUPON_ERROR_ALREADY_USED);
+    }
+    if (options.couponEligibility?.hasPriorOrder === true) {
+      throw new Error(COUPON_ERROR_NOT_FIRST_TIME);
+    }
+    if (isSubscriberVerified) {
+      couponMessage = COUPON_MESSAGE_SUBSCRIBER_NO_STACK;
+    } else {
+      couponCode = requestedCoupon;
+      couponDiscountCents = claimedDiscountCents;
+    }
+  }
+  const totalDiscountCents = subscriberDiscountCents + couponDiscountCents;
+
   const threshold = isSubscriberVerified
     ? FREE_SHIPPING_SUBSCRIBER_CENTS
     : FREE_SHIPPING_GENERAL_CENTS;
@@ -566,12 +694,14 @@ export function validateAndBuildOrder(
     subtotalCents >= FREE_SHIPPING_GENERAL_CENTS ? 0 : FLAT_SHIPPING_CENTS;
   const shippingCents = isSubscriberVerified ? 0 : standardShippingCents;
   const shippingStatus: ShippingStatus = shippingCents === 0 ? 'FREE' : 'FLAT';
-  // The total is the subtotal minus any VERIFIED subscriber discount,
-  // plus the shipping charged for this order. Sales tax is NOT part of
-  // this total: for card orders Stripe Tax computes it from the
-  // customer's address inside the Stripe session (owner decision
+  // The total is the subtotal minus any VERIFIED subscriber discount
+  // and any applied coupon discount (never both — no stacking), plus
+  // the shipping charged for this order. Shipping is computed from the
+  // pre-discount subtotal and is never itself discounted. Sales tax is
+  // NOT part of this total: for card orders Stripe Tax computes it from
+  // the customer's address inside the Stripe session (owner decision
   // 2026-10-20); the webhook verifies total + tax (see stripe webhook).
-  const totalCents = subtotalCents - subscriberDiscountCents + shippingCents;
+  const totalCents = subtotalCents - totalDiscountCents + shippingCents;
 
   // Total check. Without a subscriber claim the client total must equal
   // the server total exactly (tamper rejection, unchanged). With a claim,
@@ -579,14 +709,17 @@ export function validateAndBuildOrder(
   // figures — the standard total (no discount, standard shipping) or the
   // claimed-subscriber total (claimed discount, free shipping) — so both
   // are accepted; the RECORDED total is always the server's own figure for
-  // the verification outcome. Any other client total is still rejected.
+  // the verification outcome. A coupon claim adds one more legitimate
+  // preview figure: subtotal − coupon discount + standard shipping (the
+  // coupon never changes shipping). Any other client total is rejected.
   const standardTotalCents = subtotalCents + standardShippingCents;
   const claimedSubscriberTotalCents = subtotalCents - claimedDiscountCents;
-  const totalMatches = isSubscriberAsserted
-    ? body.client_total_cents === standardTotalCents ||
-      body.client_total_cents === claimedSubscriberTotalCents
-    : body.client_total_cents === standardTotalCents;
-  if (!totalMatches) {
+  const claimedCouponTotalCents =
+    subtotalCents - claimedDiscountCents + standardShippingCents;
+  const acceptableTotals = new Set<number>([standardTotalCents]);
+  if (isSubscriberAsserted) acceptableTotals.add(claimedSubscriberTotalCents);
+  if (requestedCoupon !== null) acceptableTotals.add(claimedCouponTotalCents);
+  if (!acceptableTotals.has(body.client_total_cents as number)) {
     throw new Error(
       `Total mismatch: client claimed ${String(body.client_total_cents)}, server computes ${totalCents}.`,
     );
@@ -607,6 +740,9 @@ export function validateAndBuildOrder(
     bundle,
     subtotal_cents: subtotalCents,
     subscriber_discount_cents: subscriberDiscountCents,
+    coupon_code: couponCode,
+    coupon_discount_cents: couponDiscountCents,
+    ...(couponMessage ? { coupon_message: couponMessage } : {}),
     shipping_cents: shippingCents,
     shipping_status: shippingStatus,
     free_shipping_threshold_cents: threshold,

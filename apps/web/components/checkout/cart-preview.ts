@@ -28,10 +28,28 @@ export interface CartPreview {
   subtotalCents: number;
   /** 10% subscriber discount as CLAIMED by the checkbox (server verifies). */
   subscriberDiscountCents: number;
+  /**
+   * 10% FIRST10 coupon discount as CLAIMED by the Apply button
+   * (server validates code + first-time eligibility). Never shown
+   * stacked with the subscriber discount — same no-stack rule as the
+   * server: when the subscriber box is checked, the coupon preview
+   * discount is 0 (the subscriber claim is the discount shown).
+   */
+  couponDiscountCents: number;
+  /** Normalized coupon code the preview applied, or null. */
+  couponCode: string | null;
   shippingCents: number;
   shippingStatus: ShippingStatus;
   freeShippingThresholdCents: number;
   totalCents: number;
+}
+
+/** The one coupon code the preview recognizes (server is the authority). */
+export const COUPON_CODE_FIRST10 = 'FIRST10';
+
+export function normalizeCouponCodePreview(raw: string): string | null {
+  const normalized = raw.trim().toUpperCase();
+  return normalized ? normalized : null;
 }
 
 /**
@@ -46,6 +64,7 @@ export function previewCartTotals(
   items: CartItem[],
   bundle: StoredBundle | null,
   isSubscriber: boolean,
+  appliedCouponCode?: string | null,
 ): CartPreview {
   const itemsTotalCents = items.reduce(
     (sum, item) => sum + item.unit_price_cents * item.quantity,
@@ -70,6 +89,18 @@ export function previewCartTotals(
   const subscriberDiscountCents = isSubscriber
     ? discountableCents - Math.round(discountableCents * 0.9)
     : 0;
+  // Coupon preview: FIRST10 only, same base + rounding as the server,
+  // and NEVER stacked on a subscriber claim (the server applies the
+  // larger single discount and explains; both are 10% today).
+  const normalizedCoupon = appliedCouponCode
+    ? normalizeCouponCodePreview(appliedCouponCode)
+    : null;
+  const couponCode =
+    normalizedCoupon === COUPON_CODE_FIRST10 ? normalizedCoupon : null;
+  const couponDiscountCents =
+    couponCode !== null && !isSubscriber
+      ? discountableCents - Math.round(discountableCents * 0.9)
+      : 0;
   const freeShippingThresholdCents = isSubscriber
     ? FREE_SHIPPING_SUBSCRIBER_CENTS
     : FREE_SHIPPING_GENERAL_CENTS;
@@ -81,9 +112,12 @@ export function previewCartTotals(
     bundleTotalCents,
     subtotalCents,
     subscriberDiscountCents,
+    couponDiscountCents,
+    couponCode,
     shippingCents,
     shippingStatus,
     freeShippingThresholdCents,
-    totalCents: subtotalCents - subscriberDiscountCents + shippingCents,
+    totalCents:
+      subtotalCents - subscriberDiscountCents - couponDiscountCents + shippingCents,
   };
 }

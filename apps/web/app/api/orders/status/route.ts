@@ -108,6 +108,10 @@ export async function POST(request: Request) {
       item_count:
         order.items.reduce((n, line) => n + line.quantity, 0) +
         (order.bundle ? 5 : 0),
+      subtotal_cents: order.subtotal_cents,
+      subscriber_discount_cents: order.subscriber_discount_cents,
+      coupon_code: order.coupon_code ?? null,
+      coupon_discount_cents: order.coupon_discount_cents ?? 0,
       total_cents: order.total_cents,
     },
     tracking: tracking ? toTrackingView(tracking) : null,

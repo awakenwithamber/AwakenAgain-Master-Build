@@ -80,6 +80,20 @@ describe('purchase confirmation renderer (Template 1)', () => {
     expect(without.text).not.toContain('subscriber discount');
   });
 
+  it('shows the FIRST10 coupon discount line only when a coupon applied', () => {
+    const withCoupon = renderPurchaseConfirmation(
+      data({
+        coupon_code: 'FIRST10',
+        coupon_discount_cents: 198,
+        total_cents: 5179,
+      }),
+    );
+    expect(withCoupon.text).toContain('Coupon FIRST10 discount (10% off): −$1.98');
+    expect(withCoupon.html).toContain('Coupon FIRST10 discount');
+    const without = renderPurchaseConfirmation(data());
+    expect(without.text).not.toContain('Coupon FIRST10');
+  });
+
   it('Venmo / Cash App orders show both handles', () => {
     const { text } = renderPurchaseConfirmation(data());
     expect(text).toContain('Venmo: @AwakenwithAmber');

@@ -49,6 +49,9 @@ interface OrderResponse {
   total_cents?: number;
   subtotal_cents?: number;
   subscriber_discount_cents?: number;
+  coupon_code?: string | null;
+  coupon_discount_cents?: number;
+  coupon_message?: string;
   is_subscriber_verified?: boolean;
   shipping_status?: string;
   payment_method?: string;
@@ -64,6 +67,9 @@ export function CheckoutForm() {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubscriber, setIsSubscriber] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethodChoice>('bookipi_invoice');
   const [submitting, setSubmitting] = useState(false);
@@ -72,8 +78,37 @@ export function CheckoutForm() {
 
   if (!loaded) return <p>Loading checkout…</p>;
 
-  const preview = previewCartTotals(items, bundle, isSubscriber);
+  const preview = previewCartTotals(items, bundle, isSubscriber, appliedCoupon);
   const empty = items.length === 0 && !bundle;
+
+  /**
+   * Apply a coupon code to the PREVIEW. The server re-validates the
+   * code + first-time eligibility authoritatively when the order is
+   * placed — an unknown or ineligible code comes back as a friendly
+   * error and no order is recorded.
+   */
+  const applyCoupon = () => {
+    const normalized = couponInput.trim().toUpperCase();
+    if (!normalized) {
+      setCouponError('Enter a coupon code first.');
+      return;
+    }
+    if (normalized !== 'FIRST10') {
+      setAppliedCoupon(null);
+      setCouponError(
+        "That coupon code doesn't look right — please check the code and try again.",
+      );
+      return;
+    }
+    setCouponError(null);
+    setAppliedCoupon(normalized);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError(null);
+  };
 
   const placeOrder = async () => {
     setFormError(null);
@@ -98,6 +133,7 @@ export function CheckoutForm() {
         customer: { name: name.trim(), email: email.trim(), phone: phone.trim(), notes: notes.trim() },
         is_subscriber: isSubscriber,
         payment_method: paymentMethod,
+        ...(appliedCoupon ? { coupon_code: appliedCoupon } : {}),
         client_total_cents: preview.totalCents,
       };
       const res = await fetch('/api/checkout', {
@@ -187,6 +223,13 @@ export function CheckoutForm() {
               {formatPrice(result.subscriber_discount_cents ?? 0)}
             </p>
           ) : null}
+          {(result.coupon_discount_cents ?? 0) > 0 ? (
+            <p>
+              Coupon {result.coupon_code ?? 'FIRST10'} discount (10%): −
+              {formatPrice(result.coupon_discount_cents ?? 0)}
+            </p>
+          ) : null}
+          {result.coupon_message ? <p>{result.coupon_message}</p> : null}
           <p>
             Amount: <strong>{formatPrice(result.total_cents ?? 0)}</strong>
           </p>
@@ -240,6 +283,16 @@ export function CheckoutForm() {
                   </small>
                 </p>
               ) : null}
+              {preview.couponDiscountCents > 0 ? (
+                <p>
+                  Coupon {preview.couponCode} discount (10%): −
+                  {formatPrice(preview.couponDiscountCents)}{' '}
+                  <small>
+                    (first-time customers only — the server confirms
+                    eligibility when you place your order)
+                  </small>
+                </p>
+              ) : null}
               <p>
                 Shipping:{' '}
                 {preview.shippingStatus === 'FREE'
@@ -252,6 +305,82 @@ export function CheckoutForm() {
                 <strong>Total: {formatPrice(preview.totalCents)}</strong> (preview —
                 the server recomputes this when you place your order)
               </p>
+            </section>
+
+            <section
+              aria-label="Coupon code"
+              style={{
+                border: '1px solid var(--brass)',
+                borderRadius: '0.75rem',
+                padding: '1.25rem 1.5rem',
+                marginTop: '1.75rem',
+                background: 'rgba(42, 26, 64, 0.55)',
+              }}
+            >
+              <h2
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  color: 'var(--brass-lt)',
+                  fontSize: '1.1rem',
+                  margin: '0 0 0.5rem',
+                }}
+              >
+                ✦ Coupon code
+              </h2>
+              {appliedCoupon ? (
+                <>
+                  <p style={{ margin: '0 0 0.5rem' }}>
+                    <strong>{appliedCoupon}</strong> applied — 10% off your
+                    products.{' '}
+                    <small>
+                      (First-time customers, once per customer. The server
+                      confirms eligibility when you place your order;
+                      shipping isn&apos;t discounted, and the coupon
+                      can&apos;t be combined with the subscriber discount.)
+                    </small>
+                  </p>
+                  <button type="button" onClick={removeCoupon}>
+                    Remove coupon
+                  </button>
+                </>
+              ) : (
+                <>
+                  <label>
+                    Coupon code
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      autoComplete="off"
+                      placeholder="FIRST10"
+                    />
+                  </label>{' '}
+                  <button type="button" onClick={applyCoupon}>
+                    Apply
+                  </button>
+                  <p style={{ margin: '0.5rem 0 0' }}>
+                    <small>
+                      First order? Use <strong>FIRST10</strong> for 10% off
+                      your products — first-time customers only, once per
+                      customer.
+                    </small>
+                  </p>
+                </>
+              )}
+              {couponError ? (
+                <p role="alert" style={{ margin: '0.5rem 0 0' }}>
+                  {couponError}
+                </p>
+              ) : null}
+              {appliedCoupon && isSubscriber ? (
+                <p style={{ margin: '0.5rem 0 0' }}>
+                  <small>
+                    You&apos;ve also claimed the subscriber discount —
+                    coupons can&apos;t be combined with it, so the server
+                    will apply the larger single discount and let you know.
+                  </small>
+                </p>
+              ) : null}
             </section>
 
             <section aria-label="Your details">

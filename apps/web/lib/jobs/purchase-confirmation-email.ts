@@ -128,6 +128,11 @@ export function renderPurchaseConfirmation(
       `Living Grimoire subscriber discount: \u2212${formatPrice(data.subscriber_discount_cents ?? 0)}`,
     );
   }
+  if ((data.coupon_discount_cents ?? 0) > 0) {
+    textParts.push(
+      `Coupon ${data.coupon_code ?? 'FIRST10'} discount (10% off): \u2212${formatPrice(data.coupon_discount_cents ?? 0)}`,
+    );
+  }
   textParts.push(
     `Total: ${formatPrice(data.total_cents)}`,
     '',
@@ -153,6 +158,11 @@ export function renderPurchaseConfirmation(
   if ((data.subscriber_discount_cents ?? 0) > 0) {
     totalsRows.push(
       `<tr><td style="padding:6px 8px;">Subscriber discount</td><td style="padding:6px 8px;text-align:right;">\u2212${formatPrice(data.subscriber_discount_cents ?? 0)}</td></tr>`,
+    );
+  }
+  if ((data.coupon_discount_cents ?? 0) > 0) {
+    totalsRows.push(
+      `<tr><td style="padding:6px 8px;">Coupon ${escapeHtml(data.coupon_code ?? 'FIRST10')} discount</td><td style="padding:6px 8px;text-align:right;">\u2212${formatPrice(data.coupon_discount_cents ?? 0)}</td></tr>`,
     );
   }
   totalsRows.push(

@@ -62,6 +62,9 @@ export interface PurchaseConfirmationData {
   items?: { title: string; quantity: number; unit_price_cents: number }[];
   subtotal_cents?: number;
   subscriber_discount_cents?: number;
+  /** FIRST10 coupon (2026-10-24) — populated from the order record when a coupon applied. */
+  coupon_code?: string | null;
+  coupon_discount_cents?: number;
   shipping_status?: string;
   /**
    * Payment rails for the Cash App / Venmo method. Optional because an

@@ -65,6 +65,8 @@ export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
     items,
     subtotal_cents: record.subtotal_cents,
     subscriber_discount_cents: record.subscriber_discount_cents,
+    coupon_code: record.coupon_code ?? null,
+    coupon_discount_cents: record.coupon_discount_cents ?? 0,
     shipping_status: record.shipping_status,
     payment_method: record.payment_method,
     ...(record.payment_method === 'cash_app_or_venmo' ||

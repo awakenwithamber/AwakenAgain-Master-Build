@@ -218,16 +218,22 @@ export function buildShippingOptions(record: OrderRecord) {
 
 /**
  * The PRE-TAX total the session must charge, recomputed from the
- * record: line items − subscriber discount + shipping. Stripe Tax adds
- * tax on top of this inside the session; the webhook verifies
- * amount_total == this figure + the reported tax.
+ * record: line items − subscriber discount − coupon discount +
+ * shipping. Stripe Tax adds tax on top of this inside the session; the
+ * webhook verifies amount_total == this figure + the reported tax.
+ * (Coupon field added 2026-10-24; legacy records omit it → 0.)
  */
 export function expectedSessionTotalCents(record: OrderRecord): number {
   const lines = buildSessionLineItems(record).reduce(
     (sum, item) => sum + item.price_data.unit_amount * item.quantity,
     0,
   );
-  return lines - record.subscriber_discount_cents + record.shipping_cents;
+  return (
+    lines -
+    record.subscriber_discount_cents -
+    (record.coupon_discount_cents ?? 0) +
+    record.shipping_cents
+  );
 }
 
 export function buildEmbeddedSessionParams(
@@ -271,12 +277,18 @@ export async function createEmbeddedCheckoutSession(
   returnUrl: string,
 ): Promise<{ id: string; client_secret: string }> {
   let couponId: string | undefined;
-  if (record.subscriber_discount_cents > 0) {
+  const totalDiscountCents =
+    record.subscriber_discount_cents + (record.coupon_discount_cents ?? 0);
+  if (totalDiscountCents > 0) {
     const coupon = await client.coupons.create({
-      amount_off: record.subscriber_discount_cents,
+      amount_off: totalDiscountCents,
       currency: 'usd',
       duration: 'once',
-      name: `Living Grimoire subscriber discount — order ${record.order_id}`,
+      name:
+        (record.coupon_discount_cents ?? 0) > 0 &&
+        record.subscriber_discount_cents === 0
+          ? `Coupon ${record.coupon_code ?? 'FIRST10'} discount — order ${record.order_id}`
+          : `Living Grimoire subscriber discount — order ${record.order_id}`,
     });
     couponId = coupon.id;
   }
