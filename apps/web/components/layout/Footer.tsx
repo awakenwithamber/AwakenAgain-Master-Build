@@ -37,6 +37,27 @@ const INVOLVED_LINKS = [
   { href: '/partner', label: 'Partner With Us' },
 ];
 
+/**
+ * Verified social profiles (owner request 2026-10-26) — one shared set
+ * for Awaken With Amber LLC, Amber's Alchemy Apothecary, and The Awaken
+ * Network. TikTok is intentionally absent until the owner confirms the
+ * current handle; never guess it.
+ */
+const SOCIAL_LINKS = [
+  {
+    href: 'https://www.facebook.com/profile.php?id=1125112937358042',
+    label: 'Facebook — Awaken With Amber LLC',
+  },
+  {
+    href: 'https://www.instagram.com/awakenwithamber',
+    label: 'Instagram — @awakenwithamber',
+  },
+  {
+    href: 'https://www.linkedin.com/in/awakenwithamber',
+    label: 'LinkedIn — Amber Lynn Patten',
+  },
+];
+
 const LEGAL_LINKS = [
   { href: '/legal', label: 'Disclaimers' },
   { href: '/privacy', label: 'Privacy Policy' },
@@ -121,12 +142,58 @@ export default function Footer() {
         </div>
       </div>
       <div className="site-footer-base">
+        <nav className="footer-sitemap" aria-label="Site map and social links">
+          <p>
+            <strong>Site Map</strong>
+          </p>
+          <p className="footer-sitemap-links">
+            <Link href="/sitemap">Full Site Map</Link> ·{' '}
+            <Link href="/about">About Amber (Bio)</Link> ·{' '}
+            <Link href="/shop">Shop</Link> ·{' '}
+            <Link href="/grimoire">The Living Grimoire</Link> ·{' '}
+            <Link href="/services">Services &amp; Readings</Link> ·{' '}
+            <Link href="/network">The Awaken Network</Link> ·{' '}
+            <Link href="/contact">Contact</Link>
+          </p>
+          <p className="footer-sitemap-links">
+            {SOCIAL_LINKS.map((s, i) => (
+              <span key={s.href}>
+                {i > 0 ? ' · ' : ''}
+                <a href={s.href} target="_blank" rel="noreferrer">
+                  {s.label}
+                </a>
+              </span>
+            ))}
+          </p>
+        </nav>
+        <div className="footer-disclaimer">
+          <p>
+            <strong>Legal Disclaimer</strong>
+          </p>
+          <p>
+            The products and content offered by {BRAND_NAME}, operated by
+            Awaken With Amber LLC, are handcrafted botanical goods and
+            educational, spiritual, and reflective materials. These
+            statements have not been evaluated by the Food and Drug
+            Administration. Our products are not intended to diagnose,
+            treat, cure, or prevent any disease, and nothing on this site
+            constitutes medical, legal, or financial advice. Always consult
+            a qualified healthcare provider before beginning any herbal
+            regimen — especially if you are pregnant, nursing, taking
+            medication, or managing a health condition.
+          </p>
+          <p>
+            Spiritual guidance, hypnotherapy, consultations, tarot, rune,
+            and energy-work services are provided for entertainment,
+            spiritual, and reflective purposes only. They are not medical,
+            mental-health, or licensed therapy services, and outcomes are
+            not guaranteed. By using this site, you acknowledge and accept
+            these terms.{' '}
+            <Link href="/legal">Read the full disclaimers.</Link>
+          </p>
+        </div>
         <p>
           © {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
-        </p>
-        <p className="footer-disclaimer-mini">
-          Products are not intended to diagnose, treat, cure, or prevent any
-          disease. <Link href="/legal">Read our disclaimers.</Link>
         </p>
       </div>
     </footer>

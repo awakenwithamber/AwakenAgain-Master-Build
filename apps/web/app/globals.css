@@ -959,6 +959,65 @@ html {
   margin: 0 0 0.5rem;
 }
 
+/* Footer site map + social links, above the legal small print
+   (owner request 2026-10-26: site map directly before disclaimers). */
+.footer-sitemap {
+  max-width: 62rem;
+  margin: 0 auto 1.25rem;
+}
+
+.footer-sitemap strong {
+  color: #d4af37;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.footer-sitemap-links {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: #9a8256;
+}
+
+.footer-sitemap-links a {
+  color: #b08d2a;
+  text-decoration: none;
+}
+
+.footer-sitemap-links a:hover {
+  text-decoration: underline;
+}
+
+/* Full legal disclaimer block (owner request 2026-10-26), rendered as
+   small print: 7pt per the owner's footer-order instruction. */
+.footer-disclaimer {
+  max-width: 62rem;
+  margin: 0 auto 1.25rem;
+}
+
+.footer-disclaimer p {
+  font-size: 7pt;
+  line-height: 1.6;
+  color: #9a8256;
+}
+
+.footer-disclaimer strong {
+  color: #d4af37;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 7pt;
+}
+
+.footer-disclaimer a {
+  color: #d4af37;
+  text-decoration: underline;
+}
+
+.footer-sitemap-link a:hover {
+  color: #d4af37;
+  text-decoration: underline;
+}
+
 /* Footer form inputs — dark theme */
 .site-footer input[type="email"],
 .site-footer input[type="text"] {

@@ -82,6 +82,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       { href: '/privacy', label: 'Privacy' },
       { href: '/terms', label: 'Terms' },
       { href: '/returns', label: 'Returns & Refunds' },
+      { href: '/sitemap', label: 'Site Map' },
     ],
   },
 ];

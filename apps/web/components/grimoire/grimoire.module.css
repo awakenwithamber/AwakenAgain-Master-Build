@@ -124,6 +124,17 @@
   display: flex;
   align-items: stretch;
   gap: 2px;
+  /*
+   * Definite height, not just min-height (scroll fix 2026-10-26): with
+   * min-height alone the flex chain below has no cap to resolve against,
+   * so .pageScroll grew to its full content height (measured: a long
+   * entry's region rendered ~3,600px tall with scrollHeight equal to
+   * clientHeight — nothing ever scrolled inside the page, and on the
+   * owner's phone long entries simply ran past the visible page and
+   * stopped). A definite height caps the chain: slot → page → scroll
+   * region, and long entries finally scroll inside the parchment.
+   */
+  height: clamp(480px, 62vh, 640px);
   min-height: clamp(480px, 62vh, 640px);
 }
 
@@ -134,12 +145,16 @@
 .pageSlot {
   flex: 1 1 0;
   min-width: 0;
+  /* Part of the capped height chain (scroll fix 2026-10-26): without
+     min-height: 0 a flex item refuses to shrink below its content. */
+  min-height: 0;
   display: flex;
 }
 
 .page {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -740,6 +755,8 @@
 
 @media (max-width: 899px) {
   .spread {
+    /* Definite height on mobile too (scroll fix 2026-10-26) — see .spread. */
+    height: 68vh;
     min-height: 68vh;
   }
 
