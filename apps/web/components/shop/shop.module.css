@@ -270,3 +270,51 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Sticky buy bar (product page, Phase 1 Batch 3) ----
+   Mobile only: title + base price + anchor to #purchase (the existing
+   purchase section — the bar carries no cart logic of its own). Hidden
+   at >=768px per the codebase breakpoint convention (globals.css). */
+
+#purchase {
+  scroll-margin-top: 1rem;
+}
+
+.stickyBuyBar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  background: var(--plum-deep);
+  border-top: 1px solid var(--brass);
+  color: var(--parchment);
+}
+
+.stickyBuyBarTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.stickyBuyBarCta {
+  flex: 0 0 auto;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--brass);
+  color: var(--plum-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (min-width: 768px) {
+  .stickyBuyBar {
+    display: none;
+  }
+}

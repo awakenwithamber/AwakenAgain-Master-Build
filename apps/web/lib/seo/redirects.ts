@@ -63,6 +63,33 @@ export const REDIRECT_RULES: RedirectRule[] = [
       'Legacy SEO product alias → canonical product page. Fragment target replaced with a real route (legacy sitemap fragment defect must not be recreated).',
   },
   {
+    source: '/pain-relief-balm',
+    destination: '/shop/soothe-restore-botanical-balm',
+    status: 301,
+    sourceRef:
+      'Owner directive 2026-10-25 (Phase 1 build list §1, site-upgrade-pack §5.4): claim-heavy SEO alias → claim-safe canonical handle "soothe-restore-botanical-balm" from products.canonical.v3.json; product route shape /shop/[handle] from NEXTJS_ARCHITECTURE_REPORT.md §14',
+    reason:
+      'Claim-heavy SEO alias → claim-safe canonical product page (permanent). Display names stay claim-safe; the alias captures search demand without publishing a claim.',
+  },
+  {
+    source: '/age-reversal-beauty-balm',
+    destination: '/shop/radiance-renewal-balm',
+    status: 301,
+    sourceRef:
+      'Owner directive 2026-10-25 (Phase 1 build list §1, site-upgrade-pack §5.5): claim-heavy SEO alias → claim-safe canonical handle "radiance-renewal-balm" from products.canonical.v3.json; product route shape /shop/[handle] from NEXTJS_ARCHITECTURE_REPORT.md §14',
+    reason:
+      'Claim-heavy SEO alias → claim-safe canonical product page (permanent). Display names stay claim-safe; the alias captures search demand without publishing a claim.',
+  },
+  {
+    source: '/hair-regrowth-serum',
+    destination: '/shop/root-scalp-revival-serum',
+    status: 301,
+    sourceRef:
+      'Owner directive 2026-10-25 (Phase 1 build list §1, site-upgrade-pack §5.6): claim-heavy SEO alias → claim-safe canonical handle "root-scalp-revival-serum" from products.canonical.v3.json; product route shape /shop/[handle] from NEXTJS_ARCHITECTURE_REPORT.md §14',
+    reason:
+      'Claim-heavy SEO alias → claim-safe canonical product page (permanent). Display names stay claim-safe; the alias captures search demand without publishing a claim.',
+  },
+  {
     source: '/contact.html',
     destination: '/contact',
     status: 301,

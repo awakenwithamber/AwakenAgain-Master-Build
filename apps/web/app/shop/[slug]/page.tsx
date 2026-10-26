@@ -5,6 +5,15 @@
  * 'Soaps') get the two-path scent selector; the Alchemy Soap Collection
  * bundle gets the 5-slot configurator; the superseded 9-bar collection is
  * shown as superseded (reference only, not for sale).
+ *
+ * Phase 1 Batch 2: metadata uses the record's seo_title / seo_description
+ * (Batch 1 fields) when present — see generateMetadata for the rule.
+ * Phase 1 Batch 3: template sections in order — Overview → Benefits →
+ * Featured ingredients (linked to /herbal-library where the herb resolves)
+ * → Directions → Who It Is Best For → Ritual Tip → Safety/Disclaimer →
+ * Customer Reviews → FAQ — plus a mobile-only sticky buy bar anchoring to
+ * the purchase section. Story sections render only when the record carries
+ * their fields (honest absence for the rest of the catalog).
  */
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -30,10 +39,25 @@ import {
   ProductDisclaimerSections,
   ProductIngredientsSections,
 } from '../../../components/shop/ProductSafetySections';
+import {
+  BenefitsSection,
+  BestForSection,
+  IngredientName,
+  RitualTipSection,
+} from '../../../components/shop/ProductStorySections';
+import { ProductReviews } from '../../../components/shop/ProductReviews';
+import { ProductFaq } from '../../../components/shop/ProductFaq';
+import styles from '../../../components/shop/shop.module.css';
 import Link from 'next/link';
 
 export function generateStaticParams() {
   return PRODUCTS.map((p) => ({ slug: p.handle }));
+}
+
+/** Defensive read of a Batch 1 string field on the open Product record. */
+function seoField(product: Product, key: string): string | null {
+  const raw = (product as Record<string, unknown>)[key];
+  return typeof raw === 'string' && raw.trim().length > 0 ? raw : null;
 }
 
 export async function generateMetadata({
@@ -44,14 +68,24 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = getProductByHandle(slug);
   if (!product) return { title: 'Product not found' };
+  const seoTitle = seoField(product, 'seo_title');
+  const seoDescription = seoField(product, 'seo_description');
   const description =
+    seoDescription ??
     product.short_description ??
     `${product.title} — Amber's Alchemy Apothecary handcrafted botanicals.`;
+  // Metadata rule (Batch 2): when the record carries an seo_title it is a
+  // COMPLETE document title (Batch 1's DreamEase title already ends with
+  // the brand), so it is used verbatim via `absolute` — the root layout's
+  // `%s — Amber's Alchemy Apothecary` template would otherwise append the
+  // brand a second time. The OG title is the same verbatim string (OG
+  // titles are never templated). Without an seo_title, behavior is
+  // unchanged: bare product title + layout template, OG title suffixed.
   return {
-    title: product.title,
+    title: seoTitle ? { absolute: seoTitle } : product.title,
     description,
     openGraph: {
-      title: `${product.title} — Amber's Alchemy Apothecary`,
+      title: seoTitle ?? `${product.title} — Amber's Alchemy Apothecary`,
       description,
       type: 'website',
     },
@@ -140,6 +174,26 @@ function PurchaseSection({ product }: { product: Product }) {
   return null;
 }
 
+/**
+ * Mobile-only sticky buy bar — title + base price + an anchor to the
+ * purchase section. It carries NO cart logic of its own (the purchase
+ * section it points at is the single VariantAddToCart path), and it never
+ * renders for superseded reference listings or unpriced products.
+ */
+function StickyBuyBar({ product }: { product: Product }) {
+  if (isSupersededProduct(product)) return null;
+  if (typeof product.price !== 'number') return null;
+  return (
+    <div className={styles.stickyBuyBar}>
+      <span className={styles.stickyBuyBarTitle}>{product.title}</span>
+      <PriceDisplay cents={Math.round(product.price * 100)} />
+      <a className={styles.stickyBuyBarCta} href="#purchase">
+        Add to Cart
+      </a>
+    </div>
+  );
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -149,6 +203,7 @@ export default async function ProductPage({
   const product = getProductByHandle(slug);
   if (!product) notFound();
 
+  const superseded = isSupersededProduct(product);
   const featuredIngredients = (product.featured_ingredients ?? []) as Array<
     Record<string, unknown>
   >;
@@ -160,7 +215,7 @@ export default async function ProductPage({
 
   return (
     <>
-      <main>
+      <main id="main-content">
         <ProductViewTracker
           productHandle={product.handle}
           category={product.category}
@@ -172,13 +227,11 @@ export default async function ProductPage({
         <p>{product.category}</p>
         {/* Superseded products show NO price at all — a reference listing
             must not display a purchasable-looking price above its notice. */}
-        {isSupersededProduct(product) ? null : (
-          <PriceBlock product={product} />
-        )}
+        {superseded ? null : <PriceBlock product={product} />}
         {/* Like (Phase 3 Step 3): explicit tap, kept on-device and in
             the signed-in profile. Superseded listings are reference
             only — no like affordance, like no price. */}
-        {isSupersededProduct(product) ? null : (
+        {superseded ? null : (
           <p>
             <LikeButton handle={product.handle} />
           </p>
@@ -198,13 +251,22 @@ export default async function ProductPage({
           </figure>
         ) : null}
 
+        {/* Overview — the record's extended description (short description
+            as fallback, exactly as before Batch 3). */}
         {product.extended_description ?? product.short_description ? (
-          <section aria-label="Description">
+          <section aria-label="Overview">
+            <h2>Overview</h2>
             <p>{product.extended_description ?? product.short_description}</p>
           </section>
         ) : null}
 
-        <PurchaseSection product={product} />
+        <BenefitsSection product={product} />
+
+        {/* The purchase section carries id="purchase" — the sticky buy
+            bar's anchor target. */}
+        <div id="purchase">
+          <PurchaseSection product={product} />
+        </div>
 
         <section aria-label="Availability">
           <h2>Availability</h2>
@@ -224,7 +286,9 @@ export default async function ProductPage({
             <ul>
               {featuredIngredients.map((fi, i) => (
                 <li key={i}>
-                  <strong>{String(fi.name)}</strong>
+                  <strong>
+                    <IngredientName name={fi.name} />
+                  </strong>
                   {fi.botanical_name ? (
                     <span> ({String(fi.botanical_name)})</span>
                   ) : null}
@@ -257,6 +321,10 @@ export default async function ProductPage({
           </section>
         ) : null}
 
+        <BestForSection product={product} />
+
+        <RitualTipSection product={product} />
+
         {warnings ? (
           <section aria-label="Safety">
             <h2>Safety</h2>
@@ -273,7 +341,16 @@ export default async function ProductPage({
             record's own disclaimer — several bundle/ritual records
             carry only the short "educational purposes" text. */}
         <ProductDisclaimerSections product={product} />
+
+        {/* Reviews + FAQ are buying-surface sections — superseded
+            reference listings get neither (no purchase path to ask
+            about, like no price and no like button). */}
+        {superseded ? null : <ProductReviews productHandle={product.handle} productTitle={product.title} />}
+
+        {superseded ? null : <ProductFaq />}
       </main>
+
+      <StickyBuyBar product={product} />
     </>
   );
 }

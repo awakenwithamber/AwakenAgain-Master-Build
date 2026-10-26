@@ -48,6 +48,24 @@ describe('known legacy routes', () => {
     expect(r?.status).toBe(301);
   });
 
+  it('/pain-relief-balm (claim-heavy SEO alias) → claim-safe canonical product page, permanent', () => {
+    const r = findRedirect('/pain-relief-balm');
+    expect(r?.destination).toBe('/shop/soothe-restore-botanical-balm');
+    expect(r?.status).toBe(301);
+  });
+
+  it('/age-reversal-beauty-balm (claim-heavy SEO alias) → claim-safe canonical product page, permanent', () => {
+    const r = findRedirect('/age-reversal-beauty-balm');
+    expect(r?.destination).toBe('/shop/radiance-renewal-balm');
+    expect(r?.status).toBe(301);
+  });
+
+  it('/hair-regrowth-serum (claim-heavy SEO alias) → claim-safe canonical product page, permanent', () => {
+    const r = findRedirect('/hair-regrowth-serum');
+    expect(r?.destination).toBe('/shop/root-scalp-revival-serum');
+    expect(r?.status).toBe(301);
+  });
+
   it('/contact.html → /contact, permanent', () => {
     const r = findRedirect('/contact.html');
     expect(r?.destination).toBe('/contact');
