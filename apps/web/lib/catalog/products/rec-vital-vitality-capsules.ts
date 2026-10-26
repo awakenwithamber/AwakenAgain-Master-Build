@@ -2,7 +2,7 @@
  * GENERATED — do not hand-edit. Re-run `node scripts/port-catalog.mjs`.
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
- * Generated: 2026-10-05
+ * Generated: 2026-10-26
  */
 import type { Product } from '../../../types';
 
@@ -12,21 +12,21 @@ export const RECORD: Product = {
   "sku": "CAP-VITALVITALITY-001",
   "category": "Capsules",
   "subcategory": "Energy & Vitality",
-  "price": 19.77,
+  "price": 28.44,
   "compare_at_price": null,
-  "subscriber_price": 17.79,
+  "subscriber_price": 25.6,
   "sizes": [
-    "2-week supply",
-    "30-day supply (30 capsules)"
+    "2-week supply (28 capsules)",
+    "30-day supply (60 capsules)"
   ],
   "variants": [
     {
       "variant_id": "vital-vitality-capsules-2wk",
-      "name": "2-Week Supply",
-      "size": "2-week supply",
+      "name": "2-Week Supply (28 Capsules)",
+      "size": "2-week supply (28 capsules)",
       "weight": null,
-      "price": 19.77,
-      "subscriber_price": 17.79,
+      "price": 28.44,
+      "subscriber_price": 25.6,
       "currency": "USD",
       "sku": "CAP-VITALVITALITY-001-2WK",
       "sku_status": "NEEDS_VERIFICATION",
@@ -36,11 +36,11 @@ export const RECORD: Product = {
     },
     {
       "variant_id": "vital-vitality-capsules-30d",
-      "name": "30-Day Supply",
-      "size": "30-day supply (30 capsules)",
+      "name": "30-Day Supply (60 Capsules)",
+      "size": "30-day supply (60 capsules)",
       "weight": null,
-      "price": 47.77,
-      "subscriber_price": 42.99,
+      "price": 54.33,
+      "subscriber_price": 48.9,
       "currency": "USD",
       "sku": "CAP-VITALVITALITY-001-30D",
       "sku_status": "NEEDS_VERIFICATION",
@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "Clean, grounded energy for the days you need to feel bright, focused, and fully online.",
-  "extended_description": "Vital Vitality is a botanical boost for stamina, clarity, and daily momentum. Built with adaptogenic herbs traditionally used for energy resilience and focus, this blend helps you feel awake without feeling wired — candle flame, not lightning strike. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
+  "extended_description": "Balanced energy, the plant way. Vital Vitality gathers classic adaptogens and stamina botanicals — rhodiola, eleuthero, ginseng, maca, and cordyceps — into one steady daily formula for people who feel tired and wired at once.",
   "featured_ingredients": [
     {
       "name": "Rhodiola",
@@ -211,5 +211,15 @@ export const RECORD: Product = {
   },
   "last_verified": "2026-10-05",
   "tags": [],
-  "price_display": "From $19.77"
+  "price_display": "From $28.44",
+  "benefits": [
+    "Supports balanced energy",
+    "Supports focus and stamina",
+    "Supports a healthy stress response",
+    "Traditionally used for endurance and resilience"
+  ],
+  "best_for": "Busy founders, parents, and caregivers; afternoon-slump coffee cyclers; anyone rebuilding a steadier rhythm.",
+  "ritual_tip": "Take with your first glass of water and two minutes of morning light. Energy is a rhythm before it is a supplement.",
+  "seo_title": "Vital Vitality Capsules — Adaptogen Energy & Focus Support",
+  "seo_description": "Rhodiola, eleuthero, ginseng, maca & cordyceps in a small-batch adaptogen blend that supports balanced energy & focus. $28.44–$54.33."
 };

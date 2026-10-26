@@ -2,7 +2,7 @@
  * GENERATED — do not hand-edit. Re-run `node scripts/port-catalog.mjs`.
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
- * Generated: 2026-10-05
+ * Generated: 2026-10-26
  */
 import type { Product } from '../../../types';
 
@@ -12,21 +12,21 @@ export const RECORD: Product = {
   "sku": "CAP-DREAMEASE-001",
   "category": "Capsules",
   "subcategory": "Sleep & Nervous System",
-  "price": 19.77,
+  "price": 38.44,
   "compare_at_price": null,
-  "subscriber_price": 17.79,
+  "subscriber_price": 34.6,
   "sizes": [
-    "2-week supply",
-    "30-day supply (30 capsules)"
+    "2-week supply (28 capsules)",
+    "30-day supply (60 capsules)"
   ],
   "variants": [
     {
       "variant_id": "dreamease-capsules-2wk",
-      "name": "2-Week Supply",
-      "size": "2-week supply",
+      "name": "2-Week Supply (28 Capsules)",
+      "size": "2-week supply (28 capsules)",
       "weight": null,
-      "price": 19.77,
-      "subscriber_price": 17.79,
+      "price": 38.44,
+      "subscriber_price": 34.6,
       "currency": "USD",
       "sku": "CAP-DREAMEASE-001-2WK",
       "sku_status": "NEEDS_VERIFICATION",
@@ -36,11 +36,11 @@ export const RECORD: Product = {
     },
     {
       "variant_id": "dreamease-capsules-30d",
-      "name": "30-Day Supply",
-      "size": "30-day supply (30 capsules)",
+      "name": "30-Day Supply (60 Capsules)",
+      "size": "30-day supply (60 capsules)",
       "weight": null,
-      "price": 47.77,
-      "subscriber_price": 42.99,
+      "price": 64.33,
+      "subscriber_price": 57.9,
       "currency": "USD",
       "sku": "CAP-DREAMEASE-001-30D",
       "sku_status": "NEEDS_VERIFICATION",
@@ -67,7 +67,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A moonlit capsule ritual for deep rest, a quiet mind, and mornings that feel softer.",
-  "extended_description": "DreamEase is crafted for the person whose body is tired but whose mind will not hush. This calming botanical blend supports relaxation, nighttime nervous-system ease, and restorative sleep. It centers on classic bedtime nervines — valerian root, passionflower, chamomile, lavender, and lemon balm — botanicals long used in herbal tradition to help quiet a racing mind and ease the transition into rest. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
+  "extended_description": "The apothecary's evening ritual in a capsule. DreamEase was crafted for the mind that will not quiet at bedtime — a small-batch blend rooted in ancient herbal traditions for rest, made for modern nights of screens and unfinished lists.",
   "featured_ingredients": [
     {
       "name": "Valerian Root",
@@ -123,6 +123,17 @@ export const RECORD: Product = {
       "key_constituents": null,
       "evidence_context": "traditional_use",
       "customer_friendly_summary": "A gentle lemony herb traditionally used to soothe frazzled nerves."
+    },
+    {
+      "name": "Saffron",
+      "botanical_name": "Crocus sativus",
+      "part_used": "stigma",
+      "role_in_formula": "Premium botanical for mood and rest; the costly heart of the formula",
+      "traditional_use": "Traditionally used in herbal practice to support a calm mood and restful sleep.",
+      "properties": "Traditionally used to support relaxation and a balanced mood.",
+      "key_constituents": null,
+      "evidence_context": "traditional_use",
+      "customer_friendly_summary": "One of the world's most precious spices, treasured in evening rituals."
     }
   ],
   "complete_ingredients": "Mugwort, lavender, chamomile, tulsi, lemon balm, ashwagandha, passionflower, valerian, turmeric, saffron, peppermint, skullcap, wild lettuce, clove, star anise, marjoram, eucalyptus, rosemary, sage, fenugreek, caraway, ginger, chrysanthemum, hibiscus, rose, alfalfa, nutmeg, reishi, basil, Egyptian licorice.",
@@ -191,6 +202,16 @@ export const RECORD: Product = {
       "source_file": "catalog.master.json",
       "date": "2026-09-27",
       "note": "Standard FDA supplement disclaimer present in baseline."
+    },
+    "complete_ingredients": {
+      "source_file": "Owner ruling 2026-10-25",
+      "date": "2026-10-25",
+      "note": "Owner ruling 2026-10-25: saffron IS in DreamEase; Oct 5 baseline record omitted it in error. (The baseline complete-ingredients string already listed saffron; the featured-ingredients list is corrected in Phase 1 Batch 1 to match.)"
+    },
+    "featured_ingredients": {
+      "source_file": "Owner ruling 2026-10-25",
+      "date": "2026-10-25",
+      "note": "Saffron (Crocus sativus, stigma) added per owner ruling 2026-10-25: saffron IS in DreamEase; Oct 5 baseline record omitted it in error. Lemon Balm retained; Skullcap not added (unconfirmed)."
     }
   },
   "field_verification": {
@@ -219,5 +240,15 @@ export const RECORD: Product = {
   },
   "last_verified": "2026-10-05",
   "tags": [],
-  "price_display": "From $19.77"
+  "price_display": "From $38.44",
+  "benefits": [
+    "Promotes restful sleep",
+    "Supports relaxation in the evening",
+    "Supports a calm transition from day to night",
+    "Traditionally used at bedtime in Western herbal practice"
+  ],
+  "best_for": "Light, restless sleepers; people whose stress follows them to bed; shift workers resetting a rhythm.",
+  "ritual_tip": "Take DreamEase, then make a small cup of chamomile-lavender tea while you put the phone in another room. The capsule does the botanical work; the ritual tells your body the day is over.",
+  "seo_title": "DreamEase Capsules — Botanical Sleep Support | Amber's Alchemy Apothecary",
+  "seo_description": "Small-batch herbal capsules with valerian & saffron, traditionally used to promote restful sleep & support relaxation. Handcrafted in the USA."
 };

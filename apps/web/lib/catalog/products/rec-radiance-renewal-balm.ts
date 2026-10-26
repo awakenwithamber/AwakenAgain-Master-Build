@@ -2,7 +2,7 @@
  * GENERATED — do not hand-edit. Re-run `node scripts/port-catalog.mjs`.
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
- * Generated: 2026-10-05
+ * Generated: 2026-10-26
  */
 import type { Product } from '../../../types';
 
@@ -63,7 +63,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A rich botanical face-and-body balm that moisturizes, softens, and supports a radiant-looking complexion.",
-  "extended_description": "Radiance Renewal Botanical Balm is a rich, herb-infused face-and-body moisturizer crafted to deeply moisturize, soften dry-feeling skin, and support a radiant-looking complexion. The balm base of coconut oil and beeswax forms a breathable, occlusive layer that helps lock in moisture, while a broad botanical infusion — rose, lavender, calendula, gotu kola, chamomile, hibiscus and more — gives it its floral, apothecary character. It is designed as a versatile topical: night balm, lip balm, cuticle balm, highlighter balm, or dry-skin rescue. Cosmetic in nature; it is not intended to diagnose, treat, cure, or prevent any disease. Individual experiences vary.",
+  "extended_description": "Rose, calendula, lavender, and gotu kola in slow-infused botanical oils, finished with vitamin E — the apothecary's answer to a 9-step routine. One balm to soften and seal in moisture, made like beauty products were made for a thousand years before they were made in factories.",
   "featured_ingredients": [
     {
       "name": "Rose",
@@ -324,5 +324,15 @@ export const RECORD: Product = {
       "note": "baseline image paths; all are generated placeholders/art-direction, not product photography"
     }
   },
-  "last_verified": "2026-10-05"
+  "last_verified": "2026-10-05",
+  "benefits": [
+    "Supports skin vitality and the appearance of elasticity",
+    "Deeply moisturizes dry skin",
+    "Supports a soft, luminous look",
+    "Suitable as an overnight balm"
+  ],
+  "best_for": "Dry, mature, or weather-tired skin; minimalists replacing three products with one honest jar.",
+  "ritual_tip": "Apply as the last step at night with three slow breaths — rose has been the scent of evening rituals far longer than it has been a perfume note.",
+  "seo_title": "Radiance Renewal Beauty Balm — Rose & Calendula Botanical Balm",
+  "seo_description": "A rose & calendula botanical balm that supports skin vitality & a luminous look. Small-batch apothecary skincare."
 };

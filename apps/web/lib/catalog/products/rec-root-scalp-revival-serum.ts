@@ -2,7 +2,7 @@
  * GENERATED — do not hand-edit. Re-run `node scripts/port-catalog.mjs`.
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
- * Generated: 2026-10-05
+ * Generated: 2026-10-26
  */
 import type { Product } from '../../../types';
 
@@ -69,7 +69,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A botanical scalp serum for conditioning, shine, and fuller-looking hair.",
-  "extended_description": "Root & Scalp Revival Botanical Serum is a handcrafted botanical oil for the scalp and hair, designed to condition the scalp, support the appearance of fuller-looking strands, and restore healthy-looking shine. A carrier-oil base of coconut, grapeseed, castor, and olive oils is infused with traditional hair-care botanicals — rosemary, peppermint, nettle, fenugreek, hibiscus, borage and more — for a root-to-tip conditioning ritual. Cosmetic in nature; no hair-regrowth guarantee is made or implied. Individual experiences vary. This product is not intended to diagnose, treat, cure, or prevent any disease.",
+  "extended_description": "A scalp-first ritual, because healthy-looking hair starts at the root. Rosemary, peppermint, nettle, and fenugreek in a castor-oil base — lightweight botanical oils and herbs traditionally used for hair care, blended to be massaged in, not just applied.",
   "featured_ingredients": [
     {
       "name": "Rosemary",
@@ -325,5 +325,15 @@ export const RECORD: Product = {
       "note": "baseline image paths; all are generated placeholders/art-direction, not product photography"
     }
   },
-  "last_verified": "2026-10-05"
+  "last_verified": "2026-10-05",
+  "benefits": [
+    "Supports scalp comfort and hydration",
+    "Supports the look of fuller, shinier hair",
+    "Nourishes dry ends",
+    "Traditionally used in Ayurvedic and folk hair rituals"
+  ],
+  "best_for": "Dry scalps, dull or thinning-looking hair, anyone building a Sunday self-care ritual.",
+  "ritual_tip": "The massage is the medicine's partner — set a timer, put on music, make it the ritual, not a chore.",
+  "seo_title": "Hair & Scalp Botanical Serum — Herbal Scalp Ritual Oil",
+  "seo_description": "A botanical scalp serum that supports scalp comfort & the look of fuller, healthier hair. Handcrafted in small batches."
 };

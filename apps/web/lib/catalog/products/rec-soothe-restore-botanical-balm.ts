@@ -2,7 +2,7 @@
  * GENERATED — do not hand-edit. Re-run `node scripts/port-catalog.mjs`.
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
- * Generated: 2026-10-05
+ * Generated: 2026-10-26
  */
 import type { Product } from '../../../types';
 
@@ -69,7 +69,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A comforting herbal massage balm for tired muscles and everyday body care.",
-  "extended_description": "Soothe & Restore Botanical Balm is a comforting herbal massage balm crafted for everyday muscle and joint comfort after activity, work, or long days. A coconut-oil and beeswax base carries traditional comfort botanicals — arnica, cayenne, ginger, peppermint, comfrey, St. John's wort and more — for a massage ritual with both warming and cooling botanical character. It is designed as a comforting topical for the body, not a treatment for any condition. Wash hands after use, especially because of cayenne and peppermint. Individual experiences vary. This cosmetic/topical product is not intended to diagnose, treat, cure, or prevent any disease.",
+  "extended_description": "For hands, knees, shoulders, and backs that have done real work. A slow-infused arnica, cayenne, ginger, peppermint, and comfrey balm in the old apothecary tradition — the jar customers keep in the gym bag, the garden tote, and the nightstand. For external use only.",
   "featured_ingredients": [
     {
       "name": "Arnica",
@@ -330,5 +330,14 @@ export const RECORD: Product = {
       "note": "baseline image paths; all are generated placeholders/art-direction, not product photography"
     }
   },
-  "last_verified": "2026-10-05"
+  "last_verified": "2026-10-05",
+  "benefits": [
+    "Supports comfort in tired muscles and joints after activity",
+    "Supports skin vitality where it is applied",
+    "Warming, grounding scent for a nightly rub-down ritual"
+  ],
+  "best_for": "Gardeners, lifters, tradespeople, desk workers with desk-worker shoulders.",
+  "ritual_tip": "Warm the balm between your palms first. Ninety seconds of slow massage is part of the product, not an extra.",
+  "seo_title": "Botanical Muscle & Joint Balm — Soothe & Restore | Amber's Alchemy",
+  "seo_description": "Arnica, comfrey & cayenne balm, traditionally used after work & training to support comfort in tired muscles. Handcrafted small-batch. External use only."
 };

@@ -2,7 +2,7 @@
  * GENERATED — do not hand-edit. Re-run `node scripts/port-catalog.mjs`.
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
- * Generated: 2026-10-05
+ * Generated: 2026-10-26
  */
 import type { Product } from '../../../types';
 
@@ -59,7 +59,7 @@ export const RECORD: Product = {
     }
   ],
   "short_description": "A botanical shield for everyday resilience, seasonal support, and deep immune nourishment.",
-  "extended_description": "Immune-At-Ease brings together classic immune-supportive botanicals in one protective daily formula. It is designed for steady resilience, not harsh stimulation — botanicals such as elderberry, astragalus, echinacea, reishi, and andrographis, long used in herbal traditions to support the body's natural defenses through seasonal shifts, stress, and everyday exposure. Individual experiences vary. Free shipping on orders of $45 or more (always free for Living Grimoire subscribers).",
+  "extended_description": "The seasonal apothecary shelf, bottled. The berries and roots in Immune-At-Ease have been simmered, tinctured, and trusted through centuries of winters.",
   "featured_ingredients": [
     {
       "name": "Elderberry",
@@ -211,5 +211,15 @@ export const RECORD: Product = {
   },
   "last_verified": "2026-10-05",
   "tags": [],
-  "price_display": "From $19.77"
+  "price_display": "From $19.77",
+  "benefits": [
+    "Supports everyday immune wellness",
+    "Traditionally used at seasonal change",
+    "Supports respiratory wellness",
+    "Rich in naturally occurring plant antioxidants"
+  ],
+  "best_for": "Teachers, parents, travelers, and anyone who dreads the office cold making its rounds.",
+  "ritual_tip": "Start your seasonal ritual at the first equinox reminder on your calendar — not at the first sniffle.",
+  "seo_title": "Immune-At-Ease Capsules — Elderberry & Echinacea Immune Support",
+  "seo_description": "Elderberry, echinacea & astragalus, traditionally used to support everyday immune wellness. Small-batch, handcrafted."
 };
