@@ -33,7 +33,9 @@ const FORMULA_FILES = [
 ];
 
 const FORMULA_PAGES = [
-  'app/custom-formula/page.tsx',
+  // 2026-10-25: /custom-formula became the "Choose your form" guide
+  // landing; the capsule builder page moved to /custom-formula/capsules.
+  'app/custom-formula/capsules/page.tsx',
   'app/custom-formula/tea/page.tsx',
 ];
 
@@ -161,7 +163,13 @@ describe('formula money path — single cart store, server recompute', () => {
   });
 
   it('both builder pages render the FormulaBuilder island with the right kind', () => {
-    expect(src('app/custom-formula/page.tsx')).toMatch(/<FormulaBuilder kind="capsule" \/>/);
+    expect(src('app/custom-formula/capsules/page.tsx')).toMatch(/<FormulaBuilder kind="capsule" \/>/);
     expect(src('app/custom-formula/tea/page.tsx')).toMatch(/<FormulaBuilder kind="tea" \/>/);
+  });
+
+  it('the /custom-formula landing is the form guide and links to both builders', () => {
+    const guide = src('app/custom-formula/page.tsx');
+    expect(guide).toMatch(/FORM_GUIDE/);
+    expect(guide).not.toMatch(/<FormulaBuilder/);
   });
 });

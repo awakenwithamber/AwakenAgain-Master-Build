@@ -37,6 +37,7 @@ import {
   attemptFormRelay,
   buildFormRelayJob,
 } from '../../../lib/jobs/form-relay';
+import { sendContactAutoResponse } from '../../../lib/jobs/contact-auto-response';
 import {
   captureServerEventSoon,
   resolveServerDistinctId,
@@ -168,6 +169,13 @@ export async function POST(request: Request) {
   } catch {
     relayStatus = 'relay_failed';
   }
+
+  // Auto-response — fire-and-forget confirmation email to the sender
+  // (2026-10-25). Runs only after persistence; skips silently when no
+  // email provider is configured and can never fail this request (the
+  // helper resolves every failure to a logged result, and the catch
+  // here is belt-and-braces). The response shape is unchanged.
+  void sendContactAutoResponse(record).catch(() => undefined);
 
   captureServerEventSoon(
     ANALYTICS_EVENT_NAMES.contactAccepted,

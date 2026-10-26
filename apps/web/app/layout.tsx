@@ -9,6 +9,8 @@ import { LegacyAnchorRedirect } from '../components/seo/LegacyAnchorRedirect';
 import { MusicGate } from '../components/music/MusicGate';
 import { BotanicalCardHost } from '../components/herbs/BotanicalCardHost';
 import { GaiaWidget } from '../components/chat/GaiaWidget';
+import { GaiaNudge } from '../components/chat/GaiaNudge';
+import { ContactPopup } from '../components/contact/ContactPopup';
 import { ConsentBar } from '../components/privacy/ConsentBar';
 
 // CSP nonce (Aikido 845087258): pages must render per-request so Next.js
@@ -80,6 +82,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <BotanicalCardHost />
         {/* Gaia chatbot — popup intro + lower-right button (owner directive 2026-10-10). */}
         <GaiaWidget />
+        {/* Gaia nudge card — non-blocking suggestions above the Gaia FAB (2026-10-25). */}
+        <GaiaNudge />
+        {/* Contact popup — global "Message Amber" modal, opened via the
+            'aa:open-contact' event or <ContactPopupTrigger> (2026-10-25). */}
+        <ContactPopup />
         {/* Analytics consent bar (2026-10-14) — calm bottom bar, shows only until the visitor chooses. */}
         <ConsentBar />
         {/* Legacy SPA anchor → route bridge (client-side; fragments never reach the server). */}

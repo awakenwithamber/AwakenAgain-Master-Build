@@ -46,6 +46,8 @@ import {
   trackBuilderEventOnce,
 } from '../../lib/analytics/builders-events';
 import { useCart } from '../checkout/cart-store';
+import { BUILDER_INTRO_LINES } from '../../lib/custom-formula/forms-guide';
+import { QuizPromo } from '../custom-formula/QuizPromo';
 import { FORMULA_BUILDER_CSS } from './shared/builder-styles';
 import { ProgressNav } from './shared/ProgressNav';
 import { SummaryList } from './shared/SummaryList';
@@ -464,7 +466,7 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
   const complete = stepKey === 'reveal' ? true : formulaStepComplete(stepKey, sel, kind);
   const stepIndex = FORMULA_STEPS.indexOf(stepKey);
   const otherKind: FormulaKind = kind === 'capsule' ? 'tea' : 'capsule';
-  const otherHref = otherKind === 'capsule' ? '/custom-formula' : '/custom-formula/tea';
+  const otherHref = otherKind === 'capsule' ? '/custom-formula/capsules' : '/custom-formula/tea';
 
   return (
     <div className="builder-root">
@@ -474,10 +476,13 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
           Amber's Alchemy Apothecary
         </Link>
         <nav className="nav" aria-label="Formula builders">
-          <Link href="/custom-formula">Capsule Builder</Link>
+          <Link href="/custom-formula/capsules">Capsule Builder</Link>
           <Link href="/custom-formula/tea">Tea Builder</Link>
+          <Link href="/custom-formula">Choose Your Form</Link>
         </nav>
       </header>
+
+      <QuizPromo />
 
       <div className="wrap">
         <h1 className="builder-title">{KIND_TITLE[kind]}</h1>
@@ -485,6 +490,9 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
           {kind === 'capsule'
             ? 'A personalized capsule blend crafted around your body, goals, and herbal needs — hand-filled in small batches.'
             : 'A personalized tea blend crafted around your taste and ritual — calming, energizing, digestion, glow, or seasonal support.'}
+        </p>
+        <p className="builder-lede" style={{ fontStyle: 'italic' }}>
+          {BUILDER_INTRO_LINES[kind]}
         </p>
 
         <ProgressNav

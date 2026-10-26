@@ -51,7 +51,8 @@ export type EmailTemplate =
   | 'unsubscribe_confirmation'
   | 'review_reminder'
   | 'quiz_results'
-  | 'account_signin_code';
+  | 'account_signin_code'
+  | 'contact_received';
 
 export interface PurchaseConfirmationData {
   order_id: string;
@@ -122,13 +123,24 @@ export interface AccountSigninCodeData {
   expires_in_minutes: number;
 }
 
+/**
+ * Contact auto-response (2026-10-25): the confirmation sent to a contact
+ * form sender after their message is persisted. Data carries only the
+ * sender's name for the greeting — the message text is never copied
+ * into the auto-response.
+ */
+export interface ContactReceivedData {
+  name: string;
+}
+
 export type EmailTemplateData =
   | { template: 'purchase_confirmation'; data: PurchaseConfirmationData }
   | { template: 'weekly_promo'; data: WeeklyPromoData }
   | { template: 'unsubscribe_confirmation'; data: UnsubscribeConfirmationData }
   | { template: 'review_reminder'; data: ReviewReminderData }
   | { template: 'quiz_results'; data: QuizResultsData }
-  | { template: 'account_signin_code'; data: AccountSigninCodeData };
+  | { template: 'account_signin_code'; data: AccountSigninCodeData }
+  | { template: 'contact_received'; data: ContactReceivedData };
 
 export type EmailJobStatus = 'queued' | 'sent' | 'failed';
 
@@ -142,7 +154,8 @@ export interface EmailJob {
     | UnsubscribeConfirmationData
     | ReviewReminderData
     | QuizResultsData
-    | AccountSigninCodeData;
+    | AccountSigninCodeData
+    | ContactReceivedData;
   queued_at: string;
   status: EmailJobStatus;
   attempts: number;
@@ -330,6 +343,23 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
           `\nThese notes reflect traditional use and the evidence context shown ` +
           `with each ally — they are education, not medical advice.` +
           SIGN_OFF,
+      };
+    }
+    case 'contact_received': {
+      const d = job.data as ContactReceivedData;
+      return {
+        subject: "We've received your message ✦ Amber's Alchemy Apothecary",
+        text:
+          `Hello ${d.name},\n\n` +
+          `Thank you for reaching out to Amber's Alchemy Apothecary. This note is ` +
+          `your confirmation that your message has been received.\n\n` +
+          `Amber reads every message personally — no call center, no robots reading ` +
+          `your words. She will respond just as soon as she is able.\n\n` +
+          `Need a faster reply? Text Amber at 801-819-6795 — a text usually reaches ` +
+          `her sooner than email.\n\n` +
+          `With gratitude,\n` +
+          `Amber's Alchemy Apothecary — Awaken With Amber LLC\n` +
+          `awakenagain.com`,
       };
     }
     case 'account_signin_code': {
@@ -716,6 +746,17 @@ export function buildAccountSigninCodeJob(
     throw new Error('Sign-in code job requires the 6-digit code.');
   }
   return buildEmailJob({ to, template: 'account_signin_code', data });
+}
+
+/** Contact auto-response factory — the send is routed via the EmailProvider. */
+export function buildContactReceivedJob(
+  to: unknown,
+  data: ContactReceivedData,
+): EmailJob {
+  if (!data.name?.trim()) {
+    throw new Error('Contact auto-response requires the sender name.');
+  }
+  return buildEmailJob({ to, template: 'contact_received', data });
 }
 
 /** Quiz-results factory — the send is routed via the EmailProvider. */

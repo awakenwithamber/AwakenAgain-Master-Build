@@ -9,12 +9,24 @@
  */
 import { useEffect, useState } from 'react';
 import { HerbalChat } from './HerbalChat';
+import {
+  GAIA_CHAT_CLOSED_EVENT,
+  GAIA_CHAT_OPEN_EVENT,
+} from '../../lib/personalization/overlay-events';
 
 const SEEN_KEY = 'gaia-intro-seen';
 
 export function GaiaWidget() {
   const [open, setOpen] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
+
+  // Announce chat open/closed so Gaia nudges never appear over the chat
+  // (overlay coordination, 2026-10-25 — see lib/personalization/overlay-events).
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(open ? GAIA_CHAT_OPEN_EVENT : GAIA_CHAT_CLOSED_EVENT),
+    );
+  }, [open ]);
 
   useEffect(() => {
     // Show intro popup on first visit only.
