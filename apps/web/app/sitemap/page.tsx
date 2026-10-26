@@ -86,6 +86,11 @@ const SOCIAL_LINKS = [
     label: 'LinkedIn — Amber Lynn Patten',
     note: 'Business services, partnerships, and professional updates.',
   },
+  {
+    href: 'https://www.tiktok.com/@awakenwithamber',
+    label: 'TikTok — @awakenwithamber',
+    note: 'Short videos from the apothecary: remedies, rituals, and behind the bench.',
+  },
 ];
 
 function LinkSection({

@@ -40,8 +40,9 @@ const INVOLVED_LINKS = [
 /**
  * Verified social profiles (owner request 2026-10-26) — one shared set
  * for Awaken With Amber LLC, Amber's Alchemy Apothecary, and The Awaken
- * Network. TikTok is intentionally absent until the owner confirms the
- * current handle; never guess it.
+ * Network. TikTok @awakenwithamber confirmed by the owner 2026-10-26
+ * (profile screenshot); the older @alchemizingwithamber /
+ * @ambersapothecary1985 candidates were not hers to link.
  */
 const SOCIAL_LINKS = [
   {
@@ -55,6 +56,10 @@ const SOCIAL_LINKS = [
   {
     href: 'https://www.linkedin.com/in/awakenwithamber',
     label: 'LinkedIn — Amber Lynn Patten',
+  },
+  {
+    href: 'https://www.tiktok.com/@awakenwithamber',
+    label: 'TikTok — @awakenwithamber',
   },
 ];
 
