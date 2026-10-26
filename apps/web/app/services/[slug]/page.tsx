@@ -179,7 +179,7 @@ export default async function ServiceLandingPage({
             <p>
               <small>
                 Or write to{' '}
-                <a href="mailto:awaken@consultant.com">awaken@consultant.com</a>{' '}
+                <a href="mailto:Amber@awakenagain.com">Amber@awakenagain.com</a>{' '}
                 or call{' '}
                 <a href="tel:+18018196795">(801) 819-6795</a>.
               </small>

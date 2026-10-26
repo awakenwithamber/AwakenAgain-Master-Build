@@ -118,7 +118,7 @@ export function ContactForm() {
       }
     } catch {
       setErrors([
-        'Could not reach the apothecary server. Please try again — or email awaken@consultant.com directly.',
+        'Could not reach the apothecary server. Please try again — or email Amber@awakenagain.com directly.',
       ]);
     } finally {
       setSubmitting(false);

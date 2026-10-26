@@ -13,7 +13,7 @@
 export const BRAND_NAME = "Amber's Alchemy Apothecary";
 
 /** Owner-verified contact details (MEMORY.md: CONTACT IDENTITY VERIFIED 2026-10-04). */
-export const BRAND_EMAIL = 'awaken@consultant.com';
+export const BRAND_EMAIL = 'Amber@awakenagain.com';
 export const BRAND_PHONE_DISPLAY = '(801) 819-6795';
 /** JSON-LD / structured-data telephone format. */
 export const BRAND_PHONE_JSONLD = '+1-801-819-6795';

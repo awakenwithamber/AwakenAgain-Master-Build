@@ -143,7 +143,7 @@ export async function POST(request: Request) {
       [
         `Your message could not be saved: ${
           err instanceof Error ? err.message : 'store write failed'
-        }. Please email Amber directly at awaken@consultant.com.`,
+        }. Please email Amber directly at Amber@awakenagain.com.`,
       ],
       500,
     );

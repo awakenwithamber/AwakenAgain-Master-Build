@@ -2,7 +2,7 @@
  * Site footer — shared chrome (workstream 2 owns layout chrome).
  *
  * Columns: shop, learn, services, legal, contact. Newsletter signup (G15)
- * embedded. Contact identity per owner verification: awaken@consultant.com,
+ * embedded. Contact identity per owner verification: Amber@awakenagain.com,
  * (801) 819-6795. Payments: emailed invoice (ACH bank transfer,
  * Venmo, or Cash App) or Cash App / Venmo directly — stated plainly
  * (owner directive 2026-10-24; no card payment is offered).

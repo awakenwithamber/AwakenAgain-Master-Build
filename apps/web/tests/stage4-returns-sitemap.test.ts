@@ -47,7 +47,7 @@ describe('returns page — approved terms only', () => {
     expect(RETURNS_PAGE).toContain('regardless of whether the item has been opened');
     // The contact address renders from the shared brand constant.
     expect(RETURNS_PAGE).toContain('BRAND_EMAIL');
-    expect(read('lib/seo/config.ts')).toContain('awaken@consultant.com');
+    expect(read('lib/seo/config.ts')).toContain('Amber@awakenagain.com');
   });
 
   it('states the already-approved facts: handmade by Amber, ships in 3–5 business days', () => {

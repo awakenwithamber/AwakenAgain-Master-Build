@@ -132,10 +132,10 @@ export default function ContactPage() {
             <li style={{ marginBottom: '0.6rem' }}>
               📧{' '}
               <a
-                href="mailto:awaken@consultant.com"
+                href="mailto:Amber@awakenagain.com"
                 style={{ color: 'var(--aa-gold-bright)' }}
               >
-                awaken@consultant.com
+                Amber@awakenagain.com
               </a>
             </li>
             <li style={{ marginBottom: '0.6rem' }}>
@@ -148,7 +148,7 @@ export default function ContactPage() {
             <li>
               📅{' '}
               <a
-                href="mailto:awaken@consultant.com?subject=Free%20Consultation%20Request"
+                href="mailto:Amber@awakenagain.com?subject=Free%20Consultation%20Request"
                 style={{ color: 'var(--aa-gold-bright)' }}
               >
                 Book a Free Consultation

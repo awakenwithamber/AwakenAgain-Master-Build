@@ -158,8 +158,8 @@ export default function AboutPage() {
               </p>
               <p>
                 Email:{' '}
-                <a href="mailto:awaken@consultant.com">
-                  awaken@consultant.com
+                <a href="mailto:Amber@awakenagain.com">
+                  Amber@awakenagain.com
                 </a>
                 <br />
                 {/* Business number only (owner directive 2026-10-13):

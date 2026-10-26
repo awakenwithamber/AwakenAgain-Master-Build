@@ -86,7 +86,7 @@ function PriceBlock({ product }: { product: Product }) {
     return (
       <p>
         <strong>Pricing not yet established.</strong> Please contact Amber for
-        current pricing: <a href="mailto:awaken@consultant.com">awaken@consultant.com</a>{' '}
+        current pricing: <a href="mailto:Amber@awakenagain.com">Amber@awakenagain.com</a>{' '}
         or <a href="tel:+18018196795">(801) 819-6795</a>.
       </p>
     );
