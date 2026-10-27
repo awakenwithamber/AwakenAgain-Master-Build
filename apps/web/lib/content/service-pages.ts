@@ -15,7 +15,7 @@
  *   NO price and routes to the contact/inquiry path. Pricing for
  *   unpriced services is a pending owner decision; nothing is invented.
  * - Copy is capability + process only: no credentials, years, reviews,
- *   testimonials, or outcome guarantees. Healing-adjacent copy frames the
+ *   testimonials, or outcome guarantees. Spiritual-support copy frames the
  *   work as spiritual support alongside licensed care, never therapy.
  * - Images reuse the existing service illustrations where they genuinely
  *   depict the service. Pages without a matching illustration use the
@@ -191,7 +191,7 @@ export const SERVICE_PAGES: ServicePageEntry[] = [
       'A spiritual service offered for reflective and symbolic purposes — not a medical service, and no claim is made that it removes disease, toxins, or objectively measurable entities.',
       'Pricing is arranged personally — reach out for current details.',
     ],
-    relatedSlugs: ['house-cleansing', 'inner-healing'],
+    relatedSlugs: ['house-cleansing', 'inner-renewal'],
   },
   {
     slug: 'spirit-resolution',
@@ -260,14 +260,14 @@ export const SERVICE_PAGES: ServicePageEntry[] = [
       'Reflective and entertainment-oriented; not a therapeutic or historical-verification service.',
       'Pricing is arranged personally — reach out for current details.',
     ],
-    relatedSlugs: ['astrology', 'inner-healing'],
+    relatedSlugs: ['astrology', 'inner-renewal'],
   },
   {
-    slug: 'inner-healing',
-    title: 'Inner Healing',
+    slug: 'inner-renewal',
+    title: 'Inner Renewal',
     eyebrow: 'Energy Work · Salt Lake City & Online',
     metaDescription:
-      'Inner healing sessions with Amber — quiet, intention-based spiritual support for reflection and personal ritual, offered alongside licensed care, never in place of it. Salt Lake City, Utah and online.',
+      'Inner renewal sessions with Amber — quiet, intention-based spiritual support for reflection and personal ritual, offered alongside licensed care, never in place of it. Salt Lake City, Utah and online.',
     catalogHandle: 'energy-work',
     image: 'energy-work.webp',
     imageAlt: 'Illustration for Energy Work',
@@ -275,7 +275,7 @@ export const SERVICE_PAGES: ServicePageEntry[] = [
     deliveryNote:
       'Sessions are arranged personally with Amber — reach out to talk first.',
     intro: [
-      'Inner healing at the apothecary is quiet work: a one-to-one, intention-based spiritual session designed around reflection and personal ritual. No fixing, no forcing — a held space, a steady guide, and room for whatever you have been carrying to be set down for a while.',
+      'Inner renewal at the apothecary is quiet work: a one-to-one, intention-based spiritual session designed around reflection and personal ritual. No fixing, no forcing — a held space, a steady guide, and room for whatever you have been carrying to be set down for a while.',
       'Amber draws on the house’s energy-work tradition: breath, intention, symbolism, and the botanical calm this place is built on. People come in heavy seasons — grief, burnout, transition, the long aftermath of hard years — and leave with a ritual of their own to keep.',
     ],
     includes: [

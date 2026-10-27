@@ -1,5 +1,5 @@
 /**
- * "Free Herbal Healing Guide" — lead capture wired to the existing
+ * "Free Herbal Guide" — lead capture wired to the existing
  * newsletter endpoint (POST /api/newsletter). Consent is a hard gate:
  * nothing is stored without the explicit checkbox.
  *
@@ -67,10 +67,10 @@ export function GuideSignup() {
             🌿
           </div>
           <h2 id="guide-heading" className={styles.guideTitle}>
-            Free Herbal Healing Guide
+            Free Herbal Guide
           </h2>
           <p className={styles.guideCopy}>
-            Subscribe for Amber&apos;s Beginner&apos;s Guide to Herbal Healing —
+            Subscribe for Amber&apos;s Beginner&apos;s Guide to Herbal Wisdom —
             20 herbs and how to use them.
           </p>
           {status.kind === 'done' ? (

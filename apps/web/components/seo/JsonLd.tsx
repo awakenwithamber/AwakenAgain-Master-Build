@@ -77,7 +77,7 @@ export async function OrganizationJsonLd() {
           knowsAbout: [
             'Herbalism', 'Botanical medicine', 'Spiritual awakening',
             'Empath protection', 'Light magic', 'Ritual', 'Sustainable living',
-            'Natural skincare', 'Energy cleansing', 'Soul healing',
+            'Natural skincare', 'Energy cleansing', 'Spiritual guidance',
           ],
         },
         {

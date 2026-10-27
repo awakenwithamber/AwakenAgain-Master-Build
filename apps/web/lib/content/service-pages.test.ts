@@ -28,7 +28,7 @@ const EXPECTED_SLUGS = [
   'aura-cleansing',
   'spirit-resolution',
   'past-life-regression',
-  'inner-healing',
+  'inner-renewal',
   'business-setup',
   'web-development',
 ];
@@ -166,8 +166,8 @@ describe('service landing page registry', () => {
     );
   });
 
-  it('inner-healing copy carries the alongside-licensed-care guardrail', () => {
-    const copy = allCopy(getServicePage('inner-healing')!);
+  it('inner-renewal copy carries the alongside-licensed-care guardrail', () => {
+    const copy = allCopy(getServicePage('inner-renewal')!);
     expect(copy).toContain('not therapy');
     expect(copy).toContain('alongside licensed care');
     expect(copy).toContain('never a substitute');

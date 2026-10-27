@@ -40,7 +40,7 @@ export const JOURNAL_ARTICLES: readonly JournalArticle[] = [
     paragraphs: [
       'In a world of overstimulation, the nervous system craves stillness. Traditional herbalism has long recognized a family of plants called nervines — herbs that nourish, calm, and restore the nervous system. Valerian, passionflower, chamomile, and lemon balm each offer a distinct quality of rest: some deepen sleep, others quiet the mind, and some gently ease the transition from waking to dreaming.',
     ],
-    wisdom: 'Rest is not idleness. It is the soil in which healing grows.',
+    wisdom: 'Rest is not idleness. It is where strength quietly returns.',
     keyHerbs: ['Valerian', 'Chamomile', 'Passionflower', 'Lemon Balm'],
     publishedNote: 'Originally published in the legacy Apothecary Journal.',
   },
@@ -58,9 +58,9 @@ export const JOURNAL_ARTICLES: readonly JournalArticle[] = [
     publishedNote: 'Originally published in the legacy Apothecary Journal.',
   },
   {
-    slug: 'ancient-herbal-rituals-for-healing',
+    slug: 'ancient-herbal-rituals-for-renewal',
     tag: 'Ancient Rituals',
-    title: 'Ancient Herbal Rituals for Healing',
+    title: 'Ancient Herbal Rituals for Renewal',
     excerpt:
       'Long before pharmacies, there were apothecaries. Long before apothecaries, there were healers who walked into the forest and listened.',
     paragraphs: [
@@ -71,26 +71,26 @@ export const JOURNAL_ARTICLES: readonly JournalArticle[] = [
     publishedNote: 'Originally published in the legacy Apothecary Journal.',
   },
   {
-    slug: 'immune-boosting-plants-from-ancient-traditions',
+    slug: 'immune-wisdom-from-ancient-traditions',
     tag: 'Immune Wisdom',
-    title: 'Immune Boosting Plants from Ancient Traditions',
+    title: 'Immune Wisdom from Ancient Traditions',
     excerpt:
       'The immune system is not a wall — it is a living intelligence. Traditional herbalism has always understood this.',
     paragraphs: [
-      'The immune system is not a wall — it is a living intelligence. Traditional herbalism has always understood this. Rather than simply "boosting" immunity, the wisest herbal traditions speak of modulating, nourishing, and educating the immune response. Elderberry, astragalus, echinacea, and reishi mushroom each work in distinct ways — some stimulate, some regulate, some build deep immune reserves over time.',
+      'The immune system is not a wall — it is a living intelligence. Traditional herbalism has always understood this. Rather than simply "boosting" immunity, the wisest herbal traditions speak of modulating, nourishing, and educating the immune response. Elderberry, astragalus, echinacea, and reishi mushroom each work in distinct ways — some stimulate, some regulate, some build deep reserves over time.',
     ],
-    wisdom: 'The body has the wisdom to heal itself when given the right allies.',
+    wisdom: 'The body finds its way back to balance when given the right allies.',
     keyHerbs: ['Elderberry', 'Astragalus', 'Echinacea', 'Reishi'],
     publishedNote: 'Originally published in the legacy Apothecary Journal.',
   },
   {
-    slug: 'natural-pain-relief-through-plant-medicine',
-    tag: 'Natural Pain Relief',
-    title: 'Natural Pain Relief Through Plant Medicine',
+    slug: 'traditional-plant-care-for-aches-and-tension',
+    tag: 'Plant Traditions',
+    title: 'Traditional Plant Care for Aches & Tension',
     excerpt:
-      'Pain is the body\u2019s language — a signal, not a sentence. Traditional herbalism approaches pain by addressing the underlying imbalance.',
+      'Pain is the body\u2019s language — a signal, not a sentence. Traditional herbalism meets it by tending the underlying imbalance.',
     paragraphs: [
-      'Pain is the body\u2019s language — a signal, not a sentence. Traditional herbalism approaches pain not by silencing the signal, but by addressing the underlying inflammation, tension, or imbalance that creates it. Arnica, turmeric, willow bark, and cayenne each offer distinct mechanisms: some cool inflammation, some increase circulation, some interrupt the pain signal at the nerve level — all without the side effects of pharmaceutical intervention.',
+      'Pain is the body\u2019s language — a signal, not a sentence. Traditional herbalism approaches pain not by silencing the signal, but by tending the underlying tension or imbalance that creates it. Arnica, turmeric, willow bark, and cayenne have been turned to for generations — in salves, teas, and warm compresses — as part of that traditional care, each with its own long history in the apothecary.',
     ],
     wisdom: 'These pains you feel are messengers. Listen to them. — Rumi',
     keyHerbs: ['Arnica', 'Turmeric', 'Willow Bark', 'Cayenne', 'Comfrey'],

@@ -111,7 +111,7 @@ export function MusicGate() {
           Welcome to the Apothecary
         </h2>
         <p id="music-gate-sub" className={styles.gateSub}>
-          Enhance your experience with soft nature sounds and 432Hz healing tones — stress-reducing
+          Enhance your experience with soft nature sounds and 432Hz tones — calming
           music to accompany you as you explore the apothecary.
         </p>
         <div className={styles.gateActions}>
