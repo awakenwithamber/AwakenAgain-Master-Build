@@ -82,6 +82,26 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/services/inner-healing',
+        destination: '/services/inner-renewal',
+        permanent: true,
+      },
+      {
+        source: '/journal/ancient-herbal-rituals-for-healing',
+        destination: '/journal/ancient-herbal-rituals-for-renewal',
+        permanent: true,
+      },
+      {
+        source: '/journal/immune-boosting-plants-from-ancient-traditions',
+        destination: '/journal/immune-wisdom-from-ancient-traditions',
+        permanent: true,
+      },
+      {
+        source: '/journal/natural-pain-relief-through-plant-medicine',
+        destination: '/journal/traditional-plant-care-for-aches-and-tension',
+        permanent: true,
+      },
+      {
         source: '/shop/full-soap-collection',
         destination: '/shop/soap-style-collection-5',
         permanent: true,

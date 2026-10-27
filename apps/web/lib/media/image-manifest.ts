@@ -605,7 +605,7 @@ function productSlots(): ImageAssetEntry[] {
     ['soothe-restore-botanical-balm', 'Soothe & Restore Botanical Balm', 'Product photo slot — balm jar with herbs', 'Dangling reference: "Amber\'s Alchemy Apothecary Balm Ritual.png" does not exist in uploads — do not render.'],
     ['gentle-detox-ritual', 'Gentle Detox Ritual Bundle', 'Bundle photo slot'],
     ['focus-clarity-ritual', 'Focus & Clarity Ritual Bundle', 'Bundle photo slot'],
-    ['stress-relief-ritual', 'Stress Relief Ritual Bundle', 'Bundle photo slot'],
+    ['stress-relief-ritual', 'Unwind Ritual Bundle', 'Bundle photo slot'],
     ['environmental-wellness-support', 'Environmental Wellness Support', 'Product photo slot — capsules'],
     ['metabolic-wellness-formula', 'Metabolic Wellness Formula', 'Product photo slot — capsules'],
     ['seasonal-gut-reset', 'Seasonal Gut Reset', 'Product photo slot — capsules'],

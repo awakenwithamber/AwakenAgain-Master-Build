@@ -7,7 +7,7 @@
 import type { Product } from '../../../types';
 
 export const RECORD: Product = {
-  "title": "Custom Remedy Consultation",
+  "title": "Personalized Formula Consultation",
   "handle": "custom-remedy-consultation",
   "sku": "AAA-CUSTOM-REMEDY-CONSULTATI",
   "category": "Custom & Consultations",
@@ -18,7 +18,7 @@ export const RECORD: Product = {
   "sizes": "",
   "variants": [
     {
-      "name": "Custom Remedy Consultation",
+      "name": "Personalized Formula Consultation",
       "sku": "AAA- CUSTOMREMEDYCONSUL-CONSULT",
       "price": 33.33,
       "unit": "consultation",
@@ -30,7 +30,7 @@ export const RECORD: Product = {
   "images": [
     {
       "src": "/images/products/custom-remedy-consultation.webp",
-      "alt": "Custom Remedy Consultation — apothecary bottles and a mortar on a candlelit workbench (illustrated representation)",
+      "alt": "Personalized Formula Consultation — apothecary bottles and a mortar on a candlelit workbench (illustrated representation)",
       "role": "primary",
       "status": "mapped_photo",
       "asset_status": "MAPPED",

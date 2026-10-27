@@ -16,7 +16,7 @@ export const RECORD: Product = {
   "inventory_status": "NEEDS_VERIFICATION",
   "disclaimer": "For educational, spiritual, or informational purposes only. Not medical advice and not intended to diagnose, treat, cure, or prevent any disease. Seek qualified professional care for medical concerns.",
   "last_verified": "2026-10-05",
-  "title": "The Stress Relief Ritual Bundle",
+  "title": "The Unwind Ritual Bundle",
   "handle": "stress-relief-ritual",
   "sku": "RITUAL-STRESS-001",
   "subcategory": "Wellness Bundle",
@@ -31,7 +31,7 @@ export const RECORD: Product = {
     {
       "src": "/images/products/stress-relief-ritual.webp",
       "fallback": "/images/products/stress-relief-ritual.png",
-      "alt_text": "Stress Relief Ritual Bundle with soap tea balm and capsules",
+      "alt_text": "The Unwind Ritual Bundle with soap tea balm and capsules",
       "status": "placeholder"
     }
   ],
@@ -46,7 +46,7 @@ export const RECORD: Product = {
     "nervous system"
   ],
   "short_description": "A nervous-system sanctuary in a box: calm tea, soft soap, soothing balm, and serenity capsules.",
-  "extended_description": "The Stress Relief Ritual Bundle is made for the woman holding everything together with a pretty smile and a clenched jaw. It builds an evening wind-down sanctuary in four layers: steep the calm tea — ashwagandha, holy basil, lemon balm, chamomile, lavender, and passionflower — and let the day loosen its grip. Wash with the soft botanical soap and let warm water do its quiet work. Massage the soothing 1 oz balm into shoulders, neck, or tired hands. Take the 14-day serenity capsule course with water in the evening. Layered together, the tea, soap, balm, and capsules support calm, softness, and nervous-system restoration through one unhurried nightly ritual.",
+  "extended_description": "The Unwind Ritual Bundle is made for the woman holding everything together with a pretty smile and a clenched jaw. It builds an evening wind-down sanctuary in four layers: steep the calm tea — ashwagandha, holy basil, lemon balm, chamomile, lavender, and passionflower — and let the day loosen its grip. Wash with the soft botanical soap and let warm water do its quiet work. Massage the soothing 1 oz balm into shoulders, neck, or tired hands. Take the 14-day serenity capsule course with water in the evening. Layered together, the tea, soap, balm, and capsules support calm, softness, and nervous-system restoration through one unhurried nightly ritual.",
   "bundle_highlights": "Key botanicals named in the baseline catalog for this bundle: Ashwagandha, Holy Basil, Lemon Balm, Chamomile, Lavender, Passionflower. Full component formulas to be confirmed by owner.",
   "complete_ingredients": "See included products. Included component handles: not specified in baseline — NEEDS_VERIFICATION.",
   "traditional_uses": "The botanicals named for this bundle — ashwagandha, holy basil, lemon balm, chamomile, lavender, and passionflower — are traditionally used to support calm and stress resilience. Individual experiences vary.",

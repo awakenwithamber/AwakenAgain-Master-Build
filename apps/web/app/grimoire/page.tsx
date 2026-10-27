@@ -38,7 +38,7 @@ import { resolveGrimoireEntitlement } from '../../lib/grimoire/entitlement';
 export const metadata: Metadata = {
   title: 'Living Grimoire of Light & Magic — 333-page edition',
   description:
-    "Open the Living Grimoire — 333-page edition: Amber's family grimoire, a handmade-style book of true magic, healing, recipes, spells, herbal wisdom, and botanical illustrations from Amber's Alchemy Apothecary. The first sixteen pages are a free preview; the full book — the family edition complete and the collected works in full — opens to subscribers and permanent-unlock holders.",
+    "Open the Living Grimoire — 333-page edition: Amber's family grimoire, a handmade-style book of true magic, recipes, spells, and herbal wisdom, and botanical illustrations from Amber's Alchemy Apothecary. The first sixteen pages are a free preview; the full book — the family edition complete and the collected works in full — opens to subscribers and permanent-unlock holders.",
 };
 
 // Session + entitlement state is per-request — never static.

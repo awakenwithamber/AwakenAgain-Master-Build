@@ -40,7 +40,7 @@ export default function GrimoireSubscribePage() {
         <p>
           <strong>Amber&apos;s Family Grimoire</strong> — a book, handmade by the women
           in my family, passed down from mother to daughter through generations.
-          A book of true magic, healing, recipes, spells, and more.
+          A book of true magic, recipes, spells, herbal wisdom, and more.
         </p>
 
         <section aria-labelledby="grimoire-about-heading">
