@@ -21,7 +21,7 @@ import Link from 'next/link';
 
 /** Category filter pills (spec §7) — each maps onto the goal mapping. */
 const FILTER_PILLS: Array<{ id: string; label: string; goalId: string | null }> = [
-  { id: 'all', label: 'All Remedies', goalId: null },
+  { id: 'all', label: 'All Customized Products', goalId: null },
   { id: 'sleep', label: '🌙 Sleep', goalId: 'sleep' },
   { id: 'energy', label: '⚡ Energy', goalId: 'energy' },
   { id: 'immune', label: '🛡️ Immune', goalId: 'immune' },
@@ -92,7 +92,7 @@ export function ShopClient() {
       <section aria-label="Ritual bundles" className={styles.bundleSection}>
         <h2 className="section-title">Begin a Ritual</h2>
         <p className="section-subtitle">
-          Layered remedies designed to be experienced together — tea, soap,
+          Layered customized products designed to be experienced together — tea, soap,
           balm, and capsules in one unhurried practice.
         </p>
         <div className={styles.bundleGrid}>
@@ -106,7 +106,7 @@ export function ShopClient() {
         <h2 className="section-title">Shop by Goal</h2>
         <p className="section-subtitle">
           Not sure where to begin? Choose what you&apos;d love support with —
-          or <Link href="/quiz">take the Find My Remedy quiz ✦</Link>.
+          or <Link href="/quiz">take the Find My Formula quiz ✦</Link>.
         </p>
         <div className={styles.goalGrid}>
           {SHOP_GOALS.map((goal) => (
@@ -125,8 +125,8 @@ export function ShopClient() {
         </div>
       </section>
 
-      <section aria-label="All remedies">
-        <div className={styles.pillRow} role="group" aria-label="Filter remedies">
+      <section aria-label="All customized products">
+        <div className={styles.pillRow} role="group" aria-label="Filter products">
           {FILTER_PILLS.map((pill) => (
             <button
               key={pill.id}
@@ -141,7 +141,7 @@ export function ShopClient() {
         </div>
         {activeLabel ? (
           <p className={styles.filterNote}>
-            Showing remedies for {activeLabel} —{' '}
+            Showing customized products for {activeLabel} —{' '}
             <button
               type="button"
               className={styles.filterPill}
@@ -161,7 +161,7 @@ export function ShopClient() {
           ))}
           {visibleProducts.length === 0 ? (
             <p className={styles.emptyResult}>
-              No remedies are filed under this goal yet — try another, or ask
+              No customized products are filed under this goal yet — try another, or ask
               Amber for a custom formula.
             </p>
           ) : null}

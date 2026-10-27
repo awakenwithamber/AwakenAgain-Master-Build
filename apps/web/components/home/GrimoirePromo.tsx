@@ -37,7 +37,7 @@ export function GrimoirePromo() {
             <h3 className={styles.grimoirePromoTitle}>Recipes & Rituals</h3>
             <p className={styles.grimoirePromoCopy}>
               Monthly articles, exclusive recipes, and seasonal rituals you can
-              practice at home with your own herbs and remedies.
+              practice at home with your own herbs and customized products.
             </p>
           </div>
           <div className={styles.grimoirePromoCard}>

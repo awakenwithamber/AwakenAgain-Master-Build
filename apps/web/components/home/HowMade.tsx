@@ -1,5 +1,5 @@
 /**
- * "How Our Remedies Are Made" — 4-step strip.
+ * "How Our Customized Products Are Made" — 4-step strip.
  */
 import styles from './home.module.css';
 import { HOW_MADE_STEPS } from './data';
@@ -15,10 +15,10 @@ export function HowMade() {
           ✦ ─────────────── ✦
         </div>
         <h2 id="how-made-heading" className={styles.sectionTitle}>
-          How Our Remedies Are Made
+          How Our Customized Products Are Made
         </h2>
         <p className={styles.sectionSub}>
-          From dried herb to your doorstep — every remedy follows the same
+          From dried herb to your doorstep — every customized product follows the same
           careful path.
         </p>
         <ol className={styles.stepGrid}>

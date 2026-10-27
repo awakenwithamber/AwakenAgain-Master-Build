@@ -31,7 +31,7 @@ export interface ArticlePick {
 }
 
 const INTEREST_LABEL: Record<InterestCategory, string> = {
-  herbs: 'your love of herbal remedies',
+  herbs: 'your love of personalized formulas',
   soaps: 'your love of handcrafted soaps',
   grimoire: 'your love of the Living Grimoire of Light & Magic',
   readings: 'your interest in readings & services',

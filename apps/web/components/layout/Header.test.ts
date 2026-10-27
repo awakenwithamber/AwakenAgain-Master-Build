@@ -99,7 +99,7 @@ describe('Header structure (source level)', () => {
   });
 
   it('keeps the header actions: quiz accent, music controls, cart, search', () => {
-    expect(headerSrc).toContain('Find My Remedy');
+    expect(headerSrc).toContain('Find My Formula');
     expect(headerSrc).toContain('<MusicControls />');
     expect(headerSrc).toContain('<Search />');
     expect(headerSrc).toContain('nav-cart');

@@ -34,7 +34,7 @@ export default function ReturnsPage() {
             Our returns policy is being finalized. If something is not
             right with your order, please contact us at{' '}
             <a href={`mailto:${BRAND_EMAIL}`}>{BRAND_EMAIL}</a> and we
-            will help you arrange a return or a remedy.
+            will help you arrange a return or another resolution.
           </p>
         </section>
       ) : (

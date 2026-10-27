@@ -11,7 +11,7 @@
  * answers travel with the lead/profile saves and are stored on the
  * result snapshot. Framing is educational throughout — the quiz
  * explores herbal allies by focus area; it does not assess a body or
- * match a remedy to a person.
+ * match a personalized formula to a person.
  *
  * Analytics: quiz_started / quiz_step_completed / quiz_completed via
  * trackContent (client-owned). The lead submission is POSTed to

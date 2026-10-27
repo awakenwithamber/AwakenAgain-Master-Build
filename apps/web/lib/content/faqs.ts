@@ -84,7 +84,7 @@ export const FAQS: Faq[] = [
   {
     question: 'What is the Herbal Allies Quiz?',
     answer: [
-      'Our quiz helps you discover the herbal allies that fit your current focus — sleep, energy, immunity, skin, digestion, and more — and the remedy form you prefer. You can optionally share your name and email to receive your results and a welcome note from the apothecary. We never sell or share your information.',
+      'Our quiz helps you discover the herbal allies that fit your current focus — sleep, energy, immunity, skin, digestion, and more — and the customized product form you prefer. You can optionally share your name and email to receive your results and a welcome note from the apothecary. We never sell or share your information.',
     ],
     source: 'owner-verified',
   },

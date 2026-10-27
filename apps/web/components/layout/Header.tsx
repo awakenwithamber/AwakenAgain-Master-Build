@@ -9,7 +9,7 @@
  * Structure (data: lib/nav.ts — grouped, ~7 top-level entries):
  * brand block ("AWAKEN WITH AMBER LLC" over "Amber's Alchemy
  * Apothecary") · grouped primary nav (desktop dropdowns) ·
- * "Find My Remedy" accent button → /quiz · Checkout (only while the
+ * "Find My Formula" accent button → /quiz · Checkout (only while the
  * cart has items) · music controls · 🛒 cart with count · search ·
  * hamburger ≤1100px opening the mobile panel (same groups,
  * expandable). Menus close on Escape, outside click, and navigation.
@@ -207,9 +207,9 @@ export default function Header() {
           <Link
             href="/quiz"
             className="nav-accent-btn"
-            aria-label="Find my remedy — take the herbal allies quiz"
+            aria-label="Find my formula — take the herbal allies quiz"
           >
-            Find My Remedy
+            Find My Formula
           </Link>
 
           {hasItems && (
@@ -265,7 +265,7 @@ export default function Header() {
               className="nav-accent-btn"
               onClick={() => setMenuOpen(false)}
             >
-              Find My Remedy
+              Find My Formula
             </Link>
           </li>
         </ul>

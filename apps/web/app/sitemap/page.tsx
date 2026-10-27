@@ -89,7 +89,7 @@ const SOCIAL_LINKS = [
   {
     href: 'https://www.tiktok.com/@awakenwithamber',
     label: 'TikTok — @awakenwithamber',
-    note: 'Short videos from the apothecary: remedies, rituals, and behind the bench.',
+    note: 'Short videos from the apothecary: customized products, rituals, and behind the bench.',
   },
 ];
 

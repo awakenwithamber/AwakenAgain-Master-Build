@@ -3,7 +3,7 @@
  *
  * Server page (metadata) with the quiz as a client island.
  * Stage 4 (R-15): the surface is framed educationally — explore
- * herbal allies by focus area — not as a personal remedy match.
+ * herbal allies by focus area — not as a personal formula match.
  */
 import type { Metadata } from 'next';
 import Quiz from '../../components/quiz/Quiz';

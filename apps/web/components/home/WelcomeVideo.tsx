@@ -40,7 +40,7 @@ export function WelcomeVideo() {
           A Personal Welcome
         </h2>
         <p className={styles.videoContext}>
-          Discover personalized herbal remedies, handcrafted formulas, and
+          Discover personalized formulas, handcrafted customized products, and
           plant-based solutions designed to support your body naturally.
         </p>
         <div className={styles.videoFrame}>

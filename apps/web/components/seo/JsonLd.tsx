@@ -73,7 +73,7 @@ export async function OrganizationJsonLd() {
           email: BRAND_EMAIL,
           telephone: BRAND_PHONE_JSONLD,
           description:
-            "Amber's Alchemy Apothecary — handcrafted botanical apothecary offering small-batch herbal capsules, artisan soaps, salves, balms, custom remedies, and the Living Grimoire of Light & Magic. Spiritual wellness, herbal education, and soul-centered living.",
+            "Amber's Alchemy Apothecary — handcrafted botanical apothecary offering small-batch herbal capsules, artisan soaps, salves, balms, customized products, and the Living Grimoire of Light & Magic. Spiritual wellness, herbal education, and soul-centered living.",
           knowsAbout: [
             'Herbalism', 'Botanical medicine', 'Spiritual awakening',
             'Empath protection', 'Light magic', 'Ritual', 'Sustainable living',
