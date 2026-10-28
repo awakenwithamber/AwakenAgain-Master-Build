@@ -249,8 +249,15 @@ describe('safety screening (Stage 4, R-14/R-15)', () => {
   });
 });
 
-describe('quiz surface reframing (Stage 4, R-15) — source level', () => {
-  it('the /quiz page and island carry no "Find My Remedy" / "best suited to your body" / "personalized match" language', async () => {
+describe('quiz surface framing (Stage 4, R-15, as restored 2026-10-22) — source level', () => {
+  // Owner directive 2026-10-22 restored the original Guided Wellness
+  // Quiz ("The Synthesis") as the /quiz surface, superseding the
+  // Stage-4 "Explore by Focus Area" framing. The safety substance of
+  // R-15 still stands and stays pinned here: the screening step, the
+  // shared safety banner, the FDA statement, traditional-use framing,
+  // and no diagnostic-tool naming ("Find My Remedy") or body-claim
+  // phrasing ("best suited to your body", "personalized match").
+  it('the /quiz page and island carry the restored quiz with the safety framing intact', async () => {
     const { readFileSync } = await import('node:fs');
     const { join, resolve } = await import('node:path');
     const root = resolve(__dirname, '..', '..');
@@ -262,12 +269,12 @@ describe('quiz surface reframing (Stage 4, R-15) — source level', () => {
       expect(src).not.toContain('personalized match');
       expect(src).not.toContain('personalized herbal match');
     }
-    expect(page).toContain('Explore Herbal Allies by Focus Area');
-    expect(island).toContain('traditionally used to support');
+    expect(page).toContain('Guided Wellness Quiz');
+    expect(island).toContain('Traditional use');
     expect(island).toContain('QUIZ_SAFETY_BANNER');
     expect(island).toContain('FDA_STATEMENT');
-    // The screening step exists between form and results.
-    expect(island).toContain("setPhase('screening')");
+    // The screening step exists between the questions and results.
+    expect(island).toContain("goTo('screening'");
     expect(island).toContain('QUIZ_SCREENING_QUESTIONS');
   });
 });

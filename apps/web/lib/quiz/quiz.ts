@@ -32,6 +32,7 @@ import {
   isIngestibleProduct,
   safetyTextMentionsMedication,
 } from '../safety/product-safety';
+import type { AdvisorResultSnapshot } from './advisor';
 
 /** Evidence context for an herbal note — never collapsed to "proven". */
 export type EvidenceContext = 'traditional' | 'lab' | 'human';
@@ -455,6 +456,16 @@ export interface QuizResultSnapshot {
   screening?: QuizScreening;
   /** SKUs withheld by the screening rules (Stage 4). Optional, as above. */
   withheld?: QuizWithheldProduct[];
+  /**
+   * The restored Guided Wellness Quiz ("Synthesis") result, present
+   * when the lead came through the advisor flow (2026-10-22 restore).
+   * The concern/form ids above then carry the advisor's legacy-matrix
+   * translation (see advisorLegacyIds); this block carries the full
+   * patterns / allies / rituals the visitor actually saw, and the
+   * results email + PDF render from it. Optional so every snapshot
+   * stored before the restore stays valid.
+   */
+  advisor?: AdvisorResultSnapshot;
 }
 
 export function toQuizResultSnapshot(result: QuizResult): QuizResultSnapshot {
