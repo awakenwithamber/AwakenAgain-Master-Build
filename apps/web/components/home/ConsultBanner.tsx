@@ -1,6 +1,15 @@
 /**
  * Dismissible consult banner — top of the homepage.
- * Gradient plum → amethyst bar linking to the free custom formula consultation.
+ * Gradient plum → amethyst bar linking to the free consultation
+ * offer.
+ *
+ * History: the 2026-10-22 fix dropped the word "Free" (the catalog
+ * consultation is a $33.33 offering) and pointed the banner at that
+ * product. Owner decision 2026-10-27: the banner OFFERS A FREE
+ * CONSULTATION — Amber's standing free-consultation practice,
+ * arranged personally with her. It therefore links to /contact until
+ * the native /book page ships; the $33.33 Personalized Formula
+ * Consultation in the shop remains a separate paid offering.
  */
 'use client';
 
@@ -33,10 +42,10 @@ export function ConsultBanner() {
   };
 
   return (
-    <div className={styles.consultBanner} role="note" aria-label="Free consultation banner">
+    <div className={styles.consultBanner} role="note" aria-label="Consultation banner">
       <p>
-        Not sure what to choose?{' '}
-        <Link href="/custom-formula">Get a Free Custom Formula Consultation</Link>
+        Not sure where to start?{' '}
+        <Link href="/contact">Get a Free Personalized Formula Consultation</Link>
       </p>
       <button
         type="button"

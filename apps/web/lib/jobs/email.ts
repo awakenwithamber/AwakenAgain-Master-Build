@@ -39,6 +39,7 @@ const log = createLogger('jobs:email');
 import { formatPrice } from '../pricing/pricing';
 import { siteUrl } from '../seo/config';
 import type { QuizResultSnapshot } from '../quiz/quiz';
+import { ADVISOR_WHY_ALLIES_PARAGRAPHS } from '../quiz/advisor';
 import { renderEmail } from './purchase-confirmation-email';
 
 /* ------------------------------------------------------------------ */
@@ -324,6 +325,45 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
     case 'quiz_results': {
       const d = job.data as QuizResultsData;
       const r = d.result;
+      // Restored Guided Wellness Quiz (2026-10-22): when the snapshot
+      // carries the advisor block, the email renders the full Synthesis
+      // the visitor saw — patterns, allies with their why-lines,
+      // rituals, and Amber's "why these allies" narrative.
+      if (r.advisor) {
+        const a = r.advisor;
+        const allyLines = a.allies
+          .map(
+            (ally) =>
+              `• ${ally.name}${ally.latin ? ` (${ally.latin})` : ''} — ${ally.benefit}\n` +
+              `  ${ally.whyLine}${ally.traditionalNote ? `\n  Traditional use: ${ally.traditionalNote}` : ''}`,
+          )
+          .join('\n');
+        const patternLines = a.patterns
+          .map((p) => `• ${p.name} — root support: ${p.rootSupport}`)
+          .join('\n');
+        const ritualLines = a.rituals
+          .map((rit) => `• ${rit.title} — ${rit.desc}`)
+          .join('\n');
+        const productLines = a.productHandles
+          .map((h) => `• ${siteUrl()}/shop/${h}`)
+          .join('\n');
+        return {
+          subject: 'Your personalized Herbal Allies results — Awaken Again',
+          text:
+            `${d.name ? `Hello ${d.name},` : 'Hello,'}\n\n` +
+            `Here is your personalized report from the Guided Wellness Quiz — the same Synthesis you saw on the site, kept for you to return to.\n\n` +
+            `${a.summaryLines.join('\n')}\n\n` +
+            `Your pattern${a.patterns.length > 1 ? 's' : ''}:\n${patternLines}\n\n` +
+            `Your personal herbal allies:\n${allyLines}\n\n` +
+            `Why these plants are calling to you:\n${ADVISOR_WHY_ALLIES_PARAGRAPHS.join('\n\n')}\n\n` +
+            (ritualLines ? `Gentle rituals for your pattern:\n${ritualLines}\n\n` : '') +
+            `Your remedy form: ${a.formExplanation}\n` +
+            (productLines ? `\nFrom the apothecary:\n${productLines}\n` : '') +
+            `\nBook a call or Zoom with Amber, or simply reply to this email:\n${siteUrl()}/contact\n\n` +
+            `These botanical recommendations support general wellness and self-care. They are not intended to diagnose, treat, cure, or prevent any disease, and they are education, not medical advice.` +
+            SIGN_OFF,
+        };
+      }
       const allyLines = r.allies
         .map((a) => `• ${a.name} (${a.latin}) — ${a.note}`)
         .join('\n');

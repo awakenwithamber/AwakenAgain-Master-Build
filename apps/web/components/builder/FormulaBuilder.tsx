@@ -137,6 +137,31 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind]);
 
+  // Quiz prefill (restored 2026-10-22): the Herbal Allies Quiz links
+  // here with ?herbs=<ally ids>. Apply them once on mount — ids are
+  // validated against this builder's available herbs and the normal
+  // toggle rules (caps included); unknown ids are simply ignored.
+  const prefillApplied = useRef(false);
+  const [prefilledFromQuiz, setPrefilledFromQuiz] = useState(false);
+  useEffect(() => {
+    if (prefillApplied.current) return;
+    prefillApplied.current = true;
+    const raw = new URLSearchParams(window.location.search).get('herbs');
+    if (!raw) return;
+    const available = new Set(herbs.map((h) => h.id));
+    const wanted = raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter((id) => id && available.has(id));
+    if (wanted.length === 0) return;
+    let ids: string[] = [];
+    for (const id of wanted) ids = toggleFormulaHerb(ids, id, kind);
+    if (ids.length === 0) return;
+    setSel((s) => ({ ...s, herbIds: ids }));
+    setPrefilledFromQuiz(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind]);
+
   // Focus the step heading on navigation (screen-reader + keyboard users).
   useEffect(() => {
     headingRef.current?.focus();
@@ -494,6 +519,20 @@ export function FormulaBuilder({ kind }: FormulaBuilderProps) {
         <p className="builder-lede" style={{ fontStyle: 'italic' }}>
           {BUILDER_INTRO_LINES[kind]}
         </p>
+        {kind === 'capsule' && (
+          <p className="builder-lede">
+            New to capsules? They begin as whole organic botanicals,
+            ground to a fine powder and capsuled by hand — the whole
+            plant in a simple daily ritual, made for the days when you
+            don&apos;t have time to brew a tea.
+          </p>
+        )}
+        {prefilledFromQuiz && (
+          <p className="builder-lede" role="status">
+            ✦ Your herbal allies from the quiz are already gathered below
+            — adjust anything before you blend.
+          </p>
+        )}
 
         <ProgressNav
           steps={FORMULA_STEPS}
