@@ -96,6 +96,8 @@ export const RATE_LIMIT_GROUPS = {
   contact: 'moderate',
   newsletter: 'moderate',
   'quiz-lead': 'moderate',
+  /** Quiz results PDF generation (2026-10-22 restore). */
+  'quiz-results-pdf': 'moderate',
   'affiliate-interest': 'moderate',
   'partner-idea': 'moderate',
   'reviews-write': 'moderate',

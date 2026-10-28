@@ -10,15 +10,25 @@
  *
  * Audit 2026-10-15 BROKEN-1: the lead now stores the FULL computed quiz
  * result (snapshot), and a quiz_results email job is built from it and
- * routed through the EmailProvider abstraction. The only bound provider
- * today is the logging preview — NO REAL SENDS — so customer copy says
- * the results are SAVED, never that an email is on its way. Binding a
- * real provider (owner-gated) is a factory swap in lib/jobs/email.ts.
+ * routed through the EmailProvider abstraction.
+ *
+ * Restore 2026-10-22: leads from the Guided Wellness Quiz carry the
+ * advisor answers; the synthesis is recomputed HERE from those answers
+ * (never trusted from the client) and stored on the snapshot's advisor
+ * block, and the results email renders from it. The provider factory
+ * binds Resend when RESEND_API_KEY is set (lib/jobs/email.ts), so the
+ * results email is a real send in production and a logged preview
+ * otherwise — customer copy keys off emailDeliveryIsPreview().
  */
 import { NextResponse } from 'next/server';
 import { leadStore } from '../../../lib/leads/lead-store';
 import { validateQuizLead } from '../../../lib/leads/validation';
 import { getQuizResult, toQuizResultSnapshot } from '../../../lib/quiz/quiz';
+import {
+  advisorLegacyIds,
+  computeAdvisorSynthesis,
+  toAdvisorResultSnapshot,
+} from '../../../lib/quiz/advisor';
 import { buildQuizResultsJob, createEmailProvider } from '../../../lib/jobs/email';
 import { captureContentServerEventSoon } from '../../../lib/analytics/content-posthog-server';
 import { resolveServerDistinctId } from '../../../lib/analytics/posthog-server';
@@ -53,23 +63,37 @@ export async function POST(req: Request) {
   // Validation guarantees the ids resolve, so the result always exists.
   // The screening answers ride along so the stored snapshot is the
   // screened result the visitor actually saw (Stage 4, R-14).
-  const result = getQuizResult(v.concernId, v.formId, v.screening)!;
+  //
+  // Advisor flow: recompute the synthesis server-side from the answers
+  // and derive the legacy concern/form ids from IT (not from the
+  // client's claim), then attach the full advisor block to the snapshot.
+  let concernId = v.concernId;
+  let formId = v.formId;
+  let advisorSnapshot;
+  if (v.advisorAnswers) {
+    const synthesis = computeAdvisorSynthesis(v.advisorAnswers, v.screening);
+    const legacy = advisorLegacyIds(synthesis);
+    concernId = legacy.concernId;
+    formId = legacy.formId;
+    advisorSnapshot = toAdvisorResultSnapshot(synthesis);
+  }
+  const result = getQuizResult(concernId, formId, v.screening)!;
   const snapshot = toQuizResultSnapshot(result);
+  if (advisorSnapshot) snapshot.advisor = advisorSnapshot;
   const record = await leadStore.append({
     kind: 'quiz_lead',
     email: v.email,
     name: v.name,
     consent: true,
     consentAt: new Date().toISOString(),
-    metadata: { concern_id: v.concernId, form_id: v.formId },
+    metadata: { concern_id: concernId, form_id: formId },
     quizResult: snapshot,
   });
 
-  // Route the results email through the provider abstraction. With the
-  // logging provider bound this only records the job (preview) — the
-  // durable copy of the result is the lead record above, from which a
-  // real send can always be produced once a provider is bound. A failure
-  // in the email layer must never fail the lead capture itself.
+  // Route the results email through the provider abstraction. The
+  // factory binds Resend when RESEND_API_KEY is set and the logging
+  // preview otherwise — either way a failure in the email layer must
+  // never fail the lead capture itself.
   try {
     const job = buildQuizResultsJob(v.email, { name: v.name, result: snapshot });
     await createEmailProvider().send(job);
@@ -80,7 +104,7 @@ export async function POST(req: Request) {
   // Server-owned: the store is the authority; this records the fact.
   captureContentServerEventSoon(
     'quiz_lead_captured',
-    { concern_id: v.concernId, form_id: v.formId },
+    { concern_id: concernId, form_id: formId },
     resolveServerDistinctId(req.headers.get('cookie'), `quiz-lead:${record.id}`),
   );
 

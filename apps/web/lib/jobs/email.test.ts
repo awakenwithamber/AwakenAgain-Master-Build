@@ -21,8 +21,13 @@ import {
   buildWeeklyPromoJob,
   createEmailProvider,
   handleUnsubscribe,
+  renderEmailMessage,
 } from './email';
 import { getQuizResult, toQuizResultSnapshot } from '../quiz/quiz';
+import {
+  computeAdvisorSynthesis,
+  toAdvisorResultSnapshot,
+} from '../quiz/advisor';
 
 describe('buildEmailJob', () => {
   it('builds a queued job with a valid recipient', () => {
@@ -86,6 +91,44 @@ describe('buildQuizResultsJob (audit 2026-10-15 fix #2)', () => {
         result: undefined as never,
       }),
     ).toThrow(/snapshot/);
+  });
+
+  it('renders the advisor Synthesis when the snapshot carries one (2026-10-22 restore)', () => {
+    const snapshot = toQuizResultSnapshot(getQuizResult('sleep', 'tea')!);
+    snapshot.advisor = toAdvisorResultSnapshot(
+      computeAdvisorSynthesis(
+        {
+          symptoms: ['sleep', 'stress'],
+          intensity: 'significant',
+          frequency: 'daily',
+          duration: 'months',
+          sleep: 'broken',
+          stressLevel: 'stretched',
+          digestion: 'smooth',
+          emotional: 'overwhelmed',
+          triggers: ['work-pressure'],
+          timeOfDay: ['evening'],
+          sensitivity: 'balanced',
+          preferredFormat: 'no-preference',
+        },
+        { pregnantOrNursing: false, takingMedication: false, managingCondition: false },
+      ),
+    );
+    const job = buildQuizResultsJob('friend@example.com', {
+      name: 'Friend',
+      result: snapshot,
+    });
+    const rendered = renderEmailMessage(job);
+    expect(rendered.subject).toContain('personalized Herbal Allies results');
+    expect(rendered.text).toContain('Nervous System Overwhelm');
+    expect(rendered.text).toContain('Passionflower');
+    expect(rendered.text).toContain('Chosen because of');
+    expect(rendered.text).toContain("In Amber's work");
+    // Booking CTA points at /contact until the native /book page ships
+    // (owner push 2026-10-27: quiz restored first; /book follows with the
+    // scheduling build). Was '/book' in the 2026-10-22 staged restore.
+    expect(rendered.text).toContain('/contact');
+    expect(rendered.text).not.toMatch(/tincture/i);
   });
 });
 

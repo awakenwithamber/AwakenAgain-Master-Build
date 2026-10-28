@@ -12,6 +12,10 @@ import {
   normalizeQuizScreening,
   type QuizScreening,
 } from '../quiz/quiz';
+import {
+  normalizeAdvisorAnswers,
+  type AdvisorAnswers,
+} from '../quiz/advisor';
 import { isValidProjectSlug, NETWORK_PROJECT_SLUGS } from '../content/network';
 import { isValidContributionType } from '../content/partnerships';
 
@@ -48,6 +52,13 @@ export interface QuizLeadInput {
   formId: string;
   /** Stage 4 screening answers (absent → all "no", the legacy shape). */
   screening: QuizScreening;
+  /**
+   * Restored Guided Wellness Quiz answers (2026-10-22), present when
+   * the lead came through the advisor flow. The route recomputes the
+   * synthesis server-side from these — the client's rendered result is
+   * never trusted as the stored record.
+   */
+  advisorAnswers?: AdvisorAnswers;
 }
 
 export function validateQuizLead(body: unknown): ValidationResult<QuizLeadInput> {
@@ -66,6 +77,20 @@ export function validateQuizLead(body: unknown): ValidationResult<QuizLeadInput>
     errors.push('Unknown quiz concern — please restart the quiz.');
   if (!isValidFormId(b.formId))
     errors.push('Unknown remedy form — please restart the quiz.');
+
+  // Advisor flow (optional): when the guided-quiz answers ride along,
+  // they must normalize and name at least one goal — the synthesis is
+  // recomputed server-side from them at the route.
+  let advisorAnswers: AdvisorAnswers | undefined;
+  if (b.advisor !== undefined) {
+    const normalized = normalizeAdvisorAnswers(b.advisor);
+    if (!normalized || normalized.symptoms.length === 0) {
+      errors.push('Your quiz answers could not be read — please restart the quiz.');
+    } else {
+      advisorAnswers = normalized;
+    }
+  }
+
   if (errors.length > 0) return { ok: false, errors };
   return {
     ok: true,
@@ -77,6 +102,7 @@ export function validateQuizLead(body: unknown): ValidationResult<QuizLeadInput>
       concernId: b.concernId as string,
       formId: b.formId as string,
       screening: normalizeQuizScreening(b.screening),
+      ...(advisorAnswers ? { advisorAnswers } : {}),
     },
   };
 }

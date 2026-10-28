@@ -17,6 +17,11 @@ import {
   normalizeQuizScreening,
   toQuizResultSnapshot,
 } from '../../../../lib/quiz/quiz';
+import {
+  computeAdvisorSynthesis,
+  normalizeAdvisorAnswers,
+  toAdvisorResultSnapshot,
+} from '../../../../lib/quiz/advisor';
 import { saveQuizResultAsync } from '../../../../lib/accounts/accounts';
 import {
   accountFail,
@@ -42,15 +47,23 @@ export async function POST(request: Request) {
   if (!isValidConcernId(body.concernId) || !isValidFormId(body.formId)) {
     return accountFail(['Unknown quiz answers — please retake the quiz.']);
   }
-  const result = getQuizResult(
-    body.concernId,
-    body.formId,
-    normalizeQuizScreening(body.screening),
-  );
+  const screening = normalizeQuizScreening(body.screening);
+  const result = getQuizResult(body.concernId, body.formId, screening);
   if (!result) {
     return accountFail(['Unknown quiz answers — please retake the quiz.']);
   }
   const snapshot = toQuizResultSnapshot(result);
+  // Restored advisor flow (2026-10-22): when the guided-quiz answers
+  // ride along, recompute the synthesis server-side and store the full
+  // advisor block on the profile snapshot, exactly as the lead route.
+  if (body.advisor !== undefined) {
+    const answers = normalizeAdvisorAnswers(body.advisor);
+    if (answers && answers.symptoms.length > 0) {
+      snapshot.advisor = toAdvisorResultSnapshot(
+        computeAdvisorSynthesis(answers, screening),
+      );
+    }
+  }
   const state = await saveQuizResultAsync(session.identity.email, snapshot, 'quiz');
 
   captureContentServerEventSoon(
