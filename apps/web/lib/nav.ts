@@ -72,7 +72,7 @@ export const NAV_ENTRIES: NavEntry[] = [
     label: 'About & Support',
     links: [
       { href: '/about', label: 'About Amber' },
-      { href: '/account', label: 'My Account' },
+      { href: '/account', label: 'My Profile' },
       { href: '/partner', label: 'Partner With Us' },
       { href: '/support', label: 'Support' },
       { href: '/order-status', label: 'Order Status' },
