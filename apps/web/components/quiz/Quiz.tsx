@@ -901,7 +901,7 @@ export default function Quiz() {
               {profileSave === 'saved' ? (
                 <p className="quiz-lead-done">
                   ✦ Saved to your profile — find your allies any time at{' '}
-                  <Link href="/account">My Account</Link>.
+                  <Link href="/account">My Profile</Link>.
                 </p>
               ) : (
                 <>
