@@ -56,6 +56,7 @@ export const CANONICAL_ROUTES: CanonicalRoute[] = [
   { path: '/partner', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/account', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/sitemap', priority: 0.4, changeFrequency: 'monthly' },
+  { path: '/links', priority: 0.7, changeFrequency: 'monthly' },
 ];
 
 /** Absolute canonical URL for a registered path. */
