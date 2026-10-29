@@ -27,7 +27,7 @@ import { BRAND_NAME } from '../../lib/seo/config';
 import styles from '../../components/account/account.module.css';
 
 export const metadata: Metadata = {
-  title: 'My Account',
+  title: 'My Profile',
   description: `Your ${BRAND_NAME} profile: saved herbal allies, likes, searches, and order history — sign in with an email code, no password.`,
   alternates: { canonical: '/account' },
 };
@@ -44,7 +44,7 @@ export default async function AccountPage() {
         <p className="section-ornament" aria-hidden="true">
           ✦
         </p>
-        <h1>My Account</h1>
+        <h1>My Profile</h1>
         <p>
           Your corner of the apothecary: the herbal allies you&apos;ve
           found, the products you love, the searches you keep, and the
