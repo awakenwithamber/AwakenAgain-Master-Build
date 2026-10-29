@@ -67,6 +67,14 @@
   line-height: 1.7;
 }
 
+/* Homepage quiz invite (2026-10-29): centers the embedded quiz island
+   at a readable measure inside the full-width section container. */
+.quizInviteWrap {
+  max-width: 56rem;
+  margin: 0 auto;
+  text-align: left;
+}
+
 /* ---------- Buttons ---------- */
 .btnPrimary,
 .btnSecondary {
