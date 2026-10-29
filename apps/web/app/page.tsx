@@ -6,6 +6,11 @@
  * consult banner → hero → welcome video → goal cards → best sellers →
  * how-made → trust stats → reviews → learn → free guide.
  *
+ * Owner amendment 2026-10-29: the quiz invite ("Not Sure Where to
+ * Begin?", with the full quiz island embedded) sits directly after the
+ * hero, before the welcome video — the quiz is a first-class homepage
+ * section, never rearranged by personalization.
+ *
  * Personalization (owner spec 2026-10-14): the server renders exactly
  * that default order for everyone. Only after mount, and only for
  * visitors who accepted analytics consent with a clear on-device top
@@ -20,6 +25,7 @@
 import type { Metadata } from 'next';
 import { ConsultBanner } from '../components/home/ConsultBanner';
 import { Hero } from '../components/home/Hero';
+import { QuizInvite } from '../components/home/QuizInvite';
 import { WelcomeVideo } from '../components/home/WelcomeVideo';
 import { GoalCards } from '../components/home/GoalCards';
 import { BestSellers } from '../components/home/BestSellers';
@@ -80,6 +86,7 @@ export default function HomePage() {
       <ConsultBanner />
       <main id="main-content">
         <Hero />
+        <QuizInvite />
         <WelcomeVideo />
         <PersonalizedSections
           pickedForYou={
