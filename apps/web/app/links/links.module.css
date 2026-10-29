@@ -7,12 +7,50 @@
  * generous tap targets (min 64px tall, 12px gaps).
  */
 
+/* Full-page background — the original Netlify pane treatment: the
+   apothecary-shelf photograph (public/images/textures/apothecary-shelf.jpg,
+   byte-identical to the old site's
+   apothecary-shelf-abundance-stockcake-1095398323.jpg) under the same
+   plum overlay the Netlify styles.css used, rgba(30, 17, 40, 0.78), so
+   parchment text keeps the contrast the live homepage panes ship with. */
+.pageBg {
+  position: relative;
+  background:
+    #150b26 url('/images/textures/apothecary-shelf.jpg') center / cover
+    no-repeat;
+}
+
+.pageBg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 17, 40, 0.78);
+  pointer-events: none;
+}
+
+.pageBg > * {
+  position: relative;
+  z-index: 1;
+}
+
 .linksMain {
   max-width: 36rem;
   margin: 0 auto;
   padding: 2.5rem 1.25rem 4rem;
   font-family: 'EB Garamond', Georgia, serif;
   color: #f1e6c8;
+}
+
+/* Real brand banner artwork across the top of the hub (the repo holds
+   no portrait/logo asset, so the monogram below stays as the avatar). */
+.headerBanner {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 14px;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 8px 32px rgba(10, 6, 20, 0.6);
 }
 
 .portraitWrap {
@@ -100,9 +138,9 @@
 
 .card {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.15rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
   min-height: 64px;
   padding: 0.9rem 1.25rem;
   background: linear-gradient(160deg, #2a1a40, #1f1336);
@@ -124,6 +162,26 @@
 .card:focus-visible {
   outline: 3px solid #d4af37;
   outline-offset: 3px;
+}
+
+/* Every card's picture: a square-cropped thumbnail of real repo
+   artwork, brass-ringed like the rest of the theme. */
+.cardImage {
+  flex: 0 0 76px;
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  display: block;
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 .cardLabel {
