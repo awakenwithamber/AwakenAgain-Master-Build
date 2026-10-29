@@ -1,0 +1,161 @@
+/**
+ * /links hub styles — AwakenAgain theme (mandatory for all materials):
+ * deep plum #150b26 family, gold #d4af37, parchment text, Cinzel /
+ * Cinzel Decorative display type, EB Garamond body. The root layout
+ * loads those Google Fonts site-wide; the stacks are named here in full
+ * so this module stands on its own. Mobile-first: full-width cards with
+ * generous tap targets (min 64px tall, 12px gaps).
+ */
+
+.linksMain {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+  font-family: 'EB Garamond', Georgia, serif;
+  color: #f1e6c8;
+}
+
+.portraitWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Same monogram convention as the About page: circular, brass border,
+   soft gold glow, standing in until an owner portrait photo is added. */
+.portrait {
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  border: 3px solid #d4af37;
+  box-shadow:
+    0 0 32px rgba(212, 175, 55, 0.35),
+    0 8px 32px rgba(10, 6, 20, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 4rem;
+  color: #d4af37;
+  background: linear-gradient(135deg, #2a1a40, #150b26);
+  overflow: hidden;
+}
+
+.name {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: clamp(1.7rem, 6vw, 2.4rem);
+  color: #d4af37;
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.35rem;
+  font-weight: 500;
+}
+
+.company {
+  font-family: 'Cinzel', serif;
+  text-align: center;
+  color: #f1e6c8;
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 0.25rem;
+}
+
+.location {
+  text-align: center;
+  color: #d4af37;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  margin: 0 0 1.25rem;
+}
+
+.intro {
+  text-align: center;
+  font-size: 1.08rem;
+  line-height: 1.55;
+  margin: 0 auto 2rem;
+  max-width: 30rem;
+}
+
+.sectionTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  color: #d4af37;
+  text-align: center;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 2.25rem 0 1rem;
+  font-weight: 500;
+}
+
+.cardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 64px;
+  padding: 0.9rem 1.25rem;
+  background: linear-gradient(160deg, #2a1a40, #1f1336);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 14px;
+  text-decoration: none;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #d4af37;
+  box-shadow: 0 6px 24px rgba(10, 6, 20, 0.6);
+}
+
+.card:focus-visible {
+  outline: 3px solid #d4af37;
+  outline-offset: 3px;
+}
+
+.cardLabel {
+  font-family: 'Cinzel', serif;
+  font-size: 1.08rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #d4af37;
+}
+
+.cardNote {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #f1e6c8;
+}
+
+.framing {
+  margin: 2.5rem auto 0;
+  max-width: 30rem;
+  text-align: center;
+  font-size: 0.95rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: #cbb26a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+}
