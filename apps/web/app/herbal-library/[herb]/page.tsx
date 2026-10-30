@@ -15,6 +15,18 @@
  * references (Herbal Index Phase 1 overlay) render a "References &
  * further reading" list here — detail pages only, never on the
  * compact index cards.
+ *
+ * Phase 2B wiring (2026-10-29): records covered by the sourced
+ * encyclopedia overlay (lib/catalog/herb-encyclopedia) additionally
+ * render structured Herbal Encyclopedia sections (family + traditional
+ * names, description, distribution, cultivation, constituents — each
+ * with its source link), a Related herbs list derived from shared
+ * categories, and a Sources & attribution block carrying the existing
+ * references, the Wikimedia Commons illustration credit (for images
+ * from the 2026-10-29 correction pass), and the Wikipedia/Wikidata
+ * credit line. Every block is honest-empty: fields the sources did
+ * not state render nothing. Section-building lives in the pure helper
+ * lib/herbal-index/encyclopedia-sections so it is unit-testable.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -28,6 +40,13 @@ import {
   getHerbalCard,
   herbalRouteParams,
 } from '../../../lib/herbal-index/cards';
+import { getEncyclopediaEntry } from '../../../lib/catalog/herb-encyclopedia';
+import {
+  WIKIPEDIA_WIKIDATA_CREDIT,
+  detailAttributionFor,
+  encyclopediaSectionsFor,
+  relatedHerbsFor,
+} from '../../../lib/herbal-index/encyclopedia-sections';
 
 export function generateStaticParams() {
   return herbalRouteParams();
@@ -44,11 +63,11 @@ export async function generateMetadata({
   const name = card?.name ?? entry?.name;
   const latin = card?.latin ?? entry?.latin;
   return {
-    title: name ? `${name} — Herb Library` : 'Herb Library',
+    title: name ? `${name} — Herbal Encyclopedia` : 'Herbal Encyclopedia',
     description:
       name && latin
-        ? `${name} (${latin}) — botanical index card and library entry at Amber's Alchemy Apothecary.`
-        : "Amber's Alchemy Apothecary herb library.",
+        ? `${name} (${latin}) — botanical index card and encyclopedia entry at Amber's Alchemy Apothecary.`
+        : "Amber's Alchemy Apothecary herbal encyclopedia.",
     ...(card?.illustrationRenderable && card.illustrationUrl
       ? {
           openGraph: {
@@ -81,7 +100,7 @@ export default async function HerbDetailPage({
         />
         <p>
           Categories: {entry.categories.join(' · ')} ·{' '}
-          <Link href="/herb-index">Back to the Herb Index</Link>
+          <Link href="/herb-index">Back to the Herbal Encyclopedia</Link>
         </p>
       </main>
     );
@@ -90,6 +109,20 @@ export default async function HerbDetailPage({
   if (!card) notFound();
   const categories =
     entry?.categories ?? card.categoryLabels;
+
+  /* Phase 2B: sourced encyclopedia sections + related herbs +
+     attribution, all honest-empty (absent data renders nothing).
+     card.slug is the catalog record id (aliases already resolved by
+     getHerbalCard), which is the overlay's key. */
+  const encyclopediaSections = encyclopediaSectionsFor(
+    getEncyclopediaEntry(card.slug),
+  );
+  const relatedHerbs = relatedHerbsFor(card.slug);
+  const attribution = detailAttributionFor(card.slug, encyclopediaSections);
+  const hasSourcesBlock =
+    (card.references && card.references.length > 0) ||
+    attribution.illustrationCredit !== null ||
+    attribution.creditWikipediaWikidata;
 
   return (
     <main id="main-content" className="page content-page">
@@ -138,28 +171,89 @@ export default async function HerbDetailPage({
             </p>
           )}
 
-          {card.references && card.references.length > 0 && (
-            <section className="aa-herbal-references">
-              <h2 className="aa-herbal-props-title">
-                References &amp; further reading
-              </h2>
+          {encyclopediaSections.map((section) => (
+            <section
+              key={section.key}
+              className="aa-herbal-encyclopedia-section"
+            >
+              <h2 className="aa-herbal-props-title">{section.heading}</h2>
+              {section.paragraphs.map((text) => (
+                <p key={text.slice(0, 48)}>{text}</p>
+              ))}
+              <p className="aa-herbal-source">
+                Source:{' '}
+                {section.sources.map((source, i) => (
+                  <span key={source.url}>
+                    {i > 0 && ', '}
+                    <a href={source.url} target="_blank" rel="noreferrer">
+                      {source.name}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            </section>
+          ))}
+
+          {relatedHerbs.length > 0 && (
+            <section className="aa-herbal-related">
+              <h2 className="aa-herbal-props-title">Related herbs</h2>
               <ul className="aa-herbal-refs">
-                {card.references.map((ref) => (
-                  <li key={`${ref.kind}-${ref.label}`}>
-                    {ref.url ? (
-                      <a href={ref.url} target="_blank" rel="noreferrer">
-                        {ref.label}
-                      </a>
-                    ) : (
-                      ref.label
-                    )}
-                    {` — ${ref.body}`}
-                    {ref.unverified && (
-                      <em> (unverified — search by title)</em>
-                    )}
+                {relatedHerbs.map((related) => (
+                  <li key={related.slug}>
+                    <Link href={related.href}>
+                      {related.name} <em>({related.latin})</em>
+                    </Link>
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          {hasSourcesBlock && (
+            <section className="aa-herbal-references">
+              <h2 className="aa-herbal-props-title">
+                Sources &amp; attribution
+              </h2>
+              {card.references && card.references.length > 0 && (
+                <>
+                  <h3 className="aa-herbal-props-title">
+                    References &amp; further reading
+                  </h3>
+                  <ul className="aa-herbal-refs">
+                    {card.references.map((ref) => (
+                      <li key={`${ref.kind}-${ref.label}`}>
+                        {ref.url ? (
+                          <a href={ref.url} target="_blank" rel="noreferrer">
+                            {ref.label}
+                          </a>
+                        ) : (
+                          ref.label
+                        )}
+                        {` — ${ref.body}`}
+                        {ref.unverified && (
+                          <em> (unverified — search by title)</em>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {attribution.illustrationCredit && (
+                <p className="aa-herbal-source">
+                  Illustration:{' '}
+                  <a
+                    href={attribution.illustrationCredit.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {attribution.illustrationCredit.attribution}
+                  </a>{' '}
+                  (license: {attribution.illustrationCredit.license})
+                </p>
+              )}
+              {attribution.creditWikipediaWikidata && (
+                <p className="aa-herbal-source">{WIKIPEDIA_WIKIDATA_CREDIT}</p>
+              )}
             </section>
           )}
 
@@ -171,7 +265,7 @@ export default async function HerbDetailPage({
 
           <p>
             Categories: {categories.join(' · ')} ·{' '}
-            <Link href="/herb-index">Back to the Herb Index</Link>
+            <Link href="/herb-index">Back to the Herbal Encyclopedia</Link>
           </p>
         </div>
       </article>

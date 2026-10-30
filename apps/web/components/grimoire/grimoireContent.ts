@@ -94,7 +94,7 @@ export const HERB_ILLUSTRATIONS: Record<string, string> = {
   'peppermint':
     'https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-peppermint_bead4a95.jpg',
   'rose':
-    'https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-rose-hip_c140d24a.jpg',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Blackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg/960px-Blackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg',
 };
 
 /** Human labels for the catalog's lowercase category keys. */

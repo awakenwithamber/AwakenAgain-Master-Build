@@ -1,0 +1,155 @@
+{
+  "agarikon": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Laricifomes_officinalis_393917122.jpg/960px-Laricifomes_officinalis_393917122.jpg",
+    "commonsFile": "File:Laricifomes officinalis 393917122.jpg",
+    "license": "CC0",
+    "verifiedSpecies": "Laricifomes officinalis",
+    "attribution": "Public domain / CC0 — no attribution legally required",
+    "verification": "Commons file title names Laricifomes officinalis; description: 'Quinine Conk (Laricifomes officinalis) in the United States' — agarikon's accepted name.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ALaricifomes_officinalis_393917122.jpg"
+  },
+  "chaga": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Inonotus_obliquus_%28Qu%C3%A9bec%2C_Canada%29.jpg",
+    "commonsFile": "File:Inonotus obliquus (Québec, Canada).jpg",
+    "license": "CC0",
+    "verifiedSpecies": "Inonotus obliquus",
+    "attribution": "Public domain / CC0 — no attribution legally required",
+    "verification": "File title and description both name Inonotus obliquus (Québec, Canada); sterile conk on birch, the diagnostic chaga form.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AInonotus_obliquus_%28Qu%C3%A9bec%2C_Canada%29.jpg"
+  },
+  "andrographis": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Andrographis_paniculata_001.JPG/960px-Andrographis_paniculata_001.JPG",
+    "commonsFile": "File:Andrographis paniculata 001.JPG",
+    "license": "CC BY-SA 3.0",
+    "verifiedSpecies": "Andrographis paniculata",
+    "attribution": "H. Zell, CC BY-SA 3.0, via Wikimedia Commons",
+    "verification": "Title + description name Andrographis paniculata (Botanical Garden KIT, Karlsruhe; 'Green Chirayta, King of Bitters').",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AAndrographis_paniculata_001.JPG"
+  },
+  "spilanthes": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Acmella_oleracea%2C.jpg/960px-Acmella_oleracea%2C.jpg",
+    "commonsFile": "File:Acmella oleracea,.jpg",
+    "license": "CC BY 4.0",
+    "verifiedSpecies": "Acmella oleracea",
+    "attribution": "Nativeplants garden, CC BY 4.0, via Wikimedia Commons",
+    "verification": "File title and description are exactly 'Acmella oleracea' — the toothache-plant species.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AAcmella_oleracea%2C.jpg"
+  },
+  "ginkgo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Ginkgo_biloba_JPG1a.jpg/960px-Ginkgo_biloba_JPG1a.jpg",
+    "commonsFile": "File:Ginkgo biloba JPG1a.jpg",
+    "license": "CC BY 3.0",
+    "verifiedSpecies": "Ginkgo biloba",
+    "attribution": "Jean-Pol Grandmont, CC BY 3.0, via Wikimedia Commons",
+    "verification": "File title 'Ginkgo biloba JPG1a'; description: 'Ginkgo biloba also known as Maidenhair Tree' (Jardin des Plantes specimen photo by Jean-Pol Grandmont).",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AGinkgo_biloba_JPG1a.jpg"
+  },
+  "holy-thistle": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/Centaurea_benedicta.jpg/960px-Centaurea_benedicta.jpg",
+    "commonsFile": "File:Centaurea benedicta.jpg",
+    "license": "Public domain",
+    "verifiedSpecies": "Cnicus benedictus (syn. Centaurea benedicta)",
+    "attribution": "Public domain / CC0 — no attribution legally required",
+    "verification": "Köhler's Medizinal-Pflanzen plate filed under Centaurea benedicta, the accepted name for Cnicus benedictus (synonymy per POWO); plate legend describes the plant and flower heads.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ACentaurea_benedicta.jpg"
+  },
+  "sea-lavender": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Limonium_vulgare_RF.jpg/960px-Limonium_vulgare_RF.jpg",
+    "commonsFile": "File:Limonium vulgare RF.jpg",
+    "license": "CC BY 4.0",
+    "verifiedSpecies": "Limonium vulgare",
+    "attribution": "Robert Flogaus-Faust, CC BY 4.0, via Wikimedia Commons",
+    "verification": "File title + description: 'Common sea-lavender (Limonium vulgare) on Spiekeroog, Germany'.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ALimonium_vulgare_RF.jpg"
+  },
+  "copper-root": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Coptis_japonica_var._japonica_2.JPG/960px-Coptis_japonica_var._japonica_2.JPG",
+    "commonsFile": "File:Coptis japonica var. japonica 2.JPG",
+    "license": "CC BY-SA 4.0",
+    "verifiedSpecies": "Coptis japonica",
+    "attribution": "Qwert1234, CC BY-SA 4.0, via Wikimedia Commons",
+    "verification": "File title names Coptis japonica var. japonica (the nominate variety of C. japonica); description confirms species and Fukushima, Japan locality.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ACoptis_japonica_var._japonica_2.JPG"
+  },
+  "copal": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Bursera_copallifera.jpg/960px-Bursera_copallifera.jpg",
+    "commonsFile": "File:Bursera copallifera.jpg",
+    "license": "CC BY 4.0",
+    "verifiedSpecies": "Bursera copallifera",
+    "attribution": "luispauperrimo (NaturaLista), CC BY 4.0, via Wikimedia Commons",
+    "verification": "File title and description name Bursera copallifera exactly.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ABursera_copallifera.jpg"
+  },
+  "labdanum": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Cistus_ladanifer_kz14.jpg/960px-Cistus_ladanifer_kz14.jpg",
+    "commonsFile": "File:Cistus ladanifer kz14.jpg",
+    "license": "CC BY-SA 4.0",
+    "verifiedSpecies": "Cistus ladanifer",
+    "attribution": "Krzysztof Ziarnek (Kenraiz), CC BY-SA 4.0, via Wikimedia Commons",
+    "verification": "File title + description name Cistus ladanifer (Setúbal, Portugal), photographer Krzysztof Ziarnek's botanical series.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ACistus_ladanifer_kz14.jpg"
+  },
+  "white-willow": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Illustration_Salix_alba0.jpg/960px-Illustration_Salix_alba0.jpg",
+    "commonsFile": "File:Illustration Salix alba0.jpg",
+    "license": "Public domain",
+    "verifiedSpecies": "Salix alba",
+    "attribution": "Public domain / CC0 — no attribution legally required",
+    "verification": "Thomé, Flora von Deutschland plate of Salix alba (filed as 'Illustration Salix alba0'); title names the species.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AIllustration_Salix_alba0.jpg"
+  },
+  "willow-bark": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Illustration_Salix_alba0.jpg/960px-Illustration_Salix_alba0.jpg",
+    "commonsFile": "File:Illustration Salix alba0.jpg",
+    "license": "Public domain",
+    "verifiedSpecies": "Salix alba",
+    "attribution": "Public domain / CC0 — no attribution legally required",
+    "verification": "Same Thomé Salix alba plate as white-willow — willow-bark is the same species (Salix alba) in bark-product form.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AIllustration_Salix_alba0.jpg"
+  },
+  "wood-sage": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Teucrium_scorodonia_RF.jpg/960px-Teucrium_scorodonia_RF.jpg",
+    "commonsFile": "File:Teucrium scorodonia RF.jpg",
+    "license": "CC BY 4.0",
+    "verifiedSpecies": "Teucrium scorodonia",
+    "attribution": "Robert Flogaus-Faust, CC BY 4.0, via Wikimedia Commons",
+    "verification": "File title + description: 'Wood sage (Teucrium scorodonia)' near Dreieich-Offenthal, Germany.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ATeucrium_scorodonia_RF.jpg"
+  },
+  "cats-claw-2": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Sangre_de_grado_%28Croton_lechleri%29_en_el_jard%C3%ADn_bot%C3%A1nico_de_Takiwasi.jpg",
+    "commonsFile": "File:Sangre de grado (Croton lechleri) en el jardín botánico de Takiwasi.jpg",
+    "license": "CC BY-SA 4.0",
+    "verifiedSpecies": "Croton lechleri",
+    "attribution": "Jaime Torres / Archivo Centro Takiwasi, CC BY-SA 4.0, via Wikimedia Commons",
+    "verification": "File title explicitly names Croton lechleri ('Sangre de grado (Croton lechleri) en el jardín botánico de Takiwasi'); description repeats the species.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ASangre_de_grado_%28Croton_lechleri%29_en_el_jard%C3%ADn_bot%C3%A1nico_de_Takiwasi.jpg"
+  },
+  "holy-basil-2": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Aloysia_citrodora_272171591.jpg/960px-Aloysia_citrodora_272171591.jpg",
+    "commonsFile": "File:Aloysia citrodora 272171591.jpg",
+    "license": "CC BY 4.0",
+    "verifiedSpecies": "Aloysia citrodora",
+    "attribution": "German Leonel Sarmiento Cruz, CC BY 4.0, via Wikimedia Commons",
+    "verification": "File title + description: 'Lemon verbena (Aloysia citrodora) in Colombia' — matches the entry's stated Latin (see audit: the entry NAME 'holy-basil-2' conflicts with its Latin and needs a catalog decision).",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AAloysia_citrodora_272171591.jpg"
+  },
+  "boswellia": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/b/bc/AmCyc_Frankincense_-_Boswellia_serrata.jpg",
+    "commonsFile": "File:AmCyc Frankincense - Boswellia serrata.jpg",
+    "license": "Public domain",
+    "verifiedSpecies": "Boswellia serrata",
+    "attribution": "Public domain / CC0 — no attribution legally required",
+    "verification": "American Cyclopaedia engraving; description: 'leaves, flower, seed of Olibanum (Boswellia serrata)'. Replaces a Boswellia sacra (frankincense) image on the B. serrata entry.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3AAmCyc_Frankincense_-_Boswellia_serrata.jpg"
+  },
+  "rose": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Blackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg/960px-Blackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg",
+    "commonsFile": "File:Blackwell E 1750 pl 82 Rosa damascena 4500px.jpg",
+    "license": "Public domain",
+    "verifiedSpecies": "Rosa damascena (Rosa × damascena)",
+    "attribution": "Public domain / CC0 — no attribution legally required",
+    "verification": "Elizabeth Blackwell, A Curious Herbal (1750), plate 82; file title and description name Rosa damascena. Replaces a Rosa canina hip photo on the damask-rose entry.",
+    "commonsPage": "https://commons.wikimedia.org/wiki/File%3ABlackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg"
+  }
+}

@@ -22,7 +22,7 @@ import { HerbalIndexCardView } from '../../components/herbs/HerbalIndexCard';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata: Metadata = {
-  title: 'Herb Index',
+  title: 'Herbal Encyclopedia',
   description:
     "Search the botanical archive of Amber's Alchemy Apothecary by symptom or concern — herbs, roots, flowers, and mushrooms.",
 };
@@ -32,7 +32,7 @@ export default function HerbIndexPage() {
   return (
     <main id="main-content" className="page content-page">
       <InterestTracker category="herbs" signalKey="herb-index" />
-      <h1>🌿 Herb Index</h1>
+      <h1>🌿 Herbal Encyclopedia</h1>
       {/* Owner-supplied Herb & Ingredient Library header art (2026-10-23;
           registered as asset_brand_herbal_library_header in
           lib/media/image-manifest.ts). */}

@@ -6,19 +6,33 @@
  * Canonical slug aliases applied: valerian-root -> valerian,
  * red-raspberry-leaf -> red-raspberry, willow-bark -> white-willow,
  * chasteberry -> vitex.
+ *
+ * Correction pass 2026-10-29 (Track B illustration audit): 17 entries
+ * whose mapped image depicted the WRONG species now point to verified
+ * Wikimedia Commons illustrations of the correct species (see
+ * ILLUSTRATION_CREDITS below for licenses and credit lines). 20 entries
+ * have NO map entry at all: 19 compound / blend / non-plant records
+ * (apigenin, luteolin, astaxanthin, menthol, trikatu, alpha-lipoic,
+ * berberine, coq10, n-acetyl-cysteine, vitamin-d3, vitamin-k2,
+ * b12-methylcobalamin, folate, zinc-bisglycinate, probiotics, triphala,
+ * propolis, pearl-powder, deer-antler) and coptis (Coptis chinensis —
+ * no verified Commons image of the species exists). Absence is
+ * deliberate: those cards render the monogram slot rather than a
+ * misleading plant photo. The generator source named above
+ * (docs/launch-readiness/botanical-illustrations-mapping.js) is not in
+ * this repo, so corrections were applied directly to this file in its
+ * exact generated format.
  */
 export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
-  "agarikon": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-reishi_238dd3d3.jpg",
+  "agarikon": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Laricifomes_officinalis_393917122.jpg/960px-Laricifomes_officinalis_393917122.jpg",
   "agrimony": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/mQEJFHJFwKVnfSIo.jpg",
   "albizzia": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/angDgSIiWpxZbHgk.jpg",
   "aloe": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/DMrxxHLQDffUEqCV.jpg",
-  "alpha-lipoic": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/HfenBRbUPoXOQQmg.jpg",
   "amalaki": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/WRHiaYqDdKGgjKqt.jpg",
   "amla": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/bEGfeSVMkYnPGzUB.jpg",
-  "andrographis": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-echinacea_472030c0.jpg",
+  "andrographis": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Andrographis_paniculata_001.JPG/960px-Andrographis_paniculata_001.JPG",
   "andrographis-2": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/oHoSARtSPMkAbbdb.jpg",
   "angelica": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/QRkAyiBHgNLzWvpR.jpg",
-  "apigenin": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-chamomile_24f1bf7f.jpg",
   "aralia": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/WSDQSBYnBSJilqXM.jpg",
   "argan": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/lXFJHgcFfYEOoxsk.jpg",
   "arnica": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/xvzxDLezRWzccmBZ.jpg",
@@ -26,17 +40,14 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "ash-bark": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/nnIbPRTKbynDDDYy.jpg",
   "ashoka": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/yJCtaniMLqAwopUd.jpg",
   "ashwagandha": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-ashwagandha_4c6d0285.jpg",
-  "astaxanthin": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-spirulina_b9322fb6.jpg",
   "astragalus": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-astragalus_8073181b.jpg",
   "astragalus-2": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-astragalus_8073181b.jpg",
   "avocado": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/JZNTZaRTiltySzIv.jpg",
-  "b12-methylcobalamin": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/nuPrIejvWdkAbLzF.png",
   "bacopa-2": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-bacopa-2_42203133.jpg",
   "bakuchiol": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/BYDaOtUZOEyqPqYc.jpg",
   "baobab": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/SHAJDwzqrrMUtFnM.jpg",
   "beeswax": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/NxqDtRcTDSISYEXZ.jpg",
   "benzoin": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/RpLDnDlUAjSqxOTv.jpg",
-  "berberine": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/wkLsQOVMIwITKlqd.jpg",
   "berberine-2": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/BrmXXNmBknlPmCXH.jpg",
   "berberis": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-barberry_aafbce32.jpg",
   "bergamot": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/FcwXQXkmwnYBNCmT.jpg",
@@ -61,7 +72,7 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "bogbean": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/GIYunjUuzlFOLpgA.jpg",
   "boneset": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-boneset_367076b9.jpg",
   "borage": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-borage_15a894bb.jpg",
-  "boswellia": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-frankincense_920176bc.jpg",
+  "boswellia": "https://upload.wikimedia.org/wikipedia/commons/b/bc/AmCyc_Frankincense_-_Boswellia_serrata.jpg",
   "brahmi": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-brahmi_4a61d6cc.jpg",
   "burdock": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-burdock_0440b16b.jpg",
   "burdock-root-2": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-burdock_0440b16b.jpg",
@@ -76,13 +87,13 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "cat-claw": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-cats-claw_7e800de2.jpg",
   "cat-mint": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-catnip_a4abcf89.jpg",
   "cat-nip": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-catnip_a4abcf89.jpg",
-  "cats-claw-2": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-cats-claw_7e800de2.jpg",
+  "cats-claw-2": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Sangre_de_grado_%28Croton_lechleri%29_en_el_jard%C3%ADn_bot%C3%A1nico_de_Takiwasi.jpg",
   "catuaba": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/erHustBogJZKltKf.jpg",
   "cayenne": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-cayenne_af41af51.jpg",
   "cedar-sage": "images/soap-cedar-sage.png",
   "cedarwood": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/aMyGijoKpKvaxLlJ.jpg",
   "centaury": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/ijPOYBuSnspgzbDI.jpg",
-  "chaga": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-reishi_238dd3d3.jpg",
+  "chaga": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Inonotus_obliquus_%28Qu%C3%A9bec%2C_Canada%29.jpg",
   "chamomile": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-chamomile_24f1bf7f.jpg",
   "charcoal-mint": "images/soap-charcoal-mint.png",
   "chasteberry": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/KAqzmSEEqkgNnYyI.jpg",
@@ -101,17 +112,14 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "codonopsis": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/cseXuaQSjHPnkUHP.jpg",
   "coltsfoot": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-coltsfoot_4ecd26e3.jpg",
   "comfrey": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-comfrey_a3769ad6.jpg",
-  "copal": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-frankincense_920176bc.jpg",
-  "copper-root": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-goldenseal_1a90e9dd.jpg",
-  "coptis": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-goldenseal_1a90e9dd.jpg",
-  "coq10": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/QUMKdjjXdRFQuTyJ.jpg",
+  "copal": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Bursera_copallifera.jpg/960px-Bursera_copallifera.jpg",
+  "copper-root": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Coptis_japonica_var._japonica_2.JPG/960px-Coptis_japonica_var._japonica_2.JPG",
   "cordyceps": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-cordyceps_caba8906.jpg",
   "cornflower": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/LFKVKRhIRwjGiUKT.jpg",
   "cramp-bark": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-cramp-bark_42ebeb45.jpg",
   "damiana": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-damiana_b517c8cb.jpg",
   "dandelion": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-dandelion_96452957.jpg",
   "dang-gui": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-dong-quai_2e222341.jpg",
-  "deer-antler": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/CtMUMRpaefDmkDfz.jpg",
   "devils-claw": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-devils-claw_9eb2f7f6.jpg",
   "dong-quai": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-dong-quai_2e222341.jpg",
   "dragon-blood": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/nmjDxjjjzhrKzrbl.jpg",
@@ -129,7 +137,6 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "fenugreek": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-fenugreek_25193285.jpg",
   "flaxseed": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-flaxseed_a9076919.jpg",
   "fo-ti": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-fo-ti_0a683ff9.jpg",
-  "folate": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/KHlRgCtAGMmSjGUL.jpg",
   "frankincense": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-frankincense_920176bc.jpg",
   "frankincense-myrrh": "images/soap-frankincense-myrrh.png",
   "fumitory": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/jJfycAMCsvPhXHYZ.jpg",
@@ -137,7 +144,7 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "gentian": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-gentian_b14d3381.jpg",
   "geranium": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/KzvTiruQVMVewfBJ.jpg",
   "ginger": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-ginger_0caa06cd.jpg",
-  "ginkgo": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-gotu-kola_4820c572.jpg",
+  "ginkgo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Ginkgo_biloba_JPG1a.jpg/960px-Ginkgo_biloba_JPG1a.jpg",
   "ginseng": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-ginseng_2e2644e0.jpg",
   "gotu-kola": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-gotu-kola_4820c572.jpg",
   "grape-seed": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/WZYzYrwSGpTqmTCq.jpg",
@@ -155,8 +162,8 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "hemp-seed-oil": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/rcocpqnhNJVJHdxY.jpg",
   "hibiscus": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-hibiscus_6042e55f.jpg",
   "holy-basil": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-holy-basil_f690ec1e.jpg",
-  "holy-basil-2": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-holy-basil_f690ec1e.jpg",
-  "holy-thistle": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-milk-thistle_d5a8fd91.jpg",
+  "holy-basil-2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Aloysia_citrodora_272171591.jpg/960px-Aloysia_citrodora_272171591.jpg",
+  "holy-thistle": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/Centaurea_benedicta.jpg/960px-Centaurea_benedicta.jpg",
   "hops": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-hops_547c83a0.jpg",
   "horehound": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-horehound_dd693b12.jpg",
   "horse-chestnut": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-horse-chestnut_31bd6244.jpg",
@@ -168,7 +175,7 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "jojoba": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/BnOjNcrhBnlehxiv.jpg",
   "kava": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-kava-kava_b7eb58e2.jpg",
   "kigelia": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/qNwMYghjtBsfTktf.jpg",
-  "labdanum": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-frankincense_920176bc.jpg",
+  "labdanum": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Cistus_ladanifer_kz14.jpg/960px-Cistus_ladanifer_kz14.jpg",
   "lavender": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-lavender_c61be9fc.jpg",
   "lavender-honey": "images/soap-lavender-honey.png",
   "lemon-balm": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-lemon-balm_e2d00434.jpg",
@@ -182,7 +189,6 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "lomatium": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/EuEfPPXHSecIKSTp.jpg",
   "longan": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/AVesIyUbVzDChMNL.jpg",
   "lotus-seed": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/NSwvHGCdNjyWFMQi.jpg",
-  "luteolin": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-chamomile_24f1bf7f.jpg",
   "lycium": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/hxJxAPrWXROiiTAZ.jpg",
   "maca": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-maca_96a36f87.jpg",
   "magnesium-glycinate": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/OAYBPBsIxOQbWzPr.jpg",
@@ -191,7 +197,6 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "marshmallow": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-marshmallow-root_65434528.jpg",
   "marula": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/owwpTBrGXtVUESTf.jpg",
   "meadowsweet": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-meadowsweet_209f7e7a.jpg",
-  "menthol": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-peppermint_bead4a95.jpg",
   "milk-thistle": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-milk-thistle_d5a8fd91.jpg",
   "mimosa": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/ZSaVOVwjYYrGsnnN.jpg",
   "morinda": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/akYPTNHEzCUVqCVN.jpg",
@@ -201,7 +206,6 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "mugwort": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-mugwort_92a64ac0.jpg",
   "muira-puama": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/iofMsqqLAgHbcESp.jpg",
   "mullein": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-mullein_22de2940.jpg",
-  "n-acetyl-cysteine": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/zjJiwJRNbuEOlIyy.jpg",
   "neem": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-neem_16d714d2.jpg",
   "neem-oil": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-neem_16d714d2.jpg",
   "neroli": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/GawXCNEkfjWHyfov.jpg",
@@ -218,7 +222,6 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "passionflower": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-passionflower_72074d7d.jpg",
   "patchouli-hemp": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/vlvjzRAAQACocVZg.jpg",
   "pau-darco": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-pau-darco_b8f7eebf.jpg",
-  "pearl-powder": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/lTSYnAXkStADDxzH.jpg",
   "peony-root": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/jPzZQnIGBOqgyWel.jpg",
   "peppermint": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-peppermint_bead4a95.jpg",
   "periwinkle": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-periwinkle_d48eb637.jpg",
@@ -233,8 +236,6 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "poria": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/JWytXuGdmCtrTVxL.jpg",
   "prebiotic": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/NQMpuGxdKaglMcum.jpg",
   "prickly-pear": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/ntqhfnwAsrWrYRTi.jpg",
-  "probiotics": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/IVppafGxZdrPikxQ.jpg",
-  "propolis": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/JIVnQqAtUDqhqrHS.jpg",
   "propolis-2": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/fozIYsRThCCmzwKk.jpg",
   "psyllium": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-psyllium_55be73d6.jpg",
   "pulsatilla": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/qyXrIoCfkzLhvFmw.jpg",
@@ -248,7 +249,7 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "reishi": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-reishi_238dd3d3.jpg",
   "resveratrol": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/BMosrCRWNpCFfKcr.jpg",
   "rhodiola": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-rhodiola_e0f187f6.jpg",
-  "rose": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-rose-hip_c140d24a.jpg",
+  "rose": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Blackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg/960px-Blackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg",
   "rose-clay": "images/soap-rose-clay.png",
   "rose-hip": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-rose-hip_c140d24a.jpg",
   "rosehip": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-rose-hip_c140d24a.jpg",
@@ -265,7 +266,7 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "sea-buckthorn": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/nwGQDEdFeRlsAXgd.jpg",
   "sea-buckthorn-oil": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/qLWsrwATJaaCMrKj.jpg",
   "sea-kelp": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-kelp_ae3e7c1b.jpg",
-  "sea-lavender": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-lavender_c61be9fc.jpg",
+  "sea-lavender": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Limonium_vulgare_RF.jpg/960px-Limonium_vulgare_RF.jpg",
   "sea-moss": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/HjpwAYzvQnvdlFeL.jpg",
   "self-heal": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/rdSbDJPCxKtNCRIs.jpg",
   "shatavari": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/UqoqTsjTZlUxrjZm.jpg",
@@ -278,7 +279,7 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "solomon-seal": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/ExVrHxSPByxbYHev.jpg",
   "spearmint": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-spearmint_298c2766.jpg",
   "spikenard": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/rlkTXsjtnRbHfJbs.jpg",
-  "spilanthes": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-echinacea_472030c0.jpg",
+  "spilanthes": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Acmella_oleracea%2C.jpg/960px-Acmella_oleracea%2C.jpg",
   "spirulina": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-spirulina_b9322fb6.jpg",
   "spleen-wort": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/ShQUOCitgXtOoAhX.jpg",
   "st-johns-wort": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-st-johns-wort_b39c6e75.jpg",
@@ -294,8 +295,6 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "tongkat-ali": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/hRpoyHtgzzROsnvl.jpg",
   "tremella": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/nJPVGDqjgpViMana.jpg",
   "tribulus": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-tribulus_84fe8054.jpg",
-  "trikatu": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-ginger_0caa06cd.jpg",
-  "triphala": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/BHeuKXJxpRHPOsuW.jpg",
   "tulsi": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/lSoNxzrnmrJcldoI.jpg",
   "turkey-tail": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-turkey-tail_85ee010b.jpg",
   "turmeric": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-turmeric_a524e6e8.jpg",
@@ -305,21 +304,19 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "valerian-root": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-valerian_1bfa4a56.jpg",
   "vervain": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-vervain_ae97a4f1.jpg",
   "vetiver": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/qarjqfnhLNWzUjeQ.jpg",
-  "vitamin-d3": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/YyifjTOUBgTybEqG.jpg",
   "vitamin-e": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/oFtanseLIiSfdscy.jpg",
-  "vitamin-k2": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/rXPKPAdoIgOLYzaB.jpg",
   "vitex": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/KAqzmSEEqkgNnYyI.jpg",
   "water-hyssop": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-bacopa_799c00b9.jpg",
   "white-sage": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/qXJehQeqLjzljKsg.jpg",
-  "white-willow": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-meadowsweet_209f7e7a.jpg",
+  "white-willow": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Illustration_Salix_alba0.jpg/960px-Illustration_Salix_alba0.jpg",
   "wild-cherry": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/iJdOUIuBtWRllaUm.jpg",
   "wild-lettuce": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/fqenXfcrGfPJYGBg.jpg",
   "wild-yam": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-wild-yam_dcc0a051.jpg",
-  "willow-bark": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-meadowsweet_209f7e7a.jpg",
+  "willow-bark": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Illustration_Salix_alba0.jpg/960px-Illustration_Salix_alba0.jpg",
   "willow-herb": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/jRycPquuxOAConBP.jpg",
   "wintergreen": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/qjaFCCRFpainveuz.jpg",
   "wood-betony": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-wood-betony_18d253e6.jpg",
-  "wood-sage": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-sage_090270b6.jpg",
+  "wood-sage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Teucrium_scorodonia_RF.jpg/960px-Teucrium_scorodonia_RF.jpg",
   "wood-sorrel": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/fYTvYbcCSuYQYTBZ.jpg",
   "wood-violet": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/FLKyjNsixJbYQxhp.jpg",
   "wormwood": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-wormwood_5109c7ae.jpg",
@@ -327,9 +324,121 @@ export const BOTANICAL_ILLUSTRATIONS: Record<string, string> = {
   "yarrow": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-yarrow_5efd301f.jpg",
   "yellow-dock": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-yellow-dock_08da9244.jpg",
   "ylang-ylang": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/CcsbifxeFQmMaJvm.jpg",
-  "zinc-bisglycinate": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663508836609/ldtXTzWZCAPzKuvw.jpg",
   "ziziphus": "https://d2xsxph8kpxj0f.cloudfront.net/310519663508836609/VDHw29YgzjByjwgsGHGQ8W/herb-jujube_cd730436.jpg",
 };
+
+/**
+ * Credit lines for the 2026-10-29 Commons correction pass, keyed by
+ * catalog slug. Data-driven from the Track B audit
+ * (corrected-illustrations.json): every corrected entry carries its
+ * license and attribution text; CC BY / CC BY-SA entries MUST be
+ * credited wherever the image renders (the herb detail page renders
+ * the line under "Sources & attribution"). Public-domain / CC0
+ * entries carry the audit's no-attribution-required statement.
+ */
+export interface IllustrationCredit {
+  /** Attribution / credit line exactly as recorded in the audit. */
+  attribution: string;
+  /** License of the Commons file, e.g. 'CC BY-SA 4.0'. */
+  license: string;
+  /** Canonical Wikimedia Commons file page for the image. */
+  sourceUrl: string;
+}
+
+export const ILLUSTRATION_CREDITS: Record<string, IllustrationCredit> = {
+  'agarikon': {
+    attribution: 'Public domain / CC0 — no attribution legally required',
+    license: 'CC0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ALaricifomes_officinalis_393917122.jpg',
+  },
+  'andrographis': {
+    attribution: 'H. Zell, CC BY-SA 3.0, via Wikimedia Commons',
+    license: 'CC BY-SA 3.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AAndrographis_paniculata_001.JPG',
+  },
+  'boswellia': {
+    attribution: 'Public domain / CC0 — no attribution legally required',
+    license: 'Public domain',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AAmCyc_Frankincense_-_Boswellia_serrata.jpg',
+  },
+  'cats-claw-2': {
+    attribution: 'Jaime Torres / Archivo Centro Takiwasi, CC BY-SA 4.0, via Wikimedia Commons',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ASangre_de_grado_%28Croton_lechleri%29_en_el_jard%C3%ADn_bot%C3%A1nico_de_Takiwasi.jpg',
+  },
+  'chaga': {
+    attribution: 'Public domain / CC0 — no attribution legally required',
+    license: 'CC0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AInonotus_obliquus_%28Qu%C3%A9bec%2C_Canada%29.jpg',
+  },
+  'copal': {
+    attribution: 'luispauperrimo (NaturaLista), CC BY 4.0, via Wikimedia Commons',
+    license: 'CC BY 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ABursera_copallifera.jpg',
+  },
+  'copper-root': {
+    attribution: 'Qwert1234, CC BY-SA 4.0, via Wikimedia Commons',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ACoptis_japonica_var._japonica_2.JPG',
+  },
+  'ginkgo': {
+    attribution: 'Jean-Pol Grandmont, CC BY 3.0, via Wikimedia Commons',
+    license: 'CC BY 3.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AGinkgo_biloba_JPG1a.jpg',
+  },
+  'holy-basil-2': {
+    attribution: 'German Leonel Sarmiento Cruz, CC BY 4.0, via Wikimedia Commons',
+    license: 'CC BY 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AAloysia_citrodora_272171591.jpg',
+  },
+  'holy-thistle': {
+    attribution: 'Public domain / CC0 — no attribution legally required',
+    license: 'Public domain',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ACentaurea_benedicta.jpg',
+  },
+  'labdanum': {
+    attribution: 'Krzysztof Ziarnek (Kenraiz), CC BY-SA 4.0, via Wikimedia Commons',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ACistus_ladanifer_kz14.jpg',
+  },
+  'rose': {
+    attribution: 'Public domain / CC0 — no attribution legally required',
+    license: 'Public domain',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ABlackwell_E_1750_pl_82_Rosa_damascena_4500px.jpg',
+  },
+  'sea-lavender': {
+    attribution: 'Robert Flogaus-Faust, CC BY 4.0, via Wikimedia Commons',
+    license: 'CC BY 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ALimonium_vulgare_RF.jpg',
+  },
+  'spilanthes': {
+    attribution: 'Nativeplants garden, CC BY 4.0, via Wikimedia Commons',
+    license: 'CC BY 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AAcmella_oleracea%2C.jpg',
+  },
+  'white-willow': {
+    attribution: 'Public domain / CC0 — no attribution legally required',
+    license: 'Public domain',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AIllustration_Salix_alba0.jpg',
+  },
+  'willow-bark': {
+    attribution: 'Public domain / CC0 — no attribution legally required',
+    license: 'Public domain',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3AIllustration_Salix_alba0.jpg',
+  },
+  'wood-sage': {
+    attribution: 'Robert Flogaus-Faust, CC BY 4.0, via Wikimedia Commons',
+    license: 'CC BY 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File%3ATeucrium_scorodonia_RF.jpg',
+  },
+};
+
+/** The Commons credit line for a catalog slug, if its illustration came from the 2026-10-29 correction pass. */
+export function illustrationCreditFor(
+  slug: string,
+): IllustrationCredit | undefined {
+  return ILLUSTRATION_CREDITS[slug];
+}
 
 /**
  * Local fallback for botanical illustrations.

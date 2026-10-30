@@ -135,11 +135,64 @@ describe('29-vs-catalog reconciliation', () => {
   });
 });
 
+/**
+ * Slugs whose botanical-map entry was DELIBERATELY removed in the
+ * 2026-10-29 correction pass (Track B audit): 19 compound / blend /
+ * non-plant records, for which a whole-plant photo would misidentify
+ * the entry, plus coptis (no verified image of Coptis chinensis
+ * exists). These cards carry no reference and render the monogram.
+ */
+const REMOVED_ILLUSTRATION_SLUGS = new Set([
+  'apigenin',
+  'luteolin',
+  'astaxanthin',
+  'menthol',
+  'trikatu',
+  'alpha-lipoic',
+  'berberine',
+  'coq10',
+  'n-acetyl-cysteine',
+  'vitamin-d3',
+  'vitamin-k2',
+  'b12-methylcobalamin',
+  'folate',
+  'zinc-bisglycinate',
+  'probiotics',
+  'triphala',
+  'propolis',
+  'pearl-powder',
+  'deer-antler',
+  'coptis',
+]);
+
 describe('illustrations', () => {
-  it('carries a mapped reference for every record and renders none of the dead CDN hotlinks', () => {
+  it('carries a mapped reference except the audited removals, and never renders a dead CDN hotlink', () => {
     for (const card of HERBAL_CARDS) {
-      expect(card.illustrationUrl).not.toBeNull();
-      expect(card.illustrationRenderable).toBe(false);
+      if (card.illustrationUrl === null) {
+        expect(
+          REMOVED_ILLUSTRATION_SLUGS.has(card.slug),
+          `unexpected missing illustration: ${card.slug}`,
+        ).toBe(true);
+        expect(card.illustrationRenderable).toBe(false);
+        continue;
+      }
+      if (
+        card.illustrationUrl.includes('manuscdn.com') ||
+        card.illustrationUrl.includes('cloudfront.net')
+      ) {
+        expect(card.illustrationRenderable).toBe(false);
+      }
+    }
+  });
+
+  it('renders the Commons-corrected illustrations (2026-10-29 pass)', () => {
+    // 17 map entries were corrected, but 'willow-bark' is a HERB_INDEX
+    // alias of the 'white-willow' record (same Salix alba image), so
+    // 16 distinct cards become renderable.
+    const renderable = HERBAL_CARDS.filter((c) => c.illustrationRenderable);
+    expect(renderable).toHaveLength(16);
+    for (const card of renderable) {
+      expect(card.illustrationUrl).toContain('wikimedia.org');
     }
   });
 
@@ -194,9 +247,14 @@ describe('manifest integrity', () => {
     expect(manifest.partialBenefits).toBe(282);
     expect(manifest.noBenefits).toBe(0);
     expect(manifest.shortfallToTarget).toBe(46);
-    expect(manifest.withIllustrationEntry).toBe(306);
+    // 2026-10-29 correction pass: 20 map entries deliberately removed
+    // (compounds/blends + coptis — see REMOVED_ILLUSTRATION_SLUGS) and
+    // 17 wrong-species map entries replaced with verified Wikimedia
+    // Commons illustrations (16 distinct renderable cards: willow-bark
+    // is an alias of white-willow and shares its corrected image).
+    expect(manifest.withIllustrationEntry).toBe(286);
     expect(manifest.withGrimoireIllustration).toBe(12);
-    expect(manifest.renderableIllustrations).toBe(0);
-    expect(manifest.needingArtwork).toBe(306);
+    expect(manifest.renderableIllustrations).toBe(16);
+    expect(manifest.needingArtwork).toBe(290);
   });
 });
