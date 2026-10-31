@@ -72,9 +72,9 @@ function statusLine(order: OrderSummary): string {
     case 'cancelled':
       return 'This order was cancelled. If that is unexpected, please contact Amber.';
     case 'refunded':
-      return 'This order was refunded through Stripe. If you have questions about your refund, please contact Amber.';
+      return 'This order was refunded. If you have questions about your refund, please contact Amber.';
     case 'disputed':
-      return 'A payment dispute was opened on this order through Stripe. If that is unexpected, please contact Amber.';
+      return 'A payment dispute was opened on this order. If that is unexpected, please contact Amber.';
     default:
       if (order.payment_method === 'bookipi_invoice') {
         return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. Your invoice arrives by email — you can pay it by ACH bank transfer, Venmo, or Cash App, using your order number as the reference.';

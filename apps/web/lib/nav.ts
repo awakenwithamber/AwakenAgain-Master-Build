@@ -49,7 +49,7 @@ export const NAV_ENTRIES: NavEntry[] = [
     label: 'Herb Library',
     links: [
       { href: '/herb-index', label: 'Herb Encyclopedia' },
-      { href: '/herbal-library', label: 'Articles & Guides' },
+      { href: '/herb-index', label: 'Articles & Guides' },
       { href: '/herbal-wisdom', label: 'Herbal Wisdom' },
     ],
   },

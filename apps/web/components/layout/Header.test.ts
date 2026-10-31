@@ -37,9 +37,27 @@ describe('nav data (lib/nav.ts)', () => {
 
   it('covers the real non-registry pages the old header linked', () => {
     const hrefs = navHrefs();
-    for (const path of ['/custom-formula', '/custom-formula/tea', '/herbal-library']) {
+    for (const path of ['/custom-formula', '/custom-formula/tea']) {
       expect(hrefs, `nav is missing ${path}`).toContain(path);
     }
+  });
+
+  it('never links the bare /herbal-library path — it has no index page (404)', () => {
+    // Post-launch fix 2026-10-30: the header linked 'Articles & Guides'
+    // to /herbal-library, which 404s (only /herbal-library/[herb]
+    // exists). The library index lives at /herb-index — the same
+    // destination the footer site map uses.
+    const hrefs = navHrefs();
+    expect(hrefs).not.toContain('/herbal-library');
+    const herbLibrary = NAV_ENTRIES.find(
+      (e) => e.kind === 'group' && e.id === 'herb-library',
+    );
+    if (!herbLibrary || herbLibrary.kind !== 'group') {
+      throw new Error('herb-library group missing');
+    }
+    expect(
+      herbLibrary.links.find((l) => l.label === 'Articles & Guides')?.href,
+    ).toBe('/herb-index');
   });
 
   it('puts "Remedies" at the top of the Shop menu, exactly once (punch list)', () => {
@@ -59,7 +77,15 @@ describe('nav data (lib/nav.ts)', () => {
       if (entry.kind === 'link') all.push(entry.href);
       else all.push(...entry.links.map((l) => l.href));
     }
-    expect(new Set(all).size).toBe(all.length);
+    // Single documented exception (post-launch fix 2026-10-30): the
+    // Herb Library group carries two labels for the one library index
+    // — 'Herb Encyclopedia' and 'Articles & Guides' both land on
+    // /herb-index, mirroring the footer's two labels for the same
+    // page. Every other href must be unique.
+    const counts = new Map<string, number>();
+    for (const href of all) counts.set(href, (counts.get(href) ?? 0) + 1);
+    const duplicated = [...counts.entries()].filter(([, n]) => n > 1);
+    expect(duplicated).toEqual([['/herb-index', 2]]);
     expect(NAV_ENTRIES.length).toBeGreaterThanOrEqual(6);
     expect(NAV_ENTRIES.length).toBeLessThanOrEqual(9);
     expect(NAV_ENTRIES.filter((e) => e.kind === 'group').length).toBe(4);

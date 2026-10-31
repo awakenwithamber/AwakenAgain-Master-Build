@@ -1,14 +1,17 @@
 /**
- * /checkout/return — landing page after the embedded card checkout.
+ * /checkout/return — order payment-status landing page.
  *
  * DISPLAY ONLY. This page reads the order + its paid state through
  * the shared resolver (lib/orders/paid-state.ts) and shows where
- * things stand — including a Stripe refund/dispute when one has been
- * recorded. It never marks anything paid: paid state is written
- * exclusively by the signature-verified webhook
- * (app/api/stripe/webhook). If the webhook has not landed yet,
- * the page says payment is being confirmed and points at the
- * order-status lookup — it does not guess.
+ * things stand — including a refund or dispute when one has been
+ * recorded on the order. It never marks anything paid: paid state
+ * comes only from a merchant-recorded payment (the manual
+ * confirmation ledger for today's emailed-invoice flow, or the
+ * legacy card-payment ledger for historical orders). Orders today
+ * are paid by emailed invoice — ACH bank transfer, Venmo, or Cash
+ * App — and Amber confirms those payments by hand, so a just-paid
+ * order can read "being confirmed" here until she records it. The
+ * page points at the order-status lookup and does not guess.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -18,7 +21,7 @@ import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
   title: 'Payment Status',
-  description: `Your card payment status with ${BRAND_NAME}.`,
+  description: `Your payment status with ${BRAND_NAME}.`,
 };
 
 export const dynamic = 'force-dynamic';
@@ -66,13 +69,13 @@ export default async function CheckoutReturnPage({
           <p style={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
             {paidState.status === 'refunded' ? (
               <>
-                Your card payment for order <strong>{order?.order_id}</strong>{' '}
-                was refunded through Stripe. If you have questions about
-                your refund, please contact Amber.
+                Your payment for order <strong>{order?.order_id}</strong>{' '}
+                was refunded. If you have questions about your refund,
+                please contact Amber.
               </>
             ) : (
               <>
-                A payment dispute was opened through Stripe for order{' '}
+                A payment dispute was opened for order{' '}
                 <strong>{order?.order_id}</strong>. If that is unexpected,
                 please contact Amber.
               </>
@@ -99,7 +102,7 @@ export default async function CheckoutReturnPage({
             Payment Confirmed
           </h1>
           <p style={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
-            Thank you! Your card payment for order{' '}
+            Thank you! Your payment for order{' '}
             <strong>{order?.order_id}</strong> is confirmed. Amber is
             preparing your order — it will ship within 3 to 5 business
             days, and we will notify you when it ships.
@@ -117,16 +120,18 @@ export default async function CheckoutReturnPage({
             Payment Being Confirmed
           </h1>
           <p style={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
-            Your order <strong>{order.order_id}</strong> is placed and in
-            review. If you completed your card payment, confirmation can
-            take a few moments — you can check any time on the{' '}
+            Your order <strong>{order.order_id}</strong> is placed.
+            Orders are paid by emailed invoice — you can pay by ACH bank
+            transfer, Venmo, or Cash App, using your order number as the
+            payment reference. Amber confirms every payment by hand, so
+            if you have already paid, your status can take a little
+            while to update — you can check any time on the{' '}
             <Link href="/order-status" style={{ color: '#d4af37' }}>
               order status page
             </Link>{' '}
-            with your order ID and email. If your payment was not
-            completed, your order is still saved — just contact Amber and
-            she will help you finish paying by card, invoice, Venmo, or
-            Cash App.
+            with your order ID and email. If you have not received your
+            invoice yet, your order is still saved — just contact Amber
+            and she will help you finish.
           </p>
         </>
       ) : (
@@ -141,8 +146,8 @@ export default async function CheckoutReturnPage({
             Let\u2019s Find Your Order
           </h1>
           <p style={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
-            We could not match that payment link to an order here. Check
-            your order on the{' '}
+            We could not find an order matching that link. Check your
+            order on the{' '}
             <Link href="/order-status" style={{ color: '#d4af37' }}>
               order status page
             </Link>{' '}
