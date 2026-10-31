@@ -15,17 +15,17 @@ import { isSupersededProduct } from '../status';
 describe('catalog port provenance', () => {
   it('carries a provenance header: source, count, status', () => {
     expect(CATALOG_PROVENANCE.source).toBe('products.canonical.v3.json');
-    expect(CATALOG_PROVENANCE.recordCount).toBe(46);
+    expect(CATALOG_PROVENANCE.recordCount).toBe(62);
     expect(CATALOG_PROVENANCE.status).toBe('PROPOSED');
   });
 
-  it('contains exactly 46 records (45 ported + the hand-authored trio)', () => {
-    expect(PRODUCTS).toHaveLength(46);
+  it('contains exactly 62 records (46 prior records + 13 owner-directed specialty teas + the Collagen Supplement split record + the owner-directed Small Rose listing + the owner-approved Custom Botanical Balm record)', () => {
+    expect(PRODUCTS).toHaveLength(62);
   });
 
   it('handles are unique', () => {
     const handles = PRODUCTS.map((p) => p.handle);
-    expect(new Set(handles).size).toBe(46);
+    expect(new Set(handles).size).toBe(62);
   });
 });
 

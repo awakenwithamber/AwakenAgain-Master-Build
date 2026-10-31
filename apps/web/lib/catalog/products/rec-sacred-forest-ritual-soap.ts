@@ -124,18 +124,12 @@ export const RECORD: Product = {
   ],
   "images": [
     {
-      "file": "/images/products/sacred-forest-ritual-soap.webp",
+      "src": "/images/products/sacred-forest-ritual-soap.webp",
+      "alt": "Sacred Forest Soap — panel cropped from the owner's three-soap card (regenerated 2026-10-30 with catalog names): a round green forest-mold bar with pinecone and evergreen styling by candlelight",
       "role": "primary",
-      "status": "placeholder_fallback",
-      "provenance": "products/IMAGE_MAP.md (2026-10-04); merged catalog image_manifest.csv (2026-09-27)",
-      "note": "Catalog-safe generated fallback per baseline image_verification; not a verified product photo."
-    },
-    {
-      "file": null,
-      "role": "primary product photo",
-      "status": "MISSING_ASSET",
-      "provenance": "products/IMAGE_MAP.md (2026-10-04); merged catalog image_manifest.csv (2026-09-27)",
-      "note": "No real product photo mapped to this formula in source materials. Baseline image is a catalog-safe generated fallback (placeholder). Real product photography needed before customer-facing use."
+      "status": "mapped_photo",
+      "provenance": "Owner upload file 78 (three-panel soap card; panel names owner-accepted 2026-10-30) via the owner-directed regeneration regen-78 (catalog names restored, unverified printed ingredient lists removed). Photo reconciliation 2026-10-30: the Sacred Forest panel was cropped from regen-78 and placed here — the first image on this listing. No documentary product photograph exists; the card artwork is AI-styled, registered as a generated representation.",
+      "note": "Replaces the baseline placeholder_fallback / MISSING_ASSET entries (products/IMAGE_MAP.md 2026-10-04). Not a documentary photo — the manifest entry carries the representation caption."
     }
   ],
   "short_description": "An earthy, grounding bar that turns your shower into a forest cleansing ritual.",

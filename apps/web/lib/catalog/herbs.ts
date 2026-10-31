@@ -51,8 +51,8 @@ export function getHerb(id: string): Herb | undefined {
   return HERBS.find((h) => h.id === id);
 }
 
-/** Herbs usable in a formula form ('capsule' | 'tea'). Data-driven. */
-export function herbsForUse(use: 'capsule' | 'tea'): Herb[] {
+/** Herbs usable in a formula form ('capsule' | 'tea' | 'balm'). Data-driven. */
+export function herbsForUse(use: 'capsule' | 'tea' | 'balm'): Herb[] {
   return HERBS.filter((h) => h.uses.includes(use));
 }
 

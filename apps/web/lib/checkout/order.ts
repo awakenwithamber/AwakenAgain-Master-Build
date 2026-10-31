@@ -10,7 +10,7 @@
  * regression tests and imported by app/api/checkout/route.ts.
  */
 import { getProductByHandle } from '../catalog/products';
-import { isSupersededProduct } from '../catalog/status';
+import { isFixedFormulaProduct, isSupersededProduct } from '../catalog/status';
 import { BUNDLE_ID, formulaKindForHandle, getFormulaSize, toCents } from '../pricing/pricing';
 import {
   sanitizeEmail,
@@ -47,12 +47,21 @@ export const CUSTOM_BUILDER_TITLE = 'Custom Alchemy Soap (your creation)';
  */
 export function isSoapProduct(productHandle: string): boolean {
   if (productHandle === CUSTOM_BUILDER_HANDLE) return true;
-  return getProductByHandle(productHandle)?.category === 'Soaps';
+  const product = getProductByHandle(productHandle);
+  if (!product) return false;
+  // Owner ruling 2026-10-30: a fixed-formula product (fixed_formula:
+  // true — first carrier: the Shea & Goat Milk Small Rose Soap) sits in
+  // the 'Soaps' category so it shelves with the soaps, but it is sold
+  // exactly as pictured: NO customization may attach to it, so for
+  // customization-gating purposes it is not a customizable soap. Its
+  // plain variant purchases flow through the standard variant path.
+  if (isFixedFormulaProduct(product)) return false;
+  return product.category === 'Soaps';
 }
 
 /**
- * Custom-formula products (G2 capsules, G10 tea): fully custom blends are
- * only valid on these two catalog handles. Without this gate, a formula
+ * Custom-formula products (G2 capsules, G10 tea, custom balm): fully
+ * custom blends are only valid on these catalog handles. Without this gate, a formula
  * could be attached to any product (e.g. a standard capsule variant priced
  * without its herb add-ons), producing an internally inconsistent order
  * record. Mirrors the isSoapProduct gate above.
@@ -82,7 +91,7 @@ export interface CheckoutItemInput {
   variant_id?: string;
   quantity: number;
   customization?: Customization;
-  /** Custom capsule/tea formula — mutually exclusive with customization. */
+  /** Custom capsule/tea/balm formula — mutually exclusive with customization. */
   formula?: FormulaCustomization;
   unit_price_cents: number;
 }
@@ -444,7 +453,7 @@ function priceItem(input: CheckoutItemInput): OrderLine {
   let cleanFormula: FormulaCustomization | undefined;
 
   if (formula !== undefined) {
-    // Custom capsule/tea formula: exact herb IDs persisted; the server
+    // Custom capsule/tea/balm formula: exact herb IDs persisted; the server
     // reprices from canonical data (size base + per-herb add-ons).
     if (variant_id !== undefined || customization !== undefined) {
       throw new Error(
@@ -453,7 +462,7 @@ function priceItem(input: CheckoutItemInput): OrderLine {
     }
     if (!isFormulaProduct(product_handle)) {
       throw new Error(
-        `Item ${product_handle} is not a custom-formula product — formulas apply to custom capsules and custom teas only.`,
+        `Item ${product_handle} is not a custom-formula product — formulas apply to custom capsules, custom teas, and custom balms only.`,
       );
     }
     const validation = validateFormulaCustomization(product_handle, formula);
@@ -474,6 +483,12 @@ function priceItem(input: CheckoutItemInput): OrderLine {
         ? { intention: sanitizePlainText(formula.intention, 120) }
         : {}),
       ...(formula.notes ? { notes: sanitizePlainText(formula.notes, 500) } : {}),
+      // Balm-only fields (additive, 2026-10-30): exact validated IDs,
+      // never free text — present only on balm order lines, so
+      // capsule/tea records are unchanged.
+      ...(formula.base_id ? { base_id: formula.base_id } : {}),
+      ...(formula.purpose_id ? { purpose_id: formula.purpose_id } : {}),
+      ...(formula.scent_id ? { scent_id: formula.scent_id } : {}),
     };
     serverUnitCents = priceFormulaCustomization(product_handle, cleanFormula);
     lineTitle = formulaLineTitle(product_handle, cleanFormula);

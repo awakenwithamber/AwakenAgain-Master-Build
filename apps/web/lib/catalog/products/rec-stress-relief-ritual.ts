@@ -10,7 +10,53 @@ export const RECORD: Product = {
   "category": "Bundles",
   "vendor": "Awaken With Amber LLC",
   "brand": "Amber's Alchemy Apothecary",
-  "featured_ingredients": [],
+  "featured_ingredients": [
+    {
+      "name": "Ashwagandha",
+      "botanical_name": "Withania somnifera",
+      "part_used": "root",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Holy Basil",
+      "botanical_name": "Ocimum tenuiflorum",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Lemon Balm",
+      "botanical_name": "Melissa officinalis",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Chamomile",
+      "botanical_name": "Matricaria chamomilla",
+      "part_used": "flower",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Lavender",
+      "botanical_name": "Lavandula angustifolia",
+      "part_used": "flower",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    }
+  ],
   "process": "Not applicable — bundle of finished products.",
   "review_summary": {},
   "inventory_status": "NEEDS_VERIFICATION",
@@ -30,9 +76,9 @@ export const RECORD: Product = {
   "images": [
     {
       "src": "/images/products/stress-relief-ritual.webp",
-      "fallback": "/images/products/stress-relief-ritual.png",
-      "alt_text": "The Unwind Ritual Bundle with soap tea balm and capsules",
-      "status": "placeholder"
+      "alt": "The Unwind Ritual Bundle — generated representation: steaming tea, botanical soap bar, balm tin and amber capsule bottle with lavender and chamomile in moonlit candlelight",
+      "provenance": "GENERATED_REPRESENTATION",
+      "status": "GENERATED_REPRESENTATION"
     }
   ],
   "collections": [

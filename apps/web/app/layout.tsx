@@ -35,16 +35,16 @@ export const metadata: Metadata = {
   openGraph: {
     images: [
       {
-        url: '/images/brand/social-preview-og.jpg',
+        url: '/images/brand/ambers-alchemy-emblem-og.jpg',
         width: 1200,
-        height: 630,
-        alt: "Amber's Alchemy Apothecary — AwakenAgain.com",
+        height: 1200,
+        alt: "Amber's Alchemy Apothecary circular emblem — Amber@awakenagain.com",
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['/images/brand/social-preview-og.jpg'],
+    images: ['/images/brand/ambers-alchemy-emblem-og.jpg'],
   },
 };
 
@@ -67,6 +67,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        {/* Layered background (2026-10-30): royal purple + apothecary
+            image at 44% opacity, fixed behind all content site-wide. */}
+        <div className="aa-bg-layer" aria-hidden="true" />
         {/* Entry-gate: music choice modal on every load (workstream B). */}
         <MusicGate />
         {/* Skip link target: every page template must render <main id="main-content">. */}

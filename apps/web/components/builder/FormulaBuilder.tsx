@@ -28,6 +28,8 @@ import {
   buildOrderConfiguration,
 } from '../../lib/cart/validation';
 import {
+  CUSTOM_BALM_HANDLE,
+  CUSTOM_BALM_SIZES,
   CUSTOM_CAPSULE_HANDLE,
   CUSTOM_CAPSULE_SIZES,
   CUSTOM_TEA_HANDLE,
@@ -80,16 +82,25 @@ export interface FormulaBuilderProps {
 const KIND_HANDLE: Record<FormulaKind, string> = {
   capsule: CUSTOM_CAPSULE_HANDLE,
   tea: CUSTOM_TEA_HANDLE,
+  // The balm kind has its own builder (components/builder/BalmBuilder);
+  // this entry exists only so the record stays exhaustive.
+  balm: CUSTOM_BALM_HANDLE,
 };
 
 const KIND_TITLE: Record<FormulaKind, string> = {
   capsule: 'Create Your Own Herbal Capsules',
   tea: 'Create Your Own Tea Blend',
+  balm: 'Create Your Own Botanical Balm',
 };
 
 export function FormulaBuilder({ kind }: FormulaBuilderProps) {
   const handle = KIND_HANDLE[kind];
-  const sizes = kind === 'capsule' ? CUSTOM_CAPSULE_SIZES : CUSTOM_TEA_SIZES;
+  const sizes =
+    kind === 'capsule'
+      ? CUSTOM_CAPSULE_SIZES
+      : kind === 'tea'
+        ? CUSTOM_TEA_SIZES
+        : CUSTOM_BALM_SIZES;
   const { addItem } = useCart();
 
   const [sel, setSel] = useState<FormulaSelections>(defaultFormulaSelections);

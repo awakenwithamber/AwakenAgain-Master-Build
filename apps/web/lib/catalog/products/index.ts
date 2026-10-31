@@ -3,6 +3,20 @@
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
  * Generated: 2026-10-05
+ * 2026-10-30: 13 hand-authored specialty tea records appended at the owner's
+ * direction; the original 46-record port is unchanged.
+ * 2026-10-30 (mega build): one further hand-authored record appended —
+ * rec-collagen-supplement, the second product of the owner-ruled
+ * Omega-3/Collagen split (the Omega-3 record itself was renamed in place
+ * to "Mega Omegas"; its handle is unchanged).
+ * 2026-10-30 (final staging pass): one further hand-authored record
+ * appended — rec-shea-goat-milk-small-rose-soap, the owner's shea butter /
+ * goat milk Small Rose, created at her direction with weight, price, and
+ * complete ingredients flagged NEEDS VERIFICATION inside the record.
+ * 2026-10-30 (Custom Balm Builder): one further hand-authored record
+ * appended — rec-custom-botanical-balm, the template product for the
+ * owner-approved Custom Balm Builder; its variant prices mirror the
+ * balm records exactly (both wax finishes at identical prices).
  */
 import type { Product } from '../../../types';
 import { RECORD as rec_radiance_renewal_balm } from './rec-radiance-renewal-balm';
@@ -51,10 +65,26 @@ import { RECORD as rec_alchemy_tea_blend } from './rec-alchemy-tea-blend';
 import { RECORD as rec_custom_tea_blends } from './rec-custom-tea-blends';
 import { RECORD as rec_soap_style_collection_5 } from './rec-soap-style-collection-5';
 import { RECORD as rec_hearth_harvest_trio } from './rec-hearth-harvest-trio';
+import { RECORD as rec_dreamease_herbal_tea } from './rec-dreamease-herbal-tea';
+import { RECORD as rec_vital_vitality_tea } from './rec-vital-vitality-tea';
+import { RECORD as rec_sacred_balance_tea } from './rec-sacred-balance-tea';
+import { RECORD as rec_chill_pill_tea } from './rec-chill-pill-tea';
+import { RECORD as rec_happy_pill_tea } from './rec-happy-pill-tea';
+import { RECORD as rec_vital_flow_tea } from './rec-vital-flow-tea';
+import { RECORD as rec_vital_connect_tea } from './rec-vital-connect-tea';
+import { RECORD as rec_radiance_support_tea } from './rec-radiance-support-tea';
+import { RECORD as rec_immune_at_ease_tea } from './rec-immune-at-ease-tea';
+import { RECORD as rec_moonlit_lavender_rose_tea } from './rec-moonlit-lavender-rose-tea';
+import { RECORD as rec_golden_hearth_tea } from './rec-golden-hearth-tea';
+import { RECORD as rec_wild_mint_meadow_tea } from './rec-wild-mint-meadow-tea';
+import { RECORD as rec_velvet_hibiscus_berry_tea } from './rec-velvet-hibiscus-berry-tea';
+import { RECORD as rec_collagen_supplement } from './rec-collagen-supplement';
+import { RECORD as rec_shea_goat_milk_small_rose_soap } from './rec-shea-goat-milk-small-rose-soap';
+import { RECORD as rec_custom_botanical_balm } from './rec-custom-botanical-balm';
 
 export const CATALOG_PROVENANCE = {
   source: 'products.canonical.v3.json',
-  recordCount: 46,
+  recordCount: 62,
   generatedAt: '2026-10-05T23:08:13.352Z',
   status: 'PROPOSED',
 } as const;
@@ -106,6 +136,22 @@ export const PRODUCTS: Product[] = [
   rec_custom_tea_blends,
   rec_soap_style_collection_5,
   rec_hearth_harvest_trio,
+  rec_dreamease_herbal_tea,
+  rec_vital_vitality_tea,
+  rec_sacred_balance_tea,
+  rec_chill_pill_tea,
+  rec_happy_pill_tea,
+  rec_vital_flow_tea,
+  rec_vital_connect_tea,
+  rec_radiance_support_tea,
+  rec_immune_at_ease_tea,
+  rec_moonlit_lavender_rose_tea,
+  rec_golden_hearth_tea,
+  rec_wild_mint_meadow_tea,
+  rec_velvet_hibiscus_berry_tea,
+  rec_collagen_supplement,
+  rec_shea_goat_milk_small_rose_soap,
+  rec_custom_botanical_balm,
 ];
 
 export function getProductByHandle(handle: string): Product | undefined {

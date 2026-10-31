@@ -1,29 +1,27 @@
 /**
- * Welcome video — framed Vimeo player with a mute toggle.
- * Autoplay is OFF. The toggle drives the player via Vimeo's postMessage API
- * (setVolume) — no external player SDK needed.
+ * Welcome / intro video — Amber's own intro video (owner-ruled
+ * 2026-10-30: the 231-second apothecary compilation she uploaded is
+ * THE intro video). Self-hosted native player: the owner's file,
+ * web-compressed (1080×1920 HEVC 39 MB → 720×1280 H.264, ~7 MB,
+ * faststart) with a poster frame from its opening. Autoplay is OFF;
+ * the mute toggle drives the native video element.
  */
 'use client';
 
 import { useRef, useState } from 'react';
 import styles from './home.module.css';
 
-const VIMEO_URL = 'https://player.vimeo.com/video/1171942742';
+const VIDEO_SRC = '/video/ambers-alchemy-intro.mp4';
+const POSTER_SRC = '/images/video/intro-poster.jpg';
 
 export function WelcomeVideo() {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(false);
 
   const toggleMute = () => {
     const next = !muted;
     setMuted(next);
-    const win = iframeRef.current?.contentWindow;
-    if (win) {
-      win.postMessage(
-        JSON.stringify({ method: 'setVolume', value: next ? 0 : 1 }),
-        'https://player.vimeo.com',
-      );
-    }
+    if (videoRef.current) videoRef.current.muted = next;
   };
 
   return (
@@ -40,16 +38,20 @@ export function WelcomeVideo() {
           A Personal Welcome
         </h2>
         <p className={styles.videoContext}>
-          Discover personalized formulas, handcrafted customized products, and
-          plant-based solutions designed to support your body naturally.
+          Hey neighbors — before you wander the shelves, let Amber herself
+          show you around the apothecary: the soaps, the teas, the
+          capsules, the readings, and the Living Grimoire, all in her own
+          words. ✨🌿
         </p>
         <div className={styles.videoFrame}>
-          <iframe
-            ref={iframeRef}
-            src={VIMEO_URL}
+          <video
+            ref={videoRef}
+            src={VIDEO_SRC}
+            poster={POSTER_SRC}
             title="Meet Amber — a personal welcome from the founder"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
+            controls
+            playsInline
+            preload="none"
           />
           <button
             type="button"

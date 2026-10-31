@@ -2,7 +2,8 @@
  * Herb catalog integrity tests — lib/catalog/herbs.ts (G2/G10 data).
  *
  * Laws under test:
- * - 306 botanicals ported; ids unique; every entry well-formed.
+ * - 309 botanicals (306 ported + 3 owner-approved additions 2026-10-30);
+ *   ids unique; every entry well-formed.
  * - Prices are positive integer cents (no floats).
  * - Ritual-bundle pseudo-entries excluded (not botanicals).
  * - Capsule and tea builders each have a non-empty, form-usable herb list.
@@ -24,8 +25,8 @@ const FORBIDDEN = [
 ];
 
 describe('herb catalog integrity', () => {
-  it('ports 306 botanicals with unique ids', () => {
-    expect(HERBS.length).toBe(306);
+  it('ports 309 botanicals with unique ids', () => {
+    expect(HERBS.length).toBe(309);
     const ids = HERBS.map((h) => h.id);
     expect(new Set(ids).size).toBe(ids.length);
   });

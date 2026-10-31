@@ -318,3 +318,39 @@
     display: none;
   }
 }
+
+/* — Product journey sections (2026-10-30 mega build) — */
+.balmBanner {
+  border: 1px solid var(--brass);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--plum-deep), var(--plum-dark));
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+.balmBanner h2 {
+  margin-top: 0;
+  color: var(--brass-lt);
+}
+.packageOptions {
+  margin: 2rem 0;
+}
+.optionCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.optionCard {
+  border: 1px solid var(--amethyst);
+  border-radius: var(--radius-lg);
+  background: rgba(21, 11, 38, 0.55);
+  padding: 1rem 1.25rem;
+}
+.optionCard h3 {
+  margin-top: 0;
+  color: var(--brass-lt);
+}
+.keepWandering {
+  margin: 2.5rem 0 1rem;
+  border-top: 1px solid var(--amethyst);
+  padding-top: 1rem;
+}

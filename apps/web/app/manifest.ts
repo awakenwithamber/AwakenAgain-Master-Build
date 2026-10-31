@@ -5,7 +5,7 @@
  * design-system colors: dark purple background (#17102b) + gold accents
  * (#d9a93c) per app/globals.css.
  *
- * HONEST PWA STATUS: this manifest + app/icon.tsx provide installability
+ * HONEST PWA STATUS: this manifest + app/icon.png provide installability
  * metadata. A service worker and offline fallback page are NOT wired yet —
  * see lib/pwa/status.ts (OFFLINE_NOT_WIRED) and the G14 ledger entry.
  * No offline capability is claimed.
@@ -35,6 +35,18 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
+      },
+      {
+        src: '/images/brand/icons/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/images/brand/icons/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
       },
     ],
   };

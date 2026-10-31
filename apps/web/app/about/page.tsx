@@ -1,9 +1,8 @@
 /**
  * About Amber — founder story / handmade positioning (workstream G).
  *
- * Spec §7: circular portrait (200px, 3px brass border, glow) — a styled
- * monogram placeholder "A" stands in where no portrait photo exists in the
- * repo (never hotlink random images); name "Amber Lynn Patten"; the exact
+ * Spec §7: circular portrait (200px, 3px brass border, glow) — the owner-supplied
+ * portrait photograph placed 2026-10-30 (inventory file 20, CONFIRMED); name "Amber Lynn Patten"; the exact
  * title line; bio sourced from the previous about page (kept, restyled);
  * pull-quote with a brass left border. No fabricated claims: no reviews,
  * certifications, timelines, or inventory statements.
@@ -23,12 +22,12 @@ export default function AboutPage() {
     <>
       <main id="main-content" className={styles.aboutMain}>
         <div className={styles.portraitWrap}>
-          <div
-            className={styles.portrait}
-            role="img"
-            aria-label="Portrait of Amber Lynn Patten (placeholder monogram)"
-          >
-            A
+          <div className={styles.portrait}>
+            {/* Owner-supplied portrait (inventory file 20); local asset, never hotlinked. */}
+            <img
+              src="/images/brand/amber-portrait.webp"
+              alt="Portrait of Amber Lynn Patten in a bristlecone pine"
+            />
           </div>
         </div>
         <h1 className={styles.aboutName}>Amber Lynn Patten</h1>

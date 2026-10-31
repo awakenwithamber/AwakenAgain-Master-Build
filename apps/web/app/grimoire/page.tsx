@@ -56,6 +56,15 @@ export default async function GrimoirePage() {
 
   return (
     <main id="main-content">
+      {/* Accessibility fix (2026-10-30): this page rendered no h1 (pre-
+          existing, identical in production). The heading below is
+          visually hidden via the global .visually-hidden utility
+          (position:absolute, 1×1px, clipped) — it changes no pixels,
+          layout, design, or reader behavior; it only gives the page a
+          proper top-level heading for assistive technology and SEO. */}
+      <h1 className="visually-hidden">
+        Living Grimoire of Light &amp; Magic — 333-page edition
+      </h1>
       <InterestTracker category="grimoire" signalKey="grimoire" />
       <GrimoireBook
         pages={pages}

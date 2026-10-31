@@ -27,6 +27,7 @@ import Link from 'next/link';
 
 const CATEGORY_ICONS: Record<string, string> = {
   Soaps: '🧼',
+  'Bath & Body': '🧼',
   Capsules: '💊',
   Teas: '🍵',
   'Balms & Skincare': '🫙',
@@ -117,6 +118,26 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
       : props.slice(0, 4).map((p) => ({ label: p.property, note: p.note }));
 
   const hasPrice = typeof product.price === 'number';
+  // Variant-aware display (QA D-1 fix): when a product's variants span
+  // more than one price, the card shows the honest range entry point —
+  // "from $9.00" — instead of silently presenting the base variant's
+  // price as the only price. Single-price products render as before.
+  const variantPrices = (product.variants ?? [])
+    .map((v) => (typeof v.price === 'number' ? v.price : null))
+    .filter((p): p is number => p !== null);
+  const minPrice =
+    variantPrices.length > 0
+      ? Math.min(...variantPrices)
+      : (product.price as number);
+  const maxPrice =
+    variantPrices.length > 0
+      ? Math.max(...variantPrices)
+      : (product.price as number);
+  const priceIsRange = hasPrice && maxPrice > minPrice;
+  const minSubscriber =
+    typeof product.subscriber_price === 'number' && hasPrice
+      ? Math.round(toCents(minPrice) * 0.9)
+      : null;
   const icon = CATEGORY_ICONS[product.category] ?? '🌿';
   // Registered primary image (registry + record agreement) wins; the
   // canonical path is the fallback for everything not yet registered.
@@ -191,13 +212,20 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
             {hasPrice ? (
               <>
                 <span className="product-card-price">
-                  <PriceDisplay cents={toCents(product.price as number)} />
+                  {priceIsRange ? 'from ' : ''}
+                  <PriceDisplay cents={toCents(minPrice)} />
                 </span>
                 {typeof product.subscriber_price === 'number' ? (
                   <div>
                     <small>
                       Living Grimoire of Light &amp; Magic subscriber{' '}
-                      <PriceDisplay cents={toCents(product.subscriber_price)} />
+                      {priceIsRange && minSubscriber !== null ? (
+                        <>
+                          from <PriceDisplay cents={minSubscriber} />
+                        </>
+                      ) : (
+                        <PriceDisplay cents={toCents(product.subscriber_price)} />
+                      )}
                     </small>
                   </div>
                 ) : null}

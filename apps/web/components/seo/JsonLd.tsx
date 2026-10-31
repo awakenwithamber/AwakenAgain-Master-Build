@@ -70,6 +70,8 @@ export async function OrganizationJsonLd() {
           '@id': `${base}/#organization`,
           name: BRAND_NAME,
           url: base,
+          logo: `${base}/images/brand/ambers-alchemy-emblem.png`,
+          image: `${base}/images/brand/ambers-alchemy-emblem-og.jpg`,
           email: BRAND_EMAIL,
           telephone: BRAND_PHONE_JSONLD,
           description:

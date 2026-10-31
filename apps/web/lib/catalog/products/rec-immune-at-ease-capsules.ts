@@ -146,7 +146,11 @@ export const RECORD: Product = {
   "related_products": [
     "environmental-wellness-support",
     "seasonal-gut-reset",
-    "metabolic-wellness-formula"
+    "metabolic-wellness-formula",
+    "immune-at-ease-tea"
+  ],
+  "also_available_as": [
+    "immune-at-ease-tea"
   ],
   "frequently_bought_together": [
     "environmental-wellness-support"

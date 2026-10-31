@@ -129,6 +129,8 @@ function missing(
 const STAGE_SOAP_BUILDER = '~/workspace/awakenagain-migration/soap-builder/images';
 const STAGE_SOAP_SHOP = '~/workspace/awakenagain-migration/soap-shop-build/assets';
 const STAGE_UPLOADS = '~/workspace/user/files';
+const STAGE_REGEN_2026_10_30 = '~/workspace/your_files/regenerated-images-2026-10-30';
+const STAGE_CONTENT_BUILD_2026_10_30 = '~/workspace/content-build-2026-10-30';
 
 /* ---------------- Staged real assets (exist on disk, not yet in public/) ---------------- */
 
@@ -284,6 +286,20 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
     },
   ),
   real(
+    'asset_product_sacred_forest_ritual_soap',
+    '/images/products/sacred-forest-ritual-soap.webp',
+    'Sacred Forest Soap — panel cropped from the owner\'s three-soap card (regenerated with catalog names): a round green forest-mold bar with pinecone and evergreen styling by candlelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'sacred-forest-ritual-soap',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-78-three-soap-card.png`,
+      deployed: true,
+      notes:
+        'Photo reconciliation 2026-10-30: the middle panel of regen-78 (the owner-directed regeneration of her upload file 78, whose three panel identifications she accepted 2026-10-30) was cropped (x 645–1275 of 1920) and placed as this listing\'s first image; the baseline placeholder/MISSING_ASSET state is retired. AI-styled card artwork — not a documentary photograph, so it carries the representation caption. The original card\'s printed ingredient lists were removed in the regeneration as unverified.',
+    },
+  ),
+  real(
     'asset_product_gaias_rose_soap',
     '/images/products/gaias-rose-soap.webp',
     'Gaia\'s Rose Soap — red floral round double-layer soap (clear red botanical top over white base), candlelit apothecary styling',
@@ -295,6 +311,32 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
       deployed: true,
       notes:
         'Pixel-verified 2026-10-13 as identical to owner upload 17297_5_ncac.webp (IMAGE_MAP gallery for this product). AI-styled artwork supplied by the owner — not verified as a documentary photo. Second gallery upload 17300_8_ckj3.webp (red rose soap) exists in uploads but is NOT deployed.',
+    },
+  ),
+  real(
+    'asset_product_lavender_fairy_dream_photo',
+    '/images/products/lavender-fairy-dream-photo.webp',
+    'Lavender Fairy Dream Soap — the maker\'s own photograph: a translucent violet-blue rose-mold bar with botanical layers, candlelit apothecary styling',
+    'OWNER_UPLOADED',
+    {
+      slotKey: 'lavender-fairy-dream-soap',
+      stagedFrom: `${STAGE_UPLOADS}/8145_80_4glw.jpg`,
+      deployed: true,
+      notes:
+        'Owner-ruled identification 2026-10-30: upload file 80 IS Lavender Fairy Dream Soap. This photograph previously circulated with a "Miracle Pain Relieving Balm" caption — that caption is wrong for this image and must never be paired with it. Registered ahead of the painterly illustration entry so the product page leads with the maker\'s photograph; the illustration remains deployed as the secondary entry. Photo reconciliation 2026-10-30: the first staged copy of this file still contained the wrong caption band in its lower frame; the deployed file was re-cropped the same day to the photograph only (source 1080×1920, crop y 0–1400) so no caption text renders anywhere. Re-uploads 115/126 (10607_115_8dim.jpg / 10604_126_otd2.jpg) are byte-identical duplicates of the same captioned graphic and were not separately placed.',
+    },
+  ),
+  real(
+    'asset_product_shea_goat_milk_small_rose_soap',
+    '/images/products/shea-goat-milk-small-rose-soap.webp',
+    'Shea & Goat Milk Small Rose Soap — the maker\'s own photograph: a cream rose-mold bar with a pale peach base layer beside a lit candle, candlelit apothecary styling',
+    'OWNER_UPLOADED',
+    {
+      slotKey: 'shea-goat-milk-small-rose-soap',
+      stagedFrom: `${STAGE_UPLOADS}/8149_81_phb9.jpg`,
+      deployed: true,
+      notes:
+        'Owner-ruled identification 2026-10-30: upload file 81 IS her shea butter / goat milk Small Rose for sensitive skin (no added oils, scents, or botanicals). Story-format photograph (1080×1920); the letterbox bars were cropped 2026-10-30 (scene band y 458–1470) and the frame converted to WebP — the bar and scene are otherwise untouched. Registered with the hand-authored listing created the same day at the owner\'s direction.',
     },
   ),
   real(
@@ -327,25 +369,27 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   real(
     'asset_product_chill_pill_capsules',
     '/images/products/chill-pill-capsules.webp',
-    'Chill Pill Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Chill Pill',
+    'Chill Pill Capsules — AI-generated marketing graphic: labeled amber jar; the anti-stress/mood-support subtitle was removed in the 2026-10-30 regeneration',
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
       slotKey: 'chill-pill-capsules',
       deployed: true,
-      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-72-chill-pill.jpg`,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards. Deployed file replaced 2026-10-30 with regen-72, whose label subtitle was stripped.',
     },
   ),
   real(
     'asset_product_happy_pill_capsules',
     '/images/products/happy-pill-capsules.webp',
-    'Happy Pill Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Happy Pill',
+    'Happy Pill Capsules — AI-generated marketing graphic: labeled amber jar; named hormone/neurotransmitter claim text was removed in the 2026-10-30 regeneration',
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
       slotKey: 'happy-pill-capsules',
       deployed: true,
-      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-87-happy-pill.png`,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards. Deployed file replaced 2026-10-30 with regen-87, whose claim list was removed.',
     },
   ),
   real(
@@ -364,51 +408,55 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   real(
     'asset_product_sacred_balance_capsules',
     '/images/products/sacred-balance-capsules.webp',
-    'Sacred Balance Capsules — AI-generated marketing graphic: amber jar labeled "Sacred Balance — Hormone Balancing Formula"',
+    'Sacred Balance Capsules — AI-generated marketing graphic: labeled amber jar with a compliant sensory caption added in the 2026-10-30 regeneration',
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
       slotKey: 'sacred-balance-capsules',
       deployed: true,
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-71-sacred-balance.jpg`,
       notes:
-        'Generated graphic; not product photography. Registered 2026-10-13. Regenerated 2026-10-13 at the owner\'s direction (caption-only edit; jar and scene preserved): the original caption described Vital Connect; the replacement caption describes Sacred Balance and was verified word-for-word.',
+        'Generated graphic; not product photography. Registered 2026-10-13. Regenerated 2026-10-13 at the owner\'s direction (caption-only edit; jar and scene preserved): the original caption described Vital Connect; the replacement caption describes Sacred Balance and was verified word-for-word. Deployed file replaced 2026-10-30 with regen-71; the earlier hormone/endocrine claim caption was rewritten to sensory copy.',
     },
   ),
   real(
     'asset_product_vital_connect_capsules',
     '/images/products/vital-connect-capsules.webp',
-    'Vital Connect Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Vital Connect',
+    'Vital Connect Capsules — AI-generated marketing graphic: labeled amber jar; hormone/energy claim text was removed in the 2026-10-30 regeneration',
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
       slotKey: 'vital-connect-capsules',
       deployed: true,
-      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-86-vital-connect.png`,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards. Deployed file replaced 2026-10-30 with regen-86, whose claim phrases were removed.',
     },
   ),
   real(
     'asset_product_vital_flow_capsules',
     '/images/products/vital-flow-capsules.webp',
-    'Vital Flow Capsules — AI-generated marketing graphic: labeled amber jar with baked-in caption text naming Vital Flow',
+    'Vital Flow Capsules — AI-generated marketing graphic: labeled amber jar; digestion/bloat-relief claim text was removed in the 2026-10-30 regeneration',
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
       slotKey: 'vital-flow-capsules',
       deployed: true,
-      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards.',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-85-vital-flow.png`,
+      notes: 'Generated graphic with text baked in; not product photography. Registered 2026-10-13; previously misregistered as MISSING_ASSET while the file rendered on shop cards. Deployed file replaced 2026-10-30 with regen-85, whose relief claims were removed.',
     },
   ),
   real(
     'asset_product_vital_vitality_capsules',
     '/images/products/vital-vitality-capsules.webp',
-    'Vital Vitality Capsules — AI-generated marketing graphic: amber jar labeled "Vital Vitality Vitamins" with baked-in caption text',
+    'Vital Vitality Capsules — AI-generated marketing graphic: labeled amber jar; the side-card benefit claims were removed in the 2026-10-30 regeneration',
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
       slotKey: 'vital-vitality-capsules',
       deployed: true,
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-57-vital-vitality.png`,
       notes:
-        'Generated graphic; not product photography. Registered 2026-10-13. Regenerated 2026-10-13 at the owner\'s direction: the original jar label read "Vital Vitality Vitamins"; the replacement reads "Vital Vitality Capsules", verified word-for-word.',
+        'Generated graphic; not product photography. Registered 2026-10-13. Regenerated 2026-10-13 at the owner\'s direction: the original jar label read "Vital Vitality Vitamins"; the replacement reads "Vital Vitality Capsules", verified word-for-word. Deployed file replaced 2026-10-30 with regen-57, whose side-card claims were stripped.',
     },
   ),
   real(
@@ -583,6 +631,344 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
     },
   ),
 
+
+  // — Owner-directed content build, 2026-10-30 —
+  real(
+    'asset_product_dreamease_herbal_tea',
+    '/images/products/dreamease-herbal-tea.webp',
+    'DreamEase Herbal Tea — owner-supplied artwork: a labeled glass jar reading "Dream Ease Sleep Blend — 2 oz — Herbal Tea Blend" filled with loose-leaf botanicals, beside a brass scoop and lavender in candlelit apothecary styling',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'dreamease-herbal-tea',
+      stagedFrom: `${STAGE_UPLOADS}/10600_121_tnch.jpg`,
+      deployed: true,
+      notes:
+        'Photo reconciliation 2026-10-30: replaced the generated tea representation (loose-leaf jar + steaming cup, created earlier the same day) with the owner\'s own labeled Dream Ease tea artwork (inventory file 56; re-uploaded 2026-10-30 as upload 121, byte-identical). Owner-supplied AI-styled artwork — not documentary photography, so it keeps the representation caption. The deployed file is CROPPED to the jar (x 23.5%–73.5%, y 5.5%–81.5% of the source frame): the artwork\'s side card — which carries benefit wording ("Calms the Nervous System • Supports Deeper Sleep • Eases Stress & Anxiety • Promotes Relaxation • Helps You Wake Refreshed", the copy-rule flag recorded for file 56 in the uploads inventory) — is entirely outside the crop and does not appear on the site. What remains visible is the jar\'s own printed label, including its tagline "Rest Deep • Release Tension • Wake Refreshed", exactly as the physical product is labeled (the same standard as the DreamEase Capsules documentary photo). The full uncropped frame remains in the owner\'s uploads.',
+    },
+  ),
+  real(
+    'asset_product_vital_vitality_tea',
+    '/images/products/vital-vitality-tea.webp',
+    'Vital Vitality Tea — generated representation: loose-leaf roots and lemongrass blend beside a steaming cup in morning light',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'vital-vitality-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-vital-vitality-0-9d73212d-f2e6-40ba-8dea-2520b89c4100.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_sacred_balance_tea',
+    '/images/products/sacred-balance-tea.webp',
+    'Sacred Balance Tea — generated representation: loose-leaf tulsi, nettle, sage and chamomile blend beside a steaming cup by candlelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'sacred-balance-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-sacred-balance-0-60b037b5-1746-43fd-997b-738466d25b59.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_chill_pill_tea',
+    '/images/products/chill-pill-tea.webp',
+    'Chill Pill Tea — generated representation: loose-leaf passionflower and lemon-balm blend beside a steaming cup in twilight candlelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'chill-pill-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-chill-pill-0-ef015df8-bbf8-4495-a872-b615b3f61255.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_happy_pill_tea',
+    '/images/products/happy-pill-tea.webp',
+    'Happy Pill Tea — generated representation: loose-leaf flowers, mimosa, schisandra and saffron blend beside a steaming cup in sunlight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'happy-pill-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-happy-pill-0-d2b6971b-1791-4770-a440-b98a9c0f83e8.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_vital_flow_tea',
+    '/images/products/vital-flow-tea.webp',
+    'Vital Flow Tea — generated representation: loose-leaf ginger, peppermint and fennel blend beside a steaming cup',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'vital-flow-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-vital-flow-0-81871876-da3d-4706-8543-78363ffd72b7.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_vital_connect_tea',
+    '/images/products/vital-connect-tea.webp',
+    'Vital Connect Tea — generated representation: loose-leaf maca, shatavari, tulsi and vitex blend beside a steaming cup in warm candlelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'vital-connect-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-vital-connect-0-7633abc8-ddb5-4f72-81e3-218bfefdff0d.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_radiance_support_tea',
+    '/images/products/radiance-support-tea.webp',
+    'Radiance Support Tea — generated representation: ruby hibiscus and rose-hip loose-leaf blend beside a steaming crimson cup',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'radiance-support-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-radiance-support-0-86fe64a5-4081-4f83-880c-b86e047f040c.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_immune_at_ease_tea',
+    '/images/products/immune-at-ease-tea.webp',
+    'Immune-At-Ease Tea — generated representation: loose-leaf elderberry, echinacea and reishi blend beside a steaming cup by firelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'immune-at-ease-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-immune-at-ease-0-cdd350ba-2bfe-48bf-b5cd-b5ddf07d662e.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_moonlit_lavender_rose_tea',
+    '/images/products/moonlit-lavender-rose-tea.webp',
+    'Moonlit Lavender Rose Tea — generated representation: loose-leaf lavender and rose-petal blend beside a steaming cup in moonlight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'moonlit-lavender-rose-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-moonlit-lavender-rose-0-f01bbce2-65c9-45e8-b784-9b8d12d75b04.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_golden_hearth_tea',
+    '/images/products/golden-hearth-tea.webp',
+    'Golden Hearth Tea — generated representation: spiced loose-leaf blend with cinnamon and star anise beside a steaming cup by firelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'golden-hearth-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-golden-hearth-0-6701d01f-8d0a-420e-8aa8-18f630806937.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_wild_mint_meadow_tea',
+    '/images/products/wild-mint-meadow-tea.webp',
+    'Wild Mint Meadow Tea — generated representation: green loose-leaf mint blend beside a steaming cup in daylight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'wild-mint-meadow-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-wild-mint-meadow-0-021d0006-1906-4229-9b36-982d08393327.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_velvet_hibiscus_berry_tea',
+    '/images/products/velvet-hibiscus-berry-tea.webp',
+    'Velvet Hibiscus Berry Tea — generated representation: hibiscus and dark-berry loose-leaf blend beside a steaming garnet cup by candlelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'velvet-hibiscus-berry-tea',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated/media-generation-tea-velvet-hibiscus-berry-0-d8d870f9-9eb4-48db-8b5a-72b00e4fa768.webp`,
+      deployed: true,
+      notes:
+        'Generated tea representation created 2026-10-30 at the owner\'s direction. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_root_scalp_revival_serum',
+    '/images/products/root-scalp-revival-serum.webp',
+    'Root & Scalp Revival Botanical Serum — regenerated marketing graphic of an amber dropper bottle, renamed from the legacy Miracle Hair Regrowth Serum artwork with regrowth claims removed',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'root-scalp-revival-serum',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-73-root-scalp-revival-serum.jpg`,
+      deployed: true,
+      notes:
+        'Regenerated artwork placed 2026-10-30 (regen-73). The flagged original was never placed. Generated representation — not real product photography.',
+    },
+  ),
+  real(
+    'asset_product_wild_caught_omega_3_fish_oil',
+    '/images/products/wild-caught-omega-3-fish-oil.webp',
+    'Wild-Caught Omega-3 Fish Oil — regenerated standalone marketing graphic of the labeled Omega-3 jar, with baked-in health claims removed',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'wild-caught-omega-3-fish-oil',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-82b-omega-3-fish-oil.jpg`,
+      deployed: true,
+      notes:
+        'Regenerated standalone artwork placed 2026-10-30 (regen-82b). The flagged composite was not placed, and this asset is not the mislabeled Natural Collagen Booster jar panel. Generated representation — not real product photography.',
+    },
+  ),
+  real(
+    'asset_product_custom_herbal_capsules',
+    '/images/products/custom-herbal-capsules.webp',
+    'Custom Herbal Capsules — regenerated apothecary promotional graphic for made-to-order capsule blends, with treatment-oriented wording removed',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'custom-herbal-capsules',
+      stagedFrom: `${STAGE_REGEN_2026_10_30}/regen-76-custom-herbal-capsules.jpg`,
+      deployed: true,
+      notes:
+        'Regenerated promotional graphic placed 2026-10-30 (regen-76). The front vessel in the artwork reads cream/balm-like rather than capsules; registered honestly as a promotional representation, not product photography.',
+    },
+  ),
+  real(
+    'asset_service_hypnotherapy_guided_relaxation',
+    '/images/products/hypnotherapy-guided-relaxation.webp',
+    'Hypnotherapy & Guided Relaxation — owner-supplied artwork of a meditating silhouette with glowing chakras on a lotus beneath the moon and mountains',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'hypnotherapy-guided-relaxation',
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19603_55_pq00.webp`,
+      deployed: true,
+      notes:
+        'Owner-supplied artwork (inventory file 55, PROBABLE identification accepted by the owner 2026-10-30) assigned to this guided-relaxation service. Artwork for a service; not a photograph.',
+    },
+  ),
+  real(
+    'asset_brand_ambers_alchemy_emblem',
+    '/images/brand/ambers-alchemy-emblem.png',
+    'Amber\'s Alchemy Apothecary circular emblem — owner artwork with Amber Lynn Patten, moon phases, lotus, crystals and contact lines; the email line was deterministically corrected to Amber@awakenagain.com in 2026-10-30',
+    'OWNER_UPLOADED',
+    {
+      notDocumentaryPhoto: true,
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/emblem/emblem-fixed.png`,
+      deployed: true,
+      notes:
+        'Used as the site social/SEO emblem and source for the icon set. A generative edit attempt was rejected because it re-rendered the whole emblem; the deployed master uses a deterministic PIL email-line treatment, leaving the QR region and all pixels outside the email band identical to the owner upload.',
+    },
+  ),
+  real(
+    'asset_brand_amber_portrait',
+    '/images/brand/amber-portrait.webp',
+    'Amber Lynn Patten — owner-supplied portrait photograph in a bristlecone pine with a mountain backdrop',
+    'OWNER_UPLOADED',
+    {
+      stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_20784_20_hj6k.heif`,
+      deployed: true,
+      notes:
+        'Owner-supplied HEIF photograph (inventory file 20, CONFIRMED) converted to WebP and cropped to a 1:1 format for the About page portrait. Documentary photograph of Amber.',
+    },
+  ),
+  // — Owner-directed mega build, 2026-10-30 (Collagen Supplement +
+  // ritual-bundle photography; Lavender Fairy Dream photo above) —
+  real(
+    'asset_product_collagen_supplement',
+    '/images/products/collagen-supplement.webp',
+    'Collagen Supplement — generated representation: amber apothecary jar of golden capsules among dried botanicals and candlelight, deep plum and gold',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'collagen-supplement',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated-mega/media-generation-collagen-supplement-0-034e962e-48e1-4d17-8d18-a7fea4816e05.webp`,
+      deployed: true,
+      notes:
+        'Generated representation created 2026-10-30 at the owner\'s direction (owner update 05:38 MDT: a NEW generated photo — the legacy "Natural Collagen Booster" jar panel from upload file 82 was expressly NOT used). No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_focus_clarity_ritual',
+    '/images/products/focus-clarity-ritual.webp',
+    'The Focus & Clarity Ritual Bundle — generated representation: steaming tea cup, botanical soap bar, balm tin and amber capsule bottle with rosemary and peppermint on a candlelit apothecary table',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'focus-clarity-ritual',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated-mega/media-generation-focus-clarity-ritual-0-b2c73a6e-3748-4b25-a2e0-6d8c1c2aa2e2.webp`,
+      deployed: true,
+      notes:
+        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_gentle_detox_ritual',
+    '/images/products/gentle-detox-ritual.webp',
+    'Gentle Flow Ritual Bundle — generated representation: golden tea, botanical soap bar, balm tin and amber capsule bottle with dandelion, fennel and ginger on an apothecary table',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'gentle-detox-ritual',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated-mega/media-generation-gentle-detox-ritual-0-e122314a-0cdc-4535-b555-dcf919948b10.webp`,
+      deployed: true,
+      notes:
+        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_stress_relief_ritual',
+    '/images/products/stress-relief-ritual.webp',
+    'The Unwind Ritual Bundle — generated representation: steaming tea, botanical soap bar, balm tin and amber capsule bottle with lavender and chamomile in moonlit candlelight',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'stress-relief-ritual',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated-mega/media-generation-stress-relief-ritual-0-a1ba2729-339b-434e-b2c4-91848299dff4.webp`,
+      deployed: true,
+      notes:
+        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography.',
+    },
+  ),
+  real(
+    'asset_product_hearth_harvest_trio',
+    '/images/products/hearth-harvest-trio.webp',
+    'Hearth & Harvest Trio — generated representation: cinnamon spice bar, green rosemary forest bar and rose petal bar on an autumn apothecary table',
+    'GENERATED_PRODUCT_REPRESENTATION',
+    {
+      notDocumentaryPhoto: true,
+      slotKey: 'hearth-harvest-trio',
+      stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated-mega/media-generation-hearth-harvest-trio-0-ae8372e2-ce9e-4078-97a2-dea2a52b2334.webp`,
+      deployed: true,
+      notes:
+        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography.',
+    },
+  ),
+
   // — MISSING_ASSET slots: product photography gaps (label + slot, never a fake image) —
   ...productSlots(),
   // — MISSING_ASSET slots: builder experience —
@@ -601,23 +987,21 @@ function productSlots(): ImageAssetEntry[] {
   const rows: Array<[handle: string, label: string, slot: string, notes?: string]> = [
     ['radiance-renewal-balm', 'Radiance Renewal Botanical Balm', 'Product photo slot — botanical balm', 'No real product photo on file.'],
     ['radiance-support-capsules', 'Radiance Support Capsules', 'Product photo slot — capsules in amber jar'],
-    ['root-scalp-revival-serum', 'Root & Scalp Revival Botanical Serum', 'Product photo slot — amber dropper bottle', '16893_13_oil4.png exists but is ART_DIRECTION_ONLY, not a product photo.'],
     ['soothe-restore-botanical-balm', 'Soothe & Restore Botanical Balm', 'Product photo slot — balm jar with herbs', 'Dangling reference: "Amber\'s Alchemy Apothecary Balm Ritual.png" does not exist in uploads — do not render.'],
-    ['gentle-detox-ritual', 'Gentle Detox Ritual Bundle', 'Bundle photo slot'],
-    ['focus-clarity-ritual', 'Focus & Clarity Ritual Bundle', 'Bundle photo slot'],
-    ['stress-relief-ritual', 'Unwind Ritual Bundle', 'Bundle photo slot'],
     ['environmental-wellness-support', 'Environmental Wellness Support', 'Product photo slot — capsules'],
     ['metabolic-wellness-formula', 'Metabolic Wellness Formula', 'Product photo slot — capsules'],
     ['seasonal-gut-reset', 'Seasonal Gut Reset', 'Product photo slot — capsules'],
-    ['wild-caught-omega-3-fish-oil', 'Wild-Caught Omega-3 Fish Oil', 'Product photo slot — supplement bottle', 'EXPLICITLY no stock-bottle substitution per catalog note.'],
-    ['custom-herbal-capsules', 'Custom Herbal Capsules', 'Product photo slot — consultation/service'],
     ['personalized-herbal-protocols', 'Personalized Herbal Protocols', 'Service visual slot'],
     // Filled 2026-10-23 (owner-approved assignments, mapping report
     // 2026-10-22) and registered as real entries above — no longer missing:
     // custom-remedy-consultation, tarot-readings, energy-work,
     // home-aura-space-cleansing, personalized-botanical-consultation,
-    // tarot-rune-reading.
-    ['hypnotherapy-guided-relaxation', 'Hypnotherapy & Guided Relaxation', 'Service visual slot', 'Legacy association images/guided-meditation.webp is UNVERIFIED.'],
+    // tarot-rune-reading. Filled 2026-10-30: root-scalp-revival-serum,
+    // wild-caught-omega-3-fish-oil, custom-herbal-capsules,
+    // hypnotherapy-guided-relaxation. Filled 2026-10-30 (mega build):
+    // gentle-detox-ritual, focus-clarity-ritual, stress-relief-ritual,
+    // hearth-harvest-trio (generated bundle representations) and the new
+    // collagen-supplement record.
     ['past-life-inspired-guided-exploration', 'Past-Life-Inspired Guided Exploration', 'Service visual slot', 'Legacy association unverified.'],
     ['rune-readings', 'Rune Readings', 'Service visual slot', 'Legacy association unverified.'],
     ['citrus-goddess-glow-soap', 'Citrus Goddess Glow Soap', 'Formula photo slot — shape references staged', 'No formula-specific photo; 5 shape crops registered above.'],

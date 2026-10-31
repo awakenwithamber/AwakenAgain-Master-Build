@@ -24,27 +24,51 @@ export const RECORD: Product = {
   ],
   "variants": [
     {
-      "name": "1 oz pocket size",
+      "name": "1 oz pocket size — Soy Wax (standard)",
       "size": "1 oz",
       "sku": "BALM-AGE-001-1OZ",
       "price": 11.77
     },
     {
-      "name": "2 oz",
+      "name": "1 oz pocket size — Beeswax (soy-free alternative)",
+      "size": "1 oz",
+      "sku": null,
+      "price": 11.77
+    },
+    {
+      "name": "2 oz — Soy Wax (standard)",
       "size": "2 oz",
       "sku": "BALM-AGE-001-2OZ",
       "price": 23.54
     },
     {
-      "name": "3 oz",
+      "name": "2 oz — Beeswax (soy-free alternative)",
+      "size": "2 oz",
+      "sku": null,
+      "price": 23.54
+    },
+    {
+      "name": "3 oz — Soy Wax (standard)",
       "size": "3 oz",
       "sku": "BALM-AGE-001-3OZ",
       "price": 35.31
     },
     {
-      "name": "4 oz",
+      "name": "3 oz — Beeswax (soy-free alternative)",
+      "size": "3 oz",
+      "sku": null,
+      "price": 35.31
+    },
+    {
+      "name": "4 oz — Soy Wax (standard)",
       "size": "4 oz",
       "sku": "BALM-AGE-001-4OZ",
+      "price": 47.08
+    },
+    {
+      "name": "4 oz — Beeswax (soy-free alternative)",
+      "size": "4 oz",
+      "sku": null,
       "price": 47.08
     }
   ],
@@ -124,11 +148,11 @@ export const RECORD: Product = {
       "customer_friendly_summary": "A well-known skin-conditioning antioxidant commonly used in balms and moisturizers."
     }
   ],
-  "complete_ingredients": "Coconut oil, beeswax, vitamin E, calendula, gotu kola, frankincense, rose, chamomile, lavender, lemon balm, comfrey, borage, violet leaf, lemon peel, chrysanthemum, hibiscus, nettle, oatstraw, peppermint, spearmint, dandelion, St. John’s wort, wild lettuce, elder flower, peony, mango peel, dragon fruit peel, forget-me-not.",
+  "complete_ingredients": "Coconut oil, soy wax, vitamin E, calendula, gotu kola, frankincense, rose, chamomile, lavender, lemon balm, comfrey, borage, violet leaf, lemon peel, chrysanthemum, hibiscus, nettle, oatstraw, peppermint, spearmint, dandelion, St. John’s wort, wild lettuce, elder flower, peony, mango peel, dragon fruit peel, forget-me-not. (Standard finish is soy wax per owner ruling 2026-10-30; a beeswax finish is available instead for customers avoiding soy — in that version beeswax replaces the soy wax.)",
   "traditional_uses": [
     "Rose, lavender, and calendula have long traditional histories in topical skin preparations for their soothing, fragrant character.",
     "Gotu kola is traditionally used in Ayurvedic and folk skin preparations.",
-    "Oil-and-beeswax balms are a traditional format for protecting dry-feeling skin."
+    "Oil-and-wax balms are a traditional format for protecting dry-feeling skin."
   ],
   "properties": [
     {
@@ -153,8 +177,8 @@ export const RECORD: Product = {
   "process": "Not established in source materials.",
   "process_flag": "NEEDS_VERIFICATION",
   "directions": "Apply a thin layer to clean skin as needed. Use as a night balm, lip balm, cuticle balm, highlighter balm, or dry-skin rescue. Patch test first for sensitive skin.",
-  "warnings": "For external use only. Avoid contact with eyes, mucous membranes, open wounds, and sensitive areas. Patch test before use. Discontinue use if irritation occurs. This cosmetic/topical product is not intended to diagnose, treat, cure, or prevent any disease. Keep out of reach of children. Contains beeswax (bee product). Not for use during pregnancy without consulting a qualified professional — formula contains St. John's wort and comfrey, which are not established as safe for pregnancy in source materials.",
-  "allergens": "Contains coconut oil and beeswax. Individuals with coconut or bee-product sensitivities should patch test. Formula includes Asteraceae-family botanicals (calendula, chamomile, chrysanthemum); those with ragweed-family sensitivities should patch test. Derived from ingredient list only — not a verified allergen statement.",
+  "warnings": "For external use only. Avoid contact with eyes, mucous membranes, open wounds, and sensitive areas. Patch test before use. Discontinue use if irritation occurs. This cosmetic/topical product is not intended to diagnose, treat, cure, or prevent any disease. Keep out of reach of children. Standard finish contains soy wax (soy). A beeswax finish is available instead for customers avoiding soy — that version contains beeswax (a bee product). Not for use during pregnancy without consulting a qualified professional — formula contains St. John's wort and comfrey, which are not established as safe for pregnancy in source materials.",
+  "allergens": "Contains coconut oil and soy wax (soy). Individuals with coconut or soy sensitivities should patch test. The beeswax-finish alternative contains a bee product instead of soy — individuals with bee-product sensitivities should choose the standard soy-wax finish and patch test. Formula includes Asteraceae-family botanicals (calendula, chamomile, chrysanthemum); those with ragweed-family sensitivities should patch test. Derived from ingredient list only — not a verified allergen statement.",
   "storage": "Store sealed in a cool, dry place away from direct sunlight. General guidance; not specified in source materials. NEEDS_VERIFICATION.",
   "disclaimer": "For external use only. Avoid contact with eyes, mucous membranes, open wounds, and sensitive areas. Patch test before use. Discontinue use if irritation occurs. This cosmetic/topical product is not intended to diagnose, treat, cure, or prevent any disease. Keep out of reach of children.",
   "related_products": [
@@ -209,7 +233,8 @@ export const RECORD: Product = {
     "discrepancies": [
       "key_botanicals lists 'Saffron' and 'Turmeric', neither of which appears in the ingredients list. 5 featured ingredients chosen only from ingredients-list entries.",
       "Baseline includes an unconfirmed '1 gram lip-balm mini' variant (price null, price_status unconfirmed) for all three balms/serum — appears to be a merge artifact; excluded from canonical variants pending owner confirmation.",
-      "Legacy variants (superseded AAA- MIRACLEBEAUTYBALM-* SKUs at $24.99–$41.99) retained in baseline as reference only; superseded by owner-approved $11.77/oz pricing."
+      "Legacy variants (superseded AAA- MIRACLEBEAUTYBALM-* SKUs at $24.99–$41.99) retained in baseline as reference only; superseded by owner-approved $11.77/oz pricing.",
+      "Wax finish: baseline records listed beeswax as the balm's finish. Owner ruling 2026-10-30: the standard finish is SOY WAX (smoother formula); BEESWAX is the alternative for customers with a soy allergy. Record corrected to the ruling 2026-10-30 — complete_ingredients now lists soy wax, allergen/warning text presents both finishes honestly, and each size is offered in both finishes at the same price (soy variants keep the canonical SKUs; beeswax variants are identified by name). The page_banner copy (soy wax) now agrees with the record."
     ],
     "compliance_notes": [
       "Legacy handle 'ambers-age-reversal-balm' carried age-reversal claim language; current title 'Radiance Renewal Botanical Balm' and all current copy are compliant appearance/structure language. No 'reverses aging' language remains.",
@@ -222,6 +247,7 @@ export const RECORD: Product = {
     ],
     "price_authority": "Owner-approved $11.77 per ounce (1 oz = $11.77); matches baseline price field. subscriber_price computed at 10% off."
   },
+  "page_banner": "Every balm begins the slow way: botanicals steeped in coconut oil at a low temperature for a full 36 hours, so the properties of each plant are drawn gently into the oil for maximum infusion. The herbs are then strained away, and soy wax is blended in for a smooth, balanced texture. Keep your balm stored in a cool, dry place — it will soften and melt at 75° or higher.",
   "field_verification": {
     "title": {
       "status": "sourced",
@@ -248,8 +274,8 @@ export const RECORD: Product = {
       "note": "baseline size field + variants"
     },
     "variants": {
-      "status": "sourced",
-      "note": "baseline variants, unconfirmed artifacts excluded"
+      "status": "owner_ruled_2026-10-30",
+      "note": "baseline size variants, unconfirmed artifacts excluded; 2026-10-30 each size gained a beeswax-finish twin at the identical price per the owner's wax ruling (soy wax standard, beeswax for soy-allergic customers)"
     },
     "short_description": {
       "status": "sourced",
@@ -264,8 +290,8 @@ export const RECORD: Product = {
       "note": "5 ingredients from actual formula data; Latin names are standard taxonomy, unverified against owner batch"
     },
     "complete_ingredients": {
-      "status": "sourced",
-      "note": "verbatim from baseline ingredients field"
+      "status": "owner_ruled_2026-10-30",
+      "note": "verbatim from baseline ingredients field, except the finish: baseline said beeswax; owner ruled 2026-10-30 that soy wax is the standard finish (beeswax = soy-allergy alternative). List updated to soy wax with the alternative noted in the list itself."
     },
     "traditional_uses": {
       "status": "enriched",
@@ -289,11 +315,11 @@ export const RECORD: Product = {
     },
     "warnings": {
       "status": "enriched",
-      "note": "baseline disclaimer + standard topical/supplement cautions"
+      "note": "baseline disclaimer + standard topical/supplement cautions; wax sentence updated 2026-10-30 per owner ruling (soy standard, beeswax alternative carries the bee-product note)"
     },
     "allergens": {
       "status": "enriched",
-      "note": "derived from ingredient list only; not a verified allergen statement"
+      "note": "derived from ingredient list only; not a verified allergen statement; wax allergen presentation updated 2026-10-30 per owner ruling (standard contains soy; beeswax alternative contains a bee product)"
     },
     "storage": {
       "status": "needs_verification",
@@ -324,7 +350,7 @@ export const RECORD: Product = {
       "note": "baseline image paths; all are generated placeholders/art-direction, not product photography"
     }
   },
-  "last_verified": "2026-10-05",
+  "last_verified": "2026-10-30",
   "benefits": [
     "Supports skin vitality and the appearance of elasticity",
     "Deeply moisturizes dry skin",

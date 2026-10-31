@@ -61,7 +61,6 @@ describe('generated / styled artwork — honest framing', () => {
   it('owner-supplied soap artwork resolves as non-documentary', () => {
     for (const handle of [
       'gaias-rose-soap',
-      'lavender-fairy-dream-soap',
       'eucalyptus-mint-spa-renewal-soap',
     ]) {
       const img = getProductDisplayImage(must(handle));
@@ -69,6 +68,20 @@ describe('generated / styled artwork — honest framing', () => {
       expect(img!.documentaryPhoto, handle).toBe(false);
       expect(img!.caption, handle).toBe(REPRESENTATION_CAPTION);
     }
+  });
+
+  it('Lavender Fairy Dream resolves to the maker\u2019s own photograph (owner-ruled 2026-10-30)', () => {
+    // Upload file 80 was circulated with a wrong "Miracle Pain Relieving
+    // Balm" caption; the owner ruled on 2026-10-30 that the photograph IS
+    // Lavender Fairy Dream Soap. It is registered ahead of the painterly
+    // illustration, so the product now leads with a documentary photo —
+    // no representation caption.
+    const img = getProductDisplayImage(must('lavender-fairy-dream-soap'));
+    expect(img).not.toBeNull();
+    expect(img!.src).toBe('/images/products/lavender-fairy-dream-photo.webp');
+    expect(img!.documentaryPhoto).toBe(true);
+    expect(img!.caption).toBeNull();
+    expect(img!.provenance).toBe('OWNER_UPLOADED');
   });
 
   it('owner-supplied service artwork resolves as non-documentary (assignments of 2026-10-23)', () => {
@@ -123,10 +136,7 @@ describe('products with no genuine imagery resolve to null', () => {
       'radiance-renewal-balm', // MISSING_ASSET, no file
       'citrus-goddess-glow-soap', // placeholder-card file only
       'environmental-wellness-support', // record marks MISSING_ASSET
-      'wild-caught-omega-3-fish-oil', // no stock substitution allowed
-      'root-scalp-revival-serum', // only an ART_DIRECTION_ONLY candidate exists
       'custom-botanical-soap', // v3 file list must not render
-      'custom-herbal-capsules', // images: [] — no registered imagery
     ]) {
       expect(getProductDisplayImage(must(handle)), handle).toBeNull();
     }
@@ -134,7 +144,7 @@ describe('products with no genuine imagery resolve to null', () => {
 });
 
 describe('catalog-wide resolution census', () => {
-  it('exactly the 20 honestly-registered products resolve an image', () => {
+  it('exactly the 44 honestly-registered products resolve an image', () => {
     const resolved = PRODUCTS.filter(
       (p) => getProductDisplayImage(p) !== null,
     ).map((p) => p.handle);
@@ -142,6 +152,28 @@ describe('catalog-wide resolution census', () => {
       [
         'alchemy-tea-blend',
         'chill-pill-capsules',
+        'chill-pill-tea',
+        'custom-herbal-capsules',
+        'dreamease-herbal-tea',
+        'golden-hearth-tea',
+        'happy-pill-tea',
+        'hypnotherapy-guided-relaxation',
+        'immune-at-ease-tea',
+        'moonlit-lavender-rose-tea',
+        'radiance-support-tea',
+        'root-scalp-revival-serum',
+        'sacred-balance-tea',
+        'velvet-hibiscus-berry-tea',
+        'vital-connect-tea',
+        'vital-flow-tea',
+        'vital-vitality-tea',
+        'wild-caught-omega-3-fish-oil',
+        'wild-mint-meadow-tea',
+        'collagen-supplement',
+        'focus-clarity-ritual',
+        'gentle-detox-ritual',
+        'stress-relief-ritual',
+        'hearth-harvest-trio',
         'custom-remedy-consultation',
         'dreamease-capsules',
         'energy-work',
@@ -154,6 +186,8 @@ describe('catalog-wide resolution census', () => {
         'lavender-fairy-dream-soap',
         'personalized-botanical-consultation',
         'sacred-balance-capsules',
+        'sacred-forest-ritual-soap',
+        'shea-goat-milk-small-rose-soap',
         'soap-style-collection-5',
         'tarot-readings',
         'tarot-rune-reading',

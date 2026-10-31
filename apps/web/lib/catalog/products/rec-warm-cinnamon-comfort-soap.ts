@@ -196,6 +196,19 @@ export const RECORD: Product = {
       "evidence_context": "mixed_with_note",
       "customer_friendly_summary": "A beloved botanical butter that helps keep skin feeling soft after rinsing.",
       "evidence_note": "cosmetic_function: emollient/skin-conditioning; traditional_use in skin care."
+    },
+    {
+      "name": "Nutmeg",
+      "botanical_name": "Myristica fragrans",
+      "part_used": "seed",
+      "role_in_formula": "Warm spice depth beneath the cinnamon and clove.",
+      "traditional_use": "Nutmeg is traditionally used in warming spice blends for its rich, cozy aroma.",
+      "properties": [
+        "Aromatic (warm, spiced)"
+      ],
+      "key_constituents": null,
+      "evidence_context": "traditional_use",
+      "customer_friendly_summary": "The quiet warmth under the cinnamon — like baking day in a small kitchen."
     }
   ],
   "complete_ingredients": "Cinnamon, Clove, Goat milk, Shea butter",

@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { getShape } from '../../lib/catalog/shapes';
 import { getHerb } from '../../lib/catalog/herbs';
 import { formatPrice } from '../../lib/pricing/pricing';
+import { getBalmBase } from '../../lib/custom-formula/balm';
 import { track } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart, cartItemTitle } from './cart-store';
@@ -65,6 +66,11 @@ export function CartView() {
                             .join(', ')}
                           {formula.creation_name
                             ? ` · “${formula.creation_name}”`
+                            : ''}
+                          {/* Balm lines only (additive): the wax/base
+                              choice rides the formula on balm items. */}
+                          {formula.base_id
+                            ? ` · ${getBalmBase(formula.base_id)?.name ?? formula.base_id}`
                             : ''}
                         </small>
                       </p>

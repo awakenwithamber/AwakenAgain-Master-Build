@@ -27,6 +27,12 @@ import {
   getFormulaSize,
 } from '../pricing/pricing';
 import { getHerb } from '../catalog/herbs';
+import {
+  getBalmBase,
+  getBalmPurpose,
+  isBalmBotanical,
+  isValidBalmScent,
+} from '../custom-formula/balm';
 import type {
   BundleConfiguration,
   BundleSlot,
@@ -209,13 +215,17 @@ export function buildBundleConfiguration(slots: BundleSlot[]): BundleConfigurati
 import { getProductByHandle } from '../catalog/products';
 
 /* ------------------------------------------------------------------ */
-/* Custom formulas (G2 capsules, G10 tea)                               */
+/* Custom formulas (G2 capsules, G10 tea, custom balm)                  */
 /* ------------------------------------------------------------------ */
 
 /**
  * Validate a custom formula: product must be a formula product, size must
  * exist for its kind, herb IDs must exist and be usable in the form
- * (data-driven via Herb.uses), no duplicates, at least 1 herb.
+ * (data-driven via Herb.uses for capsule/tea; for balm, grounded in the
+ * balm/serum records' featured ingredients — see lib/custom-formula/balm.ts),
+ * no duplicates, at least 1 herb. Balm formulas additionally require a
+ * valid base_id (wax choice, price-neutral) and validate the optional
+ * purpose/scent preference IDs; capsule/tea formulas must not carry them.
  * Formulas and soap customizations are mutually exclusive (enforced in
  * buildOrderConfiguration) — a formula can never be priced as a soap.
  */
@@ -245,8 +255,44 @@ export function validateFormulaCustomization(
       const herb = getHerb(id);
       if (!herb) {
         errors.push(`Unknown herb: ${id}`);
+      } else if (kind === 'balm') {
+        // Balm botanicals are grounded differently (additive rule): a
+        // botanical is selectable ONLY when it is a featured ingredient
+        // of the existing balm/serum records AND exists in the herb
+        // library — see BALM_BOTANICAL_SOURCES in
+        // lib/custom-formula/balm.ts. (Three grounded botanicals —
+        // gotu kola, nettle, fenugreek — carry no 'balm' entry in
+        // Herb.uses, so the capsule/tea uses-check cannot govern balm.)
+        if (!isBalmBotanical(id)) {
+          errors.push(
+            `Botanical "${herb.name}" is not a grounded balm botanical.`,
+          );
+        }
       } else if (!herb.uses.includes(kind)) {
         errors.push(`Herb "${herb.name}" is not usable in ${kind} form.`);
+      }
+    }
+  }
+  if (kind === 'balm') {
+    // Balm-only fields (additive, 2026-10-30): the wax/base choice is
+    // required and validated against the two owner-approved finishes;
+    // purpose and scent preferences, when present, must be known IDs.
+    // The base choice is price-neutral — it is validated, never priced.
+    if (!f.base_id || !getBalmBase(f.base_id)) {
+      errors.push(`Unknown balm base: ${String(f.base_id)}`);
+    }
+    if (f.purpose_id !== undefined && !getBalmPurpose(f.purpose_id)) {
+      errors.push(`Unknown balm purpose: ${f.purpose_id}`);
+    }
+    if (f.scent_id !== undefined && !isValidBalmScent(f.scent_id)) {
+      errors.push(`Unknown balm scent preference: ${f.scent_id}`);
+    }
+  } else {
+    // Capsule/tea formulas never carry balm fields — a balm field on a
+    // capsule/tea line is a malformed (or crafted) payload.
+    for (const field of ['base_id', 'purpose_id', 'scent_id'] as const) {
+      if (f[field] !== undefined) {
+        errors.push(`Formula field ${field} applies to custom balms only.`);
       }
     }
   }
@@ -303,6 +349,11 @@ export function buildFormulaCartItem(
       ...(formula.creation_name ? { creation_name: formula.creation_name } : {}),
       ...(formula.intention ? { intention: formula.intention } : {}),
       ...(formula.notes ? { notes: formula.notes } : {}),
+      // Balm-only fields (additive): present only on balm formulas —
+      // capsule/tea cart items are byte-identical to before.
+      ...(formula.base_id ? { base_id: formula.base_id } : {}),
+      ...(formula.purpose_id ? { purpose_id: formula.purpose_id } : {}),
+      ...(formula.scent_id ? { scent_id: formula.scent_id } : {}),
     },
     unit_price_cents: priceFormulaCustomization(productHandle, formula),
   };

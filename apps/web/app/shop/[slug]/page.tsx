@@ -18,8 +18,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PRODUCTS, getProductByHandle } from '../../../lib/catalog/products';
-import { isSupersededProduct } from '../../../lib/catalog/status';
-import { PriceDisplay } from '../../../components/catalog/PriceDisplay';
+import {
+  isFixedFormulaProduct,
+  isSupersededProduct,
+} from '../../../lib/catalog/status';
 import { SavingsDisplay } from '../../../components/catalog/SavingsDisplay';
 import { LikeButton } from '../../../components/shop/LikeButton';
 import { SoapCustomizer } from '../../../components/shop/SoapCustomizer';
@@ -47,6 +49,15 @@ import {
 } from '../../../components/shop/ProductStorySections';
 import { ProductReviews } from '../../../components/shop/ProductReviews';
 import { ProductFaq } from '../../../components/shop/ProductFaq';
+import {
+  VariantPriceBlock,
+  VariantPriceInline,
+} from '../../../components/shop/VariantPrice';
+import {
+  BalmBanner,
+  KeepWandering,
+  PackageOptions,
+} from '../../../components/shop/ProductJourney';
 import styles from '../../../components/shop/shop.module.css';
 import Link from 'next/link';
 
@@ -125,18 +136,10 @@ function PriceBlock({ product }: { product: Product }) {
       </p>
     );
   }
-  return (
-    <p>
-      Price: <PriceDisplay cents={Math.round(product.price * 100)} />
-      {typeof product.subscriber_price === 'number' ? (
-        <span>
-          {' '}
-          · Living Grimoire of Light & Magic subscriber{' '}
-          <PriceDisplay cents={Math.round(product.subscriber_price * 100)} />
-        </span>
-      ) : null}
-    </p>
-  );
+  // Variant-aware (QA D-1/D-3 fix, 2026-10-30): the header price now
+  // follows the variant selected in the purchase section — a tea-bags
+  // selection shows $11.00 / subscriber $9.90 here, not the $9.00 base.
+  return <VariantPriceBlock product={product} />;
 }
 
 function PurchaseSection({ product }: { product: Product }) {
@@ -165,9 +168,15 @@ function PurchaseSection({ product }: { product: Product }) {
   if (product.handle === ALCHEMY_BUNDLE_HANDLE) {
     return <BundleBuilder />;
   }
-  if (product.category === 'Soaps') {
+  if (product.category === 'Soaps' && !isFixedFormulaProduct(product)) {
     return <SoapCustomizer product={product} />;
   }
+  // Fixed-formula soaps (owner ruling 2026-10-30 — first carrier: the
+  // Shea & Goat Milk Small Rose Soap) sit in 'Soaps' so they shelve with
+  // the soaps, but they are sold exactly as pictured: no scent selector,
+  // no customization — the standard variant purchase path below. The
+  // server gate (isSoapProduct in lib/checkout/order.ts) refuses any
+  // customization attached to them, mirroring this rule.
   if (typeof product.price === 'number') {
     return <VariantAddToCart product={product} />;
   }
@@ -186,7 +195,7 @@ function StickyBuyBar({ product }: { product: Product }) {
   return (
     <div className={styles.stickyBuyBar}>
       <span className={styles.stickyBuyBarTitle}>{product.title}</span>
-      <PriceDisplay cents={Math.round(product.price * 100)} />
+      <VariantPriceInline product={product} />
       <a className={styles.stickyBuyBarCta} href="#purchase">
         Add to Cart
       </a>
@@ -225,6 +234,11 @@ export default async function ProductPage({
         </p>
         <h1>{product.title}</h1>
         <p>{product.category}</p>
+        {/* Owner's balm-making banner (2026-10-30): records that carry a
+            page_banner (both balms) print it at the very top. */}
+        {seoField(product, 'page_banner') ? (
+          <BalmBanner text={seoField(product, 'page_banner') as string} />
+        ) : null}
         {/* Superseded products show NO price at all — a reference listing
             must not display a purchasable-looking price above its notice. */}
         {superseded ? null : <PriceBlock product={product} />}
@@ -267,6 +281,13 @@ export default async function ProductPage({
         <div id="purchase">
           <PurchaseSection product={product} />
         </div>
+
+        {/* Packages (2026-10-30): the Recommended Bundle vs Create Your
+            Own — the create path LINKS to the existing builder and quiz
+            surfaces; nothing is duplicated here. */}
+        {product.category === 'Bundles' && !superseded ? (
+          <PackageOptions />
+        ) : null}
 
         <section aria-label="Availability">
           <h2>Availability</h2>
@@ -348,6 +369,10 @@ export default async function ProductPage({
         {superseded ? null : <ProductReviews productHandle={product.handle} productTitle={product.title} />}
 
         {superseded ? null : <ProductFaq />}
+
+        {/* Cross-mentions (2026-10-30): onward paths in the apothecary's
+            voice — quiz, builders, shop, Grimoire. */}
+        {superseded ? null : <KeepWandering product={product} />}
       </main>
 
       <StickyBuyBar product={product} />

@@ -10,7 +10,53 @@ export const RECORD: Product = {
   "category": "Bundles",
   "vendor": "Awaken With Amber LLC",
   "brand": "Amber's Alchemy Apothecary",
-  "featured_ingredients": [],
+  "featured_ingredients": [
+    {
+      "name": "Dandelion Root",
+      "botanical_name": "Taraxacum officinale",
+      "part_used": "root",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Fennel",
+      "botanical_name": "Foeniculum vulgare",
+      "part_used": "seed",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Ginger",
+      "botanical_name": "Zingiber officinale",
+      "part_used": "root",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Peppermint",
+      "botanical_name": "Mentha piperita",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Milk Thistle",
+      "botanical_name": "Silybum marianum",
+      "part_used": "seed",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    }
+  ],
   "process": "Not applicable — bundle of finished products.",
   "review_summary": {},
   "inventory_status": "NEEDS_VERIFICATION",
@@ -49,9 +95,9 @@ export const RECORD: Product = {
   "images": [
     {
       "src": "/images/products/gentle-detox-ritual.webp",
-      "fallback": "/images/products/gentle-detox-ritual.png",
-      "alt_text": "Gentle Detox Ritual Bundle with soap tea balm and capsules",
-      "status": "placeholder"
+      "alt": "Gentle Flow Ritual Bundle — generated representation: golden tea, botanical soap bar, balm tin and amber capsule bottle with dandelion, fennel and ginger on an apothecary table",
+      "provenance": "GENERATED_REPRESENTATION",
+      "status": "GENERATED_REPRESENTATION"
     }
   ],
   "collections": [

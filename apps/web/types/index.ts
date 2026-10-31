@@ -61,6 +61,17 @@ export interface Product {
   verification_status?: string | null;
   /** Handle of the product that replaced this one, when superseded. */
   superseded_by?: string | null;
+  /**
+   * Owner-ruled fixed-formula marker (2026-10-30): the product is sold
+   * exactly as pictured/made — no builder or customizer may add scents,
+   * botanicals, or other options to it, even when its category would
+   * normally route to a customizer. The single enforcement predicate is
+   * isFixedFormulaProduct in lib/catalog/status.ts, consulted by the
+   * product page's purchase section and by the server order gate
+   * (isSoapProduct in lib/checkout/order.ts). Absent/false = a normal,
+   * customizable-where-applicable product.
+   */
+  fixed_formula?: boolean | null;
   [key: string]: unknown;
 }
 
@@ -249,7 +260,7 @@ export interface BundleSlot extends Customization {
 }
 
 /**
- * A customer-built herbal formula (capsule or tea builder).
+ * A customer-built herbal formula (capsule, tea, or custom balm builder).
  *
  * The §14 order-record rule, extended: exact herb IDs are persisted —
  * never prose. The server recomputes the price from canonical data
@@ -264,6 +275,26 @@ export interface FormulaCustomization {
   creation_name?: string;
   intention?: string;
   notes?: string;
+  /**
+   * Custom balm ONLY (additive, 2026-10-30): the balm base/wax choice —
+   * a BalmBaseId from lib/custom-formula/balm.ts ('soy-wax' |
+   * 'beeswax'). REQUIRED on balm formulas, FORBIDDEN on capsule/tea
+   * formulas (enforced in validateFormulaCustomization). Price-neutral
+   * by owner ruling: both finishes cost the same.
+   */
+  base_id?: string;
+  /**
+   * Custom balm ONLY: the intended-purpose preference — a BalmPurpose
+   * id from lib/custom-formula/balm.ts (preference/ritual language
+   * only, never an efficacy claim). Persisted as an exact ID.
+   */
+  purpose_id?: string;
+  /**
+   * Custom balm ONLY: the scent preference — a signature scent recipe
+   * ID from lib/catalog/scents.ts, or 'unscented'. Persisted as an
+   * exact ID, never prose (mirrors the §14 scent rule).
+   */
+  scent_id?: string;
 }
 
 export interface CartItem {
@@ -272,7 +303,7 @@ export interface CartItem {
   variant_id?: string;
   quantity: number;
   customization?: Customization;
-  /** Custom capsule/tea formula — mutually exclusive with customization. */
+  /** Custom capsule/tea/balm formula — mutually exclusive with customization. */
   formula?: FormulaCustomization;
   /** Server-computed integer cents. The client never determines totals. */
   unit_price_cents: number;

@@ -908,4 +908,44 @@ export const HERBS_PART_4: readonly Herb[] = [
     traditionalBenefits: ["Nourishes and rejuvenates skin cells", "Provides antioxidant protection against aging", "Supports collagen production and elasticity"],
   },
 
+  /* Owner-approved additions 2026-10-30 (house-blend recipe adoption):
+   * orange peel sourced for Golden Hearth Tea; lemongrass and star anise
+   * already appeared in product records and are now library entries in
+   * their own right. Appended here to preserve the ported entry order. */
+  {
+    id: "orange-peel",
+    name: "Orange Peel",
+    latin: "Citrus sinensis",
+    emoji: "🍊",
+    categories: ["digestive"],
+    uses: ["tea", "capsule"],
+    priceCents: 29,
+    traditionalNote: "The bright, aromatic peel of the sweet orange. Orange peel brings a warm citrus lift to spiced blends and has a long home in traditional teas enjoyed after rich meals.",
+    traditionalBenefits: ["Warm citrus aroma that lifts spiced and winter blends", "Traditionally enjoyed in teas after rich meals", "A classic partner to cinnamon, ginger, and clove in fireside cups"],
+  },
+
+  {
+    id: "lemongrass",
+    name: "Lemongrass",
+    latin: "Cymbopogon citratus",
+    emoji: "🌿",
+    categories: ["digestive"],
+    uses: ["tea"],
+    priceCents: 29,
+    traditionalNote: "A tall, lemon-scented grass long brewed as a tea across Southeast Asia. Lemongrass gives green blends their bright, citrusy lift and a clean, fresh finish in the cup.",
+    traditionalBenefits: ["Bright lemon aroma for green and garden blends", "Traditionally enjoyed as a refreshing tea, hot or iced", "A classic companion to mint and lemon balm"],
+  },
+
+  {
+    id: "star-anise",
+    name: "Star Anise",
+    latin: "Illicium verum",
+    emoji: "⭐",
+    categories: ["digestive"],
+    uses: ["tea", "capsule"],
+    priceCents: 29,
+    traditionalNote: "The star-shaped fruit of an evergreen tree, sweet and warmly spiced with a gentle licorice note. Star anise is a classic fireside spice in winter teas and chai-style blends.",
+    traditionalBenefits: ["Sweet, warm spice for winter and chai-style blends", "Traditionally enjoyed in teas after meals", "A classic partner to cinnamon, cardamom, and clove"],
+  },
+
 ];

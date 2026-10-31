@@ -80,17 +80,19 @@ a:hover {
   color: var(--parchment);
 }
 
-/* Custom thin scrollbar — 6px, amethyst thumb (spec §8). */
+/* Custom scrollbar — amethyst thumb (spec §8; widened 2026-10-30 at the
+   owner's direction so the bar is plainly visible on every page). */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
   background: var(--plum-dark);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--amethyst);
-  border-radius: 3px;
+  border-radius: 5px;
+  border: 2px solid var(--plum-dark);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--amethyst-lt);
@@ -1480,4 +1482,53 @@ h1, h2, h3,
    section gains a gold emphasis ring. Toggled client-side only. */
 .aa-grimoire-emphasis {
   box-shadow: inset 0 0 0 2px var(--gold), inset 0 0 3rem rgba(212, 175, 55, 0.12);
+}
+
+/* ------------------------------------------------------------------ */
+/* Layered page background (owner directive 2026-10-30) — ADDITIVE:   */
+/* a fixed layer behind all content on every page. Bottom layer is a  */
+/* plain royal purple; above it the apothecary-shelf image at 44%     */
+/* opacity; page content scrolls over both. The existing theme is     */
+/* untouched: sections that carry their own background (hero, texture */
+/* panes, solid cards) simply paint over this layer, so the image is  */
+/* never doubled up.                                                  */
+/* ------------------------------------------------------------------ */
+.aa-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #2a1660; /* royal purple, plain */
+  pointer-events: none;
+}
+.aa-bg-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/textures/apothecary-shelf.jpg') center / cover
+    no-repeat;
+  opacity: 0.44;
+}
+
+/* Footer site map — every public page, grouped (2026-10-30). */
+.footer-sitemap-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem 2rem;
+  text-align: left;
+  margin: 0.5rem 0 1rem;
+}
+.footer-sitemap-group h4 {
+  margin: 0.5rem 0 0.25rem;
+  font-family: var(--font-display, serif);
+  color: var(--brass-lt);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+.footer-sitemap-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.footer-sitemap-group li {
+  margin: 0.15rem 0;
 }

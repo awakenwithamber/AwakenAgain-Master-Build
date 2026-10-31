@@ -50,6 +50,13 @@ export const RECORD: Product = {
   ],
   "images": [
     {
+      "src": "/images/products/root-scalp-revival-serum.webp",
+      "alt": "Root & Scalp Revival Botanical Serum — generated representation of an amber dropper bottle renamed from the legacy serum artwork",
+      "role": "primary",
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Regenerated artwork placed 2026-10-30 (regen-73): legacy 'Miracle Hair Regrowth Serum' name and hair-regrowth claims were removed and the product was renamed to Root & Scalp Revival Botanical Serum. Generated representation — not real product photography."
+    },
+    {
       "url": "/images/products/root-scalp-revival-serum.webp",
       "alt_text": "Root & Scalp Revival Botanical Serum — amber dropper bottle",
       "status": "MISSING_ASSET",

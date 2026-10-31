@@ -96,13 +96,13 @@ describe('returns route registration + footer link', () => {
 });
 
 describe('sitemap herb routes (Stage 4)', () => {
-  it('lists the full Herbal Index route set: 310 herb routes', () => {
+  it('lists the full Herbal Index route set: 313 herb routes', () => {
     const params = herbalRouteParams();
-    expect(params).toHaveLength(310);
+    expect(params).toHaveLength(313);
     const base = siteUrl();
     const urls = sitemap().map((e) => e.url);
     const herbUrls = urls.filter((u) => u.includes('/herbal-library/'));
-    expect(herbUrls).toHaveLength(310);
+    expect(herbUrls).toHaveLength(313);
     for (const p of params) {
       expect(herbUrls).toContain(`${base}/herbal-library/${p.herb}`);
     }

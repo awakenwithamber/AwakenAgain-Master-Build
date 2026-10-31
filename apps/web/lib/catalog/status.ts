@@ -23,3 +23,19 @@ import type { Product } from '../../types';
 export function isSupersededProduct(product: Product): boolean {
   return product.verification_status === 'SUPERSEDED';
 }
+
+/**
+ * True ⇔ the product's record carries the owner-ruled fixed-formula
+ * marker (`fixed_formula: true`). A fixed-formula product is sold
+ * exactly as pictured — it may sit in a customizable category (e.g.
+ * 'Soaps', so it shelves with its family) while every customization
+ * surface must refuse to modify it: the product page renders the
+ * standard variant purchase path instead of the SoapCustomizer, and
+ * the server order gate rejects any customization attached to it.
+ * First carrier: the Shea & Goat Milk Small Rose Soap (owner ruling
+ * 2026-10-30 — a deliberately plain, unscented bar whose formula is
+ * shea butter and goat milk, nothing added).
+ */
+export function isFixedFormulaProduct(product: Product): boolean {
+  return product.fixed_formula === true;
+}

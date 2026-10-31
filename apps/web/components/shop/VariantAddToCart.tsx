@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { toCents } from '../../lib/pricing/pricing';
 import { PriceDisplay } from '../catalog/PriceDisplay';
 import { useCart } from '../checkout/cart-store';
+import { VARIANT_SELECTED_EVENT } from './VariantPrice';
 import type { Product } from '../../types';
 import Link from 'next/link';
 
@@ -34,6 +35,17 @@ export function VariantAddToCart({ product }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** Selection also drives the page's variant-aware price displays
+      (QA D-1 fix): broadcast the choice for this product's handle. */
+  const selectVariant = (i: number) => {
+    setVariantIdx(i);
+    window.dispatchEvent(
+      new CustomEvent(VARIANT_SELECTED_EVENT, {
+        detail: { handle: product.handle, index: i },
+      }),
+    );
+  };
 
   const chosen = variants[variantIdx];
   const priceCents =
@@ -68,7 +80,7 @@ export function VariantAddToCart({ product }: Props) {
                 type="radio"
                 name={`${product.handle}-variant`}
                 checked={i === variantIdx}
-                onChange={() => setVariantIdx(i)}
+                onChange={() => selectVariant(i)}
               />
               {variantLabel(v)}
               {typeof v.price === 'number' ? (

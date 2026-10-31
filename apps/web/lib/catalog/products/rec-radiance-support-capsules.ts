@@ -163,7 +163,11 @@ export const RECORD: Product = {
     "wild-caught-omega-3-fish-oil",
     "metabolic-wellness-formula",
     "gaias-rose-soap",
-    "alchemy-tea-blend"
+    "alchemy-tea-blend",
+    "radiance-support-tea"
+  ],
+  "also_available_as": [
+    "radiance-support-tea"
   ],
   "frequently_bought_together": [
     "radiance-renewal-balm",

@@ -37,6 +37,7 @@ import { GrimoirePromo } from '../components/home/GrimoirePromo';
 import { GuideSignup } from '../components/home/GuideSignup';
 import { NetworkInvite } from '../components/home/NetworkInvite';
 import { PersonalizedSections } from '../components/home/PersonalizedSections';
+import { HomeCarousels } from '../components/home/HomeCarousels';
 import { PickedForYou, type ArticlePick } from '../components/home/PickedForYou';
 import { toCardModel, type HomeProductCardModel } from '../components/home/product-cards';
 import { getProductByHandle, PRODUCTS } from '../lib/catalog/products';
@@ -106,6 +107,9 @@ export default function HomePage() {
           grimoirePromo={<GrimoirePromo />}
           afterSections={<GuideSignup />}
         />
+        {/* Product + soap carousels (2026-10-30) — glide-along shelves
+            after the composed sections, before the Network invite. */}
+        <HomeCarousels />
         <NetworkInvite />
       </main>
     </>

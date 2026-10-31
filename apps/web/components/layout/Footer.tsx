@@ -63,6 +63,76 @@ const SOCIAL_LINKS = [
   },
 ];
 
+/**
+ * The full site map (owner directive 2026-10-30): every public page on
+ * the site, grouped and linked, printed above the legal disclaimers so
+ * a visitor at the very bottom of any page can still step directly to
+ * any other. Transactional sub-pages (checkout success/cancel/return)
+ * and admin routes are deliberately not listed — they are reached in
+ * flow, not wandered to.
+ */
+const SITEMAP_GROUPS = [
+  {
+    heading: 'The Apothecary Shelf',
+    links: [
+      { href: '/', label: 'Home — the Apothecary Door' },
+      { href: '/shop', label: 'Shop All Products' },
+      { href: '/soap-shop', label: 'The Soap Shop' },
+      { href: '/soap-builder', label: 'Custom Soap Builder' },
+      { href: '/custom-formula', label: 'Create Your Own Formula' },
+      { href: '/custom-formula/capsules', label: 'Custom Capsules' },
+      { href: '/custom-formula/tea', label: 'Custom Tea Blend' },
+      { href: '/cart', label: 'Your Cart' },
+      { href: '/checkout', label: 'Checkout' },
+      { href: '/order-status', label: 'Order Status' },
+    ],
+  },
+  {
+    heading: 'The Living Grimoire',
+    links: [
+      { href: '/grimoire', label: 'The Living Grimoire of Light & Magic' },
+      { href: '/grimoire/subscribe', label: 'Living Grimoire Membership' },
+    ],
+  },
+  {
+    heading: 'Learn & Wander',
+    links: [
+      { href: '/quiz', label: 'Herbal Allies Quiz' },
+      { href: '/herb-index', label: 'The Herbal Library' },
+      { href: '/herb-index', label: 'Herb Index' },
+      { href: '/herbal-wisdom', label: 'Herbal Wisdom' },
+      { href: '/journal', label: 'Apothecary Journal' },
+      { href: '/faqs', label: 'Questions & Answers' },
+      { href: '/links', label: 'Links & Friends of the Apothecary' },
+    ],
+  },
+  {
+    heading: 'Services & Readings',
+    links: [{ href: '/services', label: 'Services & Readings' }],
+  },
+  {
+    heading: 'The House & Its People',
+    links: [
+      { href: '/about', label: 'About Amber' },
+      { href: '/network', label: 'The Awaken Network' },
+      { href: '/partner', label: 'Partner With Us' },
+      { href: '/contact', label: 'Contact the Apothecary' },
+      { href: '/support', label: 'Support' },
+      { href: '/account', label: 'Your Account' },
+      { href: '/sitemap', label: 'Full Site Map Page' },
+    ],
+  },
+  {
+    heading: 'The Fine Print',
+    links: [
+      { href: '/legal', label: 'Disclaimers' },
+      { href: '/privacy', label: 'Privacy Policy' },
+      { href: '/terms', label: 'Terms of Service' },
+      { href: '/returns', label: 'Returns & Refunds' },
+    ],
+  },
+];
+
 const LEGAL_LINKS = [
   { href: '/legal', label: 'Disclaimers' },
   { href: '/privacy', label: 'Privacy Policy' },
@@ -149,17 +219,24 @@ export default function Footer() {
       <div className="site-footer-base">
         <nav className="footer-sitemap" aria-label="Site map and social links">
           <p>
-            <strong>Site Map</strong>
+            <strong>Site Map</strong> — every path through the apothecary,
+            gathered in one place so you can wander straight to what calls
+            you. The same paths live in the menu above, of course.
           </p>
-          <p className="footer-sitemap-links">
-            <Link href="/sitemap">Full Site Map</Link> ·{' '}
-            <Link href="/about">About Amber (Bio)</Link> ·{' '}
-            <Link href="/shop">Shop</Link> ·{' '}
-            <Link href="/grimoire">The Living Grimoire</Link> ·{' '}
-            <Link href="/services">Services &amp; Readings</Link> ·{' '}
-            <Link href="/network">The Awaken Network</Link> ·{' '}
-            <Link href="/contact">Contact</Link>
-          </p>
+          <div className="footer-sitemap-groups">
+            {SITEMAP_GROUPS.map((group) => (
+              <div className="footer-sitemap-group" key={group.heading}>
+                <h4>{group.heading}</h4>
+                <ul>
+                  {group.links.map((l) => (
+                    <li key={l.href}>
+                      <Link href={l.href}>{l.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
           <p className="footer-sitemap-links">
             {SOCIAL_LINKS.map((s, i) => (
               <span key={s.href}>

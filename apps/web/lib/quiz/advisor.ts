@@ -17,7 +17,7 @@
  *   the compliance law of lib/quiz/quiz.ts ("Tincture never appears")
  *   governs this app.
  * - Ally details (name, latin, traditional use) resolve through the
- *   CURRENT herb catalog (lib/catalog/herbs, 306 records) instead of
+ *   CURRENT herb catalog (lib/catalog/herbs, 309 records) instead of
  *   the legacy BOTANICALS table; four legacy ids are aliased to their
  *   catalog ids below. Every ally the patterns can surface resolves.
  *   Two ids in the legacy per-goal recommendation pool (magnolia,

@@ -40,7 +40,15 @@ export const RECORD: Product = {
     "build your own",
     "custom formula"
   ],
-  "images": [],
+  "images": [
+    {
+      "src": "/images/products/custom-herbal-capsules.webp",
+      "alt": "Custom Herbal Capsules — generated representation of apothecary jars and botanicals for made-to-order capsule blends",
+      "role": "primary",
+      "asset_status": "GENERATED_REPRESENTATION",
+      "note": "Regenerated promotional graphic placed 2026-10-30 (regen-76): treatment-oriented wording from the source graphic was removed. Generated representation — not real product photography; exact botanicals vary by customer blend."
+    }
+  ],
   "short_description": "A personalized capsule blend crafted around your body, goals, and herbal needs.",
   "extended_description": "Custom Herbal Capsules are made for the person who does not fit into a generic wellness box. Share your goals, symptoms, and preferences, and Amber hand-selects botanicals from her apothecary inventory to create a small-batch formula just for you. This is a made-to-order custom product — the exact botanicals are chosen per customer intake, not from a fixed formula.",
   "featured_ingredients": [],

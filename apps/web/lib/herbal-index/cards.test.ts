@@ -131,7 +131,7 @@ describe('29-vs-catalog reconciliation', () => {
     expect(new Set(params).size).toBe(params.length);
     for (const h of HERBS) expect(params).toContain(h.id);
     for (const entry of HERB_INDEX) expect(params).toContain(entry.slug);
-    expect(params).toHaveLength(HERBS.length + 4); // 306 records + 4 alias slugs
+    expect(params).toHaveLength(HERBS.length + 4); // 309 records + 4 alias slugs
   });
 });
 
@@ -165,12 +165,28 @@ const REMOVED_ILLUSTRATION_SLUGS = new Set([
   'coptis',
 ]);
 
+/**
+ * Owner-approved herb-library additions 2026-10-30 (house-blend recipe
+ * adoption): orange peel, lemongrass, and star anise entered the catalog
+ * after the illustration map was generated, so no mapped reference exists
+ * for them yet. Like the audited removals above, these cards carry no
+ * reference and render the monogram; unlike the removals, artwork is
+ * simply owed — they are counted in the manifest's needingArtwork total
+ * until illustrations land. No URL is invented for them here.
+ */
+const ARTWORK_PENDING_SLUGS = new Set([
+  'orange-peel',
+  'lemongrass',
+  'star-anise',
+]);
+
 describe('illustrations', () => {
   it('carries a mapped reference except the audited removals, and never renders a dead CDN hotlink', () => {
     for (const card of HERBAL_CARDS) {
       if (card.illustrationUrl === null) {
         expect(
-          REMOVED_ILLUSTRATION_SLUGS.has(card.slug),
+          REMOVED_ILLUSTRATION_SLUGS.has(card.slug) ||
+            ARTWORK_PENDING_SLUGS.has(card.slug),
           `unexpected missing illustration: ${card.slug}`,
         ).toBe(true);
         expect(card.illustrationRenderable).toBe(false);
@@ -240,13 +256,13 @@ describe('manifest integrity', () => {
 
   it('states the current headline numbers honestly', () => {
     const manifest = herbalIndexManifest();
-    expect(manifest.totalRecords).toBe(306);
-    expect(manifest.herbRecords).toBe(287);
+    expect(manifest.totalRecords).toBe(309);
+    expect(manifest.herbRecords).toBe(290);
     expect(manifest.nonHerbRecords).toBe(19);
     expect(manifest.fullBenefits).toBe(24); // Phase 1 Batch 01 (owner-approved 2026-10-23)
-    expect(manifest.partialBenefits).toBe(282);
+    expect(manifest.partialBenefits).toBe(285);
     expect(manifest.noBenefits).toBe(0);
-    expect(manifest.shortfallToTarget).toBe(46);
+    expect(manifest.shortfallToTarget).toBe(43);
     // 2026-10-29 correction pass: 20 map entries deliberately removed
     // (compounds/blends + coptis — see REMOVED_ILLUSTRATION_SLUGS) and
     // 17 wrong-species map entries replaced with verified Wikimedia
@@ -255,6 +271,6 @@ describe('manifest integrity', () => {
     expect(manifest.withIllustrationEntry).toBe(286);
     expect(manifest.withGrimoireIllustration).toBe(12);
     expect(manifest.renderableIllustrations).toBe(16);
-    expect(manifest.needingArtwork).toBe(290);
+    expect(manifest.needingArtwork).toBe(293);
   });
 });

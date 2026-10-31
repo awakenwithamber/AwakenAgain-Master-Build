@@ -385,7 +385,7 @@ export const HERBS_PART_1: readonly Herb[] = [
     latin: "Rosa canina",
     emoji: "🌹",
     categories: ["beauty"],
-    uses: ["serum", "balm"],
+    uses: ["serum", "balm", "tea"],
     priceCents: 29,
     traditionalNote: "Extraordinarily rich in vitamin C and essential fatty acids. Rose hip supports collagen production, brightens skin, and reduces scarring.",
     traditionalBenefits: ["Highest natural source of vitamin C for collagen", "Reduces hyperpigmentation and age spots", "Essential fatty acids for skin barrier repair"],

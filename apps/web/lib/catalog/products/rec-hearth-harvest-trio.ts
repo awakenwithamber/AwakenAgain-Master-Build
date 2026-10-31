@@ -43,15 +43,61 @@ export const RECORD: Product = {
   ],
   "images": [
     {
-      "file": null,
-      "role": "primary",
-      "status": "MISSING_ASSET",
-      "note": "No bundle photography on file. Do not present any member soap's shape reference as this bundle."
+      "src": "/images/products/hearth-harvest-trio.webp",
+      "alt": "Hearth & Harvest Trio — generated representation: cinnamon spice bar, green rosemary forest bar and rose petal bar on an autumn apothecary table",
+      "provenance": "GENERATED_REPRESENTATION",
+      "status": "GENERATED_REPRESENTATION"
     }
   ],
   "short_description": "Three bars for the turning season.",
   "extended_description": "Three bars for the turning season. Warm Cinnamon Comfort opens with spice and a creamy goat-milk lather; Sacred Forest Ritual brings the green, grounding scent of rosemary and forest botanicals; Gaia's Rose closes with rose and hibiscus, the last of the garden. One for the kitchen sink, one for the shower, one for the guest bath — or all three for your own autumn ritual.",
-  "featured_ingredients": [],
+  "featured_ingredients": [
+    {
+      "name": "Cinnamon",
+      "botanical_name": "Cinnamomum verum",
+      "part_used": "bark",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Clove",
+      "botanical_name": "Syzygium aromaticum",
+      "part_used": "bud",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Rosemary",
+      "botanical_name": "Rosmarinus officinalis",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Rose",
+      "botanical_name": "Rosa spp.",
+      "part_used": "petals",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Hibiscus",
+      "botanical_name": "Hibiscus sabdariffa",
+      "part_used": "calyx",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    }
+  ],
   "complete_ingredients": [],
   "traditional_uses": [],
   "properties": [],

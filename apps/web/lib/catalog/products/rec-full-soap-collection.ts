@@ -10,7 +10,53 @@ export const RECORD: Product = {
   "category": "Bundles",
   "vendor": "Awaken With Amber LLC",
   "brand": "Amber's Alchemy Apothecary",
-  "featured_ingredients": [],
+  "featured_ingredients": [
+    {
+      "name": "Lavender",
+      "botanical_name": "Lavandula angustifolia",
+      "part_used": "flower",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Rose",
+      "botanical_name": "Rosa spp.",
+      "part_used": "petals",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Eucalyptus",
+      "botanical_name": "Eucalyptus globulus",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Cinnamon",
+      "botanical_name": "Cinnamomum verum",
+      "part_used": "bark",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Chamomile",
+      "botanical_name": "Matricaria chamomilla",
+      "part_used": "flower",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    }
+  ],
   "process": "Not applicable — bundle of finished products.",
   "review_summary": {},
   "inventory_status": "NEEDS_VERIFICATION",

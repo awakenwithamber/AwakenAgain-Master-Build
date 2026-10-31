@@ -124,6 +124,14 @@ export const RECORD: Product = {
   ],
   "images": [
     {
+      "src": "/images/products/lavender-fairy-dream-photo.webp",
+      "alt": "Lavender Fairy Dream Soap — the maker's own photograph: a translucent violet-blue rose-mold bar with botanical layers, candlelit",
+      "role": "primary",
+      "status": "mapped_photo",
+      "provenance": "Owner upload 2026-10-30 (upload file 80); identified by the owner on 2026-10-30 as Lavender Fairy Dream Soap.",
+      "note": "Owner-ruled identification 2026-10-30. This photograph was previously circulated with a 'Miracle Pain Relieving Balm' caption — that caption is wrong for this image and must never be paired with it. Photo reconciliation 2026-10-30: the deployed file was re-cropped to the photograph only (source y 0–1400 of 1920) after the first staged copy was found to still contain the caption band; no caption text remains in the file."
+    },
+    {
       "file": "15936_29_wrls.webp",
       "role": "lifestyle",
       "status": "mapped_photo",

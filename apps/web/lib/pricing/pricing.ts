@@ -62,7 +62,7 @@ export function bundleSavingsPct(): number {
   return Math.round((bundleSavingsCents() / sum) * 1000) / 10;
 }
 
-/* ---------------- Custom formula builders (G2 capsules, G10 tea) ---------------- */
+/* ---------------- Custom formula builders (G2 capsules, G10 tea, custom balm) ---------------- */
 
 /**
  * Custom-formula pricing — PROPOSED (pending owner confirmation).
@@ -83,7 +83,7 @@ export function bundleSavingsPct(): number {
  * - 2-week capsule counts unverified (28 vs 30 capsules in sources).
  */
 
-export type FormulaKind = 'capsule' | 'tea';
+export type FormulaKind = 'capsule' | 'tea' | 'balm';
 
 export interface FormulaSizeOption {
   id: string;
@@ -93,13 +93,15 @@ export interface FormulaSizeOption {
   baseCents: number;
 }
 
-/** Product handles for the two custom-formula products (in the catalog). */
+/** Product handles for the custom-formula products (in the catalog). */
 export const CUSTOM_CAPSULE_HANDLE = 'custom-herbal-capsules';
 export const CUSTOM_TEA_HANDLE = 'custom-tea-blends';
+export const CUSTOM_BALM_HANDLE = 'custom-botanical-balm';
 
 export function formulaKindForHandle(handle: string): FormulaKind | null {
   if (handle === CUSTOM_CAPSULE_HANDLE) return 'capsule';
   if (handle === CUSTOM_TEA_HANDLE) return 'tea';
+  if (handle === CUSTOM_BALM_HANDLE) return 'balm';
   return null;
 }
 
@@ -113,11 +115,38 @@ export const CUSTOM_TEA_SIZES: readonly FormulaSizeOption[] = [
   { id: 'tea-bags-20', name: 'Tea Bags — 20 pack', unit: '20 tea bags', baseCents: 1199 },
 ];
 
+/**
+ * Custom balm sizes (owner-approved builder, 2026-10-30).
+ *
+ * PRICE GROUNDING: baseCents mirror the balm records' variant prices
+ * EXACTLY — rec-radiance-renewal-balm.ts and
+ * rec-soothe-restore-botanical-balm.ts both carry 1 oz $11.77,
+ * 2 oz $23.54, 3 oz $35.31, 4 oz $47.08 (owner-approved $11.77/oz).
+ * No price is invented here.
+ *
+ * WAX RULE (owner ruling 2026-10-30): Soy Wax (standard) and Beeswax
+ * (soy-free alternative) are offered at IDENTICAL prices on both balm
+ * records, so the builder's base/wax choice carries NO price
+ * difference — it is not an input to this table or to
+ * customFormulaPriceCents at all.
+ */
+export const CUSTOM_BALM_SIZES: readonly FormulaSizeOption[] = [
+  { id: 'balm-1oz', name: 'Pocket Size — 1 oz', unit: '1 oz', baseCents: 1177 },
+  { id: 'balm-2oz', name: 'Everyday Jar — 2 oz', unit: '2 oz', baseCents: 2354 },
+  { id: 'balm-3oz', name: 'Generous Jar — 3 oz', unit: '3 oz', baseCents: 3531 },
+  { id: 'balm-4oz', name: 'Apothecary Jar — 4 oz', unit: '4 oz', baseCents: 4708 },
+];
+
 export function getFormulaSize(
   kind: FormulaKind,
   sizeId: string,
 ): FormulaSizeOption | undefined {
-  const table = kind === 'capsule' ? CUSTOM_CAPSULE_SIZES : CUSTOM_TEA_SIZES;
+  const table =
+    kind === 'capsule'
+      ? CUSTOM_CAPSULE_SIZES
+      : kind === 'tea'
+        ? CUSTOM_TEA_SIZES
+        : CUSTOM_BALM_SIZES;
   return table.find((s) => s.id === sizeId);
 }
 

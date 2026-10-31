@@ -19,6 +19,13 @@ export const RECORD: Product = {
   "variants": [],
   "images": [
     {
+      "path": "/images/products/hypnotherapy-guided-relaxation.webp",
+      "alt": "Meditating silhouette with glowing chakras on a lotus beneath the moon — owner-supplied service artwork",
+      "status": "mapped_photo",
+      "asset_status": "MAPPED",
+      "note": "Owner-supplied artwork (inventory file 55, PROBABLE identification accepted by the owner 2026-10-30) assigned to this guided-relaxation service. Artwork, not documentary photography."
+    },
+    {
       "path": "images/guided-meditation.webp",
       "status": "mapped from merged-catalog services.csv; association unverified — not confirmed as representative service photography"
     }

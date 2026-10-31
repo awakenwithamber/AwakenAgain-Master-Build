@@ -929,6 +929,63 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     else if (intent === 'prev') prev();
   };
 
+  /*
+   * Pointer handling (2026-10-30, owner directive: swipe with mouse or
+   * pen as well as touch). Mouse/pen gestures run through the SAME pure
+   * classifier and the SAME scroll guard as touch — a drag that scrolls
+   * the page content can never turn a page. Touch pointers are left to
+   * the touch handlers above (no double-firing), and a swipe that
+   * begins on an interactive element (button, link, input) is left to
+   * that element, mirroring the keyboard handler's guard.
+   */
+  const pointerRef = useRef<{
+    x: number;
+    y: number;
+    startedAt: number;
+    scrollEl: HTMLElement | null;
+    scrollTopAtStart: number;
+  } | null>(null);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch' || e.button !== 0) {
+      pointerRef.current = null;
+      return;
+    }
+    if ((e.target as HTMLElement).closest?.('button, a, input')) {
+      pointerRef.current = null;
+      return;
+    }
+    const scrollEl = (e.target as HTMLElement).closest?.(
+      '[data-grimoire-scroll]',
+    ) as HTMLElement | null;
+    pointerRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      startedAt: Date.now(),
+      scrollEl,
+      scrollTopAtStart: scrollEl ? scrollEl.scrollTop : 0,
+    };
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    const start = pointerRef.current;
+    pointerRef.current = null;
+    if (!start || e.pointerType === 'touch' || !bookOpen || turn) return;
+    const contentScrolled =
+      start.scrollEl !== null &&
+      start.scrollEl.scrollTop !== start.scrollTopAtStart;
+    const intent = classifyPageTurnGesture({
+      startX: start.x,
+      startY: start.y,
+      endX: e.clientX,
+      endY: e.clientY,
+      durationMs: Date.now() - start.startedAt,
+      contentScrolled,
+    });
+    if (intent === 'next') next();
+    else if (intent === 'prev') prev();
+  };
+
   /* Which pages are visible under the (possibly turning) sheet. */
   const leftPage = pages[spreadBase];
   const rightPage = isDesktop ? pages[spreadBase + 1] : undefined;
@@ -1017,6 +1074,8 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
         className={styles.bookScene}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
       >
         <div className={styles.book}>
           {coverState !== 'open' && (

@@ -11,6 +11,7 @@ import { getHerb, herbsForUse } from '../catalog/herbs';
 import type { Herb, HerbCategory } from '../../types';
 import type { FormulaKind } from '../pricing/pricing';
 import { getFormulaSize } from '../pricing/pricing';
+import { balmBotanicals, getBalmBase, isBalmBotanical } from './balm';
 
 /** Legacy parity: the static builder capped formulas at 12 botanicals. */
 export const MAX_FORMULA_HERBS = 12;
@@ -44,6 +45,12 @@ export const FORMULA_STEP_HEADLINES: Record<FormulaKind, Record<FormulaStepKey, 
     safety: 'Safety & Intention',
     reveal: 'Your Blend Is Complete ✨',
   },
+  balm: {
+    size: 'Choose Your Size',
+    herbs: 'Choose Your Botanicals',
+    safety: 'Safety & Intention',
+    reveal: 'Your Balm Is Complete ✨',
+  },
 };
 
 export const FORMULA_STEP_SUBS: Record<FormulaKind, Record<FormulaStepKey, string>> = {
@@ -56,6 +63,12 @@ export const FORMULA_STEP_SUBS: Record<FormulaKind, Record<FormulaStepKey, strin
   tea: {
     size: 'Loose leaf for ritual, tea bags for ease.',
     herbs: 'Up to 12 botanicals from the apothecary shelves.',
+    safety: 'Read every flag — your safety comes first.',
+    reveal: 'The moment of truth.',
+  },
+  balm: {
+    size: 'From a pocket-size jar to a generous apothecary jar.',
+    herbs: 'Botanicals drawn from the apothecary\u2019s own balms and serum.',
     safety: 'Read every flag — your safety comes first.',
     reveal: 'The moment of truth.',
   },
@@ -100,7 +113,12 @@ export function toggleFormulaHerb(
 ): string[] {
   const herb = getHerb(id);
   if (!herb) return ids;
-  if (!herb.uses.includes(kind)) return ids;
+  // Balm botanicals are grounded in the balm/serum records' featured
+  // ingredients (lib/custom-formula/balm.ts), not in Herb.uses — three
+  // grounded botanicals carry no 'balm' use. Capsule/tea unchanged.
+  if (kind === 'balm' ? !isBalmBotanical(id) : !herb.uses.includes(kind)) {
+    return ids;
+  }
   if (ids.includes(id)) return ids.filter((h) => h !== id);
   if (ids.length >= MAX_FORMULA_HERBS) return ids; // 13th tap is ignored
   return [...ids, id];
@@ -108,6 +126,8 @@ export function toggleFormulaHerb(
 
 /** Herbs available to a builder kind, in catalog order. */
 export function availableHerbs(kind: FormulaKind): Herb[] {
+  // Balm: exactly the grounded balm botanicals, in source-record order.
+  if (kind === 'balm') return balmBotanicals();
   return herbsForUse(kind);
 }
 
@@ -161,7 +181,10 @@ export function formulaStepComplete(
         sel.herbIds.length <= MAX_FORMULA_HERBS &&
         sel.herbIds.every((id) => {
           const h = getHerb(id);
-          return !!h && h.uses.includes(kind);
+          if (!h) return false;
+          // Balm groundedness rule (see toggleFormulaHerb); capsule/tea
+          // keep the Herb.uses check exactly as before.
+          return kind === 'balm' ? isBalmBotanical(id) : h.uses.includes(kind);
         })
       );
     case 'safety':
@@ -190,12 +213,24 @@ export function canReachFormulaStep(
  * Formula customization for the order record — EXACT herb IDs, never prose.
  * Mirrors the soap builder's §14 rule.
  */
+/** Balm-only selections carried alongside a balm formula (additive). */
+export interface BalmFormulaSelections {
+  baseId: string | null;
+  purposeId?: string | null;
+  scentId?: string | null;
+}
+
 export function formulaCustomizationOf(
   sel: FormulaSelections,
   kind: FormulaKind,
+  balm?: BalmFormulaSelections,
 ): import('../../types').FormulaCustomization | null {
   if (!formulaStepComplete('size', sel, kind)) return null;
   if (!formulaStepComplete('herbs', sel, kind)) return null;
+  if (kind === 'balm') {
+    // A balm formula is incomplete without a valid wax/base choice.
+    if (!balm?.baseId || !getBalmBase(balm.baseId)) return null;
+  }
   return {
     herb_ids: [...sel.herbIds],
     size_id: sel.sizeId as string,
@@ -206,6 +241,11 @@ export function formulaCustomizationOf(
       ? { intention: sel.intention.trim().slice(0, 120) }
       : {}),
     ...(sel.notes.trim() ? { notes: sel.notes.trim().slice(0, 500) } : {}),
+    ...(kind === 'balm' && balm?.baseId ? { base_id: balm.baseId } : {}),
+    ...(kind === 'balm' && balm?.purposeId
+      ? { purpose_id: balm.purposeId }
+      : {}),
+    ...(kind === 'balm' && balm?.scentId ? { scent_id: balm.scentId } : {}),
   };
 }
 
@@ -221,7 +261,7 @@ export function formulaMakerNotes(
   const size = getFormulaSize(kind, sizeId);
   const names = herbIds.map((id) => getHerb(id)?.name ?? id);
   const parts = [
-    `Form: ${kind === 'capsule' ? 'Custom Herbal Capsules' : 'Custom Tea Blend'}.`,
+    `Form: ${kind === 'capsule' ? 'Custom Herbal Capsules' : kind === 'tea' ? 'Custom Tea Blend' : 'Custom Botanical Balm'}.`,
     `Size: ${size ? `${size.name} (${size.unit})` : sizeId}.`,
     `Botanicals (${names.length}): ${names.join(', ')}.`,
   ];

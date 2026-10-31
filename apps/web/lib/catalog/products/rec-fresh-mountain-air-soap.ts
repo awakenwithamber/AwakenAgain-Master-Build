@@ -196,6 +196,19 @@ export const RECORD: Product = {
       "evidence_context": "mixed_with_note",
       "customer_friendly_summary": "A beloved botanical butter that helps keep skin feeling soft after rinsing.",
       "evidence_note": "cosmetic_function: emollient/skin-conditioning; traditional_use in skin care."
+    },
+    {
+      "name": "Eucalyptus",
+      "botanical_name": "Eucalyptus globulus",
+      "part_used": "leaf",
+      "role_in_formula": "Crisp green aromatic that lifts the mint toward high-country air.",
+      "traditional_use": "Eucalyptus is traditionally used in bathing traditions for its fresh, camphoraceous scent.",
+      "properties": [
+        "Aromatic (fresh, green)"
+      ],
+      "key_constituents": null,
+      "evidence_context": "traditional_use",
+      "customer_friendly_summary": "A cool green note that makes the bar smell like a trail above the treeline."
     }
   ],
   "complete_ingredients": "Mint, Herbal greens, Goat milk, Shea butter",

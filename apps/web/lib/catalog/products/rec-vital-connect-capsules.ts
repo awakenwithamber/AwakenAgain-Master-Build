@@ -147,7 +147,11 @@ export const RECORD: Product = {
     "sacred-balance-capsules",
     "happy-pill-capsules",
     "vital-vitality-capsules",
-    "chill-pill-capsules"
+    "chill-pill-capsules",
+    "vital-connect-tea"
+  ],
+  "also_available_as": [
+    "vital-connect-tea"
   ],
   "frequently_bought_together": [
     "sacred-balance-capsules"

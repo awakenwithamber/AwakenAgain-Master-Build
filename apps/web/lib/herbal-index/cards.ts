@@ -55,7 +55,7 @@ export const HERB_INDEX_SLUG_ALIASES: Readonly<Record<string, string>> = {
 /* ------------------------------------------------------------------ */
 /* Ingredient-kind classification (inventory honesty).                 */
 /*                                                                     */
-/* The 306 catalog records are NOT all botanical herbs — the audit     */
+/* The 309 catalog records are NOT all botanical herbs — the audit     */
 /* noted mushrooms/resins/oils/vitamins/minerals among them. Kind is   */
 /* derived by the explicit, ordered rules in classifyHerbalKind so     */
 /* the inventory counts in the workstream report are reproducible      */

@@ -268,6 +268,11 @@ export function useCart(): CartStore {
                 ...(formula.creation_name ? { creation_name: formula.creation_name } : {}),
                 ...(formula.intention ? { intention: formula.intention } : {}),
                 ...(formula.notes ? { notes: formula.notes } : {}),
+                // Balm-only fields (additive): present only on balm
+                // formulas — capsule/tea cart lines are unchanged.
+                ...(formula.base_id ? { base_id: formula.base_id } : {}),
+                ...(formula.purpose_id ? { purpose_id: formula.purpose_id } : {}),
+                ...(formula.scent_id ? { scent_id: formula.scent_id } : {}),
               },
             }
           : {}),

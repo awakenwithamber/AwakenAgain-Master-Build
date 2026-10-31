@@ -257,6 +257,59 @@ describe('intakeOrder — validation stage', () => {
   });
 });
 
+/**
+ * FIXED-FORMULA GATE (owner ruling 2026-10-30) — the Shea & Goat Milk
+ * Small Rose Soap sits in the 'Soaps' category (so it shelves with the
+ * soaps and appears on the home Soap Shelf) but carries fixed_formula:
+ * true: it is sold exactly as pictured, and NO customization may attach
+ * to it. The server gate (isSoapProduct in lib/checkout/order.ts)
+ * excludes fixed-formula products, so a customization on this handle
+ * fails exactly like one on a non-soap product, while its plain variant
+ * purchase flows at the record's own price.
+ */
+describe('intakeOrder — fixed-formula Small Rose (owner ruling 2026-10-30)', () => {
+  it('rejects a customization attached to the fixed-formula Small Rose', async () => {
+    const outcome = await intakeOrder(
+      validBody({
+        items: [
+          {
+            product_handle: 'shea-goat-milk-small-rose-soap',
+            quantity: 1,
+            customization: VALID_SOAP_ITEM.customization,
+            unit_price_cents: 477,
+          },
+        ],
+        client_total_cents: 477,
+      }),
+      createOrderStore(),
+    );
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) return;
+    expect(outcome.stage).toBe('validation');
+    expect(outcome.errors.join(' ')).toMatch(/not a soap product/);
+  });
+
+  it('accepts the Small Rose as a plain variant purchase at its record price', async () => {
+    const outcome = await intakeOrder(
+      validBody({
+        items: [
+          {
+            product_handle: 'shea-goat-milk-small-rose-soap',
+            variant_id: 'shea-goat-milk-small-rose-soap-small-rose',
+            quantity: 1,
+            unit_price_cents: 477,
+          },
+        ],
+        client_total_cents: 477 + 595,
+      }),
+      createOrderStore(),
+    );
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.record.total_cents).toBe(477 + 595);
+  });
+});
+
 describe('intakeOrder — persistence stage', () => {
   it('surfaces store failures as the persistence stage, never validation', async () => {
     // A store pointed at a directory (not a file) always fails to append.

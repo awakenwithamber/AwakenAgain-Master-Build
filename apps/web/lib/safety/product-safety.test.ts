@@ -106,7 +106,7 @@ describe('allergenStatement', () => {
 });
 
 describe('isIngestibleProduct', () => {
-  it('classifies the catalog from format fields (19 ingestible records)', () => {
+  it('classifies the catalog from format fields (33 ingestible records)', () => {
     const ingestible = PRODUCTS.filter(isIngestibleProduct).map((p) => p.handle);
     expect(ingestible).toEqual(
       expect.arrayContaining([
@@ -118,7 +118,7 @@ describe('isIngestibleProduct', () => {
         'wild-caught-omega-3-fish-oil',
       ]),
     );
-    expect(ingestible).toHaveLength(19);
+    expect(ingestible).toHaveLength(33);
   });
 
   it('topicals, soaps, services, and digital products are not ingestible', () => {

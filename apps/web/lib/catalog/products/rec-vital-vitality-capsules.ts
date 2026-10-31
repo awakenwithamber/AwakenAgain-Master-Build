@@ -146,7 +146,11 @@ export const RECORD: Product = {
   "related_products": [
     "metabolic-wellness-formula",
     "happy-pill-capsules",
-    "vital-connect-capsules"
+    "vital-connect-capsules",
+    "vital-vitality-tea"
+  ],
+  "also_available_as": [
+    "vital-vitality-tea"
   ],
   "frequently_bought_together": [
     "metabolic-wellness-formula"

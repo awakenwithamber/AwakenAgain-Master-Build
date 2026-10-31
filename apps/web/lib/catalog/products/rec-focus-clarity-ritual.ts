@@ -10,7 +10,53 @@ export const RECORD: Product = {
   "category": "Bundles",
   "vendor": "Awaken With Amber LLC",
   "brand": "Amber's Alchemy Apothecary",
-  "featured_ingredients": [],
+  "featured_ingredients": [
+    {
+      "name": "Green Tea",
+      "botanical_name": "Camellia sinensis",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Gotu Kola",
+      "botanical_name": "Centella asiatica",
+      "part_used": "aerial parts",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Rosemary",
+      "botanical_name": "Rosmarinus officinalis",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Peppermint",
+      "botanical_name": "Mentha piperita",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Ginkgo",
+      "botanical_name": "Ginkgo biloba",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    }
+  ],
   "process": "Not applicable — bundle of finished products.",
   "review_summary": {},
   "inventory_status": "NEEDS_VERIFICATION",
@@ -49,9 +95,9 @@ export const RECORD: Product = {
   "images": [
     {
       "src": "/images/products/focus-clarity-ritual.webp",
-      "fallback": "/images/products/focus-clarity-ritual.png",
-      "alt_text": "Focus and Clarity Ritual Bundle with soap tea balm and capsules",
-      "status": "placeholder"
+      "alt": "The Focus & Clarity Ritual Bundle — generated representation: steaming tea cup, botanical soap bar, balm tin and amber capsule bottle with rosemary and peppermint on a candlelit apothecary table",
+      "provenance": "GENERATED_REPRESENTATION",
+      "status": "GENERATED_REPRESENTATION"
     }
   ],
   "collections": [

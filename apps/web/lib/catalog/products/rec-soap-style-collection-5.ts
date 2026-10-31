@@ -55,7 +55,53 @@ export const RECORD: Product = {
   ],
   "short_description": "All five soap styles in one collection — you choose the scent, color, herbs, or botanical character of each bar.",
   "extended_description": "One bar in each of the five styles: Small Rose (2 oz), Medium Rose (3 oz), Large Plain Rectangle (4 oz), Large Wave Rectangle (4.5 oz), and Large Floral Round (4.5 oz). For each soap you pick the formula/scent, color, and herbs or botanical inclusions from what is offered. Scent uses doTERRA essential oils; exact scent list is being verified. No savings claim applies to this bundle.",
-  "featured_ingredients": [],
+  "featured_ingredients": [
+    {
+      "name": "Lavender",
+      "botanical_name": "Lavandula angustifolia",
+      "part_used": "flower",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Rose",
+      "botanical_name": "Rosa spp.",
+      "part_used": "petals",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Eucalyptus",
+      "botanical_name": "Eucalyptus globulus",
+      "part_used": "leaf",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Cinnamon",
+      "botanical_name": "Cinnamomum verum",
+      "part_used": "bark",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    },
+    {
+      "name": "Chamomile",
+      "botanical_name": "Matricaria chamomilla",
+      "part_used": "flower",
+      "role_in_formula": "One of the five botanicals that give this blend its character in the cup; proportions are the apothecary's own and are not published.",
+      "traditional_use": "Named in the apothecary's blend records and long enjoyed in herbal teas and home apothecary practice.",
+      "customer_friendly_summary": "One of the botanicals that gives this blend its character in the cup.",
+      "evidence_status": "traditional_use"
+    }
+  ],
   "complete_ingredients": [],
   "traditional_uses": [],
   "properties": [],

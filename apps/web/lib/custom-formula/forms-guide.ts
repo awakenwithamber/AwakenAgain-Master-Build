@@ -64,6 +64,7 @@ export const FORM_GUIDE: readonly FormGuideEntry[] = [
     mind: "The simple act of touch slows you down and tells your nervous system it's safe to soften.",
     soul: 'Anointing is one of the oldest rituals there is — care you can feel in your hands.',
     actions: [
+      { type: 'link', label: 'Build your balm', href: '/custom-formula/balm' },
       { type: 'link', label: 'Shop balms', href: '/shop' },
       { type: 'contact', label: 'Ask about a custom balm' },
     ],
@@ -124,8 +125,9 @@ export const TINCTURE_VS_SERUM = {
 } as const;
 
 /** Builder-page intro metaphor lines (copy pack §3), keyed by builder kind. */
-export const BUILDER_INTRO_LINES: Record<'tea' | 'capsule', string> = {
+export const BUILDER_INTRO_LINES: Record<'tea' | 'capsule' | 'balm', string> = {
   tea: "New to herbs? A tea blend is like a soup recipe — a few plants, hot water, and a little patience. You can't get this wrong.",
   capsule:
     'New to herbs? Think of your formula like a team: each herb has one job, and together they cover yours. Pick what calls to you — the safety step will double-check everything.',
+  balm: 'New to balms? Think of it like choosing a favorite jar from the apothecary shelf — your finish, your botanicals, your scent — and Amber crafts it the slow way, just for you.',
 };
