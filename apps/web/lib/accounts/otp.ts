@@ -43,6 +43,14 @@ export const ACCOUNT_OTP_CODE_LENGTH = 6;
 export const ACCOUNT_OTP_TTL_SECONDS = 10 * 60;
 export const ACCOUNT_OTP_MAX_ATTEMPTS = 5;
 export const ACCOUNT_OTP_PURPOSE = 'account_signin' as const;
+/**
+ * Resend cooldown (owner requirement 2026-11-02, item 5): after a code
+ * is issued for an (email, purpose), the resend path waits this long
+ * before issuing another — long enough for the first email to arrive,
+ * short enough to never strand a customer. Enforced server-side in
+ * POST /api/account/resend-code and mirrored as a countdown in the UI.
+ */
+export const ACCOUNT_CODE_RESEND_COOLDOWN_SECONDS = 60;
 
 /** Every purpose a code can be issued for (Phase 2B). */
 export type AccountCodePurpose =
@@ -85,6 +93,15 @@ export interface AccountOtpStore {
     email: string,
     purpose: AccountCodePurpose,
   ): Promise<PersistedAccountCodeRequest | null>;
+  /**
+   * Delete every unconsumed code for (email, purpose). Issuing a fresh
+   * code supersedes all earlier ones, so a customer can never be
+   * confused by an older code from the same sitting still working.
+   */
+  deleteCodesForEmailPurpose(
+    email: string,
+    purpose: AccountCodePurpose,
+  ): Promise<void>;
 }
 
 /** In-memory implementation — TESTS ONLY since Phase 2B (see header). */
@@ -114,6 +131,17 @@ export class InMemoryAccountOtpStore implements AccountOtpStore {
       latest = record;
     }
     return latest;
+  }
+  async deleteCodesForEmailPurpose(
+    email: string,
+    purpose: AccountCodePurpose,
+  ): Promise<void> {
+    for (const [id, record] of this.codes) {
+      if (record.email !== email) continue;
+      if ((record.purpose ?? 'account_signin') !== purpose) continue;
+      if (record.consumed) continue;
+      this.codes.delete(id);
+    }
   }
 }
 
@@ -166,6 +194,9 @@ export async function requestCode(
   const request_id = newRequestId();
   const nowSeconds = Math.floor(Date.now() / 1000);
   const expires_at = nowSeconds + ACCOUNT_OTP_TTL_SECONDS;
+  // A fresh code supersedes every earlier unconsumed code for the same
+  // (email, purpose) — only the newest code can ever verify.
+  await store.deleteCodesForEmailPurpose(email, purpose);
   await store.saveCodeRequest({
     request_id,
     email,
@@ -184,6 +215,30 @@ export async function requestCode(
     },
     code,
   };
+}
+
+/**
+ * Seconds left in the resend cooldown for (email, purpose), or 0 when
+ * a resend may go ahead. Derived from the newest live (unconsumed,
+ * unexpired) code: it was issued at expires_at − TTL. An expired or
+ * absent code imposes no cooldown — the customer is never made to wait
+ * out a code that can no longer be used.
+ */
+export async function resendCooldownRemainingSeconds(
+  store: AccountOtpStore,
+  emailInput: unknown,
+  purpose: AccountCodePurpose,
+  nowSeconds: number = Math.floor(Date.now() / 1000),
+): Promise<number> {
+  const email = sanitizeEmail(emailInput);
+  if (!email) return 0;
+  const latest = await store.getLatestCodeRequestForEmail(email, purpose);
+  if (!latest) return 0;
+  if (latest.expires_at < nowSeconds) return 0;
+  const issuedAt = latest.expires_at - ACCOUNT_OTP_TTL_SECONDS;
+  const age = nowSeconds - issuedAt;
+  if (age >= ACCOUNT_CODE_RESEND_COOLDOWN_SECONDS) return 0;
+  return ACCOUNT_CODE_RESEND_COOLDOWN_SECONDS - Math.max(0, age);
 }
 
 /** Issue a legacy sign-in code (purpose 'account_signin'). */

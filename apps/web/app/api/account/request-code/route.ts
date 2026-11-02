@@ -87,17 +87,22 @@ export async function POST(request: Request) {
   // email layer must not leak the code or pretend a send happened; the
   // request still stands (the visitor can retry), and the mode is
   // reported honestly below.
-  let delivery: 'preview' | 'sent' = emailDeliveryIsPreview() ? 'preview' : 'sent';
+  // Three honest states (2026-11-02): 'sent', 'preview' (no mailer
+  // bound — nothing was sent), 'failed' (a real send was attempted and
+  // refused). A failure is never disguised as 'preview'.
+  let delivery: 'preview' | 'sent' | 'failed' = emailDeliveryIsPreview()
+    ? 'preview'
+    : 'sent';
   try {
     const job = buildAccountSigninCodeJob(email, {
       code: issued.code,
       expires_in_minutes: Math.floor(ACCOUNT_OTP_TTL_SECONDS / 60),
     });
     const result = await createEmailProvider().send(job);
-    if (!result.ok) delivery = 'preview';
+    if (!result.ok) delivery = 'failed';
   } catch (err) {
     log.error('sign-in code delivery failed', { error: err });
-    delivery = 'preview';
+    delivery = 'failed';
   }
 
   captureContentServerEventSoon(

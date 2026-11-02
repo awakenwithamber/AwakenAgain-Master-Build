@@ -15,8 +15,10 @@
  * /api/account/forgot-password itself (the forgot form is its resend).
  *
  * The response is the same shape whether or not a code was sent; the
- * delivery field describes the email SYSTEM (preview vs real sends),
- * never the existence of an account.
+ * delivery field honestly reports the send outcome ('sent' /
+ * 'preview' / 'failed'), never the existence of an account. Resends
+ * are cooldown-limited per (email, purpose) — see
+ * ACCOUNT_CODE_RESEND_COOLDOWN_SECONDS in lib/accounts/otp.ts.
  */
 import { NextResponse } from 'next/server';
 import {
@@ -33,6 +35,7 @@ import {
   ACCOUNT_OTP_TTL_SECONDS,
   getAccountOtpStore,
   requestCode,
+  resendCooldownRemainingSeconds,
   type AccountCodePurpose,
 } from '../../../../lib/accounts/otp';
 import { accountSessionsConfigured } from '../../../../lib/accounts/session';
@@ -67,10 +70,6 @@ export async function POST(request: Request) {
   const purpose: AccountCodePurpose =
     body.purpose === 'account_signin' ? 'account_signin' : 'email_verification';
 
-  const delivery: 'preview' | 'sent' = emailDeliveryIsPreview()
-    ? 'preview'
-    : 'sent';
-
   const state = await loadAccountAsync(email);
   const shouldSend =
     !state.deleted &&
@@ -80,9 +79,45 @@ export async function POST(request: Request) {
         state.has_registration &&
         !accountEmailVerified(state));
 
+  // Resend cooldown (owner requirement 2026-11-02, item 5): one code
+  // per (email, purpose) per cooldown window. The answer names the
+  // address and the wait, so a customer is never left guessing whether
+  // anything was sent. Cooldown applies only when a code would
+  // otherwise be sent, and never when the last code already expired.
+  if (shouldSend) {
+    const cooldown = await resendCooldownRemainingSeconds(
+      getAccountOtpStore(),
+      email,
+      purpose,
+    );
+    if (cooldown > 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'resend_cooldown',
+          retry_after_seconds: cooldown,
+          errors: [
+            `A code was just sent to ${email}. Please check that inbox ` +
+              `(and its spam folder) — you can ask for another code in ${cooldown} seconds.`,
+          ],
+        },
+        { status: 429, headers: { 'Retry-After': String(cooldown) } },
+      );
+    }
+  }
+
+  // Three honest delivery states (2026-11-02): 'sent', 'preview' (no
+  // mailer bound), 'failed' (send attempted and refused) — the send
+  // RESULT is checked, never assumed.
+  let delivery: 'preview' | 'sent' | 'failed' = emailDeliveryIsPreview()
+    ? 'preview'
+    : 'sent';
+  let requestId: string | null = null;
+
   if (shouldSend) {
     try {
       const issued = await requestCode(getAccountOtpStore(), email, purpose);
+      requestId = issued.request.request_id;
       const data = {
         code: issued.code,
         expires_in_minutes: Math.floor(ACCOUNT_OTP_TTL_SECONDS / 60),
@@ -91,17 +126,28 @@ export async function POST(request: Request) {
         purpose === 'account_signin'
           ? buildAccountSigninCodeJob(email, data)
           : buildAccountVerificationCodeJob(email, data);
-      await createEmailProvider().send(job);
+      const result = await createEmailProvider().send(job);
+      if (!result.ok) delivery = 'failed';
     } catch (err) {
       // A failed resend must not dead-end the visitor — they can retry;
-      // the response stays the same honest shape.
+      // the failure is reported honestly as 'failed', never as a send.
       log.error('code resend delivery failed', { error: err });
+      delivery = 'failed';
     }
   }
 
   return NextResponse.json({
     ok: true,
     delivery,
+    email,
     expires_in_seconds: ACCOUNT_OTP_TTL_SECONDS,
+    // Sign-in codes verify by request_id (POST /api/account/verify), so
+    // a resent sign-in code must hand the client its request_id — until
+    // 2026-11-02 this response omitted it and a resent sign-in code
+    // could never be entered. Verification codes verify by email and
+    // need no request_id.
+    ...(purpose === 'account_signin' && requestId
+      ? { request_id: requestId }
+      : {}),
   });
 }

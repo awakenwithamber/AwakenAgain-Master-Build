@@ -152,17 +152,25 @@ export async function POST(request: Request) {
     email,
     'email_verification',
   );
-  let delivery: 'preview' | 'sent' = emailDeliveryIsPreview() ? 'preview' : 'sent';
+  // Delivery is reported honestly in three states (2026-11-02): 'sent'
+  // (the provider accepted it), 'preview' (no real mailer is bound, so
+  // nothing was sent), and 'failed' (a real send was attempted and the
+  // provider refused it) — a failed send must never be disguised as
+  // 'preview', or the customer is told delivery is "not switched on"
+  // when the truth is that this email failed.
+  let delivery: 'preview' | 'sent' | 'failed' = emailDeliveryIsPreview()
+    ? 'preview'
+    : 'sent';
   try {
     const job = buildAccountVerificationCodeJob(email, {
       code: issued.code,
       expires_in_minutes: Math.floor(ACCOUNT_OTP_TTL_SECONDS / 60),
     });
     const result = await createEmailProvider().send(job);
-    if (!result.ok) delivery = 'preview';
+    if (!result.ok) delivery = 'failed';
   } catch (err) {
     log.error('verification code delivery failed', { error: err });
-    delivery = 'preview';
+    delivery = 'failed';
   }
 
   return NextResponse.json(

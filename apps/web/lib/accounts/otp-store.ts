@@ -153,6 +153,24 @@ export class JsonlAccountOtpStore implements AccountOtpStore {
     }
     return latest;
   }
+
+  async deleteCodesForEmailPurpose(
+    email: string,
+    purpose: AccountCodePurpose,
+  ): Promise<void> {
+    const target = normalizeAccountEmail(email);
+    const ids: string[] = [];
+    for (const line of foldLedger().values()) {
+      if (isTombstone(line)) continue;
+      if (normalizeAccountEmail(line.email) !== target) continue;
+      if (purposeOf(line) !== purpose) continue;
+      if (line.consumed) continue;
+      ids.push(line.request_id);
+    }
+    for (const id of ids) {
+      await this.deleteCodeRequest(id);
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -212,6 +230,32 @@ export class PgAccountOtpStore implements AccountOtpStore {
       latest = line;
     }
     return latest;
+  }
+
+  async deleteCodesForEmailPurpose(
+    email: string,
+    purpose: AccountCodePurpose,
+  ): Promise<void> {
+    const target = normalizeAccountEmail(email);
+    // Walk the raw stream (the fold collapses per request_id) so older
+    // still-live codes for this (email, purpose) are superseded too.
+    const events = await readStreamEvents(EVENT_STREAMS.accountOtpCodes);
+    const byId = new Map<string, PersistedAccountCodeRequest | CodeTombstone>();
+    for (const event of events) {
+      const payload: unknown = event.payload;
+      if (isTombstone(payload)) {
+        byId.set(event.stream_key, payload);
+      } else if (isCodeRecord(payload)) {
+        byId.set(payload.request_id, payload);
+      }
+    }
+    for (const line of byId.values()) {
+      if (isTombstone(line)) continue;
+      if (normalizeAccountEmail(line.email) !== target) continue;
+      if (purposeOf(line) !== purpose) continue;
+      if (line.consumed) continue;
+      await this.deleteCodeRequest(line.request_id);
+    }
   }
 }
 
