@@ -1,0 +1,135 @@
+/**
+ * Entry auth gate — scoped styles.
+ * Same apothecary theme as the music gate (dark plum, gold, parchment;
+ * Cinzel display / EB Garamond body), z-index above the music gate so
+ * the two modals can never stack visually.
+ */
+
+.gateOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 6, 20, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: authGateFadeIn 0.5s ease both;
+}
+
+.gateLeaving {
+  animation: authGateFadeOut 0.4s ease both;
+}
+
+@keyframes authGateFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes authGateFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.gateDialog {
+  text-align: center;
+  max-width: 34rem;
+  width: 100%;
+  background: rgba(31, 19, 54, 0.92);
+  border: 1px solid var(--brass, var(--aa-gold, #d4af37));
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 4px 24px rgba(10, 6, 20, 0.6);
+}
+
+.gateOrnament {
+  color: var(--brass, var(--aa-gold, #d4af37));
+  letter-spacing: 0.5em;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.gateTitle {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  color: var(--parchment, var(--aa-cream, #f4e8d0));
+  letter-spacing: 0.04em;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  margin: 0 0 1rem;
+}
+
+.gateSub {
+  font-family: 'EB Garamond', Georgia, serif;
+  color: var(--text-muted, var(--aa-cream-dim, #c8b79a));
+  line-height: 1.75;
+  margin: 0 0 1.75rem;
+}
+
+.gateActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.gatePrimary {
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: #150b26;
+  border: none;
+  border-radius: 30px;
+  padding: 0.85rem 1.75rem;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(140, 106, 59, 0.35);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.gatePrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(140, 106, 59, 0.5);
+}
+
+.gateGhost {
+  background: transparent;
+  color: var(--parchment, var(--aa-cream, #f4e8d0));
+  border: 1px solid var(--parchment, var(--aa-cream, #f4e8d0));
+  border-radius: 30px;
+  padding: 0.85rem 1.75rem;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+}
+
+.gateGhost:hover {
+  border-color: var(--brass-light, var(--aa-gold-bright, #e6c766));
+  color: var(--brass-light, var(--aa-gold-bright, #e6c766));
+  transform: translateY(-2px);
+}
+
+.gateNote {
+  color: var(--text-muted, var(--aa-cream-dim, #c8b79a));
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .gateDialog {
+    padding: 2rem 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gateOverlay,
+  .gateLeaving {
+    animation: none;
+  }
+}

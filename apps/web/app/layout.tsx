@@ -7,6 +7,7 @@ import { FooterBanner } from '../components/layout/FooterBanner';
 import { BRAND_NAME, siteUrl, SITE_KEYWORDS } from '../lib/seo/config';
 import { LegacyAnchorRedirect } from '../components/seo/LegacyAnchorRedirect';
 import { MusicGate } from '../components/music/MusicGate';
+import { EntryAuthGate } from '../components/auth/EntryAuthGate';
 import { BotanicalCardHost } from '../components/herbs/BotanicalCardHost';
 import { GaiaWidget } from '../components/chat/GaiaWidget';
 import { GaiaNudge } from '../components/chat/GaiaNudge';
@@ -70,7 +71,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Layered background (2026-10-30): royal purple + apothecary
             image at 44% opacity, fixed behind all content site-wide. */}
         <div className="aa-bg-layer" aria-hidden="true" />
-        {/* Entry-gate: music choice modal on every load (workstream B). */}
+        {/* Entry order (2026-10-31): auth gate first, then the music
+            choice modal. EntryAuthGate offers sign in / create account
+            (existing /account email-code flow) or guest browsing, once
+            per session; MusicGate waits for its dismissal. */}
+        <EntryAuthGate />
         <MusicGate />
         {/* Skip link target: every page template must render <main id="main-content">. */}
         <a className="skip-link" href="#main-content">

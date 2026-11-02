@@ -27,6 +27,10 @@ import styles from './account.module.css';
  */
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
+  bluevine_invoice: 'Invoice — Bluevine (ACH / check / Venmo / Cash App)',
+  bluevine_card_link: 'Card — Bluevine (hosted payment page)',
+  // Historical labels — orders placed under the Bookipi setup keep
+  // naming it in the customer's own order history.
   bookipi_invoice: 'Invoice — Bookipi (ACH / Venmo / Cash App)',
   bookipi_card_invoice: 'Card — Bookipi invoice',
   stripe_card_embedded: 'Card — embedded checkout',
