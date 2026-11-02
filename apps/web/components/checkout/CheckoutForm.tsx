@@ -4,15 +4,26 @@
  * The server Route Handler recomputes every total from canonical data and
  * rejects any mismatch (CLIENT=PREVIEW, SERVER=AUTHORITY).
  *
- * Payments (owner directive 2026-10-24, superseding the card flow of
- * 2026-10-19/21): the customer pays by EMAILED INVOICE (Bookipi) — the
- * invoice is paid by ACH bank transfer to Bluevine, Venmo
- * @AwakenwithAmber, or Cash App $AmberPatten347, with the order number
+ * Payments (owner directive 2026-11-01 — "Replace our checkout with
+ * the bluevine set up", superseding the 2026-10-24 Bookipi flow):
+ * the customer pays by EMAILED BLUEVINE INVOICE — the invoice is paid
+ * by ACH bank transfer or check per the invoice, or Venmo
+ * @AwakenwithAmber / Cash App $AmberPatten347, with the order number
  * as the payment reference, and the order is prepared once payment is
- * confirmed — or sends Cash App / Venmo directly after ordering. The
- * customer picks the method here; the server records it on the order
- * and returns the matching payment instructions; this UI renders
- * exactly what the server returned. No card payment is offered: the
+ * confirmed — or sends Cash App / Venmo directly after ordering. A
+ * card choice through Bluevine's hosted payment page renders ONLY
+ * when the verified Bluevine payment link is configured
+ * (bluevineCardConfigured); while it is not, no card wording appears
+ * anywhere in this UI. The customer picks the method here; the server
+ * records it on the order and returns the matching payment
+ * instructions; this UI renders exactly what the server returned.
+ * Sales tax + shipping (owner directive 2026-11-01): the form
+ * collects a delivery address for every order; the preview's tax and
+ * shipping lines come from the shared calculations (components/
+ * checkout/cart-preview.ts, which imports the server's lib/tax
+ * engine), and the amount due after ordering is the server's
+ * tax-inclusive total.
+ * No card payment is offered: the
  * Stripe embedded checkout is PARKED DORMANT (its component, routes,
  * and webhook remain in the tree, unreachable from this UI).
  * No PII in analytics — order_completed carries order_id/total/item count only.
@@ -21,14 +32,30 @@
 
 import { useState } from 'react';
 import { formatPrice } from '../../lib/pricing/pricing';
-import { CASH_APP_HANDLE, VENMO_HANDLE } from '../../lib/checkout/order';
+import {
+  bluevineCardConfigured,
+  CASH_APP_HANDLE,
+  VENMO_HANDLE,
+} from '../../lib/checkout/order';
 import { track, trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart, cartItemTitle } from './cart-store';
 import { previewCartTotals, FREE_SHIPPING_GENERAL_CENTS } from './cart-preview';
 import type { CartItem } from '../../types';
 
-type PaymentMethodChoice = 'bookipi_invoice' | 'cash_app_or_venmo';
+type PaymentMethodChoice =
+  | 'bluevine_invoice'
+  | 'cash_app_or_venmo'
+  | 'bluevine_card_link';
+
+/**
+ * The Bluevine card choice exists only while the verified Bluevine
+ * payment link is configured in this build's environment — evaluated
+ * once at bundle time from the same public config the server checks.
+ * Unset (the default): the choice never renders and the server
+ * rejects the method, so no card payment is offered or implied.
+ */
+const BLUEVINE_CARD_AVAILABLE = bluevineCardConfigured();
 
 /**
  * Payment instructions as returned by the server for the method recorded
@@ -40,6 +67,8 @@ interface PaymentInstructions {
   cash_app?: string;
   venmo?: string;
   order_id?: string;
+  /** Bluevine hosted payment-page link (card choice only, when configured). */
+  payment_link?: string;
   note: string;
 }
 
@@ -53,7 +82,19 @@ interface OrderResponse {
   coupon_discount_cents?: number;
   coupon_message?: string;
   is_subscriber_verified?: boolean;
+  shipping_cents?: number;
   shipping_status?: string;
+  /** Sales tax as computed + recorded by the server (lib/tax). */
+  tax_cents?: number;
+  tax_breakdown?: {
+    ratePercent: string;
+    rateBps: number;
+    collected: boolean;
+    jurisdiction: string;
+    taxableBaseCents: number;
+    provenance: string;
+    notes: string[];
+  } | null;
   payment_method?: string;
   payment?: PaymentInstructions;
   message?: string;
@@ -66,19 +107,29 @@ export function CheckoutForm() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
+  // Delivery address (owner directive 2026-11-01) — collected for
+  // EVERY order: physical orders need it for fulfillment, and its
+  // state drives the sales-tax preview + the server's tax figure.
+  const [addrLine1, setAddrLine1] = useState('');
+  const [addrLine2, setAddrLine2] = useState('');
+  const [addrCity, setAddrCity] = useState('');
+  const [addrState, setAddrState] = useState('');
+  const [addrZip, setAddrZip] = useState('');
   const [isSubscriber, setIsSubscriber] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethodChoice>('bookipi_invoice');
+    useState<PaymentMethodChoice>('bluevine_invoice');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<OrderResponse | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   if (!loaded) return <p>Loading checkout…</p>;
 
-  const preview = previewCartTotals(items, bundle, isSubscriber, appliedCoupon);
+  const preview = previewCartTotals(items, bundle, isSubscriber, appliedCoupon, {
+    state: addrState,
+  });
   const empty = items.length === 0 && !bundle;
 
   /**
@@ -117,6 +168,17 @@ export function CheckoutForm() {
       setFormError('Please provide your name and email so we can confirm your order.');
       return;
     }
+    if (
+      !addrLine1.trim() ||
+      !addrCity.trim() ||
+      !/^[A-Za-z]{2}$/.test(addrState.trim()) ||
+      !/^\d{5}(-\d{4})?$/.test(addrZip.trim())
+    ) {
+      setFormError(
+        'Please provide your full delivery address (street, city, state, and ZIP) — we need it to ship your order and to calculate sales tax.',
+      );
+      return;
+    }
     setSubmitting(true);
     track(ANALYTICS_EVENT_NAMES.checkoutInitiated, {});
     try {
@@ -131,6 +193,13 @@ export function CheckoutForm() {
         })),
         bundle,
         customer: { name: name.trim(), email: email.trim(), phone: phone.trim(), notes: notes.trim() },
+        delivery_address: {
+          line1: addrLine1.trim(),
+          ...(addrLine2.trim() ? { line2: addrLine2.trim() } : {}),
+          city: addrCity.trim(),
+          state: addrState.trim().toUpperCase(),
+          postal_code: addrZip.trim(),
+        },
         is_subscriber: isSubscriber,
         payment_method: paymentMethod,
         ...(appliedCoupon ? { coupon_code: appliedCoupon } : {}),
@@ -184,17 +253,17 @@ export function CheckoutForm() {
         <section aria-label="Payment instructions">
           <h2>Complete your payment</h2>
           <p>{result.payment?.note}</p>
-          {method === 'bookipi_invoice' ? (
+          {method === 'bluevine_invoice' ? (
             <>
               <p>
-                Your invoice will arrive by email. You can pay it any of
-                these ways — please use your order number as the payment
-                reference:
+                Your Bluevine invoice will arrive by email. You can pay
+                it any of these ways — please use your order number as
+                the payment reference:
               </p>
               <ul>
                 <li>
-                  <strong>ACH bank transfer</strong> — to our Bluevine
-                  account (the invoice shows the details)
+                  <strong>ACH bank transfer or check</strong> — per the
+                  details on your Bluevine invoice
                 </li>
                 <li>
                   <strong>Venmo:</strong> {result.payment?.venmo}
@@ -203,6 +272,28 @@ export function CheckoutForm() {
                   <strong>Cash App:</strong> {result.payment?.cash_app}
                 </li>
               </ul>
+              <p>
+                Your order is prepared once your payment is confirmed.
+              </p>
+            </>
+          ) : method === 'bluevine_card_link' ? (
+            <>
+              <p>
+                Finish paying on Bluevine&apos;s secure hosted payment
+                page — enter your order total there and use your order
+                number as the reference:
+              </p>
+              {result.payment?.payment_link ? (
+                <p>
+                  <a
+                    href={result.payment.payment_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Pay by card through Bluevine →
+                  </a>
+                </p>
+              ) : null}
               <p>
                 Your order is prepared once your payment is confirmed.
               </p>
@@ -230,8 +321,28 @@ export function CheckoutForm() {
             </p>
           ) : null}
           {result.coupon_message ? <p>{result.coupon_message}</p> : null}
+          {typeof result.shipping_cents === 'number' ? (
+            <p>
+              Shipping:{' '}
+              {result.shipping_cents === 0
+                ? 'Free'
+                : formatPrice(result.shipping_cents)}
+            </p>
+          ) : null}
+          {typeof result.tax_cents === 'number' ? (
+            <p>
+              {result.tax_breakdown?.collected
+                ? `Utah sales tax (${result.tax_breakdown.ratePercent} — Salt Lake City rate): `
+                : 'Sales tax: '}
+              {formatPrice(result.tax_cents)}
+              {result.tax_breakdown && !result.tax_breakdown.collected
+                ? ' — no sales tax is collected on orders delivered outside Utah.'
+                : ''}
+            </p>
+          ) : null}
           <p>
-            Amount: <strong>{formatPrice(result.total_cents ?? 0)}</strong>
+            Amount due: <strong>{formatPrice(result.total_cents ?? 0)}</strong>
+            {' — this total includes the tax and shipping above.'}
           </p>
           <p>
             Order ID: <strong>{result.order_id}</strong>
@@ -301,6 +412,34 @@ export function CheckoutForm() {
                     : `Free — shipping is free on orders of ${formatPrice(preview.freeShippingThresholdCents)} or more.`
                   : `${formatPrice(preview.shippingCents)} — flat standard shipping, included in the total below. Shipping is free on orders of ${formatPrice(FREE_SHIPPING_GENERAL_CENTS)} or more, and always free for Living Grimoire of Light & Magic subscribers.`}
               </p>
+              {preview.taxDeliveryState === 'UT' ? (
+                <p>
+                  Utah sales tax ({preview.taxRatePercent} — the Salt Lake
+                  City rate, which Utah law applies to Utah orders from
+                  our Salt Lake City shop): {formatPrice(preview.taxCents)}{' '}
+                  <small>
+                    (on your products after any discount; shipping is
+                    never taxed)
+                  </small>
+                </p>
+              ) : preview.taxDeliveryState ? (
+                <p>
+                  Sales tax: {formatPrice(0)} — no sales tax is collected
+                  on orders delivered outside Utah.{' '}
+                  <small>
+                    (This follows our current no-nexus posture for
+                    out-of-state orders — an assumption we&apos;ve
+                    recorded for review, not tax advice.)
+                  </small>
+                </p>
+              ) : (
+                <p>
+                  Sales tax: calculated from your delivery address below —
+                  Utah orders are taxed at the Salt Lake City rate
+                  (8.45%); orders delivered to other states currently
+                  collect no sales tax.
+                </p>
+              )}
               <p>
                 <strong>Total: {formatPrice(preview.totalCents)}</strong> (preview —
                 the server recomputes this when you place your order)
@@ -434,22 +573,99 @@ export function CheckoutForm() {
               </label>
             </section>
 
+            <section aria-label="Delivery address">
+              <h2>Delivery address</h2>
+              <p>
+                <small>
+                  Where your order will be shipped. Sales tax is
+                  calculated from this address: Utah deliveries are
+                  taxed at our Salt Lake City rate (8.45%); deliveries
+                  to other states currently collect no sales tax.
+                </small>
+              </p>
+              <label>
+                Street address
+                <input
+                  type="text"
+                  value={addrLine1}
+                  onChange={(e) => setAddrLine1(e.target.value)}
+                  autoComplete="street-address"
+                />
+              </label>
+              <label>
+                Apartment, suite, etc. (optional)
+                <input
+                  type="text"
+                  value={addrLine2}
+                  onChange={(e) => setAddrLine2(e.target.value)}
+                  autoComplete="address-line2"
+                />
+              </label>
+              <label>
+                City
+                <input
+                  type="text"
+                  value={addrCity}
+                  onChange={(e) => setAddrCity(e.target.value)}
+                  autoComplete="address-level2"
+                />
+              </label>
+              <label>
+                State (2-letter)
+                <input
+                  type="text"
+                  value={addrState}
+                  onChange={(e) =>
+                    setAddrState(e.target.value.toUpperCase().slice(0, 2))
+                  }
+                  autoComplete="address-level1"
+                  placeholder="UT"
+                />
+              </label>
+              <label>
+                ZIP code
+                <input
+                  type="text"
+                  value={addrZip}
+                  onChange={(e) => setAddrZip(e.target.value)}
+                  autoComplete="postal-code"
+                  placeholder="84104"
+                />
+              </label>
+            </section>
+
             <section aria-label="Payment method">
               <h2>How you&apos;d like to pay</h2>
               <label>
                 <input
                   type="radio"
                   name="payment-method"
-                  value="bookipi_invoice"
-                  checked={paymentMethod === 'bookipi_invoice'}
-                  onChange={() => setPaymentMethod('bookipi_invoice')}
+                  value="bluevine_invoice"
+                  checked={paymentMethod === 'bluevine_invoice'}
+                  onChange={() => setPaymentMethod('bluevine_invoice')}
                 />
-                <strong>Pay by invoice</strong> — place your order now and
-                we&apos;ll email you an invoice. Pay it by ACH bank
-                transfer to Bluevine, or with Venmo or Cash App, using
-                your order number as the reference. Your order is
-                prepared once payment is confirmed.
+                <strong>Pay by Bluevine invoice</strong> — place your
+                order now and we&apos;ll email you an invoice from
+                Bluevine. Pay it by ACH bank transfer or check, or with
+                Venmo or Cash App, using your order number as the
+                reference. Your order is prepared once payment is
+                confirmed.
               </label>
+              {BLUEVINE_CARD_AVAILABLE ? (
+                <label>
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value="bluevine_card_link"
+                    checked={paymentMethod === 'bluevine_card_link'}
+                    onChange={() => setPaymentMethod('bluevine_card_link')}
+                  />
+                  <strong>Pay by card — through Bluevine</strong> — place
+                  your order now, then finish on Bluevine&apos;s secure
+                  hosted payment page, entering your order total there
+                  with your order number as the reference.
+                </label>
+              ) : null}
               <label>
                 <input
                   type="radio"
@@ -458,9 +674,9 @@ export function CheckoutForm() {
                   checked={paymentMethod === 'cash_app_or_venmo'}
                   onChange={() => setPaymentMethod('cash_app_or_venmo')}
                 />
-                <strong>Cash App or Venmo</strong> — place your order now, and
-                we&apos;ll show you the payment handles and your order ID
-                right after.
+                <strong>Or pay directly with Cash App or Venmo</strong> —
+                place your order now, and we&apos;ll show you the payment
+                handles and your order ID right after.
               </label>
             </section>
 
@@ -515,10 +731,10 @@ export function CheckoutForm() {
             </section>
             <p>
               <small>
-                Payment is by emailed invoice, or with Cash App or Venmo
-                — you&apos;ll get the payment details for your chosen
-                method, and your order ID, right after placing your
-                order.
+                Payment is by emailed Bluevine invoice, or with Cash App
+                or Venmo — you&apos;ll get the payment details for your
+                chosen method, and your order ID, right after placing
+                your order.
               </small>
             </p>
           </>

@@ -1,29 +1,38 @@
 /**
  * REGRESSION SUITE — payment method at checkout (owner decisions
- * 2026-10-13 + 2026-10-21, SUPERSEDED by the owner directive
- * 2026-10-24: Stripe parked dormant, Bookipi invoices + Bluevine
- * direct ACH become the customer payment flow).
+ * 2026-10-13 + 2026-10-21; the 2026-10-24 Bookipi flow SUPERSEDED by
+ * the owner directive 2026-11-01: "Replace our checkout with the
+ * bluevine set up", Stripe still parked dormant).
  *
  * Laws under test:
- * - 'bookipi_invoice' is ACCEPTED — the primary method since
- *   2026-10-24 (order placed on site, Bookipi invoice emailed, paid by
- *   ACH bank transfer to Bluevine, Venmo, or Cash App with the order
- *   number as reference; order prepared once payment is confirmed).
+ * - 'bluevine_invoice' is ACCEPTED — the primary method since
+ *   2026-11-01 (order placed on site, Bluevine invoice emailed, paid
+ *   by ACH bank transfer or check per the invoice, or Venmo / Cash
+ *   App with the order number as reference; order prepared once
+ *   payment is confirmed).
+ * - 'bookipi_invoice' (the primary method's name 2026-10-24 →
+ *   2026-11-01) is accepted ONLY as an alias and NORMALIZED to
+ *   'bluevine_invoice' — responses and stored records never carry it
+ *   from a new order.
  * - 'bookipi_card_invoice' (the legacy 2026-10-13 name) is REJECTED
  *   (422) for new orders — it survives only on stored historical
  *   records; it is never accepted, recorded, or coerced.
+ * - 'bluevine_card_link' is REJECTED while no Bluevine payment link
+ *   is configured (the default) — the gated card option does not
+ *   exist until a verified link is set (see
+ *   tests/checkout-bluevine-card-gate.test.ts for the configured case).
  * - An unknown payment_method is REJECTED (422) — never silently coerced.
  * - An absent payment_method defaults to 'cash_app_or_venmo' with the
  *   exact instruction shape the original flow returned.
  * - The payment method NEVER affects pricing: a verified subscriber gets
  *   identical totals/discount/shipping via either method.
- * - The checkout UI no longer offers the Stripe card method: the form
+ * - The checkout UI offers no Stripe card method and renders the
+ *   Bluevine card choice only behind its configuration gate: the form
  *   source carries no stripe_card_embedded choice, no embedded Stripe
  *   component, and no checkout-session call (Stripe is parked dormant,
  *   its routes/library retained but unreachable from the UI).
  * - The order-intake pipeline (POST /api/orders) accepts the same field
- *   with the same default and carries it to the review-queue entry.
- */
+ *   with the same default and carries it to the review-queue entry. */
 import { describe, expect, it } from 'vitest';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -67,7 +76,32 @@ function lastOrder(): Record<string, unknown> {
 }
 
 describe('checkout payment method', () => {
-  it('accepts a bookipi invoice order with honest invoice instructions (primary, 2026-10-24)', async () => {
+  it('accepts a Bluevine invoice order with honest invoice instructions (primary, 2026-11-01)', async () => {
+    const { status, json } = await postCheckout({
+      items: [CAPSULE_ITEM],
+      customer: CUSTOMER,
+      payment_method: 'bluevine_invoice',
+      client_total_cents: 1977 + 595,
+    });
+    expect(status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.payment_method).toBe('bluevine_invoice');
+    expect(json.total_cents).toBe(1977 + 595);
+    const payment = json.payment as Record<string, unknown>;
+    expect(payment.method).toBe('bluevine_invoice');
+    expect(payment.cash_app).toBe('$AmberPatten347');
+    expect(payment.venmo).toBe('@AwakenwithAmber');
+    expect(payment.order_id).toBe(json.order_id);
+    expect(String(payment.note)).toMatch(/Bluevine invoice will be emailed/i);
+    expect(String(payment.note)).toMatch(/ACH bank transfer or check/);
+    expect(String(payment.note)).toMatch(/order number as the payment reference/);
+    expect(String(payment.note)).toMatch(/prepared once payment is confirmed/);
+    expect(String(payment.note)).not.toMatch(/card/i);
+    expect(String(payment.note)).not.toMatch(/Bookipi/);
+    expect(lastOrder().payment_method).toBe('bluevine_invoice');
+  });
+
+  it('normalizes the retired bookipi_invoice name to bluevine_invoice (alias, never stored)', async () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
@@ -75,32 +109,59 @@ describe('checkout payment method', () => {
       client_total_cents: 1977 + 595,
     });
     expect(status).toBe(200);
-    expect(json.ok).toBe(true);
-    expect(json.payment_method).toBe('bookipi_invoice');
-    expect(json.total_cents).toBe(1977 + 595);
+    expect(json.payment_method).toBe('bluevine_invoice');
     const payment = json.payment as Record<string, unknown>;
-    expect(payment.method).toBe('bookipi_invoice');
-    expect(payment.cash_app).toBe('$AmberPatten347');
-    expect(payment.venmo).toBe('@AwakenwithAmber');
-    expect(payment.order_id).toBe(json.order_id);
-    expect(String(payment.note)).toMatch(/invoice will be emailed/i);
-    expect(String(payment.note)).toMatch(/ACH bank transfer to Bluevine/);
-    expect(String(payment.note)).toMatch(/order number as the payment reference/);
-    expect(String(payment.note)).toMatch(/prepared once payment is confirmed/);
-    expect(String(payment.note)).not.toMatch(/card/i);
-    expect(lastOrder().payment_method).toBe('bookipi_invoice');
+    expect(payment.method).toBe('bluevine_invoice');
+    expect(lastOrder().payment_method).toBe('bluevine_invoice');
+
+    const record = validateAndBuildOrder({
+      items: [CAPSULE_ITEM],
+      customer: CUSTOMER,
+      payment_method: 'bookipi_invoice',
+      client_total_cents: 1977 + 595,
+    });
+    expect(record.payment_method).toBe('bluevine_invoice');
   });
 
-  it('the checkout UI offers no Stripe card method (parked dormant, 2026-10-24)', () => {
+  it('rejects bluevine_card_link while no Bluevine payment link is configured (gated off)', async () => {
+    delete process.env.NEXT_PUBLIC_BLUEVINE_PAYMENT_LINK_URL;
+    const { status, json } = await postCheckout({
+      items: [CAPSULE_ITEM],
+      customer: CUSTOMER,
+      payment_method: 'bluevine_card_link',
+      client_total_cents: 1977 + 595,
+    });
+    expect(status).toBe(422);
+    expect(String((json.errors as string[]).join(' '))).toMatch(
+      /Unknown payment method/,
+    );
+    expect(() =>
+      validateAndBuildOrder({
+        items: [CAPSULE_ITEM],
+        customer: CUSTOMER,
+        payment_method: 'bluevine_card_link',
+        client_total_cents: 1977 + 595,
+      }),
+    ).toThrow(/Unknown payment method/);
+  });
+
+  it('the checkout UI offers Bluevine, no Stripe card method, and the Bluevine card choice only behind its gate', () => {
     const form = readFileSync(
       resolve(__dirname, '../components/checkout/CheckoutForm.tsx'),
       'utf8',
     );
-    expect(form).toContain('bookipi_invoice');
+    expect(form).toContain('bluevine_invoice');
+    expect(form).toContain('Pay by Bluevine invoice');
+    expect(form).not.toContain('bookipi_invoice');
+    // Stripe stays parked dormant and unreachable from the UI.
     expect(form).not.toContain('stripe_card_embedded');
     expect(form).not.toContain('StripeEmbeddedCheckout');
     expect(form).not.toContain('/api/stripe/checkout-session');
     expect(form).not.toMatch(/credit or debit card/i);
+    // The Bluevine card choice renders ONLY behind the config gate.
+    expect(form).toContain('bluevineCardConfigured()');
+    expect(form).toContain('BLUEVINE_CARD_AVAILABLE ?');
+    expect(form).toContain('value="bluevine_card_link"');
   });
 
   it('rejects the legacy bookipi card-invoice name for new orders (removed 2026-10-21)', async () => {
@@ -212,7 +273,7 @@ describe('checkout payment method', () => {
       items: [CAPSULE_ITEM],
       customer,
       is_subscriber: true,
-      payment_method: 'bookipi_invoice',
+      payment_method: 'bluevine_invoice',
       client_total_cents: 1779,
     });
     expect(viaHandles.status).toBe(200);
@@ -224,7 +285,7 @@ describe('checkout payment method', () => {
       expect(json.shipping_status).toBe('FREE');
       expect(json.is_subscriber_verified).toBe(true);
     }
-    expect(viaInvoice.json.payment_method).toBe('bookipi_invoice');
+    expect(viaInvoice.json.payment_method).toBe('bluevine_invoice');
 
     // Core-level: the two persisted records differ ONLY in payment method
     // (and their generated ids/timestamps).
@@ -236,10 +297,10 @@ describe('checkout payment method', () => {
     };
     const a = validateAndBuildOrder(base, { isSubscriberVerified: true });
     const b = validateAndBuildOrder(
-      { ...base, payment_method: 'bookipi_invoice' },
+      { ...base, payment_method: 'bluevine_invoice' },
       { isSubscriberVerified: true },
     );
-    expect(b.payment_method).toBe('bookipi_invoice');
+    expect(b.payment_method).toBe('bluevine_invoice');
     expect(b.subtotal_cents).toBe(a.subtotal_cents);
     expect(b.subscriber_discount_cents).toBe(a.subscriber_discount_cents);
     expect(b.total_cents).toBe(a.total_cents);
@@ -256,7 +317,7 @@ describe('checkout payment method', () => {
       toSummary: toOrderReviewEntry,
     });
 
-    const bookipi = await intakeOrder(
+    const legacy = await intakeOrder(
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
@@ -265,15 +326,31 @@ describe('checkout payment method', () => {
       },
       store,
     );
-    // The LEGACY name fails intake validation (removed 2026-10-21);
-    // new invoice orders use 'bookipi_invoice' (accepted — next test).
-    expect(bookipi.ok).toBe(false);
-    if (!bookipi.ok) {
-      expect(bookipi.stage).toBe('validation');
-      expect(bookipi.errors.join(' ')).toMatch(/Unknown payment method/);
+    // The LEGACY card-invoice name fails intake validation (removed
+    // 2026-10-21); new invoice orders use 'bluevine_invoice'
+    // (accepted — next test).
+    expect(legacy.ok).toBe(false);
+    if (!legacy.ok) {
+      expect(legacy.stage).toBe('validation');
+      expect(legacy.errors.join(' ')).toMatch(/Unknown payment method/);
     }
 
     const invoice = await intakeOrder(
+      {
+        items: [CAPSULE_ITEM],
+        customer: CUSTOMER,
+        payment_method: 'bluevine_invoice',
+        client_total_cents: 1977 + 595,
+      },
+      store,
+    );
+    expect(invoice.ok).toBe(true);
+    if (invoice.ok) {
+      expect(invoice.reviewEntry.payment_method).toBe('bluevine_invoice');
+    }
+
+    // The retired primary name still intakes — normalized to Bluevine.
+    const aliased = await intakeOrder(
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
@@ -282,9 +359,9 @@ describe('checkout payment method', () => {
       },
       store,
     );
-    expect(invoice.ok).toBe(true);
-    if (invoice.ok) {
-      expect(invoice.reviewEntry.payment_method).toBe('bookipi_invoice');
+    expect(aliased.ok).toBe(true);
+    if (aliased.ok) {
+      expect(aliased.reviewEntry.payment_method).toBe('bluevine_invoice');
     }
 
     const defaulted = await intakeOrder(
