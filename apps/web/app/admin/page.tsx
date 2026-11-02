@@ -1,6 +1,7 @@
 /**
  * G12 — Admin overview (read-only operations dashboard).
- * Gated by <AdminGate>; real auth/RLS NEEDS VERIFICATION (lib/admin/auth.ts).
+ * Gated by <AdminGate>: real authentication via the account-session
+ * allowlist (lib/admin/auth.ts) — owner email only.
  */
 import type { Metadata } from 'next';
 import { AdminGate } from '../../components/admin/AdminGate';
@@ -27,7 +28,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 const SECTIONS = [
-  { href: '/admin/orders', name: 'Orders', desc: 'Read-only order ledger (local JSONL until Supabase binding), with shipment tracking once recorded.' },
+  { href: '/admin/analytics', name: 'Analytics', desc: 'Real-state summary from the site stores, the payment-rail status as canon states it, and the PostHog link — unchecked items read UNKNOWN.' },
+  { href: '/admin/orders', name: 'Orders', desc: 'Read-only order ledger (provider-neutral order store), with shipment tracking once recorded.' },
   { href: '/admin/subscriptions', name: 'Subscriptions', desc: 'Living Grimoire of Light & Magic members — confirm payment or cancel with the owner key.' },
   { href: '/admin/leads', name: 'Leads', desc: 'Quiz lead capture — store binding pending.' },
   { href: '/admin/reviews', name: 'Reviews', desc: 'Moderation queue — store binding pending.' },
@@ -40,7 +42,7 @@ export default async function AdminOverviewPage() {
   const issues = store instanceof JsonlOrderStore ? store.getParseIssues() : [];
 
   const bindings = [
-    { name: 'Orders', binding: { status: 'jsonl_ledger' as const, detail: 'Local JSONL ledger — read-only until the Supabase order pipeline (G3) binds.' } },
+    { name: 'Orders', binding: { status: 'jsonl_ledger' as const, detail: 'Order store as configured on this server (JSONL locally, Postgres when DATABASE_URL is set).' } },
     { name: 'Quiz leads', binding: new PendingBindingQuizLeadStore().binding() },
     { name: 'Reviews', binding: new PendingBindingReviewStore().binding() },
     { name: 'Submissions', binding: new PendingBindingSubmissionStore().binding() },
@@ -54,8 +56,8 @@ export default async function AdminOverviewPage() {
         <h1 id="admin-overview-title">Admin — Operations Overview</h1>
         <p>
           Read-only operations views for Amber&apos;s Alchemy Apothecary.
-          The order ledger is the server-written JSONL until the Supabase
-          pipeline binds; every other store is pending.
+          Counts come from the stores as configured on this server;
+          every unbound store is labelled pending, never faked.
         </p>
 
         <section aria-label="Summary">

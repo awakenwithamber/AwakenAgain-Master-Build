@@ -141,6 +141,7 @@ export default async function AdminOrdersPage() {
                 <th scope="col">Customer</th>
                 <th scope="col">Lines</th>
                 <th scope="col">Total</th>
+                <th scope="col">Tax</th>
                 <th scope="col">Shipping</th>
                 <th scope="col">Payment</th>
                 <th scope="col">Tracking</th>
@@ -163,6 +164,11 @@ export default async function AdminOrdersPage() {
                     {o.bundle ? ' + bundle(5)' : ''}
                   </td>
                   <td>{formatPrice(o.total_cents)}</td>
+                  <td>
+                    {typeof o.tax_cents === 'number'
+                      ? formatPrice(o.tax_cents)
+                      : '—'}
+                  </td>
                   <td>{o.shipping_status}</td>
                   <td>
                     {paymentMethodLabel(o.payment_method)}
@@ -286,8 +292,9 @@ export default async function AdminOrdersPage() {
         <section aria-label="Confirm payment received" style={{ marginTop: '2.5rem' }}>
           <h2>Confirm payment received</h2>
           <p>
-            When an order&apos;s payment lands — the Cash App / Venmo
-            payment arrives — confirm it here. The confirmation is
+            When an order&apos;s payment lands — the Bluevine invoice
+            is paid, or the Cash App / Venmo payment arrives — confirm
+            it here. The confirmation is
             appended to the payment ledger (the order record is never
             edited), the table above marks the order paid, and the
             customer sees it as paid on the{' '}

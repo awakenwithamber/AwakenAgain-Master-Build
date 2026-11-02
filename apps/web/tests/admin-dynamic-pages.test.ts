@@ -32,6 +32,7 @@ const LIVE_STORE_PAGES = [
   'app/admin/subscriptions/page.tsx', // subscription ledger (latest-line)
   'app/admin/subscriptions/confirm/page.tsx', // confirm surface
   'app/admin/broadcast/page.tsx', // broadcast ledger + audience stores
+  'app/admin/analytics/page.tsx', // analytics summary — order/subscription/broadcast stores
 ];
 
 describe('admin live-store pages — force-dynamic guard', () => {
