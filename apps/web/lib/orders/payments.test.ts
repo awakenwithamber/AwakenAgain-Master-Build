@@ -51,8 +51,16 @@ function event(orderId: string, method: string, reference: string | null = null)
 }
 
 describe('paymentMethodLabel (POLISH-1)', () => {
-  it('humanizes both methods', () => {
+  it('humanizes the current Bluevine methods and keeps the historical Bookipi labels', () => {
     expect(paymentMethodLabel('cash_app_or_venmo')).toBe('Cash App / Venmo');
+    expect(paymentMethodLabel('bluevine_invoice')).toBe(
+      'Invoice — Bluevine (ACH / check / Venmo / Cash App)',
+    );
+    expect(paymentMethodLabel('bluevine_card_link')).toBe(
+      'Card — Bluevine (hosted payment page)',
+    );
+    // Historical records keep the labels of the setup they were
+    // placed under — never relabeled after the fact.
     expect(paymentMethodLabel('bookipi_invoice')).toBe(
       'Invoice — Bookipi (ACH / Venmo / Cash App)',
     );
@@ -65,6 +73,12 @@ describe('paymentMethodLabel (POLISH-1)', () => {
 describe('sanitizers', () => {
   it('accepts only the known methods; absent → null (use order default)', () => {
     expect(sanitizePaymentMethod('cash_app_or_venmo')).toBe('cash_app_or_venmo');
+    expect(sanitizePaymentMethod('bluevine_invoice')).toBe('bluevine_invoice');
+    expect(sanitizePaymentMethod('bluevine_card_link')).toBe(
+      'bluevine_card_link',
+    );
+    // Stored historical values stay confirmable in admin.
+    expect(sanitizePaymentMethod('bookipi_invoice')).toBe('bookipi_invoice');
     expect(sanitizePaymentMethod('bookipi_card_invoice')).toBe(
       'bookipi_card_invoice',
     );

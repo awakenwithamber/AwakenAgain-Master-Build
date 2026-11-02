@@ -23,6 +23,7 @@ import {
   type PurchaseConfirmationData,
 } from './email';
 import {
+  bluevinePaymentLinkUrl,
   CASH_APP_HANDLE,
   VENMO_HANDLE,
   type OrderRecord,
@@ -39,10 +40,12 @@ export function orderItemSummary(record: OrderRecord): string {
 
 /**
  * Build the confirmation job for an accepted order. The data matches the
- * payment method recorded on the order: Cash App / Venmo and invoice
- * (Bookipi, 2026-10-24) jobs carry the payment handles — the invoice is
- * also paid by ACH bank transfer to Bluevine; dormant embedded-card
- * jobs carry NO handles.
+ * payment method recorded on the order: Cash App / Venmo and Bluevine
+ * invoice (2026-11-01; Bookipi invoice before that) jobs carry the
+ * payment handles — the Bluevine invoice is also paid by ACH bank
+ * transfer or check per the invoice; Bluevine card-link jobs carry
+ * the hosted payment-page link instead; dormant embedded-card jobs
+ * carry NO handles.
  */
 export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
   const items = record.items.map((line) => ({
@@ -67,11 +70,28 @@ export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
     subscriber_discount_cents: record.subscriber_discount_cents,
     coupon_code: record.coupon_code ?? null,
     coupon_discount_cents: record.coupon_discount_cents ?? 0,
+    shipping_cents: record.shipping_cents,
     shipping_status: record.shipping_status,
+    // Sales tax (2026-11-01): present only when the order carries a
+    // tax breakdown (live rails with a delivery address); the email
+    // shows the same tax-inclusive total as the checkout result.
+    ...(typeof record.tax_cents === 'number'
+      ? {
+          tax_cents: record.tax_cents,
+          ...(record.tax_breakdown
+            ? { tax_rate_percent: record.tax_breakdown.ratePercent }
+            : {}),
+        }
+      : {}),
     payment_method: record.payment_method,
     ...(record.payment_method === 'cash_app_or_venmo' ||
+    record.payment_method === 'bluevine_invoice' ||
     record.payment_method === 'bookipi_invoice'
       ? { cash_app_handle: CASH_APP_HANDLE, venmo_handle: VENMO_HANDLE }
+      : {}),
+    ...(record.payment_method === 'bluevine_card_link' &&
+    bluevinePaymentLinkUrl()
+      ? { payment_link_url: bluevinePaymentLinkUrl() as string }
       : {}),
   };
   return buildPurchaseConfirmationJob(record.customer.email, data);

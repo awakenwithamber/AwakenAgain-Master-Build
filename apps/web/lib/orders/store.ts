@@ -83,7 +83,7 @@ export interface OrderReviewEntry {
   subtotal_cents: number;
   total_cents: number;
   shipping_status: ShippingStatus;
-  /** Stored type: legacy entries may carry the removed Bookipi value. */
+  /** Stored type: legacy entries may carry the retired Bookipi-era values. */
   payment_method: StoredPaymentMethod;
   /** Fulfillment triage state — 'pending_review' until the admin flow (G12) confirms. */
   review_status: 'pending_review';
