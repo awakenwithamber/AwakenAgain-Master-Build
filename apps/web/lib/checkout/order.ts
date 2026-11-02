@@ -24,6 +24,13 @@ import {
   validateCustomization,
   validateFormulaCustomization,
 } from '../cart/validation';
+import {
+  productRequiresShipping,
+  validateShippingAddress,
+  type ShippingAddress,
+} from './shipping-address';
+
+export type { ShippingAddress } from './shipping-address';
 import type { BundleSlot, Customization, FormulaCustomization } from '../../types';
 import {
   calculateSalesTax,
@@ -131,6 +138,17 @@ export interface CheckoutRequestBody {
    * its Stripe-Tax-in-session behavior and is never double-taxed.
    */
   delivery_address?: OrderDeliveryAddressInput;
+  /**
+   * Shipping address (Phase 2, Workstream 1a): REQUIRED when the cart
+   * contains anything physical (see orderLinesRequireShipping);
+   * ignored for digital-only carts. Validated by
+   * lib/checkout/shipping-address and stored on the order record —
+   * the order's copy is authoritative for fulfillment. The checkout
+   * form collects ONE address and submits it under both this field
+   * (fulfillment, physical carts) and delivery_address (tax, every
+   * order).
+   */
+  shipping_address?: ShippingAddress | null;
 }
 
 /** Delivery address as it may arrive in a checkout body (unsanitized). */
@@ -232,6 +250,14 @@ export interface OrderRecord {
   payment_method: StoredPaymentMethod;
   /** Order lifecycle — 'pending_payment' until payment confirmed. */
   status?: OrderStatus;
+  /**
+   * The shipping address AS USED FOR THIS ORDER (Phase 2, Workstream
+   * 1a). Present exactly when the cart was physical. This copy is
+   * authoritative for fulfillment: a later edit to the customer's
+   * saved profile address never rewrites a placed order. Absent on
+   * digital-only orders and on records written before Phase 2.
+   */
+  shipping_address?: ShippingAddress;
 }
 
 /**
@@ -297,11 +323,15 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
  *   until that link exists and is verified; while the config is unset
  *   the method is rejected here and no card wording renders anywhere.
  * - 'stripe_card_embedded' — DORMANT (parked 2026-10-24, NOT deleted):
- *   no longer offered in the checkout UI and no new customer flow
- *   routes to it. The value stays accepted by this parser ONLY so the
- *   dormant Stripe code path (session route, webhook, paid-state
- *   joins) and its regression suites keep working against historical
- *   records; the checkout UI never sends it.
+ *   no longer offered in the checkout UI, and since the 2026-11-02
+ *   combined merge it is REJECTED for new orders by this parser
+ *   (adopting the card-merge build's dormant-hole fix: previously a
+ *   crafted request could place an order routed to a card rail that
+ *   does not exist). The value survives ONLY in StoredPaymentMethod,
+ *   so historical records stay readable and the dormant session
+ *   route, webhook, and paid-state joins keep working against them;
+ *   the tax build's "dormant rail ignores the address" behavior now
+ *   applies to those stored records, never to a new order.
  * Any other value is rejected, with ONE alias: 'bookipi_invoice'
  * (the primary method's name from 2026-10-24 until this replacement)
  * is accepted and NORMALIZED to 'bluevine_invoice' — a stored record
@@ -315,8 +345,7 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
 export type PaymentMethod =
   | 'cash_app_or_venmo'
   | 'bluevine_invoice'
-  | 'bluevine_card_link'
-  | 'stripe_card_embedded';
+  | 'bluevine_card_link';
 
 /**
  * Payment methods as they can appear on a STORED order record. New
@@ -334,7 +363,8 @@ export type PaymentMethod =
 export type StoredPaymentMethod =
   | PaymentMethod
   | 'bookipi_invoice'
-  | 'bookipi_card_invoice';
+  | 'bookipi_card_invoice'
+  | 'stripe_card_embedded';
 
 export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'cash_app_or_venmo';
 
@@ -345,7 +375,6 @@ export const PAYMENT_METHODS: readonly PaymentMethod[] = [
   'bluevine_invoice',
   'cash_app_or_venmo',
   'bluevine_card_link',
-  'stripe_card_embedded',
 ];
 
 /**
@@ -383,12 +412,16 @@ export function parsePaymentMethod(raw: unknown): PaymentMethod {
   if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
   // Pre-replacement alias: normalized, never stored from a new order.
   if (raw === 'bookipi_invoice') return 'bluevine_invoice';
-  if (
-    raw === 'cash_app_or_venmo' ||
-    raw === 'bluevine_invoice' ||
-    raw === 'stripe_card_embedded'
-  ) {
+  if (raw === 'cash_app_or_venmo' || raw === 'bluevine_invoice') {
     return raw;
+  }
+  if (raw === 'stripe_card_embedded') {
+    // Dormant-hole fix (card-merge build 2026-11-01, adopted in the
+    // 2026-11-02 combined merge): the embedded-card value stays
+    // readable on STORED records but must never route a NEW order.
+    throw new Error(
+      'That payment method is no longer accepted for new orders. Choose the Bluevine invoice, or Cash App or Venmo.',
+    );
   }
   if (raw === 'bluevine_card_link') {
     if (bluevineCardConfigured()) return raw;
@@ -574,7 +607,9 @@ function priceItem(input: CheckoutItemInput): OrderLine {
 
   if (formula !== undefined) {
     // Custom capsule/tea/balm formula: exact herb IDs persisted; the server
-    // reprices from canonical data (size base + per-herb add-ons).
+    // reprices from canonical data via the shared pricing path (size base
+    // + charged botanicals — balm charges only extras past the first five,
+    // APPROVED Option C, owner decision 2026-10-30).
     if (variant_id !== undefined || customization !== undefined) {
       throw new Error(
         `Item ${product_handle} has a formula plus a variant/customization — these are mutually exclusive.`,
@@ -697,6 +732,26 @@ function priceBundle(input: CheckoutBundleInput): OrderRecord['bundle'] {
 /* ------------------------------------------------------------------ */
 /* Delivery address + sales tax (owner directive 2026-11-01)           */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Does this priced cart need a shipping address? (Phase 2, Workstream
+ * 1a.) A line ships when it carries a soap customization or a custom
+ * formula (physical goods by construction), or when its catalog
+ * record is physical under lib/checkout/shipping-address's rule
+ * (positively-identified digital only). A bundle is five physical
+ * soaps — always ships. The custom-builder handle has no catalog
+ * record and counts as physical (the rule's fail-safe).
+ */
+export function orderLinesRequireShipping(
+  lines: readonly Pick<OrderLine, 'product_handle' | 'customization' | 'formula'>[],
+  bundle: OrderRecord['bundle'],
+): boolean {
+  if (bundle) return true;
+  return lines.some((line) => {
+    if (line.customization || line.formula) return true;
+    return productRequiresShipping(getProductByHandle(line.product_handle));
+  });
+}
 
 const US_STATE_CODES: ReadonlySet<string> = new Set([
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA',
@@ -833,6 +888,26 @@ export function validateAndBuildOrder(
     bundle = priceBundle(body.bundle as CheckoutBundleInput);
   }
 
+  // Shipping address (Phase 2, Workstream 1a): required exactly when
+  // the cart ships something physical; digital-only carts (e.g. a
+  // Grimoire subscription alone) are never forced through address
+  // fields. The validated address is stored on the order record and
+  // is the fulfillment authority for this order. An address sent with
+  // a digital-only cart is ignored, not stored. Address validation
+  // never touches any price or total.
+  let shippingAddress: ShippingAddress | undefined;
+  if (orderLinesRequireShipping(lines, bundle)) {
+    const validated = validateShippingAddress(
+      (body as Record<string, unknown>).shipping_address,
+    );
+    if (!validated.ok) {
+      throw new Error(
+        `Shipping address needs attention: ${validated.errors.join(' ')}`,
+      );
+    }
+    shippingAddress = validated.address;
+  }
+
   const subtotal = lines.reduce(
     (sum, line) => sum + line.unit_price_cents * line.quantity,
     0,
@@ -911,11 +986,12 @@ export function validateAndBuildOrder(
   //   lib/tax). For these rails the tax is INCLUDED in total_cents:
   //   the tax-inclusive total is the amount the customer owes by
   //   invoice / Cash App / Venmo.
-  // - The DORMANT 'stripe_card_embedded' rail is untouched: it
-  //   ignores delivery_address entirely, keeps its Stripe-Tax-in-
-  //   session behavior, and total_cents stays the pre-tax figure its
-  //   webhook verifies (total + in-session tax). Site-computed tax
-  //   never applies there, so it can never be double-taxed.
+  // - The DORMANT 'stripe_card_embedded' rail can no longer create
+  //   orders at all (the parser rejects it for new orders — see
+  //   parsePaymentMethod), so no new order can reach this code on
+  //   that rail; its stored records keep their in-session tax
+  //   behavior in the dormant session/webhook machinery and are
+  //   never double-taxed by this site-computed tax.
   // - A body with NO delivery_address (legacy / non-form API
   //   callers, e.g. the order-intake pipeline) keeps the exact legacy
   //   behavior: no tax fields, pre-tax totals. The checkout FORM
@@ -923,13 +999,8 @@ export function validateAndBuildOrder(
   //   through the site is taxed from its address. A SUBMITTED but
   //   malformed address is a hard error (parseDeliveryAddress) —
   //   never a silent zero-tax order.
-  const siteTaxApplies = paymentMethod !== 'stripe_card_embedded';
   let deliveryAddress: OrderDeliveryAddress | undefined;
-  if (
-    siteTaxApplies &&
-    body.delivery_address !== undefined &&
-    body.delivery_address !== null
-  ) {
+  if (body.delivery_address !== undefined && body.delivery_address !== null) {
     deliveryAddress = parseDeliveryAddress(body.delivery_address);
   }
   const taxLinesFor = (discountCents: number) => [
@@ -1049,5 +1120,6 @@ export function validateAndBuildOrder(
     is_subscriber_asserted: isSubscriberAsserted,
     is_subscriber_verified: isSubscriberVerified,
     payment_method: paymentMethod,
+    ...(shippingAddress ? { shipping_address: shippingAddress } : {}),
   };
 }

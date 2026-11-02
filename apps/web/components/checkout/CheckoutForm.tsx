@@ -23,6 +23,17 @@
  * checkout/cart-preview.ts, which imports the server's lib/tax
  * engine), and the amount due after ordering is the server's
  * tax-inclusive total.
+ * Phase 2 (Workstreams 1a + 2B): that same address is ALSO the
+ * order's shipping address — for a cart that ships something
+ * physical it is validated with the shared validator
+ * (lib/checkout/shipping-address) and submitted as shipping_address
+ * alongside the delivery_address the tax calculation reads, and the
+ * merged server stores it on the order as the fulfillment authority.
+ * Digital-only carts are never asked for a shipping address (the
+ * delivery address above is still collected, for tax). A signed-in
+ * customer's saved profile address pre-fills the address fields —
+ * and their name / email / phone — without ever overwriting anything
+ * already typed.
  * No card payment is offered: the
  * Stripe embedded checkout is PARKED DORMANT (its component, routes,
  * and webhook remain in the tree, unreachable from this UI).
@@ -30,13 +41,21 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatPrice } from '../../lib/pricing/pricing';
 import {
   bluevineCardConfigured,
   CASH_APP_HANDLE,
   VENMO_HANDLE,
 } from '../../lib/checkout/order';
+import { getProductByHandle } from '../../lib/catalog/products';
+import {
+  US_STATES,
+  mergeAddressPrefill,
+  productRequiresShipping,
+  validateShippingAddress,
+  type ShippingAddress,
+} from '../../lib/checkout/shipping-address';
 import { track, trackOnce } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart, cartItemTitle } from './cart-store';
@@ -107,14 +126,62 @@ export function CheckoutForm() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
-  // Delivery address (owner directive 2026-11-01) — collected for
-  // EVERY order: physical orders need it for fulfillment, and its
-  // state drives the sales-tax preview + the server's tax figure.
-  const [addrLine1, setAddrLine1] = useState('');
-  const [addrLine2, setAddrLine2] = useState('');
-  const [addrCity, setAddrCity] = useState('');
-  const [addrState, setAddrState] = useState('');
-  const [addrZip, setAddrZip] = useState('');
+  // Delivery / shipping address — ONE address section with two jobs:
+  // - Delivery address (owner directive 2026-11-01): collected for
+  //   EVERY order; its state drives the sales-tax preview + the
+  //   server's tax figure, and it is submitted as delivery_address.
+  // - Shipping address (Phase 2, Workstream 1a + 2B prefill): the
+  //   same fields, in the shared ShippingAddress shape. When the cart
+  //   ships something physical the address is validated with the
+  //   shared validator and ALSO submitted as shipping_address, which
+  //   the server stores on the order for fulfillment.
+  // A signed-in customer's saved default address pre-fills it;
+  // anything typed here wins, and the order records exactly what is
+  // submitted. Country stays 'US': the delivery/tax parser ships
+  // within the United States only (see lib/checkout/order).
+  const [ship, setShip] = useState({
+    name: '',
+    street: '',
+    street2: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: 'US',
+  });
+  const prefillTried = useRef(false);
+
+  useEffect(() => {
+    if (prefillTried.current) return;
+    prefillTried.current = true;
+    void (async () => {
+      try {
+        const res = await fetch('/api/account/me');
+        if (!res.ok) return;
+        const json = (await res.json()) as {
+          profile?: {
+            email?: string;
+            first_name?: string | null;
+            last_name?: string | null;
+            phone?: string | null;
+            shipping_address?: ShippingAddress | null;
+          };
+        };
+        const profile = json.profile;
+        if (!profile) return;
+        if (profile.shipping_address) {
+          setShip((prev) => mergeAddressPrefill(prev, profile.shipping_address));
+        }
+        const fullName = [profile.first_name, profile.last_name]
+          .filter(Boolean)
+          .join(' ');
+        if (fullName) setName((prev) => prev || fullName);
+        if (profile.email) setEmail((prev) => prev || (profile.email as string));
+        if (profile.phone) setPhone((prev) => prev || (profile.phone as string));
+      } catch {
+        // Prefill is a convenience — guests and failures just type.
+      }
+    })();
+  }, []);
   const [isSubscriber, setIsSubscriber] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
@@ -128,9 +195,21 @@ export function CheckoutForm() {
   if (!loaded) return <p>Loading checkout…</p>;
 
   const preview = previewCartTotals(items, bundle, isSubscriber, appliedCoupon, {
-    state: addrState,
+    state: ship.state,
   });
   const empty = items.length === 0 && !bundle;
+  // Mirrors the server's rule (lib/checkout/order): a bundle always
+  // ships; a line ships when it carries a customization/formula or its
+  // catalog record is physical. Digital-only carts never need a
+  // shipping address (they still give a delivery address, for tax).
+  const needsShipping =
+    Boolean(bundle) ||
+    items.some(
+      (item) =>
+        Boolean(item.customization) ||
+        Boolean(item.formula) ||
+        productRequiresShipping(getProductByHandle(item.product_handle)),
+    );
 
   /**
    * Apply a coupon code to the PREVIEW. The server re-validates the
@@ -169,15 +248,32 @@ export function CheckoutForm() {
       return;
     }
     if (
-      !addrLine1.trim() ||
-      !addrCity.trim() ||
-      !/^[A-Za-z]{2}$/.test(addrState.trim()) ||
-      !/^\d{5}(-\d{4})?$/.test(addrZip.trim())
+      !ship.street.trim() ||
+      !ship.city.trim() ||
+      !/^[A-Za-z]{2}$/.test(ship.state.trim()) ||
+      !/^\d{5}(-\d{4})?$/.test(ship.postal_code.trim())
     ) {
       setFormError(
         'Please provide your full delivery address (street, city, state, and ZIP) — we need it to ship your order and to calculate sales tax.',
       );
       return;
+    }
+    // Shipping validation mirrors the server (same shared validator);
+    // the server re-checks authoritatively either way. Only physical
+    // carts submit a shipping address — digital-only carts never do.
+    let shippingAddress: ShippingAddress | undefined;
+    if (needsShipping) {
+      const validated = validateShippingAddress({
+        ...ship,
+        name: ship.name.trim() || name.trim(),
+      });
+      if (!validated.ok) {
+        setFormError(
+          `Shipping address needs attention: ${validated.errors.join(' ')}`,
+        );
+        return;
+      }
+      shippingAddress = validated.address;
     }
     setSubmitting(true);
     track(ANALYTICS_EVENT_NAMES.checkoutInitiated, {});
@@ -194,12 +290,13 @@ export function CheckoutForm() {
         bundle,
         customer: { name: name.trim(), email: email.trim(), phone: phone.trim(), notes: notes.trim() },
         delivery_address: {
-          line1: addrLine1.trim(),
-          ...(addrLine2.trim() ? { line2: addrLine2.trim() } : {}),
-          city: addrCity.trim(),
-          state: addrState.trim().toUpperCase(),
-          postal_code: addrZip.trim(),
+          line1: ship.street.trim(),
+          ...(ship.street2.trim() ? { line2: ship.street2.trim() } : {}),
+          city: ship.city.trim(),
+          state: ship.state.trim().toUpperCase(),
+          postal_code: ship.postal_code.trim(),
         },
+        ...(shippingAddress ? { shipping_address: shippingAddress } : {}),
         is_subscriber: isSubscriber,
         payment_method: paymentMethod,
         ...(appliedCoupon ? { coupon_code: appliedCoupon } : {}),
@@ -580,15 +677,29 @@ export function CheckoutForm() {
                   Where your order will be shipped. Sales tax is
                   calculated from this address: Utah deliveries are
                   taxed at our Salt Lake City rate (8.45%); deliveries
-                  to other states currently collect no sales tax.
+                  to other states currently collect no sales tax. If
+                  you&apos;re signed in, this starts from the address
+                  saved on your profile — change anything that&apos;s
+                  different for this order; the order keeps the address
+                  you submit here.
                 </small>
               </p>
+              <label>
+                Name for delivery
+                <input
+                  type="text"
+                  value={ship.name}
+                  onChange={(e) => setShip({ ...ship, name: e.target.value })}
+                  autoComplete="shipping name"
+                  placeholder={name}
+                />
+              </label>
               <label>
                 Street address
                 <input
                   type="text"
-                  value={addrLine1}
-                  onChange={(e) => setAddrLine1(e.target.value)}
+                  value={ship.street}
+                  onChange={(e) => setShip({ ...ship, street: e.target.value })}
                   autoComplete="street-address"
                 />
               </label>
@@ -596,8 +707,8 @@ export function CheckoutForm() {
                 Apartment, suite, etc. (optional)
                 <input
                   type="text"
-                  value={addrLine2}
-                  onChange={(e) => setAddrLine2(e.target.value)}
+                  value={ship.street2}
+                  onChange={(e) => setShip({ ...ship, street2: e.target.value })}
                   autoComplete="address-line2"
                 />
               </label>
@@ -605,29 +716,34 @@ export function CheckoutForm() {
                 City
                 <input
                   type="text"
-                  value={addrCity}
-                  onChange={(e) => setAddrCity(e.target.value)}
+                  value={ship.city}
+                  onChange={(e) => setShip({ ...ship, city: e.target.value })}
                   autoComplete="address-level2"
                 />
               </label>
               <label>
-                State (2-letter)
-                <input
-                  type="text"
-                  value={addrState}
-                  onChange={(e) =>
-                    setAddrState(e.target.value.toUpperCase().slice(0, 2))
-                  }
+                State
+                <select
+                  value={ship.state}
+                  onChange={(e) => setShip({ ...ship, state: e.target.value })}
                   autoComplete="address-level1"
-                  placeholder="UT"
-                />
+                >
+                  <option value="">Choose a state…</option>
+                  {US_STATES.map((s) => (
+                    <option key={s.code} value={s.code}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
                 ZIP code
                 <input
                   type="text"
-                  value={addrZip}
-                  onChange={(e) => setAddrZip(e.target.value)}
+                  value={ship.postal_code}
+                  onChange={(e) =>
+                    setShip({ ...ship, postal_code: e.target.value })
+                  }
                   autoComplete="postal-code"
                   placeholder="84104"
                 />

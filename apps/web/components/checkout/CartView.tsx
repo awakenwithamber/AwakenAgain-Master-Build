@@ -10,6 +10,7 @@ import { getShape } from '../../lib/catalog/shapes';
 import { getHerb } from '../../lib/catalog/herbs';
 import { formatPrice } from '../../lib/pricing/pricing';
 import { getBalmBase } from '../../lib/custom-formula/balm';
+import { scentSelectionLabel } from '../../lib/catalog/scents';
 import { track } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import { useCart, cartItemTitle } from './cart-store';
@@ -50,9 +51,7 @@ export function CartView() {
                       <p>
                         <small>
                           {getShape(custom.shape)?.name} · {custom.base} ·{' '}
-                          {custom.scent.type === 'signature'
-                            ? `Signature ${custom.scent.recipe_id}`
-                            : `Custom blend: ${custom.scent.oils.join(' + ')}`}
+                          {scentSelectionLabel(custom.scent)}
                           {custom.botanical ? ` · ${custom.botanical}` : ''} ·{' '}
                           {custom.color}
                         </small>

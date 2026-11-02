@@ -178,8 +178,8 @@ export function resolveVariantPriceCents(
 /**
  * PREVIEW unit price for display. Server recomputes authoritatively.
  * Customized soaps price from the shape table; custom formulas price from
- * the formula size table + per-herb add-ons; plain items from variant or
- * product price.
+ * the shared formula pricing path (size table + charged botanicals);
+ * plain items from variant or product price.
  */
 export function previewUnitPriceCents(
   productHandle: string,

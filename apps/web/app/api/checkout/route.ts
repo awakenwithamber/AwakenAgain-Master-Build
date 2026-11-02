@@ -22,7 +22,10 @@
  * instructions always match the method recorded on the order. On success
  * a purchase_confirmation email job is also queued for the customer
  * (lib/jobs/order-confirmation — Resend when RESEND_API_KEY is set,
- * logging provider otherwise).
+ * logging provider otherwise). Every accepted order ALSO queues the
+ * owner admin-notification email (Phase 2, Workstream 1b —
+ * lib/jobs/order-notifications, fire-and-forget; a notification
+ * failure is logged and can never fail or delay the order).
  *
  * PAYMENT SWITCH (owner directive 2026-11-01, staged — "Replace our
  * checkout with the bluevine set up", superseding the 2026-10-24
@@ -56,6 +59,10 @@ import {
 } from '../../../lib/checkout/order';
 import { normalizeSubscriptionEmail } from '../../../lib/subscriptions/entitlement';
 import { queueOrderConfirmation } from '../../../lib/jobs/order-confirmation';
+import {
+  fireAndForgetEmail,
+  queueAdminOrderNotification,
+} from '../../../lib/jobs/order-notifications';
 import { createLogger } from '../../../lib/observability/logger';
 
 const log = createLogger('api:checkout');
@@ -272,6 +279,16 @@ export async function POST(request: Request) {
       order_id: record.order_id,
       error: err,
     });
+  });
+
+  // Owner notification (Phase 2, Workstream 1b): every accepted order
+  // also emails the owner inbox with the customer, items, ship-to,
+  // total, and payment method/status — same provider path as the
+  // customer confirmation, same fire-and-forget rule: a notification
+  // failure is logged and can never fail or delay the order.
+  fireAndForgetEmail(queueAdminOrderNotification(record), {
+    order_id: record.order_id,
+    template: 'admin_new_order',
   });
 
   // Authoritative order event (server-owned, exactly once per accepted

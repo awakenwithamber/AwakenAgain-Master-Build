@@ -310,9 +310,13 @@ export function validateFormulaCustomization(
 }
 
 /**
- * Server-computed unit price for a custom formula: size base + per-herb
- * add-ons, integer cents. Mirrors customFormulaPriceCents (client preview)
- * — any drift between the two fails closed at checkout.
+ * Server-computed unit price for a custom formula: size base + the
+ * per-herb prices of the charged botanicals, integer cents. Capsule/tea
+ * charge every botanical; balm charges only the extras past the first
+ * five (APPROVED Option C, owner decision 2026-10-30 — see
+ * customFormulaPriceCents in lib/pricing/pricing.ts). This function
+ * delegates to that shared pricing path — any drift between the client
+ * preview and this recompute fails closed at checkout.
  */
 export function priceFormulaCustomization(
   productHandle: string,
