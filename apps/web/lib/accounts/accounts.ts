@@ -55,6 +55,7 @@ import {
   type InterestProfile,
 } from '../personalization/interests';
 import type { QuizResultSnapshot } from '../quiz/quiz';
+import type { ShippingAddress } from '../checkout/shipping-address';
 
 /* ------------------------------------------------------------------ */
 /* Identity                                                            */
@@ -158,6 +159,30 @@ export interface AccountDeletedRecord extends AccountRecordBase {
   type: 'account.deleted';
 }
 
+/* Phase 2B (2026-10-30, registration redesign) — ADDITIVE events only.
+   Existing accounts simply have none of these; every fold default
+   below preserves their exact prior behavior. */
+export interface AccountRegistrationDetailsRecord extends AccountRecordBase {
+  type: 'account.registration_details';
+  first_name: string;
+  last_name: string;
+  /** Normalized '+<dial><digits>' (lib/accounts/phone.ts). */
+  phone: string;
+}
+export interface AccountPasswordSetRecord extends AccountRecordBase {
+  type: 'account.password_set';
+  /** 'salt$hash' scrypt (lib/accounts/password.ts) — NEVER plaintext. */
+  password_hash: string;
+}
+export interface AccountEmailVerifiedRecord extends AccountRecordBase {
+  type: 'account.email_verified';
+}
+export interface AccountShippingAddressSetRecord extends AccountRecordBase {
+  type: 'account.shipping_address_set';
+  /** The customer's default shipping address (validated). */
+  address: ShippingAddress;
+}
+
 export type AccountRecord =
   | AccountCreatedRecord
   | AccountProfileUpdatedRecord
@@ -168,7 +193,11 @@ export type AccountRecord =
   | AccountProgressUpdatedRecord
   | AccountSessionIssuedRecord
   | AccountSessionRevokedRecord
-  | AccountDeletedRecord;
+  | AccountDeletedRecord
+  | AccountRegistrationDetailsRecord
+  | AccountPasswordSetRecord
+  | AccountEmailVerifiedRecord
+  | AccountShippingAddressSetRecord;
 
 export type AccountRecordType = AccountRecord['type'];
 
@@ -199,6 +228,23 @@ export interface AccountState {
   quiz_results: SavedQuizResult[];
   progress: AccountProgress | null;
   sessions: AccountSessionState[];
+  /* Phase 2B additive fold fields — null/false for every account that
+     predates the registration redesign (legacy passwordless accounts). */
+  first_name: string | null;
+  last_name: string | null;
+  /** Normalized '+<dial><digits>', or null when never collected. */
+  phone: string | null;
+  /**
+   * SERVER-ONLY: the scrypt 'salt$hash'. Read models (profile view,
+   * export) must NEVER surface this — they expose has_password only.
+   */
+  password_hash: string | null;
+  /** ISO timestamp of the 'account.email_verified' event, or null. */
+  email_verified_at: string | null;
+  /** True when a registration_details event exists (a 2B registration). */
+  has_registration: boolean;
+  /** Default shipping address (Phase 2B), or null when never saved. */
+  shipping_address: ShippingAddress | null;
 }
 
 export const MAX_LIKES = 200;
@@ -216,6 +262,13 @@ export function emptyAccountState(email: string): AccountState {
     quiz_results: [],
     progress: null,
     sessions: [],
+    first_name: null,
+    last_name: null,
+    phone: null,
+    password_hash: null,
+    email_verified_at: null,
+    has_registration: false,
+    shipping_address: null,
   };
 }
 
@@ -230,6 +283,10 @@ const ACCOUNT_RECORD_TYPES: ReadonlySet<string> = new Set([
   'account.session_issued',
   'account.session_revoked',
   'account.deleted',
+  'account.registration_details',
+  'account.password_set',
+  'account.email_verified',
+  'account.shipping_address_set',
 ]);
 
 /**
@@ -329,6 +386,31 @@ export function foldAccountRecords(
       }
       case 'account.deleted':
         state.deleted = true;
+        break;
+      case 'account.registration_details':
+        state.has_registration = true;
+        if (typeof record.first_name === 'string') {
+          state.first_name = record.first_name;
+        }
+        if (typeof record.last_name === 'string') {
+          state.last_name = record.last_name;
+        }
+        if (typeof record.phone === 'string' && record.phone) {
+          state.phone = record.phone;
+        }
+        break;
+      case 'account.password_set':
+        if (typeof record.password_hash === 'string' && record.password_hash) {
+          state.password_hash = record.password_hash;
+        }
+        break;
+      case 'account.email_verified':
+        state.email_verified_at = record.recorded_at;
+        break;
+      case 'account.shipping_address_set':
+        if (record.address && typeof record.address === 'object') {
+          state.shipping_address = record.address;
+        }
         break;
     }
   }
@@ -664,6 +746,85 @@ export async function deleteAccountAsync(
     email,
     type: 'account.deleted',
     recorded_at: nowIso(),
+  });
+  return loadAccountAsync(email);
+}
+
+/* ------------------------------------------------------------------ */
+/* Phase 2B registration mutations (each = exactly one appended event)  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Is this account's email verified? (Phase 2B rule, spec item 7.)
+ * An explicit 'account.email_verified' event settles it. Accounts
+ * WITHOUT a registration record predate the redesign: they were
+ * created by proving possession of the inbox through the sign-in
+ * code — that proof IS their verification, so they count as verified
+ * and are never blocked. Only an account WITH registration details
+ * but no verification event is unverified.
+ */
+export function accountEmailVerified(state: AccountState): boolean {
+  if (state.email_verified_at) return true;
+  return !state.has_registration;
+}
+
+/** Record (or update) the registration name + phone. */
+export async function appendRegistrationDetailsAsync(
+  emailInput: unknown,
+  details: { first_name: string; last_name: string; phone: string },
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.registration_details',
+    recorded_at: nowIso(),
+    first_name: details.first_name,
+    last_name: details.last_name,
+    phone: details.phone,
+  });
+  return loadAccountAsync(email);
+}
+
+/** Set/replace the password hash (register, reset, complete-profile). */
+export async function setAccountPasswordAsync(
+  emailInput: unknown,
+  passwordHash: string,
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.password_set',
+    recorded_at: nowIso(),
+    password_hash: passwordHash,
+  });
+  return loadAccountAsync(email);
+}
+
+/** Mark the email verified (verification code proven). Idempotent-ish:
+ *  a second event is harmless — the fold keeps the latest stamp. */
+export async function markAccountEmailVerifiedAsync(
+  emailInput: unknown,
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.email_verified',
+    recorded_at: nowIso(),
+  });
+  return loadAccountAsync(email);
+}
+
+/** Save the customer's default shipping address (validated upstream). */
+export async function setAccountShippingAddressAsync(
+  emailInput: unknown,
+  address: ShippingAddress,
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.shipping_address_set',
+    recorded_at: nowIso(),
+    address,
   });
   return loadAccountAsync(email);
 }

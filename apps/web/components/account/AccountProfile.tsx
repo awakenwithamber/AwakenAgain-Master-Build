@@ -17,6 +17,8 @@ import {
 } from '../../lib/accounts/client';
 import { formatPrice } from '../../lib/pricing/pricing';
 import type { ProfileView } from '../../lib/accounts/profile';
+import { formatShippingAddressLines } from '../../lib/checkout/shipping-address';
+import { CompleteProfileForm } from './CompleteProfileForm';
 import styles from './account.module.css';
 
 /**
@@ -74,24 +76,7 @@ async function postJson(
 }
 
 function SubscriptionSection({ profile }: { profile: ProfileView }) {
-  const [portalError, setPortalError] = useState<string | null>(null);
-  const [portalBusy, setPortalBusy] = useState(false);
   const sub = profile.subscription;
-
-  const openPortal = async () => {
-    if (portalBusy) return;
-    setPortalBusy(true);
-    setPortalError(null);
-    const res = await postJson('/api/subscriptions/portal', {});
-    const url = res.json.url as string | undefined;
-    if (res.ok && url) {
-      window.location.assign(url);
-      return;
-    }
-    const errors = res.json.errors as string[] | undefined;
-    setPortalError(errors?.[0] ?? 'Could not open subscription management.');
-    setPortalBusy(false);
-  };
 
   return (
     <section className={styles.card} aria-labelledby="account-subscription">
@@ -107,26 +92,20 @@ function SubscriptionSection({ profile }: { profile: ProfileView }) {
           {sub.paid_through || sub.current_period_end
             ? `Your current paid period runs through ${fmtDate(
                 (sub.paid_through ?? sub.current_period_end) as string,
-              )}${
-                sub.has_stripe_subscription
-                  ? ' — your card renews it automatically unless you cancel.'
-                  : '.'
-              }`
-            : sub.has_stripe_subscription
-              ? 'Your card renews it automatically each month unless you cancel.'
-              : 'Amber confirmed your membership personally.'}
+              )}.`
+            : 'Amber confirmed your membership personally.'}
         </p>
       ) : sub.display_status === 'past_due' ? (
         <p role="alert">
           <strong>Your payment failed.</strong> Your access continues until{' '}
           {sub.grace_deadline ? fmtDate(sub.grace_deadline) : 'the end of the grace period'}{' '}
-          — update your card to keep access.
+          — contact Amber so she can help you keep access.
         </p>
       ) : sub.display_status === 'past_due_lapsed' ? (
         <p>
           <strong>Your payment failed</strong> and the grace period has ended, so
-          membership access is paused. Update your card to reactivate — a
-          successful payment restores access right away.
+          membership access is paused. Contact Amber to reactivate — once
+          your payment is confirmed, access is restored right away.
         </p>
       ) : sub.display_status === 'cancel_at_period_end' ||
         sub.display_status === 'ending_paid_through' ? (
@@ -155,27 +134,89 @@ function SubscriptionSection({ profile }: { profile: ProfileView }) {
           <Link href="/grimoire/subscribe">Rejoin the Living Grimoire →</Link>
         </p>
       )}
-      {sub?.has_stripe_subscription ? (
-        <div className={styles.actions}>
-          <button
-            className="btn-secondary"
-            type="button"
-            onClick={openPortal}
-            disabled={portalBusy}
-          >
-            {portalBusy ? 'Opening…' : 'Manage / cancel subscription'}
-          </button>
-          {portalError ? (
-            <p className={styles.meta} role="alert">
-              {portalError}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+      <p className={styles.meta}>
+        To pause, cancel, or change your membership, email Amber at{' '}
+        <a href="mailto:Amber@awakenagain.com">Amber@awakenagain.com</a> —
+        she takes care of every membership personally.
+      </p>
       <p className={styles.meta}>
         The separate $8.88 permanent unlock, if you hold one, is never affected
         by subscription cancellation.
       </p>
+    </section>
+  );
+}
+
+/**
+ * Profile details + default shipping address (Phase 2B). Legacy
+ * passwordless accounts get the full "Complete your profile" form
+ * (name, phone, set a password, address); complete profiles see their
+ * saved details and can edit the address. Orders keep the address
+ * recorded at checkout — editing here never rewrites a placed order.
+ */
+function DetailsSection({ profile }: { profile: ProfileView }) {
+  const [editingAddress, setEditingAddress] = useState(false);
+  const addressLines = formatShippingAddressLines(profile.shipping_address);
+  const fullName = [profile.first_name, profile.last_name]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <section className={styles.card} aria-labelledby="account-details">
+      <h2 id="account-details">Your details &amp; shipping</h2>
+      {profile.needs_profile_completion ? (
+        <>
+          <p>
+            A few details are still missing from your profile. Adding
+            them lets you sign in with a password and makes checkout
+            faster — your saved address fills in automatically.
+          </p>
+          <CompleteProfileForm profile={profile} variant="complete" />
+        </>
+      ) : (
+        <>
+          {fullName ? (
+            <p>
+              <strong>{fullName}</strong>
+              {profile.phone ? ` · ${profile.phone}` : ''}
+            </p>
+          ) : null}
+          {addressLines.length > 0 ? (
+            <p>
+              <strong>Default shipping address</strong>
+              <br />
+              {addressLines.map((line) => (
+                <span key={line}>
+                  {line}
+                  <br />
+                </span>
+              ))}
+            </p>
+          ) : (
+            <p>No shipping address saved yet.</p>
+          )}
+          {editingAddress ? (
+            <CompleteProfileForm profile={profile} variant="address" />
+          ) : (
+            <div className={styles.actions}>
+              <button
+                className="btn-secondary"
+                type="button"
+                onClick={() => setEditingAddress(true)}
+              >
+                {addressLines.length > 0
+                  ? 'Edit shipping address'
+                  : 'Add a shipping address'}
+              </button>
+            </div>
+          )}
+          <p className={styles.meta}>
+            Checkout starts from this address when you&apos;re signed
+            in — you can always change it for a single order, and each
+            order keeps the address it was placed with.
+          </p>
+        </>
+      )}
     </section>
   );
 }
@@ -263,6 +304,8 @@ export function AccountProfile({ profile }: { profile: ProfileView }) {
           </button>
         </div>
       </section>
+
+      <DetailsSection profile={profile} />
 
       <SubscriptionSection profile={profile} />
 

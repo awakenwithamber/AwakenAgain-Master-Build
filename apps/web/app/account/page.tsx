@@ -10,8 +10,15 @@
  * The Grimoire keeps its own gate (OTP + entitlement); this page
  * additionally SHOWS the member's subscription state (Stage 3:
  * active / past-due grace / cancelling / lapsed, composed by
- * lib/accounts/profile.ts) and offers Stripe Customer Portal
- * management for card subscribers. Display never grants entitlement.
+ * lib/accounts/profile.ts). Membership management runs through Amber
+ * personally (Phase 2 removed the card-portal surface). Display never
+ * grants entitlement.
+ *
+ * Phase 2B (2026-10-30): the signed-out island is the tabbed
+ * Create-account / Sign-in forms (components/account/AuthForms) —
+ * registration with name, phone, shipping address, and a password,
+ * activated by an email verification code; the legacy email-code
+ * sign-in remains inside it for passwordless accounts.
  */
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
@@ -21,14 +28,14 @@ import {
   resolveAccountSession,
 } from '../../lib/accounts/session';
 import { getProfileViewAsync } from '../../lib/accounts/profile';
-import { SignInForm } from '../../components/account/SignInForm';
+import { AuthForms } from '../../components/account/AuthForms';
 import { AccountProfile } from '../../components/account/AccountProfile';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from '../../components/account/account.module.css';
 
 export const metadata: Metadata = {
   title: 'My Profile',
-  description: `Your ${BRAND_NAME} profile: saved herbal allies, likes, searches, and order history — sign in with an email code, no password.`,
+  description: `Your ${BRAND_NAME} profile: saved herbal allies, likes, searches, and order history — create your account or sign in with your password or an email code.`,
   alternates: { canonical: '/account' },
 };
 
@@ -56,7 +63,7 @@ export default async function AccountPage() {
       {profile ? (
         <AccountProfile profile={profile} />
       ) : (
-        <SignInForm available={accountSessionsConfigured()} />
+        <AuthForms available={accountSessionsConfigured()} />
       )}
     </main>
   );

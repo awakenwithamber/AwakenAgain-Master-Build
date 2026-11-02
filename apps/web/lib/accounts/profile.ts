@@ -29,6 +29,7 @@
  * SERVER-ONLY.
  */
 import {
+  accountEmailVerified,
   loadAccountAsync,
   normalizeAccountEmail,
   type AccountProgress,
@@ -36,6 +37,7 @@ import {
   type SavedQuizResult,
   type SavedSearch,
 } from './accounts';
+import type { ShippingAddress } from '../checkout/shipping-address';
 import { readLeadsForEmailAsync, type LeadRecord } from '../leads/lead-store';
 import { defaultOrderStore } from '../stores/order-store';
 import {
@@ -92,6 +94,22 @@ export interface ProfileView {
   orders: ProfileOrderSummary[];
   /** Living Grimoire subscription state, or null when none is held. */
   subscription: ProfileSubscriptionView | null;
+  /* Phase 2B additive fields. The password HASH is never part of this
+     view — only the boolean that one exists. */
+  first_name: string | null;
+  last_name: string | null;
+  /** Normalized '+<dial><digits>', or null when never collected. */
+  phone: string | null;
+  has_password: boolean;
+  email_verified: boolean;
+  /**
+   * True when the profile is missing registration pieces (name, phone,
+   * or a password) — drives the "Complete your profile" section,
+   * chiefly for legacy passwordless accounts (spec item 6).
+   */
+  needs_profile_completion: boolean;
+  /** Default shipping address (Phase 2B), or null when never saved. */
+  shipping_address: ShippingAddress | null;
 }
 
 /** Same-sitting window for the lead/profile-save dedupe (see header). */
@@ -188,6 +206,16 @@ export async function getProfileViewAsync(
     progress: state.progress,
     orders,
     subscription,
+    first_name: state.first_name,
+    last_name: state.last_name,
+    phone: state.phone,
+    has_password: state.password_hash !== null,
+    email_verified: accountEmailVerified(state),
+    needs_profile_completion:
+      state.password_hash === null ||
+      state.phone === null ||
+      (state.first_name === null && state.display_name === null),
+    shipping_address: state.shipping_address,
   };
 }
 
@@ -206,6 +234,15 @@ export interface AccountExport {
     searches: SavedSearch[];
     quiz_results: SavedQuizResult[];
     progress: AccountProgress | null;
+    /* Phase 2B: registration details are the customer's own data and
+       belong in their export. The password HASH is deliberately NOT
+       exported — a hash is a credential artifact, not profile data. */
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    email_verified: boolean;
+    has_password: boolean;
+    shipping_address: ShippingAddress | null;
   } | null;
   leads: LeadRecord[];
   orders: OrderRecord[];
@@ -249,6 +286,12 @@ export async function buildAccountExportAsync(
       searches: state.searches,
       quiz_results: composeQuizResults(state, leads),
       progress: state.progress,
+      first_name: state.first_name,
+      last_name: state.last_name,
+      phone: state.phone,
+      email_verified: accountEmailVerified(state),
+      has_password: state.password_hash !== null,
+      shipping_address: state.shipping_address,
     },
     leads,
     orders,
