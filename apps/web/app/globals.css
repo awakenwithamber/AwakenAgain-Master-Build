@@ -1381,6 +1381,106 @@ h1, h2, h3,
   color: var(--parchment);
 }
 
+.gaia-panel .herbal-chat-profile-cta {
+  margin: 0.85rem 0 0;
+  border: 1px solid var(--brass);
+  border-radius: var(--radius);
+  background: rgba(201, 162, 75, 0.1);
+  padding: 0.65rem 0.85rem;
+}
+
+.gaia-panel .herbal-chat-profile-cta p {
+  margin: 0;
+  color: var(--text-body);
+  line-height: 1.55;
+}
+
+.gaia-panel .herbal-chat-profile-cta strong {
+  color: var(--parchment);
+}
+
+.gaia-panel .herbal-chat-profile-cta a {
+  color: var(--brass-lt);
+  font-weight: 600;
+}
+
+/* Gaia beginner guide + questionnaire (combined build 2026-11-02) */
+.gaia-panel .gaia-guide {
+  margin: 0.85rem 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(110, 75, 126, 0.14);
+  padding: 0.65rem 0.85rem;
+}
+
+.gaia-panel .gaia-guide-wording {
+  margin: 0;
+  color: var(--text-body);
+  line-height: 1.55;
+}
+
+.gaia-panel .gaia-guide-start,
+.gaia-panel .gaia-guide-go {
+  display: inline-block;
+  margin-top: 0.55rem;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--plum-dark);
+  background: linear-gradient(135deg, var(--brass), var(--brass-lt));
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.05rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.gaia-panel .gaia-guide-step {
+  border: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.gaia-panel .gaia-guide-step legend {
+  color: var(--parchment);
+  font-weight: 600;
+  margin-bottom: 0.45rem;
+}
+
+.gaia-panel .gaia-guide-option {
+  font: inherit;
+  text-align: left;
+  color: var(--text-body);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+.gaia-panel .gaia-guide-option:hover {
+  border-color: var(--brass);
+  color: var(--parchment);
+}
+
+.gaia-panel .gaia-guide-result p {
+  margin: 0.55rem 0 0;
+  color: var(--text-body);
+  line-height: 1.55;
+}
+
+.gaia-panel .gaia-guide-again {
+  font: inherit;
+  color: var(--brass-lt);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
 .gaia-panel .herbal-chat-messages {
   margin: 0.85rem 0;
   max-height: 16rem;

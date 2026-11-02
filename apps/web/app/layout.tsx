@@ -13,6 +13,7 @@ import { GaiaWidget } from '../components/chat/GaiaWidget';
 import { GaiaNudge } from '../components/chat/GaiaNudge';
 import { ContactPopup } from '../components/contact/ContactPopup';
 import { ConsentBar } from '../components/privacy/ConsentBar';
+import { MetaPixelTracker } from '../components/analytics/MetaPixelTracker';
 
 // CSP nonce (Aikido 845087258): pages must render per-request so Next.js
 // can stamp the middleware nonce onto its inline scripts. Static prerender
@@ -97,6 +98,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ContactPopup />
         {/* Analytics consent bar (2026-10-14) — calm bottom bar, shows only until the visitor chooses. */}
         <ConsentBar />
+        {/* Meta pixel route tracker (ported 2026-11-02 from the Oct 28
+            staged build) — inert unless NEXT_PUBLIC_META_PIXEL_ID is
+            set AND analytics consent is accepted; see
+            lib/analytics/meta-pixel.ts. Renders nothing. */}
+        <MetaPixelTracker />
         {/* Legacy SPA anchor → route bridge (client-side; fragments never reach the server). */}
         <LegacyAnchorRedirect />
         <OrganizationJsonLd />

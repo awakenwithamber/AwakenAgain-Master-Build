@@ -132,3 +132,23 @@ export const SIGNATURE_SCENTS: readonly ScentRecipe[] = [
 export function getScentRecipe(id: string): ScentRecipe | undefined {
   return SIGNATURE_SCENTS.find((r) => r.id === id);
 }
+
+/**
+ * Customer-facing label for a scent selection (Phase 2 fix, 2026-10-30).
+ *
+ * The order record stores the recipe ID (§14 rule above) — but a raw
+ * ID like SCENT_RECIPE_01 must NEVER reach a customer surface (it
+ * leaked into the cart and the bundle builder). Every customer-facing
+ * composition of scent text goes through here: signature selections
+ * resolve to the recipe's display name ("Moonlit Lavender"), with a
+ * neutral fallback for an unknown ID — never the ID itself.
+ */
+export function scentSelectionLabel(
+  scent:
+    | { type: 'signature'; recipe_id: string }
+    | { type: 'custom_blend'; oils: string[] },
+): string {
+  return scent.type === 'signature'
+    ? `Signature: ${getScentRecipe(scent.recipe_id)?.name ?? 'Signature blend'}`
+    : `Custom blend: ${scent.oils.join(' + ')}`;
+}

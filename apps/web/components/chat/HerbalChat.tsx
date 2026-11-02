@@ -16,7 +16,9 @@ import {
   trackPlatformEvent,
   trackPlatformEventOnce,
 } from '../../lib/analytics/platform-events';
+import Link from 'next/link';
 import { GAIA_DISCLAIMER } from '../../lib/ai/chat-provider';
+import { GaiaGuide } from './GaiaGuide';
 
 interface ChatBubble {
   role: 'user' | 'assistant';
@@ -85,6 +87,24 @@ export function HerbalChat() {
           guidance. Not a general AI yet; provider choice pending.
         </p>
       </header>
+
+      {/* Phase 2 (2026-10-30): a prominent profile entry inside the
+          panel — wording follows the quiz-results CTA ("create a free
+          profile"). No other Gaia behavior changes. */}
+      <div className="herbal-chat-profile-cta">
+        <p>
+          <strong>Your apothecary profile keeps your allies, likes, and
+          orders together.</strong>{' '}
+          <Link href="/account">Create your free profile</Link> — or{' '}
+          <Link href="/account">sign in</Link> if you already have one.
+        </p>
+      </div>
+
+      {/* Beginner guide (combined build 2026-11-02): Amber's exact
+          wording + the short questionnaire, offered until the visitor
+          starts chatting. It never gates the chat — no message limit
+          is built here. */}
+      {messages.length === 0 && <GaiaGuide />}
 
       <div aria-live="polite" aria-label="Conversation" className="herbal-chat-messages">
         {messages.length === 0 && (

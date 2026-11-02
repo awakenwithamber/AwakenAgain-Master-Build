@@ -67,6 +67,9 @@ export function GaiaWidget() {
             ✦ Hey, my name is <strong>Gaia</strong> and I&apos;m here to help!
             Ask me about herbs, products, or finding the right personalized formula for you.
           </p>
+          <p>
+            If you do not know where to begin, chat with Gaia! Answer a short questionnaire and she will lead you to the section that will help you the most.
+          </p>
           <div className="gaia-intro-actions">
             <button type="button" onClick={openChat}>
               Chat with Gaia

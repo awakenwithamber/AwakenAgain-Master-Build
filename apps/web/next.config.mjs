@@ -112,6 +112,14 @@ const nextConfig = {
         permanent: true,
       },
       {
+        // Phase 2 (2026-10-30): the pre-rename library URL lands on the
+        // encyclopedia. Bare path only — /herbal-library/[herb] is a
+        // live dynamic route and must NOT be swallowed by a wildcard.
+        source: '/herbal-library',
+        destination: '/herb-index',
+        permanent: true,
+      },
+      {
         source: '/herbal-wisdom/:path*',
         destination: '/herb-index',
         permanent: true,

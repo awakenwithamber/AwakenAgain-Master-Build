@@ -79,6 +79,20 @@ export const EVENT_STREAMS = {
    */
   grimoireOtpCodes: 'grimoire_otp_codes',
   grimoireOtpSessions: 'grimoire_otp_sessions',
+  /**
+   * Account verification-code durable store (Phase 2B) —
+   * lib/accounts/otp-store.ts. Sign-in, email-verification, and
+   * password-reset code requests as append-only events keyed by
+   * request_id; consumption/expiry is a tombstone event, mirroring
+   * grimoireOtpCodes.
+   */
+  accountOtpCodes: 'account_otp_codes',
+  /**
+   * Grimoire manual unlock requests (Phase 2, Workstream 3) —
+   * lib/grimoire/unlock-requests.ts. Append-only request/state records
+   * keyed by request_id; latest wins.
+   */
+  grimoireUnlockRequests: 'grimoire_unlock_requests',
 } as const;
 
 export type EventStream = (typeof EVENT_STREAMS)[keyof typeof EVENT_STREAMS];

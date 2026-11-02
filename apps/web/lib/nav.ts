@@ -33,11 +33,16 @@ export const NAV_ENTRIES: NavEntry[] = [
     kind: 'group',
     id: 'shop',
     label: 'Shop',
+    // Order (combined build 2026-11-02): the shop page stays first
+    // (owner punch list), then the custom builders are promoted
+    // directly under it — visitors who "don't know what they need"
+    // meet the builders and the Quiz before the catalog shelves.
+    // Labels are unchanged (renames are a separate owner decision).
     links: [
       { href: '/shop', label: 'Remedies' },
-      { href: '/soap-shop', label: 'Soap Shop' },
-      { href: '/soap-builder', label: 'Soap Builder' },
       { href: '/custom-formula', label: 'Create Remedy' },
+      { href: '/soap-builder', label: 'Soap Builder' },
+      { href: '/soap-shop', label: 'Soap Shop' },
       { href: '/custom-formula/tea', label: 'Tea Builder' },
       { href: '/cart', label: 'Cart' },
       { href: '/checkout', label: 'Checkout' },
@@ -49,7 +54,6 @@ export const NAV_ENTRIES: NavEntry[] = [
     label: 'Herb Library',
     links: [
       { href: '/herb-index', label: 'Herb Encyclopedia' },
-      { href: '/herb-index', label: 'Articles & Guides' },
       { href: '/herbal-wisdom', label: 'Herbal Wisdom' },
     ],
   },

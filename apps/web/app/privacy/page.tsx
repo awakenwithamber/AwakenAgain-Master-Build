@@ -6,11 +6,19 @@
  * order, account, and subscription records are stored in the site's
  * record stores (Postgres via Neon when DATABASE_URL is configured,
  * local data files otherwise — see lib/orders/store.ts
- * createOrderStore and lib/events/event-store.ts); card checkout runs
- * through Stripe's embedded checkout; Cash App and Venmo are manual
- * payment options; transactional email is sent via Resend; analytics
- * is PostHog (behavioral, no PII), consent-gated. No fabricated
- * compliance claims.
+ * createOrderStore and lib/events/event-store.ts); payments run on
+ * the manual rail — an emailed Bookipi invoice (paid by ACH bank
+ * transfer to Bluevine, Venmo, or Cash App) or Venmo / Cash App
+ * directly; there is no card checkout on this site today (a short
+ * historical note in the Payments section covers the brief earlier
+ * period when card checkout was offered); transactional email is
+ * sent via Resend; analytics is PostHog (behavioral, no PII),
+ * consent-gated. No fabricated compliance claims.
+ *
+ * Phase 2 (2026-10-30): the payments description was rewritten to the
+ * current manual process, and the collection list now names the
+ * shipping address (checkout, for physical orders) and the account
+ * registration details (name, phone, default shipping address).
  *
  * The "Analytics & personalization" section (added 2026-10-14) describes
  * the consent-gated PostHog setup and the on-device interest profile
@@ -31,7 +39,7 @@ export const metadata: Metadata = {
   description: `How ${BRAND_NAME} collects, uses, and protects your information.`,
 };
 
-const UPDATED = '2026-10-21';
+const UPDATED = '2026-10-30';
 
 export default function PrivacyPage() {
   return (
@@ -57,14 +65,17 @@ export default function PrivacyPage() {
         <li>
           <strong>Orders:</strong> when you place an order we store your
           name, email, optional phone and order notes, the items ordered,
-          the order totals, and the payment method you chose, so we can
-          fulfill the order and show its status. We never store card
-          details (see Payments below).
+          the order totals, and the payment method you chose — and, for
+          orders that ship, the shipping address you give at checkout —
+          so we can fulfill the order and show its status. We never store
+          card details (see Payments below).
         </li>
         <li>
           <strong>Accounts &amp; memberships:</strong> if you create an
           account or join the Living Grimoire membership, we store your
-          email and the account and subscription records tied to it
+          email, your name and phone number, your default shipping
+          address, a securely hashed password (never the password
+          itself), and the account and subscription records tied to it
           (such as saved quiz results, likes, and membership status).
         </li>
         <li>
@@ -78,16 +89,30 @@ export default function PrivacyPage() {
       <h2>Payments</h2>
       <ul>
         <li>
-          <strong>Card checkout:</strong> card payments are processed by
-          Stripe through its embedded checkout on this site. Your card
-          details are entered into Stripe&apos;s checkout and go to
-          Stripe — they are never stored on our site.
+          <strong>Emailed invoice:</strong> the primary way to pay. After
+          you order, we email you an invoice (sent through Bookipi). You
+          pay it by ACH bank transfer to our Bluevine account — the
+          invoice shows the details — or with Venmo or Cash App, using
+          your order number as the reference. We confirm receipt
+          personally before fulfilling your order. We never see or store
+          your bank details.
         </li>
         <li>
-          <strong>Cash App and Venmo:</strong> also available as manual
-          payment options. If you choose one, you send payment to the
-          handles shown at checkout and we confirm receipt before
-          fulfilling your order.
+          <strong>Cash App and Venmo:</strong> you can also send payment
+          directly to the handles shown at checkout, with your order
+          number in the note. We confirm receipt before fulfilling your
+          order.
+        </li>
+        <li>
+          <strong>Memberships and the Grimoire unlock:</strong> the same
+          manual process — Amber confirms each Living Grimoire
+          membership and each $8.88 permanent unlock personally once
+          payment arrives. Nothing is ever charged automatically.
+        </li>
+        <li>
+          <strong>A note on the past:</strong> card payments made on
+          this site earlier in 2026 were processed by Stripe; we never
+          stored your card details. Card checkout is not offered today.
         </li>
       </ul>
 
@@ -138,9 +163,9 @@ export default function PrivacyPage() {
         <li>We never sell your information.</li>
         <li>We never share your information with third parties for marketing.</li>
         <li>
-          We never store card details — card payments are handled by
-          Stripe through its embedded checkout, and Cash App and Venmo
-          are available as manual payment options.
+          We never store card or bank details — payments arrive by ACH
+          bank transfer, Venmo, or Cash App through the emailed-invoice
+          process described above.
         </li>
       </ul>
 
