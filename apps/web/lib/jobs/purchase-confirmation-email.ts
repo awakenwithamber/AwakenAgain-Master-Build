@@ -10,8 +10,14 @@
  * - the customer will be notified when it ships;
  * - the actual order items + totals from the order record;
  * - a payment block that matches the method recorded on the order
- *   (Venmo / Cash App = the handles; embedded card = complete/confirm
- *   on the site).
+ *   (Bluevine invoice = the emailed invoice + the handles; Bluevine
+ *   card link = the hosted payment-page link; Venmo / Cash App = the
+ *   handles; legacy Bookipi invoice = its original block; dormant
+ *   embedded card = the neutral Phase-2 block, which claims no live
+ *   on-site card checkout);
+ * - the tax + shipping breakdown when the job carries it (subtotal,
+ *   discounts, shipping, sales tax with rate, tax-inclusive total),
+ *   and the ship-to block when the job carries an address (Phase 2).
  *
  * No medical or efficacy claims anywhere — this is a transactional
  * receipt, rendered from the job data the checkout server built.
@@ -105,10 +111,13 @@ function paymentBlockText(data: PurchaseConfirmationData): string[] {
     return lines;
   }
   if (data.payment_method === 'stripe_card_embedded') {
+    // Historical records only (the embedded-card flow is dormant and
+    // rejects new orders since 2026-11-01). Corrected 2026-11-01
+    // (Phase 2): the old block pointed customers at an on-site card
+    // checkout that no longer exists in the customer flow.
     return [
-      'Payment: you chose to pay by card on our website. If your card ' +
-        'payment is still pending, you can complete it from the checkout ' +
-        'page — your order is prepared once payment is confirmed.',
+      'Payment: you chose to pay by card. Your order is prepared once ' +
+        'payment is confirmed.',
     ];
   }
   const lines = ['Payment: send your total with Cash App or Venmo:'];
@@ -163,6 +172,19 @@ export function renderPurchaseConfirmation(
       `Coupon ${data.coupon_code ?? 'FIRST10'} discount (10% off): \u2212${formatPrice(data.coupon_discount_cents ?? 0)}`,
     );
   }
+  if (typeof data.shipping_cents === 'number') {
+    textParts.push(
+      `Shipping: ${data.shipping_cents === 0 ? 'Free' : formatPrice(data.shipping_cents)}`,
+    );
+  }
+  if (typeof data.tax_cents === 'number') {
+    textParts.push(
+      `Sales tax${data.tax_rate_percent && data.tax_cents > 0 ? ` (${data.tax_rate_percent})` : ''}: ${formatPrice(data.tax_cents)}`,
+    );
+  }
+  if (data.shipping_address_lines && data.shipping_address_lines.length > 0) {
+    textParts.push('', 'Ship to:', ...data.shipping_address_lines);
+  }
   textParts.push(
     `Total: ${formatPrice(data.total_cents)}`,
     '',
@@ -195,6 +217,16 @@ export function renderPurchaseConfirmation(
       `<tr><td style="padding:6px 8px;">Coupon ${escapeHtml(data.coupon_code ?? 'FIRST10')} discount</td><td style="padding:6px 8px;text-align:right;">\u2212${formatPrice(data.coupon_discount_cents ?? 0)}</td></tr>`,
     );
   }
+  if (typeof data.shipping_cents === 'number') {
+    totalsRows.push(
+      `<tr><td style="padding:6px 8px;">Shipping</td><td style="padding:6px 8px;text-align:right;">${data.shipping_cents === 0 ? 'Free' : formatPrice(data.shipping_cents)}</td></tr>`,
+    );
+  }
+  if (typeof data.tax_cents === 'number') {
+    totalsRows.push(
+      `<tr><td style="padding:6px 8px;">Sales tax${data.tax_rate_percent && data.tax_cents > 0 ? ` (${escapeHtml(data.tax_rate_percent)})` : ''}</td><td style="padding:6px 8px;text-align:right;">${formatPrice(data.tax_cents)}</td></tr>`,
+    );
+  }
   totalsRows.push(
     `<tr><td style="padding:6px 8px;font-weight:bold;">Total</td><td style="padding:6px 8px;text-align:right;font-weight:bold;">${formatPrice(data.total_cents)}</td></tr>`,
   );
@@ -211,6 +243,13 @@ export function renderPurchaseConfirmation(
     itemRows,
     totalsRows.join(''),
     '</table>',
+    ...(data.shipping_address_lines && data.shipping_address_lines.length > 0
+      ? [
+          `<p style="margin:0 0 16px;"><strong>Ship to:</strong><br/>${data.shipping_address_lines
+            .map((line) => escapeHtml(line))
+            .join('<br/>')}</p>`,
+        ]
+      : []),
     paymentBlockHtml(data),
     '<p style="margin-top:24px;">With gratitude,<br/>Amber \u2014 Amber\u2019s Alchemy Apothecary</p>',
     '</div></div>',

@@ -28,6 +28,7 @@ import {
   VENMO_HANDLE,
   type OrderRecord,
 } from '../checkout/order';
+import { formatShippingAddressLines } from '../checkout/shipping-address';
 
 /** One-line human summary of what was ordered, for the email body. */
 export function orderItemSummary(record: OrderRecord): string {
@@ -39,13 +40,47 @@ export function orderItemSummary(record: OrderRecord): string {
 }
 
 /**
+ * Ship-to lines (Phase 2, Workstream 1a — ADAPTED to this tree's
+ * address shape). The card tree formatted its ShippingAddress
+ * (record.shipping_address: name/street/postal_code) through
+ * a shipping-address helper module this tree does not have;
+ * here the order record carries delivery_address, a TaxAddress
+ * ({ line1, line2?, city, state, postalCode, country }), so the same
+ * ship-to block is formatted from that shape, headed by the customer
+ * name (the recipient named on the order record). Empty when the
+ * order carries no delivery address (digital-only / historical).
+ */
+export function deliveryAddressLines(record: OrderRecord): string[] {
+  // Combined merge 2026-11-02: the fulfillment (shipping) address is
+  // the authoritative ship-to — prefer it when the order carries one;
+  // fall back to the delivery (tax) address, which the checkout form
+  // collects for every order.
+  if (record.shipping_address) {
+    return formatShippingAddressLines(record.shipping_address);
+  }
+  const address = record.delivery_address;
+  if (!address) return [];
+  const lines = [
+    record.customer.name,
+    address.line1,
+    ...(address.line2 ? [address.line2] : []),
+    `${address.city}, ${address.state} ${address.postalCode}`,
+    address.country,
+  ];
+  return lines.filter(
+    (line) => typeof line === 'string' && line.trim() !== '',
+  );
+}
+
+/**
  * Build the confirmation job for an accepted order. The data matches the
  * payment method recorded on the order: Cash App / Venmo and Bluevine
  * invoice (2026-11-01; Bookipi invoice before that) jobs carry the
  * payment handles — the Bluevine invoice is also paid by ACH bank
  * transfer or check per the invoice; Bluevine card-link jobs carry
  * the hosted payment-page link instead; dormant embedded-card jobs
- * carry NO handles.
+ * carry NO handles. When the order carries a delivery address, the
+ * ship-to lines ride the job as well (Phase 2, Workstream 1a).
  */
 export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
   const items = record.items.map((line) => ({
@@ -60,6 +95,7 @@ export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
       unit_price_cents: record.bundle.price_cents,
     });
   }
+  const shipToLines = deliveryAddressLines(record);
   const data: PurchaseConfirmationData = {
     order_id: record.order_id,
     total_cents: record.total_cents,
@@ -82,6 +118,12 @@ export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
             ? { tax_rate_percent: record.tax_breakdown.ratePercent }
             : {}),
         }
+      : {}),
+    // Phase 2 (Workstream 1a): the ship-to block rides the job only
+    // when the order actually carries a delivery address — orders
+    // without one keep their exact pre-Phase-2 data shape.
+    ...(shipToLines.length > 0
+      ? { shipping_address_lines: shipToLines }
       : {}),
     payment_method: record.payment_method,
     ...(record.payment_method === 'cash_app_or_venmo' ||

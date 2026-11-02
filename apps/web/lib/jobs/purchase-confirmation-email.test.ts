@@ -143,7 +143,12 @@ describe('purchase confirmation renderer (Template 1)', () => {
     expect(text).not.toMatch(/pay by card/i);
   });
 
-  it('embedded-card orders show the card block and NO handles', () => {
+  it('embedded-card (historical) orders show the corrected neutral card block and NO handles', () => {
+    // Corrected in the combined merge (2026-11-02), adopting the
+    // card tree's Phase-2 correction over the admin tree's original
+    // expectation: the dormant block no longer points customers at an
+    // on-site card checkout that does not exist in the customer flow;
+    // historical records render a neutral line claiming no live rail.
     const { text } = renderPurchaseConfirmation(
       data({
         payment_method: 'stripe_card_embedded',
@@ -151,7 +156,10 @@ describe('purchase confirmation renderer (Template 1)', () => {
         venmo_handle: undefined,
       }),
     );
-    expect(text).toContain('pay by card on our website');
+    expect(text).toContain('you chose to pay by card');
+    expect(text).toContain('prepared once payment is confirmed');
+    expect(text).not.toContain('pay by card on our website');
+    expect(text).not.toContain('checkout page');
     expect(text).not.toContain('@AwakenwithAmber');
     expect(text).not.toContain('$AmberPatten347');
   });

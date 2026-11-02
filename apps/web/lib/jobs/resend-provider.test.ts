@@ -108,7 +108,11 @@ describe('ResendEmailProvider', () => {
       provider,
     );
     expect(sent).toHaveLength(1);
-    expect(sent[0].text).toContain('pay by card on our website');
+    // Combined merge (2026-11-02): the dormant-card block renders the
+    // corrected neutral line (Phase-2 correction) — it no longer
+    // points at an on-site card checkout.
+    expect(sent[0].text).toContain('you chose to pay by card');
+    expect(sent[0].text).not.toContain('pay by card on our website');
     expect(sent[0].text).not.toContain('@AwakenwithAmber');
     expect(sent[0].text).not.toContain('$AmberPatten347');
   });

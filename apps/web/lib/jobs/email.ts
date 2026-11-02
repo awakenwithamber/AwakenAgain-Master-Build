@@ -53,7 +53,17 @@ export type EmailTemplate =
   | 'review_reminder'
   | 'quiz_results'
   | 'account_signin_code'
-  | 'contact_received';
+  | 'contact_received'
+  /* Phase 2 (2026-10-30) additions — same provider path as everything
+     above; builders live in lib/jobs/order-notifications.ts and the
+     account routes. */
+  | 'account_verification_code'
+  | 'account_password_reset_code'
+  | 'order_payment_confirmed'
+  | 'order_shipped'
+  | 'admin_new_order'
+  | 'grimoire_unlock_requested'
+  | 'grimoire_unlock_active';
 
 export interface PurchaseConfirmationData {
   order_id: string;
@@ -73,10 +83,11 @@ export interface PurchaseConfirmationData {
   tax_cents?: number;
   tax_rate_percent?: string;
   /**
-   * Payment rails for the Cash App / Venmo method. Optional because an
-   * embedded-card order must NOT carry the handles — its confirmation
-   * points at the on-site card payment instead (see payment_method).
-   * Older jobs always carried both handles.
+   * Payment rails for the Cash App / Venmo method. Optional because a
+   * card order must NOT carry the handles — a Bluevine card-link
+   * confirmation points at Bluevine's secure hosted payment page
+   * instead (see payment_link_url + payment_method). Older jobs
+   * always carried both handles.
    */
   cash_app_handle?: string;
   venmo_handle?: string;
@@ -89,6 +100,11 @@ export interface PurchaseConfirmationData {
   payment_link_url?: string;
   /** Payment method as recorded on the order. */
   payment_method?: string;
+  /**
+   * Ship-to lines (Phase 2, Workstream 1a) — rendered when the order
+   * carries a delivery address; absent for digital-only orders.
+   */
+  shipping_address_lines?: string[];
 }
 
 export interface WeeklyPromoData {
@@ -145,6 +161,65 @@ export interface ContactReceivedData {
   name: string;
 }
 
+/**
+ * Registration email-verification code (Phase 2B): same secret-carrying
+ * contract as the sign-in code — the code exists solely to be delivered
+ * to the address being verified; never logged, never returned.
+ */
+export type AccountVerificationCodeData = AccountSigninCodeData;
+
+/** Password-reset code (Phase 2B) — same contract again. */
+export type AccountPasswordResetCodeData = AccountSigninCodeData;
+
+/**
+ * Payment-confirmed email (Phase 2, Workstream 1c): sent to the
+ * customer ONLY when the owner records a verified payment through the
+ * owner-secret admin path — never automatically.
+ */
+export interface OrderPaymentConfirmedData {
+  order_id: string;
+  total_cents: number;
+  payment_method_label: string;
+  reference?: string | null;
+}
+
+/** Shipped email (Phase 2, Workstream 1c): first tracking event only. */
+export interface OrderShippedData {
+  order_id: string;
+  carrier_label: string;
+  tracking_number: string;
+  tracking_url?: string | null;
+}
+
+/**
+ * Owner notification for a newly placed order (Phase 2, Workstream
+ * 1b): addressed to the owner inbox; carries what she needs to fulfill
+ * — customer, items, ship-to, total, and how the order will be paid.
+ */
+export interface AdminNewOrderData {
+  order_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string | null;
+  item_summary: string;
+  shipping_address_lines?: string[];
+  total_cents: number;
+  payment_method_label: string;
+}
+
+/** Owner notification for a Grimoire unlock request (Phase 2, WS3). */
+export interface GrimoireUnlockRequestedData {
+  request_id: string;
+  customer_email: string;
+  amount_cents: number;
+  payment_method_label: string;
+}
+
+/** Customer confirmation that the permanent unlock is active (WS3). */
+export interface GrimoireUnlockActiveData {
+  request_id: string;
+}
+
 export type EmailTemplateData =
   | { template: 'purchase_confirmation'; data: PurchaseConfirmationData }
   | { template: 'weekly_promo'; data: WeeklyPromoData }
@@ -152,7 +227,14 @@ export type EmailTemplateData =
   | { template: 'review_reminder'; data: ReviewReminderData }
   | { template: 'quiz_results'; data: QuizResultsData }
   | { template: 'account_signin_code'; data: AccountSigninCodeData }
-  | { template: 'contact_received'; data: ContactReceivedData };
+  | { template: 'contact_received'; data: ContactReceivedData }
+  | { template: 'account_verification_code'; data: AccountVerificationCodeData }
+  | { template: 'account_password_reset_code'; data: AccountPasswordResetCodeData }
+  | { template: 'order_payment_confirmed'; data: OrderPaymentConfirmedData }
+  | { template: 'order_shipped'; data: OrderShippedData }
+  | { template: 'admin_new_order'; data: AdminNewOrderData }
+  | { template: 'grimoire_unlock_requested'; data: GrimoireUnlockRequestedData }
+  | { template: 'grimoire_unlock_active'; data: GrimoireUnlockActiveData };
 
 export type EmailJobStatus = 'queued' | 'sent' | 'failed';
 
@@ -167,7 +249,14 @@ export interface EmailJob {
     | ReviewReminderData
     | QuizResultsData
     | AccountSigninCodeData
-    | ContactReceivedData;
+    | ContactReceivedData
+    | AccountVerificationCodeData
+    | AccountPasswordResetCodeData
+    | OrderPaymentConfirmedData
+    | OrderShippedData
+    | AdminNewOrderData
+    | GrimoireUnlockRequestedData
+    | GrimoireUnlockActiveData;
   queued_at: string;
   status: EmailJobStatus;
   attempts: number;
@@ -309,12 +398,19 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
                 ? `Sales tax${d.tax_rate_percent && d.tax_cents > 0 ? ` (${d.tax_rate_percent})` : ''}: ${formatPrice(d.tax_cents)}\n`
                 : '')
             : '') +
-          `Total: ${formatPrice(d.total_cents)}\n\n` +
-          `Payment options on file for this order:\n` +
-          (handleLines.length > 0 ? `${handleLines.join('\n')}\n` : '') +
-          (d.payment_method === 'stripe_card_embedded'
-            ? `Card: complete your card payment in the secure checkout on our website.\n\n`
+          `Total: ${formatPrice(d.total_cents)}\n` +
+          (d.shipping_address_lines && d.shipping_address_lines.length > 0
+            ? `\nShip to:\n${d.shipping_address_lines.join('\n')}\n`
             : '') +
+          `\nPayment options on file for this order:\n` +
+          (handleLines.length > 0 ? `${handleLines.join('\n')}\n` : '') +
+          (d.payment_method === 'bluevine_card_link'
+            ? d.payment_link_url
+              ? `Card: pay on Bluevine's secure hosted payment page: ${d.payment_link_url} — enter your order total there and use your order ID as the payment reference.\n\n`
+              : `Card: you chose to pay by card on Bluevine's secure hosted payment page — your order is prepared once payment is confirmed.\n\n`
+            : d.payment_method === 'stripe_card_embedded'
+              ? `Card: you chose to pay by card — your order is prepared once payment is confirmed.\n\n`
+              : '') +
           `Questions about your order? Reply to this email and we'll help.` +
           SIGN_OFF,
       };
@@ -439,6 +535,118 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
           `Never share this code — we will never ask for it. If you didn't ` +
           `request a sign-in, you can ignore this email; no account changes ` +
           `were made.` +
+          SIGN_OFF,
+      };
+    }
+    case 'account_verification_code': {
+      const d = job.data as AccountVerificationCodeData;
+      return {
+        subject: 'Your Awaken Again verification code',
+        text:
+          `Welcome to Amber's Alchemy Apothecary. Your verification code is:\n\n` +
+          `    ${d.code}\n\n` +
+          `Enter it on the sign-up page to verify your email and finish ` +
+          `creating your profile. It expires in ${d.expires_in_minutes} ` +
+          `minutes and can be used once.\n\n` +
+          `Never share this code — we will never ask for it. If you didn't ` +
+          `create a profile with us, you can ignore this email.` +
+          SIGN_OFF,
+      };
+    }
+    case 'account_password_reset_code': {
+      const d = job.data as AccountPasswordResetCodeData;
+      return {
+        subject: 'Your Awaken Again password reset code',
+        text:
+          `Your password reset code is:\n\n` +
+          `    ${d.code}\n\n` +
+          `Enter it with your new password to finish resetting. It expires ` +
+          `in ${d.expires_in_minutes} minutes and can be used once.\n\n` +
+          `Never share this code — we will never ask for it. If you didn't ` +
+          `ask to reset your password, you can ignore this email; your ` +
+          `password has not been changed.` +
+          SIGN_OFF,
+      };
+    }
+    case 'order_payment_confirmed': {
+      const d = job.data as OrderPaymentConfirmedData;
+      return {
+        subject: `Payment confirmed for your Awaken Again order ${d.order_id}`,
+        text:
+          `Good news — we've confirmed your payment.\n\n` +
+          `Order: ${d.order_id}\n` +
+          `Payment: ${d.payment_method_label} — ${formatPrice(d.total_cents)} confirmed` +
+          (d.reference ? ` (reference: ${d.reference})` : '') +
+          `\n\n` +
+          `Amber is preparing your order now. We'll email you again when ` +
+          `it ships. Thank you for supporting the apothecary.` +
+          SIGN_OFF,
+      };
+    }
+    case 'order_shipped': {
+      const d = job.data as OrderShippedData;
+      return {
+        subject: `Your Awaken Again order ${d.order_id} has shipped`,
+        text:
+          `Your order is on its way.\n\n` +
+          `Order: ${d.order_id}\n` +
+          `Carrier: ${d.carrier_label}\n` +
+          `Tracking number: ${d.tracking_number}\n` +
+          (d.tracking_url ? `Track it here: ${d.tracking_url}\n` : '') +
+          `\nThank you for ordering from Amber's Alchemy Apothecary.` +
+          SIGN_OFF,
+      };
+    }
+    case 'admin_new_order': {
+      const d = job.data as AdminNewOrderData;
+      return {
+        subject: `New order ${d.order_id} — ${formatPrice(d.total_cents)} — Awaken Again`,
+        text:
+          `A new order was placed on awakenagain.com.\n\n` +
+          `Order: ${d.order_id}\n` +
+          `Customer: ${d.customer_name} <${d.customer_email}>` +
+          (d.customer_phone ? `\nPhone: ${d.customer_phone}` : '') +
+          `\nItems: ${d.item_summary}\n` +
+          (d.shipping_address_lines && d.shipping_address_lines.length > 0
+            ? `\nShip to:\n${d.shipping_address_lines.join('\n')}\n`
+            : `\nDigital order — no shipping address.\n`) +
+          `\nTotal: ${formatPrice(d.total_cents)}\n` +
+          `Payment method: ${d.payment_method_label}\n` +
+          `Payment status: awaiting payment — the order becomes paid only ` +
+          `when you record the payment in admin.`,
+      };
+    }
+    case 'grimoire_unlock_requested': {
+      const d = job.data as GrimoireUnlockRequestedData;
+      return {
+        subject: `Grimoire unlock request ${d.request_id} — ${formatPrice(d.amount_cents)}`,
+        text:
+          `A customer requested the Living Grimoire permanent unlock.\n\n` +
+          `Request: ${d.request_id}\n` +
+          `Customer: ${d.customer_email}\n` +
+          `Amount: ${formatPrice(d.amount_cents)}\n` +
+          `Paying by: ${d.payment_method_label}\n\n` +
+          `If they chose the invoice, send them the Bluevine invoice for ` +
+          `${formatPrice(d.amount_cents)} with the request ID as the ` +
+          `reference. When the payment lands, grant the unlock from the ` +
+          `admin unlock endpoint using this request ID — the customer ` +
+          `gets access (and a confirmation email) only after you grant it.`,
+      };
+    }
+    case 'grimoire_unlock_active': {
+      const d = job.data as GrimoireUnlockActiveData;
+      return {
+        subject: 'Your Living Grimoire permanent unlock is active',
+        text:
+          `Your permanent unlock is active.\n\n` +
+          `The Living Grimoire — 333-page edition is now open to ` +
+          `${job.to}, including all future chapters and revisions of ` +
+          `this edition. Your unlock is permanent: it stays yours even ` +
+          `if you later subscribe and cancel.\n\n` +
+          `Read it any time at ${siteUrl()}/grimoire — enter this email ` +
+          `address there and we'll send you a one-time code to open the ` +
+          `book.\n\n` +
+          `Reference: ${d.request_id}` +
           SIGN_OFF,
       };
     }
@@ -812,6 +1020,28 @@ export function buildAccountSigninCodeJob(
     throw new Error('Sign-in code job requires the 6-digit code.');
   }
   return buildEmailJob({ to, template: 'account_signin_code', data });
+}
+
+/** Registration verification code factory (Phase 2B). */
+export function buildAccountVerificationCodeJob(
+  to: unknown,
+  data: AccountVerificationCodeData,
+): EmailJob {
+  if (!/^\d{6}$/.test(data.code)) {
+    throw new Error('Verification code job requires the 6-digit code.');
+  }
+  return buildEmailJob({ to, template: 'account_verification_code', data });
+}
+
+/** Password-reset code factory (Phase 2B). */
+export function buildAccountPasswordResetCodeJob(
+  to: unknown,
+  data: AccountPasswordResetCodeData,
+): EmailJob {
+  if (!/^\d{6}$/.test(data.code)) {
+    throw new Error('Password-reset code job requires the 6-digit code.');
+  }
+  return buildEmailJob({ to, template: 'account_password_reset_code', data });
 }
 
 /** Contact auto-response factory — the send is routed via the EmailProvider. */
