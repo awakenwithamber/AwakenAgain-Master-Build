@@ -1,59 +1,157 @@
 /**
- * Admin access gate — NEEDS VERIFICATION (real auth/RLS pending Supabase binding).
+ * Admin access — REAL authentication (staged build, 2026-10-31).
  *
- * G12 lands the read-only operations views first. The legacy admin auth
- * (`api/admin.js`: ADMIN_PASSWORD + 12h JWT via `jsonwebtoken`) is classified
- * REBUILD → Web Crypto JWT + Supabase RLS (CONVERSION_MAP §11 rows 99–101),
- * and that replacement does NOT exist yet. This module is the explicit,
- * honest gate in front of every /admin page:
+ * Replaces the G12 placeholder gate (denied-by-default + a dev preview
+ * switch, with real auth listed as NEEDS VERIFICATION / pending a
+ * Supabase binding that will never land — Supabase is dropped).
  *
- * - DEFAULT: DENIED. The check returns { authorized: false } with the reason
- *   spelled out, and every admin page renders the denial + the
- *   NEEDS VERIFICATION marker instead of any data.
- * - ADMIN_PREVIEW_ENABLED=1 (env): allows rendering the UI for development
- *   preview ONLY. This is NOT authentication — it is a preview switch, it
- *   must never be set in any deployed environment, and pages still carry the
- *   NEEDS VERIFICATION banner while it is on.
+ * The real mechanism reuses the existing customer account system:
+ * - Identity comes from the account session cookie
+ *   (`aa_account_session`), resolved server-side by
+ *   lib/accounts/session.ts `resolveAccountSession` — HMAC-signed with
+ *   ACCOUNT_SESSION_SECRET and confirmed against the account store.
+ *   A valid signature alone never grants access; the store fold must
+ *   say the session is issued, unrevoked, unexpired, and the account
+ *   is not deleted.
+ * - Authorization is a single-email allowlist: ONLY the normalized
+ *   owner email (ADMIN_EMAIL) may see admin data. There is no
+ *   password for admin, and none is created by this module — the
+ *   owner signs in through the existing /account email-code flow.
+ * - Every other outcome fails closed with NO admin data rendered:
+ *   unsigned → sign-in prompt; signed-in non-admin → access denied.
  *
- * Nothing here invents real auth: no passwords are read, no tokens minted,
- * no sessions created. Real auth arrives with the Supabase binding.
+ * ADMIN_PREVIEW_ENABLED=1 remains available as a DEVELOPMENT PREVIEW
+ * ONLY: it renders the views behind a persistent banner, is not
+ * authentication, and must never be set in a deployed environment.
+ *
+ * SERVER-ONLY: reads cookies + server env. Never import from a
+ * client component.
  */
+import { cookies } from 'next/headers';
+import { normalizeAccountEmail } from '../accounts/accounts';
+import {
+  ACCOUNT_SESSION_COOKIE,
+  resolveAccountSession,
+  type AccountSessionIdentity,
+} from '../accounts/session';
 
-/** Binding status of the real admin auth — single source of truth. */
-export const ADMIN_AUTH_STATUS = 'NEEDS_VERIFICATION' as const;
+/** The one email allowed into /admin (already in normalized form). */
+export const ADMIN_EMAIL = 'dare2be4ree@gmail.com';
+
+/** Binding status of admin auth — single source of truth. */
+export const ADMIN_AUTH_STATUS = 'ACCOUNT_SESSION_ALLOWLIST' as const;
+
+export type AdminAccessState =
+  | 'admin'
+  | 'signed_in_non_admin'
+  | 'unsigned'
+  | 'preview';
 
 export interface AdminCheck {
   authorized: boolean;
+  /** Discriminator for the gate UI (which denial/prompt to render). */
+  state: AdminAccessState;
   /** Human-readable reason, rendered on the gate page. */
   reason: string;
   /** Present only when a non-auth bypass granted access. */
   via?: string;
+  /** The resolved account email, when a session exists. */
+  email?: string;
+}
+
+/** True when the (un-normalized) input is the allowlisted admin email. */
+export function isAdminEmail(email: unknown): boolean {
+  return normalizeAccountEmail(email) === ADMIN_EMAIL;
 }
 
 /**
- * Evaluate admin access for the current request context.
- * Sync + env-based so Server Components can call it directly.
+ * Pure access evaluation for a resolved session identity (or null).
+ * Exported separately from the cookie/session plumbing so the
+ * allowlist law is unit-testable without a request context.
  */
-export function checkAdmin(): AdminCheck {
-  if (process.env.ADMIN_PREVIEW_ENABLED === '1') {
+export function evaluateAdminAccess(
+  identity: Pick<AccountSessionIdentity, 'email'> | null,
+): AdminCheck {
+  if (!identity) {
+    return {
+      authorized: false,
+      state: 'unsigned',
+      reason:
+        'Admin is owner-only. Sign in with an email code first — ' +
+        'no admin data is shown before sign-in.',
+    };
+  }
+  const email = normalizeAccountEmail(identity.email);
+  if (isAdminEmail(email)) {
     return {
       authorized: true,
-      via: 'ADMIN_PREVIEW_ENABLED=1 — development preview switch, NOT real authentication',
-      reason:
-        'Preview mode: admin views render for development only. Real authentication ' +
-        '(Web Crypto JWT + Supabase RLS) is NEEDS VERIFICATION and must land before ' +
-        'any deployed use.',
+      state: 'admin',
+      email,
+      via: 'account session (email-code sign-in) for the allowlisted owner email',
+      reason: 'Signed in as the allowlisted owner.',
     };
   }
   return {
     authorized: false,
+    state: 'signed_in_non_admin',
+    email,
     reason:
-      'Admin access is denied by default: real authentication + RLS are NEEDS VERIFICATION ' +
-      '(pending Supabase binding). The legacy ADMIN_PASSWORD + jsonwebtoken scheme is ' +
-      'classified REBUILD and is not carried into this app.',
+      'This account is signed in, but it is not the owner account. ' +
+      'Admin data is only shown to the allowlisted owner email.',
   };
 }
 
-/** Label rendered on every admin surface while auth is unverified. */
+/** The dev-preview check, kept explicit and separate from real auth. */
+export function checkAdminPreview(): AdminCheck | null {
+  if (process.env.ADMIN_PREVIEW_ENABLED !== '1') return null;
+  return {
+    authorized: true,
+    state: 'preview',
+    via: 'ADMIN_PREVIEW_ENABLED=1 — development preview switch, NOT real authentication',
+    reason:
+      'Preview mode: admin views render for development only. Real ' +
+      'authentication is the account-session allowlist (lib/admin/auth.ts); ' +
+      'never deploy with ADMIN_PREVIEW_ENABLED set.',
+  };
+}
+
+/**
+ * Legacy sync helper retained for callers that only need the preview
+ * answer. It NEVER grants real access on its own: without the preview
+ * switch it reports unsigned/denied, and real authorization flows
+ * through resolveAdminAccess().
+ */
+export function checkAdmin(): AdminCheck {
+  return (
+    checkAdminPreview() ?? {
+      authorized: false,
+      state: 'unsigned',
+      reason:
+        'No admin session was evaluated by this sync check. Real admin ' +
+        'access requires resolveAdminAccess() with a live account session.',
+    }
+  );
+}
+
+/**
+ * Full server-side admin resolution for a request: dev preview first
+ * (explicit, bannered), otherwise the account session cookie resolved
+ * against the account store, then the allowlist evaluation.
+ * Fail-closed: any error resolving the session reads as unsigned.
+ */
+export async function resolveAdminAccess(): Promise<AdminCheck> {
+  const preview = checkAdminPreview();
+  if (preview) return preview;
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(ACCOUNT_SESSION_COOKIE)?.value;
+    const identity = token ? await resolveAccountSession(token) : null;
+    return evaluateAdminAccess(identity);
+  } catch {
+    return evaluateAdminAccess(null);
+  }
+}
+
+/** Label rendered on admin surfaces describing how access is granted. */
 export const ADMIN_AUTH_MARKER =
-  'NEEDS VERIFICATION — admin auth/RLS pending Supabase binding. Views are read-only previews.' as const;
+  'Owner-only — access requires an account session for the allowlisted owner email. Development preview (ADMIN_PREVIEW_ENABLED) is not authentication and must never be deployed.' as const;
