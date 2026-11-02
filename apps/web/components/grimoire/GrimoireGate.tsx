@@ -132,7 +132,8 @@ export function GrimoireGate({ children, gateTitle = 'Living Grimoire — 333-pa
       <>
         {children ?? (
           <p role="status">
-            Verified — the full Living Grimoire — 333-page edition is open
+            Verified — the full composed Living Grimoire (the complete
+            333-page edition together with the collected works) is open
             above.
           </p>
         )}
@@ -144,8 +145,8 @@ export function GrimoireGate({ children, gateTitle = 'Living Grimoire — 333-pa
     <section aria-labelledby="grimoire-gate-heading">
       <h2 id="grimoire-gate-heading">{gateTitle} — member access</h2>
       <p>
-        Pages 14 and onward are for Living Grimoire subscribers, permanent-unlock
-        holders, and keepers. Enter your email and we&apos;ll send a
+        The first 16 pages are free to read. Page 17 onward is for Living Grimoire
+        subscribers, permanent-unlock holders, and keepers. Enter your email and we&apos;ll send a
         one-time code to verify your access.
       </p>
       {state.step === 'email' ? (

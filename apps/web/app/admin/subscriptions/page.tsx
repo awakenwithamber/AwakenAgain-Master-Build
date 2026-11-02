@@ -23,6 +23,8 @@ import { AdminViewTracker } from '../../../components/admin/AdminViewTracker';
 import { ownerSecretConfigured } from '../../../lib/admin/owner-auth';
 import { listSubscriptionMembersAsync } from '../../../lib/subscriptions/members';
 import { SubscriberManager } from './SubscriberManager';
+import { UnlockManager } from './UnlockManager';
+import { listUnlockRequests } from '../../../lib/grimoire/unlock-requests';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -38,6 +40,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminSubscriptionsPage() {
   const members = await listSubscriptionMembersAsync();
+  const unlockRequests = await listUnlockRequests();
   const configured = ownerSecretConfigured();
 
   return (
@@ -73,6 +76,8 @@ export default async function AdminSubscriptionsPage() {
         )}
 
         <SubscriberManager members={members} configured={configured} />
+
+        <UnlockManager requests={unlockRequests} configured={configured} />
 
         <p>
           Prefer the single-purpose tool?{' '}

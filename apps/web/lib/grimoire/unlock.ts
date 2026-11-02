@@ -5,9 +5,12 @@
  * - The canonical edition is the 333-page edition — edition id
  *   'living-grimoire-333', displayed as "Living Grimoire — 333-page
  *   edition". There is NO 117-page edition.
- * - The $8.88 one-time PERMANENT_UNLOCK covers the current edition
- *   PLUS all future chapters/revisions of that edition. Separate
- *   future editions and add-on products are NOT included.
+ * - The $8.88 one-time PERMANENT_UNLOCK covers the full composed
+ *   edition (owner decision 2026-11-02, WS4): the complete current
+ *   edition PLUS the collected works bound with it (1,389 pages in
+ *   all) and all future chapters/revisions of that composed
+ *   edition. Separate future editions and add-on products are NOT
+ *   included.
  * - Refund / chargeback of the unlock transaction REVOKES it.
  * - Permanent rights survive subscription cancellation; subscribing
  *   never removes them (this ledger is independent of subscriptions).
@@ -67,8 +70,13 @@ export interface GrimoireUnlockRecord {
   state: UnlockState;
   revoked_at: string | null;
   revoked_reason: UnlockRevokeReason | null;
-  /** Provenance: which verified path wrote this record. */
-  source: 'stripe_webhook';
+  /**
+   * Provenance: which verified path wrote this record — the
+   * signature-verified Stripe webhook (historical/dormant) or the
+   * owner's manual grant (Phase 2, Workstream 3: the owner records a
+   * verified $8.88 payment through POST /api/admin/grimoire/unlock).
+   */
+  source: 'stripe_webhook' | 'owner_manual';
   /** ISO timestamp this ledger record was appended. */
   created_at: string;
 }
@@ -197,12 +205,17 @@ export interface GrantUnlockInput {
   /** Explicit primary ref; defaults to payment intent → session → charge. */
   transaction_ref?: string | null;
   effective_at?: string;
+  /** Grant provenance — defaults to 'stripe_webhook' (existing callers). */
+  source?: 'stripe_webhook' | 'owner_manual';
 }
 
 /**
- * Grant the PERMANENT_UNLOCK. Called ONLY by the signature-verified
- * Stripe webhook (checkout.session.completed carrying unlock
- * metadata). Idempotent: when the email's latest record is already an
+ * Grant the PERMANENT_UNLOCK. Called by the signature-verified Stripe
+ * webhook (checkout.session.completed carrying unlock metadata) or —
+ * Phase 2, Workstream 3 — by the owner-secret admin grant path with
+ * source 'owner_manual' after the owner verifies the $8.88 payment
+ * (the transaction_ref is then the payment reference / unlock request
+ * ID). Idempotent: when the email's latest record is already an
  * active grant for the same transaction, it is returned as-is and
  * nothing is appended.
  */
@@ -218,7 +231,7 @@ export async function grantUnlock(
     input.charge_id ??
     null;
   if (!transaction_ref) {
-    throw new Error('A Stripe transaction reference is required to grant an unlock.');
+    throw new Error('A transaction reference is required to grant an unlock.');
   }
   const latest = await findLatestUnlock(email);
   if (
@@ -242,7 +255,7 @@ export async function grantUnlock(
     state: 'active',
     revoked_at: null,
     revoked_reason: null,
-    source: 'stripe_webhook',
+    source: input.source ?? 'stripe_webhook',
     created_at: now,
   };
   await appendUnlockRecord(record);
@@ -266,6 +279,33 @@ export async function revokeUnlockByTransactionRef(
   const now = new Date().toISOString();
   const revoked: GrimoireUnlockRecord = {
     ...existing,
+    state: 'revoked',
+    revoked_at: now,
+    revoked_reason: reason,
+    created_at: now,
+  };
+  await appendUnlockRecord(revoked);
+  return revoked;
+}
+
+/**
+ * Revoke the email's LATEST unlock, whatever rail granted it (Phase 2,
+ * Workstream 3 — the admin path for manual grants, whose reference is
+ * the unlock request ID / payment reference). Same canon as the
+ * by-transaction revoke: refund → 'refund', chargeback → 'chargeback'
+ * (owner decision 2026-10-21 §13(2)); appends a revoked copy; an
+ * already-revoked or unknown email changes nothing.
+ */
+export async function revokeLatestUnlockForEmail(
+  email: unknown,
+  reason: UnlockRevokeReason,
+): Promise<GrimoireUnlockRecord | null> {
+  const latest = await findLatestUnlock(email);
+  if (!latest) return null;
+  if (latest.state === 'revoked') return latest;
+  const now = new Date().toISOString();
+  const revoked: GrimoireUnlockRecord = {
+    ...latest,
     state: 'revoked',
     revoked_at: now,
     revoked_reason: reason,

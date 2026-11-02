@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import { SubscribeForm } from '../../../components/grimoire/SubscribeForm';
 import { UnlockPurchase } from '../../../components/grimoire/UnlockPurchase';
 import { BRAND_NAME } from '../../../lib/seo/config';
-import { grimoireUnlockCheckoutAvailable } from '../../../lib/grimoire/unlock-checkout';
-import { grimoireSubscriptionCheckoutAvailable } from '../../../lib/subscriptions/subscription-checkout';
 import {
   ANCESTOR_PULL_QUOTE,
   ANCESTOR_PULL_QUOTE_ATTRIBUTION,
@@ -17,7 +15,7 @@ import {
 export const metadata: Metadata = {
   title: `Living Grimoire — 333-page edition — ${BRAND_NAME}`,
   description:
-    'Two ways into the Living Grimoire — 333-page edition: a one-time $8.88 permanent unlock (this edition plus all future chapters of it), or the $7.77/month subscription with 10% off storewide, monthly articles and rituals, and exclusive recipes.',
+    'Two ways into the Living Grimoire — 333-page edition: a one-time $8.88 permanent unlock (the full composed edition — the complete 333-page edition together with the collected works, 1,389 pages in all — plus all future chapters of it), or the $7.77/month subscription with 10% off storewide, monthly articles and rituals, and exclusive recipes.',
 };
 
 /**
@@ -29,10 +27,13 @@ export const metadata: Metadata = {
  * VERBATIM from the 2026-10-21 owner files, Overview first, then the
  * framing teaser. No imagery is added (owner heirloom pictures are
  * pending; generated substitutes are never used).
+ *
+ * Phase 2 (2026-10-30): both offers now run on the manual payment
+ * rail — the unlock through the Workstream-3 request/grant flow and
+ * the subscription through Amber-confirmed manual payments. No card
+ * checkout is offered or described here.
  */
 export default function GrimoireSubscribePage() {
-  const unlockAvailable = grimoireUnlockCheckoutAvailable();
-  const subscriptionCardAvailable = grimoireSubscriptionCheckoutAvailable();
   return (
     <>
       <main id="main-content">
@@ -67,7 +68,7 @@ export default function GrimoireSubscribePage() {
           ))}
         </section>
 
-        <UnlockPurchase available={unlockAvailable} />
+        <UnlockPurchase />
 
         <section aria-labelledby="grimoire-subscription-heading">
           <h2 id="grimoire-subscription-heading">
@@ -77,18 +78,18 @@ export default function GrimoireSubscribePage() {
             The subscription is a separate offer from the permanent unlock
             above: $7.77/month while your subscription is active, with new
             chapters every other month, plus 10% off storewide, monthly
-            articles and rituals, and exclusive recipes. By card it
-            auto-renews monthly by card; you can cancel anytime from your
-            account page or the Stripe Customer Portal, and access
-            continues through the paid period on cancellation. If your
+            articles and rituals, and exclusive recipes. Membership runs
+            on the manual rail: you join with Cash App or Venmo (or an
+            emailed invoice), Amber confirms your membership personally,
+            and you send each month&apos;s payment to stay active — there
+            is no automatic card charge. To cancel, just contact Amber;
+            access continues through the paid period. If your
             subscription ends, subscription access ends with it — a
             permanent unlock, if you hold one, is never removed by
             subscribing or cancelling, and the separate $8.88 unlock is
-            unaffected by subscription cancellation. The manual Cash App /
-            Venmo option remains available too — Amber confirms those
-            memberships personally.
+            unaffected by subscription cancellation.
           </p>
-          <SubscribeForm stripeAvailable={subscriptionCardAvailable} />
+          <SubscribeForm />
         </section>
       </main>
     </>
