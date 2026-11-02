@@ -47,8 +47,44 @@ import {
   type StripePaymentRecord,
 } from '../../../lib/payments/stripe';
 import { resolvePaidStateFromEvidence } from '../../../lib/orders/paid-state';
+import {
+  bluevineCardConfigured,
+  type OrderDeliveryAddress,
+} from '../../../lib/checkout/order';
+import {
+  formatShippingAddressLines,
+  type ShippingAddress,
+} from '../../../lib/checkout/shipping-address';
 import { formatPrice } from '../../../lib/pricing/pricing';
 import Link from 'next/link';
+
+/**
+ * Ship-to lines for the customer cell (Phase 2, from the card build,
+ * adapted to the admin build's records): orders written by the
+ * Phase-2 checkout carry `shipping_address`; orders written by the
+ * tax build carry the delivery address it taxed on
+ * (`delivery_address`, a TaxAddress). Either renders — an order with
+ * neither simply shows no Ship-to line.
+ */
+function shipToLines(o: {
+  shipping_address?: ShippingAddress | null;
+  delivery_address?: OrderDeliveryAddress;
+}): string[] {
+  if (o.shipping_address) {
+    return formatShippingAddressLines(o.shipping_address);
+  }
+  const d = o.delivery_address;
+  if (!d) return [];
+  return [
+    d.line1,
+    d.line2,
+    `${d.city}, ${d.state} ${d.postalCode}`,
+    d.country,
+  ].filter(
+    (line): line is string =>
+      typeof line === 'string' && line.trim() !== '',
+  );
+}
 
 export const metadata: Metadata = {
   title: 'Admin — Orders',
@@ -114,6 +150,14 @@ export default async function AdminOrdersPage() {
           first). Records render exactly as the checkout server persisted
           them — totals are displayed, never recomputed here.
         </p>
+        <p>
+          Payment rails: the emailed-invoice flow (ACH bank transfer to
+          Bluevine, Venmo, Cash App) and Cash App / Venmo direct are
+          live.{' '}
+          {bluevineCardConfigured()
+            ? 'Card through Bluevine\u2019s secure payment page: a payment link is set in this deployment — it counts as live only once the Bluevine connection and link verification on the go-live checklist are done.'
+            : 'No live card rail: card through Bluevine is not configured (no verified payment link is set), so checkout does not offer it.'}
+        </p>
 
         {issues.length > 0 && (
           <div role="alert">
@@ -158,6 +202,14 @@ export default async function AdminOrdersPage() {
                     {o.customer.name}
                     <br />
                     <small>{o.customer.email}</small>
+                    {shipToLines(o).length > 0 ? (
+                      <>
+                        <br />
+                        <small>
+                          Ship to: {shipToLines(o).join(' · ')}
+                        </small>
+                      </>
+                    ) : null}
                   </td>
                   <td>
                     {o.items.reduce((n, l) => n + l.quantity, 0)}
@@ -292,22 +344,27 @@ export default async function AdminOrdersPage() {
         <section aria-label="Confirm payment received" style={{ marginTop: '2.5rem' }}>
           <h2>Confirm payment received</h2>
           <p>
-            When an order&apos;s payment lands — the Bluevine invoice
-            is paid, or the Cash App / Venmo payment arrives — confirm
-            it here. The confirmation is
-            appended to the payment ledger (the order record is never
-            edited), the table above marks the order paid, and the
-            customer sees it as paid on the{' '}
+            When an order&apos;s payment lands, confirm it here. The
+            confirmation is appended to the payment ledger (the order
+            record is never edited), the table above marks the order
+            paid, and the customer sees it as paid on the{' '}
             <Link href="/order-status">order-status page</Link> and in
-            their account order history. Manual payments send no
-            automatic signal, so this step is what moves an order out of
-            “awaiting payment”. Card orders paid through the on-site
-            Stripe checkout need no confirmation here — the verified
-            Stripe webhook marks them paid automatically, and a Stripe
-            refund or dispute moves them to “Refunded” / “Disputed”
-            above. (Orders placed before 2026-10-21 via the removed
-            emailed-invoice path are confirmed the same way, under the
-            method recorded on the order.)
+            their account order history. No payment on any current rail
+            confirms itself: this recording is what moves an order out
+            of “awaiting payment”. The evidence per rail: a Cash App /
+            Venmo payment in the account, an ACH transfer for an emailed
+            invoice, or — for a card order — the payment showing in
+            Bluevine against the order number the customer used as the
+            payment reference. Record a Bluevine card payment with
+            method “Card — Bluevine (hosted payment page)” and the
+            Bluevine payment reference, and only when the amount matches
+            the order total. Historical card orders paid through the
+            former on-site card checkout were marked paid by that
+            system&apos;s verified webhook, and its refund or dispute
+            records are what move those orders to “Refunded” /
+            “Disputed” above. (Orders placed before 2026-10-21 via the
+            removed emailed-invoice path are confirmed the same way,
+            under the method recorded on the order.)
           </p>
           <PaymentConfirmForm configured={ownerSecretConfigured()} />
         </section>

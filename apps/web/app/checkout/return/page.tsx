@@ -6,11 +6,13 @@
  * things stand — including a refund or dispute when one has been
  * recorded on the order. It never marks anything paid: paid state
  * comes only from a merchant-recorded payment (the manual
- * confirmation ledger for today's emailed-Bluevine-invoice flow, or
- * the legacy payment ledgers for historical orders). Orders today
- * are paid by emailed invoice from Bluevine — ACH bank transfer or
- * check, Venmo, or Cash App — and Amber confirms those payments by
- * hand, so a just-paid
+ * confirmation ledger for today's emailed-Bluevine-invoice flow and
+ * for Bluevine card-link orders, or the legacy payment ledgers for
+ * historical orders). Orders today are paid by emailed invoice from
+ * Bluevine — ACH bank transfer or check, Venmo, or Cash App — or,
+ * when the customer chose it and the verified Bluevine payment link
+ * was configured, by card on Bluevine's secure hosted payment page;
+ * Amber confirms those payments by hand either way, so a just-paid
  * order can read "being confirmed" here until she records it. The
  * page points at the order-status lookup and does not guess.
  */
@@ -39,7 +41,17 @@ export default async function CheckoutReturnPage({
     : [];
   const order = orders.find((o) => o.order_id === orderId) ?? null;
   const paidState = order ? await resolveOrderPaidState(order) : null;
-  const payment = paidState?.is_paid ? paidState.stripe_payment : null;
+  // "Payment Confirmed" evidence (corrected 2026-11-01, ported from
+  // the card tree): a payment Amber recorded by hand in the manual
+  // ledger confirms an order exactly like a legacy card-ledger
+  // record does — previously only the card ledger was consulted
+  // here, so a manually confirmed order read "being confirmed"
+  // forever. (stripe_payment / manual_payment are the shared
+  // resolver's internal field names in lib/orders/paid-state.ts,
+  // identical in both trees; neither is customer copy.)
+  const payment = paidState?.is_paid
+    ? (paidState.stripe_payment ?? paidState.manual_payment)
+    : null;
 
   return (
     <main
@@ -121,19 +133,40 @@ export default async function CheckoutReturnPage({
             Payment Being Confirmed
           </h1>
           <p style={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
-            Your order <strong>{order.order_id}</strong> is placed.
-            Orders are paid by emailed invoice from Bluevine — you can
-            pay by ACH bank transfer or check per the invoice, or with
-            Venmo or Cash App, using your order number as the
-            payment reference. Amber confirms every payment by hand, so
-            if you have already paid, your status can take a little
-            while to update — you can check any time on the{' '}
+            Your order <strong>{order.order_id}</strong> is placed.{' '}
+            {order.payment_method === 'bluevine_card_link' ? (
+              <>
+                {
+                  "You chose to pay by card — pay on Bluevine's secure hosted payment page, using your order number as the payment reference; the payment link is in your confirmation email."
+                }
+              </>
+            ) : (
+              <>
+                Orders are paid by emailed invoice from Bluevine — you
+                can pay by ACH bank transfer or check per the invoice,
+                or with Venmo or Cash App, using your order number as
+                the payment reference.
+              </>
+            )}{' '}
+            Amber confirms every payment by hand, so if you have already
+            paid, your status can take a little while to update — you can
+            check any time on the{' '}
             <Link href="/order-status" style={{ color: '#d4af37' }}>
               order status page
             </Link>{' '}
-            with your order ID and email. If you have not received your
-            invoice yet, your order is still saved — just contact Amber
-            and she will help you finish.
+            with your order ID and email.{' '}
+            {order.payment_method === 'bluevine_card_link' ? (
+              <>
+                If you have not paid yet, your order is still saved —
+                just contact Amber and she will help you finish.
+              </>
+            ) : (
+              <>
+                If you have not received your invoice yet, your order is
+                still saved — just contact Amber and she will help you
+                finish.
+              </>
+            )}
           </p>
         </>
       ) : (

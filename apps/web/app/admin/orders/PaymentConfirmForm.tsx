@@ -57,6 +57,7 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
   const [orderId, setOrderId] = useState('');
   const [method, setMethod] = useState('');
   const [reference, setReference] = useState('');
+  const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [ownerKey, setOwnerKey] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -79,6 +80,11 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
           order_id: orderId.trim(),
           ...(method ? { method } : {}),
           ...(reference.trim() ? { reference: reference.trim() } : {}),
+          // Phase 2: the verified amount, in cents, when entered — the
+          // server requires it to equal the order total exactly.
+          ...(amount.trim()
+            ? { amount_cents: Math.round(Number(amount) * 100) }
+            : {}),
           ...(note.trim() ? { note: note.trim() } : {}),
         }),
       });
@@ -92,9 +98,10 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
           kind: 'success',
           message: data.already_recorded
             ? `That payment was already confirmed for ${data.order_id} — nothing new was added. The customer sees it as paid on the order-status page and in their account order history.`
-            : `Confirmed — ${data.order_id} is now marked paid (${data.payment?.method_label ?? 'payment recorded'}). The customer sees “Payment confirmed” on the order-status page and “Paid” in their account order history.`,
+            : `Confirmed — ${data.order_id} is now marked paid (${data.payment?.method_label ?? 'payment recorded'}). The customer sees “Payment confirmed” on the order-status page and “Paid” in their account order history, and a payment-confirmed email was sent to them.`,
         });
         setReference('');
+        setAmount('');
         setNote('');
         router.refresh();
       } else if (response.status === 401) {
@@ -175,6 +182,7 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
         >
           <option value="">As recorded on the order</option>
           <option value="cash_app_or_venmo">Cash App / Venmo</option>
+          <option value="bluevine_card_link">Card — Bluevine (hosted payment page)</option>
         </select>
       </div>
       <div style={{ marginBottom: '1.25rem' }}>
@@ -189,7 +197,25 @@ export function PaymentConfirmForm({ configured }: { configured: boolean }) {
           value={reference}
           onChange={(event) => setReference(event.target.value)}
           style={inputStyle}
-          placeholder="Cash App / Venmo reference"
+          placeholder="Payment reference (handle / Bluevine payment reference)"
+        />
+      </div>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <label htmlFor="payment-amount" style={labelStyle}>
+          Amount received, $ (optional — checked against the order total)
+        </label>
+        <input
+          id="payment-amount"
+          name="payment-amount"
+          type="number"
+          min="0"
+          step="0.01"
+          inputMode="decimal"
+          autoComplete="off"
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+          style={inputStyle}
+          placeholder="e.g. 41.72"
         />
       </div>
       <div style={{ marginBottom: '1.25rem' }}>

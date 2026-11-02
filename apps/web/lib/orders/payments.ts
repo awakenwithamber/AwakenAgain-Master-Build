@@ -54,6 +54,11 @@ const STORED_PAYMENT_METHODS: readonly StoredPaymentMethod[] = [
   ...PAYMENT_METHODS,
   'bookipi_invoice',
   'bookipi_card_invoice',
+  // Combined merge 2026-11-02: 'stripe_card_embedded' left
+  // PAYMENT_METHODS when the parser started rejecting it for new
+  // orders (dormant-hole fix); it must stay readable on stored
+  // records, so it is listed here explicitly.
+  'stripe_card_embedded',
 ];
 import {
   EVENT_STREAMS,
@@ -127,6 +132,14 @@ export interface OrderPaymentEvent {
   reference: string | null;
   /** Owner note (e.g. "paid in two parts"), when given. */
   note: string | null;
+  /**
+   * Amount the owner verified, in cents (Phase 2, Workstream 1c —
+   * additive). When the recording request supplies an amount, the
+   * route requires it to EQUAL the order total before anything is
+   * appended; the verified figure is stored here. Absent/null on
+   * events recorded before Phase 2 or without an amount.
+   */
+  amount_cents?: number | null;
   /** ISO timestamp of when the owner recorded this confirmation. */
   recorded_at: string;
   recorded_by: 'owner';
@@ -153,6 +166,8 @@ export function buildPaymentEvent(input: {
   method: StoredPaymentMethod;
   reference: string | null;
   note: string | null;
+  /** Verified amount in cents (Phase 2) — route-validated vs the total. */
+  amount_cents?: number | null;
 }): OrderPaymentEvent {
   return {
     event_id: generatePaymentEventId(),
@@ -160,6 +175,7 @@ export function buildPaymentEvent(input: {
     method: input.method,
     reference: input.reference,
     note: input.note,
+    amount_cents: input.amount_cents ?? null,
     recorded_at: new Date().toISOString(),
     recorded_by: 'owner',
     ledger_version: 1,
@@ -271,6 +287,8 @@ export interface PaymentView {
   method_label: string;
   reference: string | null;
   note: string | null;
+  /** Verified amount in cents, when one was recorded (Phase 2). */
+  amount_cents: number | null;
   confirmed_at: string;
 }
 
@@ -280,6 +298,7 @@ export function toPaymentView(event: OrderPaymentEvent): PaymentView {
     method_label: paymentMethodLabel(event.method),
     reference: event.reference,
     note: event.note,
+    amount_cents: event.amount_cents ?? null,
     confirmed_at: event.recorded_at,
   };
 }

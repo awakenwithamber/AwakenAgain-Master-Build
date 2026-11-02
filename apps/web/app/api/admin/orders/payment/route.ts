@@ -50,6 +50,10 @@ import {
   toPaymentView,
   type OrderPaymentEvent,
 } from '../../../../../lib/orders/payments';
+import {
+  fireAndForgetEmail,
+  queuePaymentConfirmedEmail,
+} from '../../../../../lib/jobs/order-notifications';
 
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
@@ -104,6 +108,21 @@ export async function POST(request: Request) {
   }
   const reference = sanitizeOptionalText(body.reference, 120);
   const note = sanitizeOptionalText(body.note, 500);
+  // Verified amount (Phase 2, Workstream 1c): optional, but when the
+  // owner supplies one it must be a non-negative integer number of
+  // cents, and (checked below, once the order is loaded) it must
+  // EQUAL the order total — a mismatched amount records nothing.
+  let amountCents: number | null = null;
+  if (body.amount_cents !== undefined && body.amount_cents !== null) {
+    if (
+      typeof body.amount_cents !== 'number' ||
+      !Number.isInteger(body.amount_cents) ||
+      body.amount_cents < 0
+    ) {
+      return fail(['Amount must be a non-negative integer number of cents.']);
+    }
+    amountCents = body.amount_cents;
+  }
 
   // The order must exist in the order ledger. IDs are matched
   // case-insensitively for typing convenience; the event records the
@@ -116,6 +135,12 @@ export async function POST(request: Request) {
     return fail([`No order found with ID ${orderIdInput}.`], 404);
   }
 
+  if (amountCents !== null && amountCents !== order.total_cents) {
+    return fail([
+      `Amount ${amountCents} does not match the order total ${order.total_cents} — nothing was recorded. Check the payment and try again.`,
+    ]);
+  }
+
   const method = methodOverride ?? order.payment_method;
 
   const existing = await findLatestPaymentAsync(order.order_id);
@@ -123,7 +148,8 @@ export async function POST(request: Request) {
     existing &&
     existing.method === method &&
     existing.reference === reference &&
-    existing.note === note
+    existing.note === note &&
+    (existing.amount_cents ?? null) === amountCents
   ) {
     // Idempotent: this exact confirmation is already the latest event.
     return NextResponse.json({
@@ -140,6 +166,7 @@ export async function POST(request: Request) {
     method,
     reference,
     note,
+    amount_cents: amountCents,
   });
   try {
     await persistPaymentEvent(event);
@@ -153,6 +180,16 @@ export async function POST(request: Request) {
       500,
     );
   }
+
+  // Payment-confirmed customer email (Phase 2, Workstream 1c): fired
+  // ONLY here — on the path that appended a NEW verified payment
+  // event. The idempotent re-record path above returns earlier and
+  // sends nothing, and nothing anywhere else can produce this email.
+  // Fire-and-forget: an email failure never un-records the payment.
+  fireAndForgetEmail(queuePaymentConfirmedEmail(order, event), {
+    order_id: order.order_id,
+    template: 'order_payment_confirmed',
+  });
 
   return NextResponse.json(
     {

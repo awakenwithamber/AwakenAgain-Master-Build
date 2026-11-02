@@ -38,6 +38,10 @@ import {
   DEFAULT_TRACKING_CARRIER,
   type OrderTrackingEvent,
 } from '../../../../../lib/orders/tracking';
+import {
+  fireAndForgetEmail,
+  queueOrderShippedEmail,
+} from '../../../../../lib/jobs/order-notifications';
 
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
@@ -137,6 +141,18 @@ export async function POST(request: Request) {
       ],
       500,
     );
+  }
+
+  // Shipped email (Phase 2, Workstream 1c): only for the order's FIRST
+  // tracking event — the moment it first ships. A later superseding
+  // event (a corrected number) updates what customers see on the
+  // status page but sends no second "shipped" email. Fire-and-forget:
+  // an email failure never un-records the tracking.
+  if (!existing) {
+    fireAndForgetEmail(queueOrderShippedEmail(order, event), {
+      order_id: order.order_id,
+      template: 'order_shipped',
+    });
   }
 
   return NextResponse.json(
