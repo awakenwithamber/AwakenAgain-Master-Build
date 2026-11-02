@@ -9,10 +9,20 @@
  * below the threshold a FLAT $5.95 shipping is charged and added to the
  * total. Status vocabulary: FREE / FLAT. This preview mirrors
  * lib/checkout/order.ts (FLAT_SHIPPING_CENTS there is the authority).
- * Sales tax is never previewed here: for card orders Stripe Tax
- * calculates it from the customer's address at payment time.
+ * Sales tax (owner directive 2026-11-01): previewed HERE with the
+ * SAME engine the server uses — calculateSalesTax from lib/tax is
+ * imported below, never re-implemented — so a preview shown for a
+ * given delivery state and claimed discounts is exactly the figure
+ * the server computes for that claim. The engine only reads the
+ * delivery STATE for its determination (Utah → the seller's Salt
+ * Lake City combined rate; any other state → 0 under the named
+ * no-nexus assumption in lib/tax); the full address is collected
+ * and validated at checkout. Callers that have no delivery state
+ * yet (the cart view) get taxCents 0 and a pre-tax preview total,
+ * exactly as before.
  */
 import { BUNDLE_PRICE_CENTS } from '../../lib/pricing/pricing';
+import { calculateSalesTax } from '../../lib/tax/tax';
 import type { CartItem } from '../../types';
 import type { StoredBundle } from './cart-store';
 
@@ -41,7 +51,22 @@ export interface CartPreview {
   shippingCents: number;
   shippingStatus: ShippingStatus;
   freeShippingThresholdCents: number;
+  /**
+   * Sales tax previewed with the shared lib/tax engine for the
+   * delivery state passed in (see the header note). 0 when no
+   * delivery state was supplied or the state collects no tax.
+   */
+  taxCents: number;
+  /** The engine's rate for the preview ('8.45%' in Utah, '0%' out of state); null when no state was supplied. */
+  taxRatePercent: string | null;
+  /** Normalized delivery state the tax preview was computed for, or null. */
+  taxDeliveryState: string | null;
   totalCents: number;
+}
+
+/** The delivery-address slice the tax preview needs: just the state. */
+export interface PreviewDeliveryAddress {
+  state?: string | null;
 }
 
 /** The one coupon code the preview recognizes (server is the authority). */
@@ -65,6 +90,7 @@ export function previewCartTotals(
   bundle: StoredBundle | null,
   isSubscriber: boolean,
   appliedCouponCode?: string | null,
+  deliveryAddress?: PreviewDeliveryAddress | null,
 ): CartPreview {
   const itemsTotalCents = items.reduce(
     (sum, item) => sum + item.unit_price_cents * item.quantity,
@@ -107,6 +133,58 @@ export function previewCartTotals(
   const shippingCents =
     subtotalCents >= freeShippingThresholdCents ? 0 : FLAT_SHIPPING_CENTS;
   const shippingStatus: ShippingStatus = shippingCents === 0 ? 'FREE' : 'FLAT';
+  // Sales tax preview — the SHARED engine (lib/tax), the exact call
+  // the server makes for the same claim: merchandise lines at the
+  // general rate, the claimed discount as a negative line, shipping
+  // passed separately (never in the base). Only the entered delivery
+  // state is meaningful pre-submission; the address fields the
+  // engine echoes back are placeholders here and are discarded.
+  const deliveryState =
+    typeof deliveryAddress?.state === 'string'
+      ? deliveryAddress.state.trim().toUpperCase()
+      : '';
+  const claimedDiscountCents = subscriberDiscountCents + couponDiscountCents;
+  const tax =
+    deliveryState.length === 2
+      ? calculateSalesTax({
+          destination: {
+            line1: '',
+            city: '',
+            state: deliveryState,
+            postalCode: '',
+            country: 'US',
+          },
+          lines: [
+            ...items.map((item) => ({
+              description: item.product_handle,
+              amountCents: item.unit_price_cents * item.quantity,
+              taxable: true,
+              category: 'merchandise',
+            })),
+            ...(bundle
+              ? [
+                  {
+                    description: 'bundle',
+                    amountCents: bundleTotalCents,
+                    taxable: true,
+                    category: 'merchandise',
+                  },
+                ]
+              : []),
+            ...(claimedDiscountCents > 0
+              ? [
+                  {
+                    description: 'Discounts (subscriber / coupon)',
+                    amountCents: -claimedDiscountCents,
+                    taxable: true,
+                    category: 'discount',
+                  },
+                ]
+              : []),
+          ],
+          shippingCents,
+        })
+      : null;
   return {
     itemsTotalCents,
     bundleTotalCents,
@@ -117,7 +195,14 @@ export function previewCartTotals(
     shippingCents,
     shippingStatus,
     freeShippingThresholdCents,
+    taxCents: tax?.taxCents ?? 0,
+    taxRatePercent: tax?.ratePercent ?? null,
+    taxDeliveryState: tax ? deliveryState : null,
     totalCents:
-      subtotalCents - subscriberDiscountCents - couponDiscountCents + shippingCents,
+      subtotalCents -
+      subscriberDiscountCents -
+      couponDiscountCents +
+      shippingCents +
+      (tax?.taxCents ?? 0),
   };
 }

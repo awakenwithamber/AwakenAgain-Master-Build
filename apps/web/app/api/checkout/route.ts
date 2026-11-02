@@ -24,12 +24,17 @@
  * (lib/jobs/order-confirmation — Resend when RESEND_API_KEY is set,
  * logging provider otherwise).
  *
- * PAYMENT SWITCH (owner directive 2026-10-24, staged): the customer
- * flow is now the emailed Bookipi invoice (pay by ACH bank transfer to
- * Bluevine, Venmo, or Cash App — see paymentInstructions below) or the
- * Cash App / Venmo handles directly. Stripe is PARKED DORMANT: the
- * embedded card branch below is retained for historical/dormant
- * records only and is no longer offered by the checkout UI.
+ * PAYMENT SWITCH (owner directive 2026-11-01, staged — "Replace our
+ * checkout with the bluevine set up", superseding the 2026-10-24
+ * Bookipi flow): the customer flow is now the emailed Bluevine
+ * invoice (pay by ACH bank transfer or check per the invoice, or
+ * Venmo / Cash App — see paymentInstructions below), the Cash App /
+ * Venmo handles directly, or — ONLY when the verified Bluevine
+ * payment link is configured — card payment on Bluevine's secure
+ * hosted page ('bluevine_card_link', gated off by default). Stripe is
+ * PARKED DORMANT: the embedded card branch below is retained for
+ * historical/dormant records only and is no longer offered by the
+ * checkout UI.
  *
  * NOTE: only HTTP handlers and route config may be exported from a route
  * module — validateAndBuildOrder lives in lib/checkout/order.ts (imported
@@ -37,6 +42,7 @@
  */
 import { NextResponse } from 'next/server';
 import {
+  bluevinePaymentLinkUrl,
   CASH_APP_HANDLE,
   VENMO_HANDLE,
   validateAndBuildOrder,
@@ -156,23 +162,40 @@ function persistOrder(record: OrderRecord) {
 /**
  * Payment instructions for the method recorded on the order. The
  * Cash App / Venmo shape is unchanged from the original flow. The
- * invoice shape (primary since 2026-10-24) carries the handles plus
- * the order id: the invoice is emailed and paid by ACH bank transfer
- * to Bluevine, Venmo, or Cash App with the order number as reference.
- * The dormant card shape carries NO handles (historical records only).
+ * Bluevine invoice shape (primary since 2026-11-01) carries the
+ * handles plus the order id: the invoice is emailed from Bluevine
+ * and paid by ACH bank transfer or check per the invoice, or with
+ * Venmo / Cash App, using the order number as reference. The
+ * Bluevine card shape (gated: only reachable when the verified
+ * Bluevine payment link is configured) carries the link and NO
+ * handles claim beyond it. The dormant embedded-card shape carries
+ * NO handles (historical records only).
  */
 function paymentInstructions(record: OrderRecord) {
-  if (record.payment_method === 'bookipi_invoice') {
+  if (record.payment_method === 'bluevine_invoice') {
     return {
       method: record.payment_method,
       cash_app: CASH_APP_HANDLE,
       venmo: VENMO_HANDLE,
       order_id: record.order_id,
       note:
-        'You chose to pay by invoice. Your invoice will be emailed to ' +
-        'you — pay it by ACH bank transfer to Bluevine, or with Venmo ' +
-        'or Cash App, using your order number as the payment ' +
-        'reference. Your order is prepared once payment is confirmed.',
+        'You chose to pay by Bluevine invoice. Your Bluevine invoice ' +
+        'will be emailed to you — pay it by ACH bank transfer or ' +
+        'check per the invoice, or with Venmo or Cash App, using ' +
+        'your order number as the payment reference. Your order is ' +
+        'prepared once payment is confirmed.',
+    };
+  }
+  if (record.payment_method === 'bluevine_card_link') {
+    return {
+      method: record.payment_method,
+      order_id: record.order_id,
+      payment_link: bluevinePaymentLinkUrl(),
+      note:
+        "You chose to pay by card through Bluevine. Finish on " +
+        "Bluevine's secure hosted payment page — enter your order " +
+        'total there and use your order number as the reference. ' +
+        'Your order is prepared once payment is confirmed.',
     };
   }
   if (record.payment_method === 'stripe_card_embedded') {
@@ -282,7 +305,15 @@ export async function POST(request: Request) {
       ? { coupon_message: record.coupon_message }
       : {}),
     is_subscriber_verified: record.is_subscriber_verified,
+    shipping_cents: record.shipping_cents,
     shipping_status: record.shipping_status,
+    // Sales tax (2026-11-01): the server-computed figure + the full
+    // breakdown recorded on the order (null on the dormant card rail
+    // and on legacy no-address orders, which carry no tax fields).
+    // For the live rails total_cents is tax-INCLUSIVE — it is the
+    // amount the customer owes by invoice / Cash App / Venmo.
+    tax_cents: record.tax_cents ?? 0,
+    tax_breakdown: record.tax_breakdown ?? null,
     total_cents: record.total_cents,
     payment_method: record.payment_method,
     payment: paymentInstructions(record),
