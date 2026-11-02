@@ -17,7 +17,7 @@
  * response equality; registration shipping address stored, editable
  * on the profile, and independent of any single order.
  */
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -153,6 +153,26 @@ async function me(cookie: string) {
       shipping_address: typeof ADDRESS | null;
     };
   };
+}
+
+/**
+ * Simulate time passing for stored codes (2026-11-02): rewrites every
+ * code record's expires_at backwards by `seconds`. Used before resend
+ * calls so the resend cooldown (60s from issuance) has elapsed, the
+ * way it would for a real customer who waited for the first email.
+ */
+function ageStoredCodes(seconds: number): void {
+  const lines = readFileSync(CODES, 'utf8')
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => {
+      const record = JSON.parse(line) as Record<string, unknown>;
+      if (typeof record.expires_at === 'number') {
+        record.expires_at -= seconds;
+      }
+      return JSON.stringify(record);
+    });
+  writeFileSync(CODES, `${lines.join('\n')}\n`, 'utf8');
 }
 
 function accountCreatedCount(email: string): number {
@@ -307,6 +327,7 @@ describe('expired code → resend → success', () => {
     const expiredBody = (await expired.json()) as { errors: string[] };
     expect(expiredBody.errors.join(' ')).toMatch(/expired/i);
 
+    ageStoredCodes(120);
     const resent = await resendPost(
       post('/api/account/resend-code', { email, purpose: 'verification' }),
     );
@@ -377,6 +398,7 @@ describe('password sign-in', () => {
     const body = (await blocked.json()) as { code: string };
     expect(body.code).toBe('email_unverified');
 
+    ageStoredCodes(120);
     const resent = await resendPost(
       post('/api/account/resend-code', { email, purpose: 'verification' }),
     );
@@ -566,5 +588,122 @@ describe('profile address ↔ checkout independence (2B + WS1 tie-in)', () => {
     const after = await me(cookie);
     expect(after.profile.shipping_address?.street).toBe('900 New Home Road');
     expect(record.shipping_address?.street).toBe('77 Different Lane');
+  });
+});
+
+describe('resend cooldown + delivery honesty (2026-11-02)', () => {
+  it('an immediate resend is refused with a named cooldown; after it elapses the resend works', async () => {
+    const email = 'cooldown@example.com';
+    await register(email);
+
+    const tooSoon = await resendPost(
+      post('/api/account/resend-code', { email, purpose: 'email_verification' }),
+    );
+    expect(tooSoon.status).toBe(429);
+    const body = (await tooSoon.json()) as {
+      code: string;
+      retry_after_seconds: number;
+      errors: string[];
+    };
+    expect(body.code).toBe('resend_cooldown');
+    expect(body.retry_after_seconds).toBeGreaterThan(0);
+    expect(body.retry_after_seconds).toBeLessThanOrEqual(60);
+    expect(body.errors.join(' ')).toContain(email);
+
+    ageStoredCodes(120);
+    const resent = await resendPost(
+      post('/api/account/resend-code', { email, purpose: 'email_verification' }),
+    );
+    expect(resent.status).toBe(200);
+    const code = latestCode('account_verification_code', email);
+    expect(
+      (await verifyEmailPost(post('/api/account/verify-email', { email, code })))
+        .status,
+    ).toBe(200);
+  });
+
+  it('a resent sign-in code returns a request_id the code can actually be entered against — and supersedes the old code', async () => {
+    const email = 'resend-signin@example.com';
+    const first = await requestCodePost(post('/api/account/request-code', { email }));
+    expect(first.status).toBe(200);
+    const { request_id: oldRequestId } = (await first.json()) as {
+      request_id: string;
+    };
+    const oldCode = latestCode('account_signin_code', email);
+
+    ageStoredCodes(120);
+    const resent = await resendPost(
+      post('/api/account/resend-code', { email, purpose: 'account_signin' }),
+    );
+    expect(resent.status).toBe(200);
+    const resentBody = (await resent.json()) as { request_id?: string };
+    expect(resentBody.request_id).toBeTruthy();
+    expect(resentBody.request_id).not.toBe(oldRequestId);
+
+    // The superseded code no longer verifies.
+    const stale = await verifyPost(
+      post('/api/account/verify', { request_id: oldRequestId, code: oldCode }),
+    );
+    expect(stale.status).toBe(401);
+
+    // The resent code signs in against its own request_id.
+    const fresh = await verifyPost(
+      post('/api/account/verify', {
+        request_id: resentBody.request_id,
+        code: latestCode('account_signin_code', email),
+      }),
+    );
+    expect(fresh.status).toBe(200);
+    sessionCookie(fresh);
+  });
+
+  it('a failed send is reported as delivery "failed", never disguised as "preview" or "sent"', async () => {
+    sendSpy.mockImplementationOnce(async () => ({
+      ok: false,
+      error: 'provider refused the send',
+    }));
+    const res = await requestCodePost(
+      post('/api/account/request-code', { email: 'delivery-fail@example.com' }),
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { delivery: string; email: string };
+    expect(body.delivery).toBe('failed');
+    expect(body.email).toBe('delivery-fail@example.com');
+
+    sendSpy.mockImplementationOnce(async () => ({
+      ok: false,
+      error: 'provider refused the send',
+    }));
+    const reg = await register('delivery-fail-reg@example.com');
+    expect(reg.status).toBe(201);
+    const regBody = (await reg.json()) as { delivery: string };
+    expect(regBody.delivery).toBe('failed');
+  });
+});
+
+describe('logout → login again (2026-11-02)', () => {
+  it('sign-out revokes the session, and password sign-in restores the same profile', async () => {
+    const email = 'logout-login@example.com';
+    const cookie = await registerAndVerify(email);
+
+    const out = await signOutPost(
+      post('/api/account/sign-out', {}, cookie),
+    );
+    expect(out.status).toBe(200);
+
+    const meAfterOut = await meGet(
+      new Request('http://localhost/api/account/me', {
+        headers: { cookie },
+      }),
+    );
+    expect(meAfterOut.status).toBe(401);
+
+    const again = await signInPost(
+      post('/api/account/sign-in', { email, password: 'grimoire-garden-42' }),
+    );
+    expect(again.status).toBe(200);
+    const view = await me(sessionCookie(again));
+    expect(view.profile.email).toBe(email);
+    expect(view.profile.email_verified).toBe(true);
   });
 });

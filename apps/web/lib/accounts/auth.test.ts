@@ -15,7 +15,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   InMemoryAccountOtpStore,
   requestAccountCode,
+  requestCode,
+  resendCooldownRemainingSeconds,
   verifyAccountCode,
+  verifyCodeForEmail,
 } from './otp';
 import {
   ACCOUNT_SESSION_COOKIE,
@@ -84,6 +87,51 @@ describe('account OTP', () => {
     }
     const burned = await verifyAccountCode(store, request.request_id, code);
     expect(burned).toEqual({ ok: false, reason: 'too_many_attempts' });
+  });
+});
+
+describe('code supersede + resend cooldown (2026-11-02)', () => {
+  it('a fresh code supersedes earlier codes for the same purpose only', async () => {
+    const store = new InMemoryAccountOtpStore();
+    const first = await requestAccountCode(store, EMAIL);
+    const other = await requestCode(store, EMAIL, 'password_reset');
+    const second = await requestAccountCode(store, EMAIL);
+
+    // The first sign-in code is gone; the newest one verifies.
+    expect(
+      await verifyAccountCode(store, first.request.request_id, first.code),
+    ).toEqual({ ok: false, reason: 'not_found' });
+    expect(
+      await verifyAccountCode(store, second.request.request_id, second.code),
+    ).toEqual({ ok: true, email: EMAIL });
+    // A different purpose is untouched by the sign-in supersede.
+    expect(
+      await verifyCodeForEmail(store, EMAIL, other.code, 'password_reset'),
+    ).toEqual({ ok: true, email: EMAIL });
+  });
+
+  it('cooldown counts down from issuance and lifts once it elapses or the code expires', async () => {
+    const store = new InMemoryAccountOtpStore();
+    const now = Math.floor(Date.now() / 1000);
+    expect(
+      await resendCooldownRemainingSeconds(store, EMAIL, 'account_signin', now),
+    ).toBe(0);
+    await requestAccountCode(store, EMAIL);
+    const remaining = await resendCooldownRemainingSeconds(
+      store,
+      EMAIL,
+      'account_signin',
+      now + 10,
+    );
+    expect(remaining).toBeGreaterThan(0);
+    expect(remaining).toBeLessThanOrEqual(50);
+    expect(
+      await resendCooldownRemainingSeconds(store, EMAIL, 'account_signin', now + 61),
+    ).toBe(0);
+    // Past expiry there is nothing to wait out.
+    expect(
+      await resendCooldownRemainingSeconds(store, EMAIL, 'account_signin', now + 601),
+    ).toBe(0);
   });
 });
 
