@@ -4,10 +4,10 @@
  * Entry sign-in gate — runs BEFORE the music gate (staged, 2026-10-31).
  *
  * First thing a visitor sees on a visit, once per session:
- * - Sign in → the existing /account email-code sign-in.
- * - Create account → the same /account flow (a first-time email
- *   creates the account there; this site has no password sign-in
- *   and this gate never asks for one).
+ * - Sign in → the existing /account sign-in (password or email code).
+ * - Create account → the same /account flow (registration there
+ *   collects name, phone, and a password, then verifies the email
+ *   with a 6-digit code; this gate itself never asks for either).
  * - Continue as guest → dismisses and browses freely; guests can
  *   browse and buy, and can sign in later from /account.
  *
@@ -126,10 +126,10 @@ export function EntryAuthGate() {
           Welcome to the Apothecary
         </h2>
         <p id="auth-gate-sub" className={styles.gateSub}>
-          Sign in with an email code — no password — to keep your herbal
-          allies, likes, and orders in your own profile. New here? The
-          same sign-in creates your account. Or simply continue as a
-          guest; you can browse and buy either way.
+          Sign in with your password or an email code to keep your
+          herbal allies, likes, and orders in your own profile. New
+          here? Create your account on the next screen. Or simply
+          continue as a guest; you can browse and buy either way.
         </p>
         <div className={styles.gateActions}>
           <a

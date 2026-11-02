@@ -81,7 +81,10 @@ export function AuthForms({ available }: { available: boolean }) {
   // Shared identity + code state.
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [delivery, setDelivery] = useState<'sent' | 'preview'>('sent');
+  const [delivery, setDelivery] = useState<'sent' | 'preview' | 'failed'>('sent');
+  // Resend cooldown countdown (seconds) — mirrors the server cooldown
+  // so the Resend buttons explain themselves instead of dead-ending.
+  const [resendWait, setResendWait] = useState(0);
   const [codeRequestId, setCodeRequestId] = useState<string | null>(null);
 
   // Registration state.
@@ -104,6 +107,30 @@ export function AuthForms({ available }: { available: boolean }) {
   useEffect(() => {
     headingRef.current?.focus();
   }, [view, tab]);
+
+  // Tick the resend cooldown down once a second.
+  useEffect(() => {
+    if (resendWait <= 0) return;
+    const timer = setTimeout(
+      () => setResendWait((s) => Math.max(0, s - 1)),
+      1000,
+    );
+    return () => clearTimeout(timer);
+  }, [resendWait]);
+
+  const deliveryOf = (result: ApiResult): 'sent' | 'preview' | 'failed' =>
+    result.json.delivery === 'sent'
+      ? 'sent'
+      : result.json.delivery === 'failed'
+        ? 'failed'
+        : 'preview';
+
+  const startCooldown = (result: ApiResult) => {
+    const retry = result.json.retry_after_seconds;
+    setResendWait(
+      typeof retry === 'number' && retry > 0 ? Math.ceil(retry) : 60,
+    );
+  };
 
   if (!available) {
     return (
@@ -199,7 +226,8 @@ export function AuthForms({ available }: { available: boolean }) {
         }
         return;
       }
-      setDelivery(result.json.delivery === 'sent' ? 'sent' : 'preview');
+      setDelivery(deliveryOf(result));
+      startCooldown(result);
       setCode('');
       setNotice(null);
       setView('verifyEmail');
@@ -231,7 +259,7 @@ export function AuthForms({ available }: { available: boolean }) {
   };
 
   const resendVerification = async () => {
-    if (busy) return;
+    if (busy || resendWait > 0) return;
     setBusy(true);
     setErrors([]);
     try {
@@ -240,15 +268,52 @@ export function AuthForms({ available }: { available: boolean }) {
         purpose: 'email_verification',
       });
       if (result.ok) {
-        setDelivery(result.json.delivery === 'sent' ? 'sent' : 'preview');
+        setDelivery(deliveryOf(result));
+        startCooldown(result);
         setNotice(
           result.json.delivery === 'sent'
-            ? 'A fresh verification code is on its way to your email.'
-            : 'Email delivery isn\u2019t switched on yet, so a new code can\u2019t reach your inbox today.',
+            ? `A fresh verification code is on its way to ${email.trim()}.`
+            : result.json.delivery === 'failed'
+              ? `We tried to email ${email.trim()} just now and the delivery failed. Check the address for typos, then try again in a moment.`
+              : 'Email delivery isn\u2019t switched on yet, so a new code can\u2019t reach your inbox today.',
         );
       } else {
+        if (result.json.code === 'resend_cooldown') startCooldown(result);
         setErrors(errorsOf(result, 'Could not resend the code.'));
       }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resendSigninCode = async () => {
+    if (busy || resendWait > 0) return;
+    setBusy(true);
+    setErrors([]);
+    try {
+      const result = await postJson('/api/account/resend-code', {
+        email: email.trim(),
+        purpose: 'account_signin',
+      });
+      if (!result.ok) {
+        if (result.json.code === 'resend_cooldown') startCooldown(result);
+        setErrors(errorsOf(result, 'Could not send a new sign-in code.'));
+        return;
+      }
+      // A resent sign-in code verifies against its NEW request_id.
+      if (typeof result.json.request_id === 'string') {
+        setCodeRequestId(result.json.request_id);
+      }
+      setDelivery(deliveryOf(result));
+      startCooldown(result);
+      setCode('');
+      setNotice(
+        result.json.delivery === 'failed'
+          ? `We tried to email ${email.trim()} just now and the delivery failed. Check the address for typos, then try again in a moment.`
+          : result.json.delivery === 'sent'
+            ? `A fresh sign-in code is on its way to ${email.trim()} — the code you had before no longer works.`
+            : null,
+      );
     } finally {
       setBusy(false);
     }
@@ -297,7 +362,8 @@ export function AuthForms({ available }: { available: boolean }) {
         return;
       }
       setCodeRequestId(result.json.request_id as string);
-      setDelivery(result.json.delivery === 'sent' ? 'sent' : 'preview');
+      setDelivery(deliveryOf(result));
+      startCooldown(result);
       setCode('');
       setView('codeEntry');
     } finally {
@@ -417,7 +483,15 @@ export function AuthForms({ available }: { available: boolean }) {
   const codeDeliveryNote =
     delivery === 'sent' ? (
       <p className={styles.note}>
-        Your code is on its way to {email} — it lasts 10 minutes.
+        Your code is on its way to {email} — it lasts 10 minutes. If it
+        doesn&apos;t arrive within a minute or two, check your spam
+        folder, then use Resend below.
+      </p>
+    ) : delivery === 'failed' ? (
+      <p className={styles.note}>
+        We tried to email {email} just now and the delivery failed —
+        no code is on its way. Check the address for typos, go back and
+        correct it if needed, then try again in a moment.
       </p>
     ) : (
       <p className={styles.note}>
@@ -426,6 +500,9 @@ export function AuthForms({ available }: { available: boolean }) {
         delivery launches, and your details stay saved until then.
       </p>
     );
+
+  const resendLabel = (base: string) =>
+    resendWait > 0 ? `${base} (${resendWait}s)` : base;
 
   return (
     <div className={styles.card}>
@@ -600,9 +677,9 @@ export function AuthForms({ available }: { available: boolean }) {
               className="btn-secondary"
               type="button"
               onClick={resendVerification}
-              disabled={busy}
+              disabled={busy || resendWait > 0}
             >
-              Resend verification code
+              {resendLabel('Resend verification code')}
             </button>
             <button
               className="btn-secondary"
@@ -689,9 +766,9 @@ export function AuthForms({ available }: { available: boolean }) {
                 className="btn-secondary"
                 type="button"
                 onClick={resendVerification}
-                disabled={busy}
+                disabled={busy || resendWait > 0}
               >
-                Resend verification code
+                {resendLabel('Resend verification code')}
               </button>
               {notice ? <p className={styles.note}>{notice}</p> : null}
             </form>
@@ -723,6 +800,7 @@ export function AuthForms({ available }: { available: boolean }) {
             Enter your sign-in code
           </h2>
           {codeDeliveryNote}
+          {notice ? <p className={styles.note}>{notice}</p> : null}
           <form className={styles.form} onSubmit={submitSigninCode}>
             <label htmlFor="signin-code">
               6-digit code
@@ -743,6 +821,14 @@ export function AuthForms({ available }: { available: boolean }) {
             {errorList}
             <button className="btn-primary" type="submit" disabled={busy}>
               {busy ? 'Checking…' : 'Sign in'}
+            </button>
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={resendSigninCode}
+              disabled={busy || resendWait > 0}
+            >
+              {resendLabel('Resend sign-in code')}
             </button>
             <button
               className="btn-secondary"
