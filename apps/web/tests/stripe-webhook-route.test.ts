@@ -26,7 +26,7 @@
  * - Unknown event types are acknowledged (200) with no state change.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -57,8 +57,8 @@ vi.mock('../lib/payments/stripe', async (importOriginal) => {
 });
 
 import { POST } from '../app/api/stripe/webhook/route';
-import { POST as postCheckout } from '../app/api/checkout/route';
 import { POST as postOrderStatus } from '../app/api/orders/status/route';
+import { validateAndBuildOrder } from '../lib/checkout/order';
 import {
   findLatestStripeOrderStatus,
   findStripePayment,
@@ -71,6 +71,18 @@ const PAYMENTS_LEDGER = join(DIR, 'stripe-payments.jsonl');
 const EVENTS_LEDGER = join(DIR, 'stripe-webhook-events.jsonl');
 const ORDER_STATUS_LEDGER = join(DIR, 'stripe-order-status.jsonl');
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
+
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
 const CAPSULE_ITEM = {
   product_handle: 'chill-pill-capsules',
   variant_id: 'chill-pill-capsules-2wk',
@@ -123,21 +135,25 @@ const ORDER_TOTAL_CENTS = 1977 + 595;
 const TAX_CENTS = 187;
 
 async function seedOrder(): Promise<string> {
-  const res = await postCheckout(
-    new Request('http://localhost/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: [CAPSULE_ITEM],
-        customer: CUSTOMER,
-        payment_method: 'stripe_card_embedded',
-        client_total_cents: ORDER_TOTAL_CENTS,
-      }),
-    }),
+  // Deliberate update (2026-11-01): POST /api/checkout now REJECTS
+  // the dormant embedded-card method for new orders, so this suite
+  // seeds a STORED historical record directly — the dormant webhook
+  // operates on stored records, which is exactly what it exercises.
+  // The record is built by the real validator (under a live method)
+  // so its shape and totals match a genuinely placed order.
+  const record = validateAndBuildOrder({
+    items: [CAPSULE_ITEM],
+    customer: CUSTOMER,
+    shipping_address: SHIPPING_ADDRESS,
+    payment_method: 'bookipi_invoice',
+    client_total_cents: ORDER_TOTAL_CENTS,
+  });
+  appendFileSync(
+    process.env.ORDERS_LEDGER_PATH as string,
+    JSON.stringify({ ...record, payment_method: 'stripe_card_embedded' }) +
+      '\n',
   );
-  const json = (await res.json()) as { ok: boolean; order_id: string };
-  expect(res.status).toBe(200);
-  return json.order_id;
+  return record.order_id;
 }
 
 function completedEvent(

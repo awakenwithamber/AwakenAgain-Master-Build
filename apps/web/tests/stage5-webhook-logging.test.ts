@@ -16,7 +16,7 @@
  * unmodified.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync } from 'node:fs';
+import { appendFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -47,11 +47,23 @@ vi.mock('../lib/payments/stripe', async (importOriginal) => {
 });
 
 import { POST } from '../app/api/stripe/webhook/route';
-import { POST as postCheckout } from '../app/api/checkout/route';
 import { findStripeWebhookEvent } from '../lib/payments/stripe';
+import { validateAndBuildOrder } from '../lib/checkout/order';
 
 const DIR = mkdtempSync(join(tmpdir(), 'stage5-webhook-logging-'));
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
+
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
 const CAPSULE_ITEM = {
   product_handle: 'chill-pill-capsules',
   variant_id: 'chill-pill-capsules-2wk',
@@ -133,21 +145,25 @@ afterEach(() => {
 });
 
 async function seedOrder(): Promise<string> {
-  const res = await postCheckout(
-    new Request('http://localhost/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: [CAPSULE_ITEM],
-        customer: CUSTOMER,
-        payment_method: 'stripe_card_embedded',
-        client_total_cents: ORDER_TOTAL_CENTS,
-      }),
-    }),
+  // Deliberate update (2026-11-01): POST /api/checkout now REJECTS
+  // the dormant embedded-card method for new orders, so this suite
+  // seeds a STORED historical record directly — the dormant webhook
+  // operates on stored records, which is exactly what it exercises.
+  // The record is built by the real validator (under a live method)
+  // so its shape and totals match a genuinely placed order.
+  const record = validateAndBuildOrder({
+    items: [CAPSULE_ITEM],
+    customer: CUSTOMER,
+    shipping_address: SHIPPING_ADDRESS,
+    payment_method: 'bookipi_invoice',
+    client_total_cents: ORDER_TOTAL_CENTS,
+  });
+  appendFileSync(
+    join(DIR, 'orders.jsonl'),
+    JSON.stringify({ ...record, payment_method: 'stripe_card_embedded' }) +
+      '\n',
   );
-  const json = (await res.json()) as { ok: boolean; order_id: string };
-  expect(res.status).toBe(200);
-  return json.order_id;
+  return record.order_id;
 }
 
 async function postWebhook(event: unknown, signature: string | null = 'valid-signature') {

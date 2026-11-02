@@ -11,10 +11,12 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  CUSTOM_BALM_HANDLE,
   CUSTOM_CAPSULE_HANDLE,
   CUSTOM_CAPSULE_SIZES,
   CUSTOM_TEA_HANDLE,
   CUSTOM_TEA_SIZES,
+  chargedHerbIds,
   customFormulaPriceCents,
   formatPrice,
   formulaKindForHandle,
@@ -110,6 +112,37 @@ describe('CLIENT=PREVIEW / SERVER=AUTHORITY parity', () => {
         size_id: 'tea-loose-1oz',
       }),
     ).toBe(customFormulaPriceCents('tea', 'tea-loose-1oz', herbIds));
+  });
+
+  it('balm (Option C, owner decision 2026-10-30): server mirrors preview; first five included', () => {
+    const seven = [
+      'rose',
+      'lavender',
+      'calendula',
+      'arnica',
+      'cayenne', // included
+      'ginger', // +29
+      'gotu-kola', // +23
+    ];
+    const preview = customFormulaPriceCents('balm', 'balm-2oz', seven);
+    expect(preview).toBe(2354 + 29 + 23);
+    expect(
+      priceFormulaCustomization(CUSTOM_BALM_HANDLE, {
+        herb_ids: seven,
+        size_id: 'balm-2oz',
+        base_id: 'soy-wax',
+      }),
+    ).toBe(preview);
+    expect(chargedHerbIds('balm', seven)).toEqual(['ginger', 'gotu-kola']);
+  });
+
+  it('Option C is balm-only: capsule and tea still charge EVERY botanical', () => {
+    const six = ['lavender', 'chamomile', 'peppermint', 'ginger', 'rosemary', 'nettle'];
+    const sum = six.reduce((s, id) => s + herbPriceCents(id), 0);
+    expect(customFormulaPriceCents('capsule', 'capsule-28', six)).toBe(3333 + sum);
+    expect(customFormulaPriceCents('tea', 'tea-loose-1oz', six)).toBe(1333 + sum);
+    expect(chargedHerbIds('capsule', six)).toEqual(six);
+    expect(chargedHerbIds('tea', six)).toEqual(six);
   });
 
   it('server rejects what the client cannot price', () => {

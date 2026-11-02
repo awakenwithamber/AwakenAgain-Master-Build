@@ -11,7 +11,7 @@
  *   with 503 + steering copy, never a crash.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync } from 'node:fs';
+import { appendFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -43,10 +43,25 @@ vi.mock('../lib/payments/stripe', async (importOriginal) => {
 });
 
 import { GET, POST } from '../app/api/stripe/checkout-session/route';
-import { POST as postCheckout } from '../app/api/checkout/route';
+import {
+  validateAndBuildOrder,
+  type PaymentMethod,
+} from '../lib/checkout/order';
 
 const DIR = mkdtempSync(join(tmpdir(), 'stripe-session-route-'));
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
+
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
 const CAPSULE_ITEM = {
   product_handle: 'chill-pill-capsules',
   variant_id: 'chill-pill-capsules-2wk',
@@ -82,25 +97,30 @@ afterEach(() => {
 });
 
 async function seedOrder(paymentMethod: string): Promise<string> {
-  const res = await postCheckout(
-    new Request('http://localhost/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: [CAPSULE_ITEM],
-        customer: CUSTOMER,
-        payment_method: paymentMethod,
-        // $19.77 is under the $45 free-shipping threshold: the server
-        // total includes the flat $5.95 shipping (owner decision
-        // 2026-10-20).
-        client_total_cents: 1977 + 595,
-      }),
-    }),
+  // Deliberate update (2026-11-01): POST /api/checkout now REJECTS
+  // the dormant embedded-card method for new orders, so this suite
+  // seeds a STORED record directly — the dormant session route
+  // operates on stored historical records, which is exactly what it
+  // exercises. The record is built by the real validator (under a
+  // live method when the historical value is requested) so its
+  // shape, totals, and line items match a genuinely placed order;
+  // $19.77 is under the $45 free-shipping threshold, so the server
+  // total includes the flat $5.95 shipping (owner decision
+  // 2026-10-20).
+  const record = validateAndBuildOrder({
+    items: [CAPSULE_ITEM],
+    customer: CUSTOMER,
+    shipping_address: SHIPPING_ADDRESS,
+    payment_method: (paymentMethod === 'stripe_card_embedded'
+      ? 'bookipi_invoice'
+      : paymentMethod) as PaymentMethod,
+    client_total_cents: 1977 + 595,
+  });
+  appendFileSync(
+    join(DIR, 'orders.jsonl'),
+    JSON.stringify({ ...record, payment_method: paymentMethod }) + '\n',
   );
-  const json = (await res.json()) as { ok: boolean; order_id: string };
-  expect(res.status).toBe(200);
-  expect(json.ok).toBe(true);
-  return json.order_id;
+  return record.order_id;
 }
 
 async function postSession(body: unknown) {

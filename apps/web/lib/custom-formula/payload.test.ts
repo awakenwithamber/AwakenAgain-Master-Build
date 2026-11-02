@@ -24,6 +24,18 @@ import {
 import { validateAndBuildOrder } from '../checkout/order';
 import type { FormulaCustomization } from '../../types';
 
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
+
 const CAPSULE_FORMULA: FormulaCustomization = {
   herb_ids: ['andrographis', 'garlic'],
   size_id: 'capsule-28',
@@ -163,6 +175,7 @@ describe('validateAndBuildOrder — server checkout with formula lines', () => {
         },
       ],
       customer: { name: 'Test Customer', email: 'test@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: item.unit_price_cents + 595,
     };
   }
@@ -213,6 +226,7 @@ describe('validateAndBuildOrder — server checkout with formula lines', () => {
         },
       ],
       customer: { name: 'Test Customer', email: 'test@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: item.unit_price_cents + 595,
     });
     const name = record.items[0]?.formula?.creation_name ?? '';

@@ -7,6 +7,11 @@
  *   record for the custom balm carries the same mirrored points.
  * - WAX IS PRICE-NEUTRAL (owner ruling 2026-10-30): Soy Wax (standard)
  *   and Beeswax (soy-free alternative) price identically, everywhere.
+ * - OPTION C (owner decision 2026-10-30, supersedes the earlier
+ *   PROPOSED every-botanical-charged model): the first five selected
+ *   botanicals — in selection order, as stored in herb_ids — are
+ *   included in the jar price; extras (6th–12th) are charged their
+ *   herb-library prices.
  * - ALLERGENS DISCLOSED BOTH DIRECTIONS: soy wax surfaces the soy note;
  *   beeswax surfaces the bee-product note — wording mirrored from the
  *   balm records' own allergens text.
@@ -24,8 +29,10 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  BALM_INCLUDED_BOTANICALS,
   CUSTOM_BALM_HANDLE,
   CUSTOM_BALM_SIZES,
+  chargedHerbIds,
   customFormulaPriceCents,
   formulaKindForHandle,
   getFormulaSize,
@@ -56,6 +63,17 @@ import {
 import type { FormulaCustomization, Product } from '../../types';
 
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
+
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
 
 function balmFormula(
   overrides: Partial<FormulaCustomization> = {},
@@ -171,6 +189,7 @@ describe('wax choice is price-neutral (owner ruling 2026-10-30)', () => {
           },
         ],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         client_total_cents: unit + 595, // below the $45 free-shipping threshold
       });
       return order.total_cents;
@@ -240,23 +259,23 @@ describe('botanical groundedness — balm/serum records ∩ herb library', () =>
 });
 
 describe('server price recompute for balm configurations', () => {
-  it('sample: 1 oz + lavender = 1177 + 29 = 1206¢, preview = server', () => {
+  it('sample: 1 oz + lavender = 1177¢ — one botanical is included (Option C), preview = server', () => {
     const formula = balmFormula({ herb_ids: ['lavender'], size_id: 'balm-1oz' });
     expect(herbPriceCents('lavender')).toBe(29);
-    expect(customFormulaPriceCents('balm', 'balm-1oz', ['lavender'])).toBe(1206);
-    expect(priceFormulaCustomization(CUSTOM_BALM_HANDLE, formula)).toBe(1206);
+    expect(customFormulaPriceCents('balm', 'balm-1oz', ['lavender'])).toBe(1177);
+    expect(priceFormulaCustomization(CUSTOM_BALM_HANDLE, formula)).toBe(1177);
   });
 
-  it('sample: 4 oz + gotu kola + vitamin E = 4708 + 23 + 23 = 4754¢', () => {
+  it('sample: 4 oz + gotu kola + vitamin E = 4708¢ — both included (Option C)', () => {
     const formula = balmFormula({
       herb_ids: ['gotu-kola', 'vitamin-e'],
       size_id: 'balm-4oz',
       base_id: 'beeswax',
     });
-    expect(priceFormulaCustomization(CUSTOM_BALM_HANDLE, formula)).toBe(4754);
+    expect(priceFormulaCustomization(CUSTOM_BALM_HANDLE, formula)).toBe(4708);
     expect(
       customFormulaPriceCents('balm', 'balm-4oz', ['gotu-kola', 'vitamin-e']),
-    ).toBe(4754);
+    ).toBe(4708);
   });
 
   it('grounded botanicals without a \u2018balm\u2019 Herb.use still validate for balm', () => {
@@ -281,14 +300,15 @@ describe('server price recompute for balm configurations', () => {
       scent_id: 'SCENT_RECIPE_01',
     });
     const item = buildFormulaCartItem(CUSTOM_BALM_HANDLE, formula, 2);
-    expect(item.unit_price_cents).toBe(3531 + 29 + 29);
+    // Two botanicals — both inside the five included by Option C.
+    expect(item.unit_price_cents).toBe(3531);
     expect(item.formula).toMatchObject({
       base_id: 'soy-wax',
       purpose_id: 'massage-ritual',
       scent_id: 'SCENT_RECIPE_01',
     });
     const order = buildOrderConfiguration([item], undefined, 0);
-    expect(order.subtotal_cents).toBe((3531 + 29 + 29) * 2);
+    expect(order.subtotal_cents).toBe(3531 * 2);
     expect(order.computed_by).toBe('server');
   });
 
@@ -312,6 +332,7 @@ describe('server price recompute for balm configurations', () => {
         },
       ],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: unit + 595,
     });
     expect(order.items[0].formula).toMatchObject({
@@ -323,6 +344,177 @@ describe('server price recompute for balm configurations', () => {
     });
     expect(order.items[0].title).toContain('Custom Botanical Balm');
     expect(order.total_cents).toBe(unit + 595);
+  });
+});
+
+describe('Option C — first five botanicals included (owner decision 2026-10-30)', () => {
+  // Five 29¢ botanicals, used as the included block in several cases.
+  const FIVE_29 = ['rose', 'lavender', 'calendula', 'arnica', 'cayenne'];
+
+  it('the included count is five', () => {
+    expect(BALM_INCLUDED_BOTANICALS).toBe(5);
+  });
+
+  it('1–5 botanicals price at the bare size base — the $0.23 herbs included too', () => {
+    expect(customFormulaPriceCents('balm', 'balm-1oz', ['rose'])).toBe(1177);
+    expect(customFormulaPriceCents('balm', 'balm-1oz', ['gotu-kola'])).toBe(1177);
+    // rose + lavender — tonight's live-walk example: was 1235¢ charged-for-every-herb, now 1177¢.
+    expect(customFormulaPriceCents('balm', 'balm-1oz', ['rose', 'lavender'])).toBe(1177);
+    // Two $0.23 herbs + a $0.29 herb on the 2 oz jar.
+    expect(
+      customFormulaPriceCents('balm', 'balm-2oz', ['gotu-kola', 'vitamin-e', 'rose']),
+    ).toBe(2354);
+    // Exactly five, mixing all three $0.23 herbs with two $0.29 herbs.
+    expect(
+      customFormulaPriceCents('balm', 'balm-3oz', [
+        'castor-oil',
+        'gotu-kola',
+        'vitamin-e',
+        'rose',
+        'lavender',
+      ]),
+    ).toBe(3531);
+    // Five $0.29 herbs on the largest jar — preview AND server agree.
+    expect(customFormulaPriceCents('balm', 'balm-4oz', FIVE_29)).toBe(4708);
+    expect(
+      priceFormulaCustomization(
+        CUSTOM_BALM_HANDLE,
+        balmFormula({ herb_ids: FIVE_29, size_id: 'balm-4oz' }),
+      ),
+    ).toBe(4708);
+  });
+
+  it('exactly 6 botanicals = size + the 6th botanical’s price only', () => {
+    expect(herbPriceCents('ginger')).toBe(29);
+    expect(customFormulaPriceCents('balm', 'balm-1oz', [...FIVE_29, 'ginger'])).toBe(
+      1177 + 29,
+    );
+    expect(herbPriceCents('castor-oil')).toBe(23);
+    expect(
+      customFormulaPriceCents('balm', 'balm-1oz', [...FIVE_29, 'castor-oil']),
+    ).toBe(1177 + 23);
+    expect(
+      priceFormulaCustomization(
+        CUSTOM_BALM_HANDLE,
+        balmFormula({ herb_ids: [...FIVE_29, 'ginger'], size_id: 'balm-1oz' }),
+      ),
+    ).toBe(1206);
+  });
+
+  it('12 botanicals = size + 7 extras at the mixed $0.23/$0.29 prices', () => {
+    const twelve = [
+      'rose',
+      'lavender',
+      'calendula',
+      'arnica',
+      'cayenne', // first five — included
+      'ginger',
+      'peppermint',
+      'comfrey',
+      'rosemary',
+      'nettle',
+      'fenugreek', // extras 6–11 — 29¢ each
+      'gotu-kola', // extra 12 — 23¢
+    ];
+    expect(twelve).toHaveLength(12);
+    const extrasCents = 29 * 6 + 23; // 197¢
+    expect(customFormulaPriceCents('balm', 'balm-2oz', twelve)).toBe(2354 + extrasCents);
+    expect(
+      priceFormulaCustomization(
+        CUSTOM_BALM_HANDLE,
+        balmFormula({ herb_ids: twelve, size_id: 'balm-2oz' }),
+      ),
+    ).toBe(2551);
+    // The charged set is exactly entries 6–12, in selection order.
+    expect(chargedHerbIds('balm', twelve)).toEqual(twelve.slice(5));
+  });
+
+  it('worked example: 4 oz + 8 mixed botanicals = 4708 + 23 + 23 + 29 = 4783¢', () => {
+    const eight = [
+      'rose',
+      'lavender',
+      'calendula',
+      'arnica',
+      'ginger', // first five — included
+      'gotu-kola', // +23
+      'vitamin-e', // +23
+      'peppermint', // +29
+    ];
+    expect(customFormulaPriceCents('balm', 'balm-4oz', eight)).toBe(4783);
+    expect(
+      priceFormulaCustomization(
+        CUSTOM_BALM_HANDLE,
+        balmFormula({ herb_ids: eight, size_id: 'balm-4oz', base_id: 'beeswax' }),
+      ),
+    ).toBe(4783);
+  });
+
+  it('selection order decides the charge: the same six herbs total differently by which is 6th', () => {
+    const cheapSixth = ['rose', 'lavender', 'calendula', 'arnica', 'ginger', 'gotu-kola'];
+    const dearSixth = ['gotu-kola', 'lavender', 'calendula', 'arnica', 'ginger', 'rose'];
+    // Identical SET of six botanicals — only the stored order differs.
+    expect([...cheapSixth].sort()).toEqual([...dearSixth].sort());
+    expect(customFormulaPriceCents('balm', 'balm-1oz', cheapSixth)).toBe(1177 + 23);
+    expect(customFormulaPriceCents('balm', 'balm-1oz', dearSixth)).toBe(1177 + 29);
+  });
+
+  it('checkout rejects the superseded every-botanical-charged total; the Option C total is accepted', () => {
+    const formula = balmFormula({ herb_ids: ['rose', 'lavender'], size_id: 'balm-1oz' });
+    // 1235¢ was correct under the old model — it must now fail the gate.
+    expect(() =>
+      validateAndBuildOrder({
+        items: [
+          {
+            product_handle: CUSTOM_BALM_HANDLE,
+            quantity: 1,
+            formula,
+            unit_price_cents: 1235,
+          },
+        ],
+        customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
+        client_total_cents: 1235 + 595,
+      }),
+    ).toThrow(/Price mismatch/);
+    const unit = priceFormulaCustomization(CUSTOM_BALM_HANDLE, formula);
+    expect(unit).toBe(1177);
+    const order = validateAndBuildOrder({
+      items: [
+        {
+          product_handle: CUSTOM_BALM_HANDLE,
+          quantity: 1,
+          formula,
+          unit_price_cents: unit,
+        },
+      ],
+      customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
+      client_total_cents: unit + 595,
+    });
+    expect(order.total_cents).toBe(unit + 595);
+  });
+
+  it('wax choice still adds $0 under Option C, with extras priced identically either finish', () => {
+    const herbs = [...FIVE_29, 'ginger', 'gotu-kola']; // extras: 29 + 23
+    const soy = priceFormulaCustomization(
+      CUSTOM_BALM_HANDLE,
+      balmFormula({ herb_ids: herbs, size_id: 'balm-2oz', base_id: 'soy-wax' }),
+    );
+    const beeswax = priceFormulaCustomization(
+      CUSTOM_BALM_HANDLE,
+      balmFormula({ herb_ids: herbs, size_id: 'balm-2oz', base_id: 'beeswax' }),
+    );
+    expect(soy).toBe(2354 + 29 + 23);
+    expect(beeswax).toBe(soy);
+  });
+
+  it('unknown herbs still fail closed, even inside the included five', () => {
+    expect(() => customFormulaPriceCents('balm', 'balm-1oz', ['not-a-plant'])).toThrow(
+      /Unknown herb id/,
+    );
+    expect(() =>
+      customFormulaPriceCents('balm', 'balm-1oz', ['rose', 'not-a-plant']),
+    ).toThrow(/Unknown herb id/);
   });
 });
 
@@ -414,6 +606,7 @@ describe('rejection of invalid balm configurations', () => {
           },
         ],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         client_total_cents: 1206 + 595,
       }),
     ).toThrow(/not a custom-formula product/);
@@ -428,6 +621,7 @@ describe('rejection of invalid balm configurations', () => {
           },
         ],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         client_total_cents: 1 + 595,
       }),
     ).toThrow(/Price mismatch/);

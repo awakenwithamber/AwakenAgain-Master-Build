@@ -18,9 +18,14 @@
  *   creates a Stripe payment record.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 const hoisted = vi.hoisted(() => {
   const client = {
@@ -48,7 +53,7 @@ vi.mock('../lib/payments/stripe', async (importOriginal) => {
 });
 
 import { POST } from '../app/api/stripe/webhook/route';
-import { POST as postCheckout } from '../app/api/checkout/route';
+import { validateAndBuildOrder } from '../lib/checkout/order';
 import {
   findLatestStripeOrderStatus,
   findStripePayment,
@@ -329,26 +334,42 @@ describe('subscription webhook lifecycle', () => {
   });
 
   it('the strict one-time order rule is untouched', async () => {
-    const orderRes = await postCheckout(
-      new Request('http://localhost/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: [
-            {
-              product_handle: 'chill-pill-capsules',
-              variant_id: 'chill-pill-capsules-2wk',
-              quantity: 1,
-              unit_price_cents: 1977,
-            },
-          ],
-          customer: { name: 'Test Customer', email: 'order@example.com' },
-          payment_method: 'stripe_card_embedded',
-          client_total_cents: 1977 + 595,
-        }),
-      }),
+    // Deliberate update (2026-11-01): POST /api/checkout now REJECTS
+    // the dormant embedded-card method for new orders, so the order
+    // this webhook test exercises is seeded as a STORED historical
+    // record (built by the real validator under a live method, then
+    // recorded with the historical method value) — the dormant
+    // webhook operates on stored records, which is what is tested.
+    const seeded = validateAndBuildOrder({
+      items: [
+        {
+          product_handle: 'chill-pill-capsules',
+          variant_id: 'chill-pill-capsules-2wk',
+          quantity: 1,
+          unit_price_cents: 1977,
+        },
+      ],
+      customer: { name: 'Test Customer', email: 'order@example.com' },
+      shipping_address: {
+        name: 'Test Customer',
+        street: '239 S 1200 W',
+        city: 'Salt Lake City',
+        state: 'UT',
+        postal_code: '84104',
+        country: 'US',
+      },
+      payment_method: 'bookipi_invoice',
+      client_total_cents: 1977 + 595,
+    });
+    mkdirSync(dirname(process.env.ORDERS_LEDGER_PATH as string), {
+      recursive: true,
+    });
+    appendFileSync(
+      process.env.ORDERS_LEDGER_PATH as string,
+      JSON.stringify({ ...seeded, payment_method: 'stripe_card_embedded' }) +
+        '\n',
     );
-    const { order_id } = (await orderRes.json()) as { order_id: string };
+    const order_id = seeded.order_id;
     const { status, json } = await postWebhook({
       id: `evt_order_${order_id}`,
       type: 'checkout.session.completed',
