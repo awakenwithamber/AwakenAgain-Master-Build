@@ -20,9 +20,13 @@ interface OrderSummary {
   shipping_status: 'FREE' | 'FLAT';
   payment_method:
     | 'cash_app_or_venmo'
+    | 'bluevine_invoice'
+    | 'bluevine_card_link'
+    // Retired Bookipi-era values: 'bookipi_invoice' was the primary
+    // method 2026-10-24 → 2026-11-01, and 'bookipi_card_invoice' is
+    // from the 2026-10-13 invoice path (removed 2026-10-21). Both can
+    // still appear on orders placed in those windows.
     | 'bookipi_invoice'
-    // Legacy value from the 2026-10-13 invoice path (removed 2026-10-21)
-    // that can still appear on orders placed before the removal.
     | 'bookipi_card_invoice'
     | 'stripe_card_embedded';
   item_count: number;
@@ -76,15 +80,24 @@ function statusLine(order: OrderSummary): string {
     case 'disputed':
       return 'A payment dispute was opened on this order. If that is unexpected, please contact Amber.';
     default:
+      if (order.payment_method === 'bluevine_invoice') {
+        return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. Your Bluevine invoice arrives by email — you can pay it by ACH bank transfer or check per the invoice, or with Venmo or Cash App, using your order number as the reference.';
+      }
+      if (order.payment_method === 'bluevine_card_link') {
+        return "Received — Amber confirms every order personally, and yours is awaiting her confirmation. To pay by card, use the Bluevine hosted payment page link from your checkout or order email — enter your order total there and use your order number as the reference.";
+      }
+      // Orders placed under the Bookipi setup (before 2026-11-01) were
+      // invoiced by email the same way — this wording stays accurate
+      // for those records only.
       if (order.payment_method === 'bookipi_invoice') {
         return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. Your invoice arrives by email — you can pay it by ACH bank transfer, Venmo, or Cash App, using your order number as the reference.';
       }
       if (order.payment_method === 'stripe_card_embedded') {
         return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. If you have not completed your card payment yet, you can finish it from the checkout page.';
       }
-      // Legacy orders placed before the Bookipi path was removed
-      // (2026-10-21) were invoiced by email — that wording stays
-      // accurate for those records only.
+      // Legacy orders placed before the earlier Bookipi card-invoice
+      // path was removed (2026-10-21) were invoiced by email — that
+      // wording stays accurate for those records only.
       if (order.payment_method === 'bookipi_card_invoice') {
         return 'Received — Amber confirms every order personally, and yours is awaiting her confirmation. If you chose to pay by card, your Bookipi invoice arrives by email.';
       }

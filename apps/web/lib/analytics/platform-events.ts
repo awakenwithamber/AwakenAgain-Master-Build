@@ -50,7 +50,7 @@ export const PLATFORM_EVENT_NAMES = {
 export type PlatformEventName =
   (typeof PLATFORM_EVENT_NAMES)[keyof typeof PLATFORM_EVENT_NAMES];
 
-export type AdminSectionName = 'overview' | 'orders' | 'leads' | 'reviews' | 'broadcast' | 'subscriptions';
+export type AdminSectionName = 'overview' | 'orders' | 'leads' | 'reviews' | 'broadcast' | 'subscriptions' | 'analytics';
 
 /** Property schema per event. Invalid payloads fail at compile time. */
 export interface PlatformEventProperties {

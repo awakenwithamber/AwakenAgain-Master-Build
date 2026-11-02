@@ -32,7 +32,7 @@ export const FAQS: Faq[] = [
   {
     question: 'How do I pay for my order?',
     answer: [
-      'We accept Cash App ($AmberPatten347) and Venmo (@AwakenwithAmber) only. At checkout you will see the exact payment instructions, send your payment, and we confirm your order once it arrives.',
+      'At checkout you can choose an emailed Bluevine invoice — pay it by ACH bank transfer or check per the invoice, or with Venmo (@AwakenwithAmber) or Cash App ($AmberPatten347), using your order number as the payment reference — or pay directly with Cash App or Venmo. At checkout you will see the exact payment instructions for your chosen method, and we confirm your order once payment arrives.',
       'We never ask for card details on this site.',
     ],
     source: 'owner-verified',
