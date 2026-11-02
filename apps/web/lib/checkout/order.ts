@@ -25,6 +25,11 @@ import {
   validateFormulaCustomization,
 } from '../cart/validation';
 import type { BundleSlot, Customization, FormulaCustomization } from '../../types';
+import {
+  calculateSalesTax,
+  type TaxAddress,
+  type TaxCalculation,
+} from '../tax/tax';
 
 /**
  * Product handle used by the "Create Your Own Alchemy Soap" builder for
@@ -116,7 +121,30 @@ export interface CheckoutRequestBody {
    * eligibility lookup (see ValidateOrderOptions.couponEligibility).
    */
   coupon_code?: string;
+  /**
+   * Delivery address (owner directive 2026-11-01: "Make it calculate
+   * tax and shipping and make it work"). The checkout form collects it
+   * for EVERY order — physical orders need it for fulfillment, and it
+   * drives the sales-tax calculation for the invoice / Cash App /
+   * Venmo rails (see validateAndBuildOrder). The dormant
+   * 'stripe_card_embedded' rail ignores it entirely: that path keeps
+   * its Stripe-Tax-in-session behavior and is never double-taxed.
+   */
+  delivery_address?: OrderDeliveryAddressInput;
 }
+
+/** Delivery address as it may arrive in a checkout body (unsanitized). */
+export interface OrderDeliveryAddressInput {
+  line1?: unknown;
+  line2?: unknown;
+  city?: unknown;
+  state?: unknown;
+  postal_code?: unknown;
+  country?: unknown;
+}
+
+/** A sanitized US delivery address, as stored on an order record. */
+export type OrderDeliveryAddress = TaxAddress;
 
 export interface OrderLine {
   product_handle: string;
@@ -163,6 +191,33 @@ export interface OrderRecord {
   shipping_cents: number;
   shipping_status: ShippingStatus;
   free_shipping_threshold_cents: number;
+  /**
+   * Delivery address — present on invoice / Cash App / Venmo orders
+   * placed with one (the checkout form always collects it, owner
+   * directive 2026-11-01). Absent on historical records and on the
+   * dormant card rail, which ignores the field; readers must treat
+   * absent as "no address on file".
+   */
+  delivery_address?: OrderDeliveryAddress;
+  /**
+   * Sales tax for this order (lib/tax), computed from the delivery
+   * address on the DISCOUNTED merchandise subtotal — separately
+   * stated shipping is never in the tax base. Present exactly when
+   * tax_breakdown is present, and INCLUDED in total_cents (unlike
+   * the dormant card rail, where Stripe Tax adds tax in-session and
+   * total_cents stays the pre-tax figure the webhook verifies).
+   */
+  tax_cents?: number;
+  /**
+   * The full tax breakdown (jurisdiction, rate, provenance, taxable
+   * base, per-line detail, assumptions) recorded at order time.
+   * Present on an invoice / Cash App / Venmo order whenever a
+   * delivery address was given — including out-of-state orders,
+   * where it records tax_cents 0 and the named no-nexus assumption
+   * (see lib/tax/tax.ts; an assumption for the owner/CPA, not legal
+   * advice).
+   */
+  tax_breakdown?: TaxCalculation;
   total_cents: number;
   /** The client claimed subscriber status (body.is_subscriber === true). */
   is_subscriber_asserted: boolean;
@@ -173,7 +228,7 @@ export interface OrderRecord {
    * boolean alone never grants them.
    */
   is_subscriber_verified: boolean;
-  /** Stored type: legacy records may carry the removed Bookipi value. */
+  /** Stored type: legacy records may carry the retired Bookipi-era values. */
   payment_method: StoredPaymentMethod;
   /** Order lifecycle — 'pending_payment' until payment confirmed. */
   status?: OrderStatus;
@@ -215,71 +270,136 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
 
 /**
  * How an order is paid (owner decisions 2026-10-13 + 2026-10-19 +
- * 2026-10-21, SUPERSEDED for the customer flow by the owner directive
- * 2026-10-24 — "Use bookipi and bluevine", Stripe parked dormant):
- * - 'bookipi_invoice' — the PRIMARY method (owner directive 2026-10-24).
- *   The order is placed on the site; a Bookipi invoice is emailed to
- *   the customer; the customer pays the invoice by ACH bank transfer
- *   (to Bluevine), Venmo @AwakenwithAmber, or Cash App
- *   $AmberPatten347, using the order number as the payment reference.
- *   The order is prepared once payment is confirmed. No card payment
- *   is offered anywhere in this flow.
+ * 2026-10-21; the 2026-10-24 Bookipi flow SUPERSEDED by the owner
+ * directive 2026-11-01 — "Replace our checkout with the bluevine set
+ * up", Stripe still parked dormant):
+ * - 'bluevine_invoice' — the PRIMARY method (owner directive
+ *   2026-11-01). The order is placed on the site; a Bluevine invoice
+ *   for the exact order total is emailed to the customer; the customer
+ *   pays it by ACH bank transfer or check per the invoice, or with
+ *   Venmo @AwakenwithAmber / Cash App $AmberPatten347, using the order
+ *   number as the payment reference. The order is prepared once Amber
+ *   confirms payment (manual mark-paid). No card payment is offered
+ *   anywhere in this flow.
  * - 'cash_app_or_venmo' — the customer sends payment to the handles
- *   above after ordering (unchanged; still offered at checkout and
- *   still the server default when the field is absent, so API clients
- *   that predate the invoice flow keep their exact behavior).
+ *   above after ordering (still offered at checkout as the alternative,
+ *   and still the server default when the field is absent, so API
+ *   clients that predate the invoice flow keep their exact behavior).
+ * - 'bluevine_card_link' — the FUTURE Bluevine card option (owner
+ *   directive 2026-10-31: a live card option through Bluevine),
+ *   GATED OFF: it is accepted for a new order ONLY when the verified
+ *   Bluevine payment link is configured
+ *   (NEXT_PUBLIC_BLUEVINE_PAYMENT_LINK_URL — see
+ *   bluevinePaymentLinkUrl below), and the checkout UI renders the
+ *   choice only then. The customer pays the order total by card on
+ *   Bluevine's secure HOSTED payment page — never an on-site or
+ *   Stripe checkout. Card acceptance through Bluevine is NOT live
+ *   until that link exists and is verified; while the config is unset
+ *   the method is rejected here and no card wording renders anywhere.
  * - 'stripe_card_embedded' — DORMANT (parked 2026-10-24, NOT deleted):
  *   no longer offered in the checkout UI and no new customer flow
  *   routes to it. The value stays accepted by this parser ONLY so the
  *   dormant Stripe code path (session route, webhook, paid-state
  *   joins) and its regression suites keep working against historical
  *   records; the checkout UI never sends it.
- * Any other value is rejected. The 2026-10-13 'bookipi_card_invoice'
- * value is the LEGACY name of the invoice path: it was removed as a
- * new-order method on 2026-10-21 and stays a stored-record value only
- * (see StoredPaymentMethod below); new invoice orders carry
- * 'bookipi_invoice'.
+ * Any other value is rejected, with ONE alias: 'bookipi_invoice'
+ * (the primary method's name from 2026-10-24 until this replacement)
+ * is accepted and NORMALIZED to 'bluevine_invoice' — a stored record
+ * never carries it from a new order, so pre-replacement API clients
+ * keep working while every new order is a Bluevine order. The
+ * 2026-10-13 'bookipi_card_invoice' value is the LEGACY name of the
+ * earlier invoice path: removed as a new-order method on 2026-10-21,
+ * it stays a stored-record value only (see StoredPaymentMethod
+ * below) and is rejected here, never coerced.
  */
 export type PaymentMethod =
   | 'cash_app_or_venmo'
-  | 'bookipi_invoice'
+  | 'bluevine_invoice'
+  | 'bluevine_card_link'
   | 'stripe_card_embedded';
 
 /**
  * Payment methods as they can appear on a STORED order record. New
- * orders can only carry a PaymentMethod; 'bookipi_card_invoice' is the
- * legacy 2026-10-13 name of the invoice method (removed 2026-10-21,
- * replaced by 'bookipi_invoice' on 2026-10-24) that can still exist on
- * records written in that window. It stays in this stored-record type
- * ONLY so those historical records remain readable (admin views,
- * order-status lookups, review entries) — it is never accepted for a
- * new order and is offered nowhere in the UI.
+ * orders can only carry a PaymentMethod; the two Bookipi-era values
+ * ('bookipi_invoice', primary 2026-10-24 → 2026-11-01, and
+ * 'bookipi_card_invoice', the 2026-10-13 name removed 2026-10-21) can
+ * still exist on records written in those windows. They stay in this
+ * stored-record type ONLY so those historical records remain readable
+ * with their correct labels/instructions (admin views, order-status
+ * lookups, review entries, account history) — neither is accepted for
+ * a new order as itself: 'bookipi_invoice' normalizes to
+ * 'bluevine_invoice' in parsePaymentMethod, and
+ * 'bookipi_card_invoice' is rejected outright.
  */
-export type StoredPaymentMethod = PaymentMethod | 'bookipi_card_invoice';
+export type StoredPaymentMethod =
+  | PaymentMethod
+  | 'bookipi_invoice'
+  | 'bookipi_card_invoice';
 
 export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'cash_app_or_venmo';
 
-/** The primary customer-facing method (owner directive 2026-10-24). */
-export const PRIMARY_PAYMENT_METHOD: PaymentMethod = 'bookipi_invoice';
+/** The primary customer-facing method (owner directive 2026-11-01). */
+export const PRIMARY_PAYMENT_METHOD: PaymentMethod = 'bluevine_invoice';
 
 export const PAYMENT_METHODS: readonly PaymentMethod[] = [
-  'bookipi_invoice',
+  'bluevine_invoice',
   'cash_app_or_venmo',
+  'bluevine_card_link',
   'stripe_card_embedded',
 ];
+
+/**
+ * The verified Bluevine payment link (Bluevine Payment Links) that
+ * powers the future Bluevine card option. Config name follows the
+ * codebase's public-config convention (NEXT_PUBLIC_POSTHOG_*,
+ * NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY): the checkout UI needs the URL
+ * to render the gated card choice, and the same value is readable
+ * server-side. DEFAULT UNSET = the card option does not exist: the
+ * parser rejects 'bluevine_card_link' and no card wording renders.
+ * Only an absolute https URL counts — anything else is treated as
+ * unset (fail closed), and no value is ever invented in code.
+ */
+export const BLUEVINE_PAYMENT_LINK_ENV =
+  'NEXT_PUBLIC_BLUEVINE_PAYMENT_LINK_URL' as const;
+
+export function bluevinePaymentLinkUrl(): string | null {
+  const raw = process.env[BLUEVINE_PAYMENT_LINK_ENV];
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** True only when a verified Bluevine payment link is configured. */
+export function bluevineCardConfigured(): boolean {
+  return bluevinePaymentLinkUrl() !== null;
+}
 
 /** Validate the optional payment_method field; absent means the default. */
 export function parsePaymentMethod(raw: unknown): PaymentMethod {
   if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
+  // Pre-replacement alias: normalized, never stored from a new order.
+  if (raw === 'bookipi_invoice') return 'bluevine_invoice';
   if (
     raw === 'cash_app_or_venmo' ||
-    raw === 'bookipi_invoice' ||
+    raw === 'bluevine_invoice' ||
     raw === 'stripe_card_embedded'
   ) {
     return raw;
   }
+  if (raw === 'bluevine_card_link') {
+    if (bluevineCardConfigured()) return raw;
+    throw new Error(
+      'Unknown payment method: bluevine_card_link. Card payment through ' +
+        'Bluevine is not available — choose the Bluevine invoice, or ' +
+        'Cash App or Venmo.',
+    );
+  }
   throw new Error(
-    `Unknown payment method: ${String(raw)}. Choose the emailed invoice, or Cash App or Venmo.`,
+    `Unknown payment method: ${String(raw)}. Choose the Bluevine invoice, or Cash App or Venmo.`,
   );
 }
 
@@ -574,6 +694,76 @@ function priceBundle(input: CheckoutBundleInput): OrderRecord['bundle'] {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Delivery address + sales tax (owner directive 2026-11-01)           */
+/* ------------------------------------------------------------------ */
+
+const US_STATE_CODES: ReadonlySet<string> = new Set([
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA',
+  'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY',
+  'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX',
+  'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+]);
+
+/**
+ * Sanitize + validate a checkout delivery address. Throws a clear
+ * error on anything unusable — an address that cannot determine tax
+ * must never silently price an order. Adapted from the Oct 28 staged
+ * build's parseShippingAddress (there it served card orders only;
+ * here it serves the live invoice / Cash App / Venmo rails).
+ */
+export function parseDeliveryAddress(
+  raw: unknown,
+): OrderDeliveryAddress {
+  if (!isRecord(raw)) {
+    throw new Error(
+      'A delivery address is required, so your order can be shipped ' +
+        'and sales tax can be calculated from it.',
+    );
+  }
+  const line1 = sanitizePlainText(raw.line1, 120);
+  const line2 = sanitizePlainText(raw.line2, 120);
+  const city = sanitizePlainText(raw.city, 80);
+  const state =
+    typeof raw.state === 'string' ? raw.state.trim().toUpperCase() : '';
+  const postalCode =
+    typeof raw.postal_code === 'string' ? raw.postal_code.trim() : '';
+  const country =
+    typeof raw.country === 'string' && raw.country.trim()
+      ? raw.country.trim().toUpperCase()
+      : 'US';
+  if (!line1 || !city) {
+    throw new Error(
+      'Please provide the street address and city for delivery, so ' +
+        'sales tax can be calculated from your address.',
+    );
+  }
+  if (!US_STATE_CODES.has(state)) {
+    throw new Error(
+      'Please provide a valid two-letter US state for the delivery ' +
+        'address, so sales tax can be calculated from your address.',
+    );
+  }
+  if (!/^\d{5}(-\d{4})?$/.test(postalCode)) {
+    throw new Error(
+      'Please provide a valid ZIP code for the delivery address, so ' +
+        'sales tax can be calculated from your address.',
+    );
+  }
+  if (country !== 'US') {
+    throw new Error('We currently ship within the United States only.');
+  }
+  return {
+    line1,
+    ...(line2 ? { line2 } : {}),
+    city,
+    state,
+    postalCode,
+    country: 'US',
+  };
+}
+
 /**
  * Validate + price an entire checkout payload. Throws on any problem.
  * Exported for the regression tests (no HTTP needed).
@@ -709,14 +899,93 @@ export function validateAndBuildOrder(
     subtotalCents >= FREE_SHIPPING_GENERAL_CENTS ? 0 : FLAT_SHIPPING_CENTS;
   const shippingCents = isSubscriberVerified ? 0 : standardShippingCents;
   const shippingStatus: ShippingStatus = shippingCents === 0 ? 'FREE' : 'FLAT';
+
+  // Sales tax (owner decisions 2026-10-20 — tax calculated from the
+  // customer's address; 2026-10-28 — the provider-agnostic engine in
+  // lib/tax, ported from that staged build; 2026-11-01 — "Make it
+  // calculate tax and shipping and make it work"):
+  // - Applies to the LIVE rails only ('bluevine_invoice',
+  //   'bluevine_card_link', and 'cash_app_or_venmo'), computed from the submitted delivery
+  //   address, on the DISCOUNTED merchandise subtotal; separately
+  //   stated shipping is never in the tax base (Utah Pub 25 — see
+  //   lib/tax). For these rails the tax is INCLUDED in total_cents:
+  //   the tax-inclusive total is the amount the customer owes by
+  //   invoice / Cash App / Venmo.
+  // - The DORMANT 'stripe_card_embedded' rail is untouched: it
+  //   ignores delivery_address entirely, keeps its Stripe-Tax-in-
+  //   session behavior, and total_cents stays the pre-tax figure its
+  //   webhook verifies (total + in-session tax). Site-computed tax
+  //   never applies there, so it can never be double-taxed.
+  // - A body with NO delivery_address (legacy / non-form API
+  //   callers, e.g. the order-intake pipeline) keeps the exact legacy
+  //   behavior: no tax fields, pre-tax totals. The checkout FORM
+  //   always collects and submits the address, so every order placed
+  //   through the site is taxed from its address. A SUBMITTED but
+  //   malformed address is a hard error (parseDeliveryAddress) —
+  //   never a silent zero-tax order.
+  const siteTaxApplies = paymentMethod !== 'stripe_card_embedded';
+  let deliveryAddress: OrderDeliveryAddress | undefined;
+  if (
+    siteTaxApplies &&
+    body.delivery_address !== undefined &&
+    body.delivery_address !== null
+  ) {
+    deliveryAddress = parseDeliveryAddress(body.delivery_address);
+  }
+  const taxLinesFor = (discountCents: number) => [
+    ...lines.map((line) => ({
+      description: line.title,
+      amountCents: line.unit_price_cents * line.quantity,
+      // Product classification (e.g. Utah's reduced grocery-food
+      // rate for a tea sold for ingestion) is an owner/CPA decision
+      // that has NOT been made — every merchandise line is taxed at
+      // the general rate until it is (see lib/tax/tax.ts).
+      taxable: true,
+      category: 'merchandise',
+    })),
+    ...(bundle
+      ? [
+          {
+            description: bundle.bundle_id,
+            amountCents: bundle.price_cents,
+            taxable: true,
+            category: 'merchandise',
+          },
+        ]
+      : []),
+    ...(discountCents > 0
+      ? [
+          {
+            description: 'Discounts (subscriber / coupon)',
+            amountCents: -discountCents,
+            taxable: true,
+            category: 'discount',
+          },
+        ]
+      : []),
+  ];
+  const taxForDiscount = (
+    discountCents: number,
+  ): TaxCalculation | undefined =>
+    deliveryAddress
+      ? calculateSalesTax({
+          destination: deliveryAddress,
+          lines: taxLinesFor(discountCents),
+          // Shipping is separately stated, so it is never in the
+          // base (Utah Publication 25 — see lib/tax/tax.ts).
+          shippingCents,
+        })
+      : undefined;
+  const taxBreakdown = taxForDiscount(totalDiscountCents);
+  const taxCents = taxBreakdown?.taxCents ?? 0;
+
   // The total is the subtotal minus any VERIFIED subscriber discount
   // and any applied coupon discount (never both — no stacking), plus
-  // the shipping charged for this order. Shipping is computed from the
-  // pre-discount subtotal and is never itself discounted. Sales tax is
-  // NOT part of this total: for card orders Stripe Tax computes it from
-  // the customer's address inside the Stripe session (owner decision
-  // 2026-10-20); the webhook verifies total + tax (see stripe webhook).
-  const totalCents = subtotalCents - totalDiscountCents + shippingCents;
+  // the shipping charged for this order, plus the sales tax above.
+  // Shipping is computed from the pre-discount subtotal and is never
+  // itself discounted.
+  const totalCents =
+    subtotalCents - totalDiscountCents + shippingCents + taxCents;
 
   // Total check. Without a subscriber claim the client total must equal
   // the server total exactly (tamper rejection, unchanged). With a claim,
@@ -726,11 +995,22 @@ export function validateAndBuildOrder(
   // are accepted; the RECORDED total is always the server's own figure for
   // the verification outcome. A coupon claim adds one more legitimate
   // preview figure: subtotal − coupon discount + standard shipping (the
-  // coupon never changes shipping). Any other client total is rejected.
-  const standardTotalCents = subtotalCents + standardShippingCents;
-  const claimedSubscriberTotalCents = subtotalCents - claimedDiscountCents;
+  // coupon never changes shipping). Since 2026-11-01 every variant is
+  // TAX-INCLUSIVE, computed for the submitted address: the standard
+  // variant carries tax on the undiscounted base, each claimed variant
+  // carries tax on its claimed-discounted base — the same figures the
+  // shared preview (components/checkout/cart-preview.ts, which imports
+  // this same lib/tax engine) shows. Any other client total — including
+  // a Utah total that omits the tax — is rejected.
+  const standardTaxCents = taxForDiscount(0)?.taxCents ?? 0;
+  const claimedTaxCents =
+    taxForDiscount(claimedDiscountCents)?.taxCents ?? 0;
+  const standardTotalCents =
+    subtotalCents + standardShippingCents + standardTaxCents;
+  const claimedSubscriberTotalCents =
+    subtotalCents - claimedDiscountCents + claimedTaxCents;
   const claimedCouponTotalCents =
-    subtotalCents - claimedDiscountCents + standardShippingCents;
+    subtotalCents - claimedDiscountCents + standardShippingCents + claimedTaxCents;
   const acceptableTotals = new Set<number>([standardTotalCents]);
   if (isSubscriberAsserted) acceptableTotals.add(claimedSubscriberTotalCents);
   if (requestedCoupon !== null) acceptableTotals.add(claimedCouponTotalCents);
@@ -761,6 +1041,10 @@ export function validateAndBuildOrder(
     shipping_cents: shippingCents,
     shipping_status: shippingStatus,
     free_shipping_threshold_cents: threshold,
+    ...(deliveryAddress ? { delivery_address: deliveryAddress } : {}),
+    ...(taxBreakdown
+      ? { tax_cents: taxBreakdown.taxCents, tax_breakdown: taxBreakdown }
+      : {}),
     total_cents: totalCents,
     is_subscriber_asserted: isSubscriberAsserted,
     is_subscriber_verified: isSubscriberVerified,

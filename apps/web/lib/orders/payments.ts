@@ -22,9 +22,12 @@
  *
  * Manual-confirmation note: Cash App / Venmo payments auto-confirm
  * nothing — the owner confirms here when the money lands. The former
- * Bookipi card-invoice path was removed by owner directive 2026-10-21;
- * payment events recorded before the removal may carry its legacy
- * method value, which stays readable here (see STORED_PAYMENT_METHODS).
+ * Bookipi card-invoice path was removed by owner directive 2026-10-21,
+ * and the Bookipi invoice method itself was replaced by the Bluevine
+ * invoice method on 2026-11-01 ("Replace our checkout with the
+ * bluevine set up"); payment events recorded before those changes may
+ * carry the legacy method values, which stay readable here (see
+ * STORED_PAYMENT_METHODS).
  *
  * SERVER-ONLY: uses node:fs. Never import from a client component.
  */
@@ -38,15 +41,18 @@ import {
 
 /**
  * Every method value a STORED payment event may carry: the live
- * PAYMENT_METHODS plus the legacy 'bookipi_card_invoice' value from the
- * 2026-10-13 card-invoice path (removed 2026-10-21; the invoice method
- * returned 2026-10-24 as 'bookipi_invoice', without card payment).
+ * PAYMENT_METHODS plus the two retired Bookipi-era values —
+ * 'bookipi_card_invoice' from the 2026-10-13 card-invoice path
+ * (removed 2026-10-21) and 'bookipi_invoice', the invoice method
+ * 2026-10-24 → 2026-11-01 (replaced by 'bluevine_invoice'; new orders
+ * never store it because parsePaymentMethod normalizes the alias).
  * Ledger reads and labels use this stored union so historical events
  * never silently drop; only parsePaymentMethod (new orders) rejects
- * the legacy value.
+ * the legacy values as stored methods.
  */
 const STORED_PAYMENT_METHODS: readonly StoredPaymentMethod[] = [
   ...PAYMENT_METHODS,
+  'bookipi_invoice',
   'bookipi_card_invoice',
 ];
 import {
@@ -68,6 +74,10 @@ import { sanitizePlainText } from '../security/validation';
  */
 const PAYMENT_METHOD_LABELS: Record<StoredPaymentMethod, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
+  bluevine_invoice: 'Invoice — Bluevine (ACH / check / Venmo / Cash App)',
+  bluevine_card_link: 'Card — Bluevine (hosted payment page)',
+  // Historical labels — records written under the Bookipi setup keep
+  // naming it; only new orders carry the Bluevine values above.
   bookipi_invoice: 'Invoice — Bookipi (ACH / Venmo / Cash App)',
   bookipi_card_invoice: 'Card — Bookipi invoice',
   stripe_card_embedded: 'Card — embedded checkout',
