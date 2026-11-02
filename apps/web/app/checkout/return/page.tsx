@@ -6,10 +6,11 @@
  * things stand — including a refund or dispute when one has been
  * recorded on the order. It never marks anything paid: paid state
  * comes only from a merchant-recorded payment (the manual
- * confirmation ledger for today's emailed-invoice flow, or the
- * legacy card-payment ledger for historical orders). Orders today
- * are paid by emailed invoice — ACH bank transfer, Venmo, or Cash
- * App — and Amber confirms those payments by hand, so a just-paid
+ * confirmation ledger for today's emailed-Bluevine-invoice flow, or
+ * the legacy payment ledgers for historical orders). Orders today
+ * are paid by emailed invoice from Bluevine — ACH bank transfer or
+ * check, Venmo, or Cash App — and Amber confirms those payments by
+ * hand, so a just-paid
  * order can read "being confirmed" here until she records it. The
  * page points at the order-status lookup and does not guess.
  */
@@ -121,8 +122,9 @@ export default async function CheckoutReturnPage({
           </h1>
           <p style={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
             Your order <strong>{order.order_id}</strong> is placed.
-            Orders are paid by emailed invoice — you can pay by ACH bank
-            transfer, Venmo, or Cash App, using your order number as the
+            Orders are paid by emailed invoice from Bluevine — you can
+            pay by ACH bank transfer or check per the invoice, or with
+            Venmo or Cash App, using your order number as the
             payment reference. Amber confirms every payment by hand, so
             if you have already paid, your status can take a little
             while to update — you can check any time on the{' '}

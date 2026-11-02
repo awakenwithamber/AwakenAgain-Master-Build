@@ -50,7 +50,7 @@ export default async function CheckoutCancelPage({
         <p style={{ fontSize: '1.1rem', lineHeight: 1.7, margin: '0 0 2rem' }}>
           No worries — nothing was charged and your cart is still saved. You
           can try again whenever you&apos;re ready — pay by emailed
-          invoice, or with Cash App or Venmo.
+          Bluevine invoice, or with Cash App or Venmo.
         </p>
         <div
           style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}

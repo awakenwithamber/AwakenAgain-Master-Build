@@ -41,6 +41,16 @@ describe('/checkout/return wording (current invoice flow)', () => {
     expect(returnSrc).toContain('order number as the');
   });
 
+  it('names the Bluevine setup and carries NO Bluevine card wording while the card link is unconfigured (2026-11-01)', () => {
+    expect(returnSrc).toContain('Bluevine');
+    // Card through Bluevine is gated off (no verified payment link
+    // configured): this page must not promise it in any form.
+    expect(returnSrc).not.toContain('hosted payment page');
+    expect(returnSrc).not.toContain('bluevine_card_link');
+    expect(returnSrc).not.toContain('Pay by card');
+    expect(returnSrc).not.toContain('Bookipi');
+  });
+
   it('still resolves state through the shared resolver and renders every status branch', () => {
     expect(returnSrc).toContain('resolveOrderPaidState');
     expect(returnSrc).toContain('Payment Refunded');
