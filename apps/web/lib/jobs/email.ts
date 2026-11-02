@@ -67,7 +67,11 @@ export interface PurchaseConfirmationData {
   /** FIRST10 coupon (2026-10-24) — populated from the order record when a coupon applied. */
   coupon_code?: string | null;
   coupon_discount_cents?: number;
+  shipping_cents?: number;
   shipping_status?: string;
+  /** Sales tax (2026-11-01) — from the order's tax breakdown, when one was recorded. */
+  tax_cents?: number;
+  tax_rate_percent?: string;
   /**
    * Payment rails for the Cash App / Venmo method. Optional because an
    * embedded-card order must NOT carry the handles — its confirmation
@@ -76,6 +80,13 @@ export interface PurchaseConfirmationData {
    */
   cash_app_handle?: string;
   venmo_handle?: string;
+  /**
+   * Bluevine hosted payment-page link (2026-11-01) — populated only
+   * for 'bluevine_card_link' orders while the verified Bluevine
+   * payment link is configured; the renderer prints it in the
+   * payment block so the customer can finish paying by card.
+   */
+  payment_link_url?: string;
   /** Payment method as recorded on the order. */
   payment_method?: string;
 }
@@ -283,6 +294,21 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
           `Thank you — your order is confirmed.\n\n` +
           `Order: ${d.order_id}\n` +
           `Items: ${d.item_summary}\n` +
+          (typeof d.subtotal_cents === 'number'
+            ? `Subtotal: ${formatPrice(d.subtotal_cents)}\n` +
+              ((d.subscriber_discount_cents ?? 0) > 0
+                ? `Subscriber discount: −${formatPrice(d.subscriber_discount_cents ?? 0)}\n`
+                : '') +
+              ((d.coupon_discount_cents ?? 0) > 0
+                ? `Coupon discount: −${formatPrice(d.coupon_discount_cents ?? 0)}\n`
+                : '') +
+              (typeof d.shipping_cents === 'number'
+                ? `Shipping: ${d.shipping_cents === 0 ? 'Free' : formatPrice(d.shipping_cents)}\n`
+                : '') +
+              (typeof d.tax_cents === 'number'
+                ? `Sales tax${d.tax_rate_percent && d.tax_cents > 0 ? ` (${d.tax_rate_percent})` : ''}: ${formatPrice(d.tax_cents)}\n`
+                : '')
+            : '') +
           `Total: ${formatPrice(d.total_cents)}\n\n` +
           `Payment options on file for this order:\n` +
           (handleLines.length > 0 ? `${handleLines.join('\n')}\n` : '') +

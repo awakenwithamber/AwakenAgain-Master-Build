@@ -59,6 +59,36 @@ function itemLines(data: PurchaseConfirmationData): ItemLine[] {
 
 /** The payment paragraph(s) for the method recorded on the order. */
 function paymentBlockText(data: PurchaseConfirmationData): string[] {
+  if (data.payment_method === 'bluevine_invoice') {
+    const lines = [
+      'Payment: your Bluevine invoice will be emailed to you. You ' +
+        'can pay it by ACH bank transfer or check per the invoice, ' +
+        'or with Venmo or Cash App:',
+    ];
+    if (data.venmo_handle) lines.push(`Venmo: ${data.venmo_handle}`);
+    if (data.cash_app_handle) lines.push(`Cash App: ${data.cash_app_handle}`);
+    lines.push(
+      'Please use your order ID as the payment reference so we can ' +
+        'match it to your order. Your order is prepared once payment ' +
+        'is confirmed.',
+    );
+    return lines;
+  }
+  if (data.payment_method === 'bluevine_card_link') {
+    const lines = [
+      "Payment: pay by card on Bluevine's secure hosted payment " +
+        'page — enter your order total there and use your order ID ' +
+        'as the reference:',
+    ];
+    if (data.payment_link_url) lines.push(data.payment_link_url);
+    lines.push(
+      'Your order is prepared once payment is confirmed.',
+    );
+    return lines;
+  }
+  // Legacy (orders placed under the Bookipi setup, before 2026-11-01):
+  // the invoice for those orders genuinely was a Bookipi invoice, so
+  // this block keeps its original wording for those records only.
   if (data.payment_method === 'bookipi_invoice') {
     const lines = [
       'Payment: your invoice will be emailed to you. You can pay it ' +

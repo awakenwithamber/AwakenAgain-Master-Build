@@ -100,7 +100,37 @@ describe('purchase confirmation renderer (Template 1)', () => {
     expect(text).toContain('Cash App: $AmberPatten347');
   });
 
-  it('invoice (Bookipi) orders show the invoice block with ACH + both handles, no card language', () => {
+  it('invoice (Bluevine) orders show the Bluevine block with ACH/check + both handles, no card language', () => {
+    const { text } = renderPurchaseConfirmation(
+      data({ payment_method: 'bluevine_invoice' }),
+    );
+    expect(text).toContain('your Bluevine invoice will be emailed to you');
+    expect(text).toContain('ACH bank transfer or check per the invoice');
+    expect(text).toContain('Venmo: @AwakenwithAmber');
+    expect(text).toContain('Cash App: $AmberPatten347');
+    expect(text).toContain('use your order ID as the payment reference');
+    expect(text).toContain('prepared once payment is confirmed');
+    expect(text).not.toContain('Bookipi');
+    expect(text).not.toMatch(/pay by card/i);
+  });
+
+  it('Bluevine card-link orders show the hosted-page block with the link, no handles claim', () => {
+    const { text } = renderPurchaseConfirmation(
+      data({
+        payment_method: 'bluevine_card_link',
+        cash_app_handle: undefined,
+        venmo_handle: undefined,
+        payment_link_url: 'https://example.invalid/bluevine-pay',
+      }),
+    );
+    expect(text).toContain("pay by card on Bluevine's secure hosted payment page");
+    expect(text).toContain('https://example.invalid/bluevine-pay');
+    expect(text).toContain('prepared once payment is confirmed');
+    expect(text).not.toContain('@AwakenwithAmber');
+    expect(text).not.toContain('Stripe');
+  });
+
+  it('LEGACY invoice (Bookipi) orders keep their original invoice block (history is not rewritten)', () => {
     const { text } = renderPurchaseConfirmation(
       data({ payment_method: 'bookipi_invoice' }),
     );
