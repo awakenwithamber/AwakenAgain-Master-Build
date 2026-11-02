@@ -50,6 +50,16 @@ const CAPSULE = {
   quantity: 1,
   unit_price_cents: 1977,
 };
+
+const SHIPPING_UT = {
+  name: 'Test Customer',
+  street: '100 S Main St',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84101',
+  country: 'US',
+};
+
 const UT_ADDRESS = {
   line1: '100 S Main St',
   city: 'Salt Lake City',
@@ -113,6 +123,7 @@ describe('card gate OFF (no link configured — today)', () => {
   it('rejects bluevine_card_link at route and core level', async () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       payment_method: 'bluevine_card_link',
@@ -125,6 +136,7 @@ describe('card gate OFF (no link configured — today)', () => {
     expect(() =>
       validateAndBuildOrder({
         items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
         customer: CUSTOMER,
         delivery_address: UT_ADDRESS,
         payment_method: 'bluevine_card_link',
@@ -136,6 +148,7 @@ describe('card gate OFF (no link configured — today)', () => {
   it('a Bluevine invoice order carries NO payment link and NO card wording', async () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       payment_method: 'bluevine_invoice',
@@ -175,6 +188,7 @@ describe('card gate ON (verified link configured)', () => {
     process.env[ENV_NAME] = FIXTURE_LINK;
     const { status, json } = await postCheckout({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       payment_method: 'bluevine_card_link',
@@ -208,6 +222,7 @@ describe('card gate ON (verified link configured)', () => {
     process.env[ENV_NAME] = FIXTURE_LINK;
     const { status } = await postCheckout({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       payment_method: 'bluevine_card_link',

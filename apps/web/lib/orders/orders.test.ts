@@ -70,6 +70,15 @@ function validBody(overrides: Record<string, unknown> = {}) {
   return {
     items: [VALID_SOAP_ITEM],
     customer: CUSTOMER,
+    // Phase 2 (WS1a): physical carts require a shipping address.
+    shipping_address: {
+      name: 'Test Customer',
+      street: '239 S 1200 W',
+      city: 'Salt Lake City',
+      state: 'UT',
+      postal_code: '84104',
+      country: 'US',
+    },
     client_total_cents: 1177 * 2 + 595,
     ...overrides,
   };

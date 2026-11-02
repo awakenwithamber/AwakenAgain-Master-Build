@@ -40,6 +40,18 @@ import { renderPurchaseConfirmation } from '../lib/jobs/purchase-confirmation-em
 import type { PurchaseConfirmationData } from '../lib/jobs/email';
 import { expectedSessionTotalCents } from '../lib/payments/stripe';
 
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
+
 const DIR = mkdtempSync(join(tmpdir(), 'checkout-coupon-'));
 const ORDERS_LEDGER = join(DIR, 'orders.jsonl');
 const SUBS_LEDGER = join(DIR, 'subscriptions.jsonl');
@@ -128,6 +140,7 @@ describe('validateAndBuildOrder — FIRST10', () => {
     const record = validateAndBuildOrder({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'first10', // lowercase — case-insensitive
       client_total_cents: 2374,
     });
@@ -143,6 +156,7 @@ describe('validateAndBuildOrder — FIRST10', () => {
       validateAndBuildOrder({
         items: [CAPSULE_ITEM],
         customer,
+        shipping_address: SHIPPING_ADDRESS,
         coupon_code: 'HALFOFF',
         client_total_cents: 2572,
       }),
@@ -155,6 +169,7 @@ describe('validateAndBuildOrder — FIRST10', () => {
         {
           items: [CAPSULE_ITEM],
           customer,
+          shipping_address: SHIPPING_ADDRESS,
           coupon_code: 'FIRST10',
           client_total_cents: 2374,
         },
@@ -169,6 +184,7 @@ describe('validateAndBuildOrder — FIRST10', () => {
         {
           items: [CAPSULE_ITEM],
           customer,
+          shipping_address: SHIPPING_ADDRESS,
           coupon_code: 'FIRST10',
           client_total_cents: 2374,
         },
@@ -182,6 +198,7 @@ describe('validateAndBuildOrder — FIRST10', () => {
       validateAndBuildOrder({
         items: [CAPSULE_ITEM],
         customer,
+        shipping_address: SHIPPING_ADDRESS,
         coupon_code: 'FIRST10',
         client_total_cents: 1,
       }),
@@ -193,6 +210,7 @@ describe('validateAndBuildOrder — FIRST10', () => {
       {
         items: [CAPSULE_ITEM],
         customer,
+        shipping_address: SHIPPING_ADDRESS,
         is_subscriber: true,
         coupon_code: 'FIRST10',
         client_total_cents: 1779,
@@ -212,6 +230,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: { name: 'First Timer', email: 'first@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'FIRST10',
       payment_method: 'bookipi_invoice',
       client_total_cents: 2374,
@@ -232,6 +251,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const first = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'FIRST10',
       client_total_cents: 2374,
     });
@@ -240,6 +260,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const second = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'first10',
       client_total_cents: 2374,
     });
@@ -255,6 +276,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const plain = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2572,
     });
     expect(plain.status).toBe(200);
@@ -262,6 +284,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const attempt = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'FIRST10',
       client_total_cents: 2374,
     });
@@ -276,6 +299,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: { name: 'Typo', email: 'typo@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'FIRST1O', // letter O instead of zero
       client_total_cents: 2572,
     });
@@ -291,6 +315,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: { name: 'Member', email: 'member@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       coupon_code: 'FIRST10',
       client_total_cents: 1779,
@@ -310,6 +335,7 @@ describe('checkout route — FIRST10 end to end', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: { name: 'Plain', email: 'plain@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2572,
     });
     expect(status).toBe(200);
@@ -324,6 +350,7 @@ describe('coupon discount downstream', () => {
     const record = validateAndBuildOrder({
       items: [CAPSULE_ITEM],
       customer: { name: 'First Timer', email: 'first@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'FIRST10',
       client_total_cents: 2374,
     });
@@ -341,6 +368,7 @@ describe('coupon discount downstream', () => {
     const placed = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: { name: 'Tracker', email: 'tracker@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'FIRST10',
       client_total_cents: 2374,
     });
@@ -368,6 +396,7 @@ describe('coupon discount downstream', () => {
     const record = validateAndBuildOrder({
       items: [CAPSULE_ITEM],
       customer: { name: 'First Timer', email: 'first@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       coupon_code: 'FIRST10',
       client_total_cents: 2374,
     });

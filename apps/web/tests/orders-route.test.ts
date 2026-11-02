@@ -20,6 +20,18 @@ process.env.ORDERS_LEDGER_PATH = LEDGER;
 
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
 
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
+
 const VALID_SOAP_ITEM = {
   product_handle: 'gaias-rose-soap',
   quantity: 1,
@@ -49,6 +61,7 @@ describe('orders route', () => {
     const { status, json } = await postOrders({
       items: [VALID_SOAP_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1177 + 595,
     });
     expect(status).toBe(200);
@@ -75,6 +88,7 @@ describe('orders route', () => {
     const { status, json } = await postOrders({
       items: [VALID_SOAP_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1,
     });
     expect(status).toBe(422);
@@ -91,6 +105,7 @@ describe('orders route', () => {
     const { status } = await postOrders({
       items: [],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 0,
     });
     expect(status).toBe(422);
@@ -108,6 +123,7 @@ describe('orders route', () => {
         },
       ],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1177,
     });
     expect(status).toBe(422);

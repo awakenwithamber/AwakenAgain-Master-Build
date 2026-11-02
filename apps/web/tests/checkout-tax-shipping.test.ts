@@ -57,6 +57,15 @@ const UT_ADDRESS = {
   postal_code: '84101',
 };
 
+const SHIPPING_UT = {
+  name: 'Test Customer',
+  street: '100 S Main St',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84101',
+  country: 'US',
+};
+
 const CO_ADDRESS = {
   line1: '1600 Broadway',
   city: 'Denver',
@@ -84,6 +93,7 @@ describe('checkout tax + shipping — server builder', () => {
     // shipping: 1977 → 167 (taxing 1977+595=2572 would give 217).
     const record = validateAndBuildOrder({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       client_total_cents: 1977 + 595 + 167,
@@ -109,6 +119,7 @@ describe('checkout tax + shipping — server builder', () => {
     // 3 × 1977 = 5931 ≥ 4500 → shipping 0; tax 5931 → 501.
     const record = validateAndBuildOrder({
       items: [{ ...CAPSULE, quantity: 3 }],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       client_total_cents: 5931 + 0 + 501,
@@ -123,6 +134,7 @@ describe('checkout tax + shipping — server builder', () => {
   it('(c) out-of-state order: $0 tax with the assumption recorded, shipping rule unchanged', () => {
     const record = validateAndBuildOrder({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: CO_ADDRESS,
       client_total_cents: 1977 + 595,
@@ -145,6 +157,7 @@ describe('checkout tax + shipping — server builder', () => {
     const record = validateAndBuildOrder(
       {
         items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
         customer: CUSTOMER,
         delivery_address: UT_ADDRESS,
         is_subscriber: true,
@@ -166,6 +179,7 @@ describe('checkout tax + shipping — server builder', () => {
     const record = validateAndBuildOrder(
       {
         items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
         customer: CUSTOMER,
         delivery_address: UT_ADDRESS,
         coupon_code: 'FIRST10',
@@ -183,6 +197,7 @@ describe('checkout tax + shipping — server builder', () => {
     expect(() =>
       validateAndBuildOrder({
         items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
         customer: CUSTOMER,
         delivery_address: UT_ADDRESS,
         client_total_cents: 1977 + 595, // the pre-tax total — not server-computable for a Utah order
@@ -191,6 +206,7 @@ describe('checkout tax + shipping — server builder', () => {
     expect(() =>
       validateAndBuildOrder({
         items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
         customer: CUSTOMER,
         delivery_address: UT_ADDRESS,
         client_total_cents: 1,
@@ -202,6 +218,7 @@ describe('checkout tax + shipping — server builder', () => {
     expect(() =>
       validateAndBuildOrder({
         items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
         customer: CUSTOMER,
         delivery_address: { ...UT_ADDRESS, state: 'XX' },
         client_total_cents: 2739,
@@ -210,6 +227,7 @@ describe('checkout tax + shipping — server builder', () => {
     expect(() =>
       validateAndBuildOrder({
         items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
         customer: CUSTOMER,
         delivery_address: { ...UT_ADDRESS, postal_code: '8410' },
         client_total_cents: 2739,
@@ -217,24 +235,32 @@ describe('checkout tax + shipping — server builder', () => {
     ).toThrow(/ZIP/);
   });
 
-  it('the dormant card rail ignores the address and records no site tax (no double tax)', () => {
-    const record = validateAndBuildOrder({
-      items: [CAPSULE],
-      customer: CUSTOMER,
-      delivery_address: UT_ADDRESS,
-      payment_method: 'stripe_card_embedded',
-      client_total_cents: 1977 + 595, // pre-tax, as the dormant flow has always been
-    });
-    expect(record.payment_method).toBe('stripe_card_embedded');
-    expect(record.tax_cents).toBeUndefined();
-    expect(record.tax_breakdown).toBeUndefined();
-    expect(record.delivery_address).toBeUndefined();
-    expect(record.total_cents).toBe(2572);
+  it('the dormant card rail cannot create a new order at all (combined merge, 2026-11-02)', () => {
+    // Supersedes this suite's original dormant case: the card-merge
+    // build's dormant-hole fix (adopted in the combined merge) makes
+    // parsePaymentMethod REJECT 'stripe_card_embedded' for new orders,
+    // so no new order can be created on that rail — and therefore no
+    // new order can be double-taxed or routed to a rail that does not
+    // exist. Stored historical records on that rail keep their
+    // in-session tax behavior in the dormant session/webhook
+    // machinery (covered by the stripe webhook/session suites, which
+    // now seed stored records directly).
+    expect(() =>
+      validateAndBuildOrder({
+        items: [CAPSULE],
+        shipping_address: SHIPPING_UT,
+        customer: CUSTOMER,
+        delivery_address: UT_ADDRESS,
+        payment_method: 'stripe_card_embedded',
+        client_total_cents: 1977 + 595,
+      }),
+    ).toThrow(/no longer accepted for new orders/);
   });
 
   it('a legacy order with no address keeps the exact legacy behavior (no tax fields)', () => {
     const record = validateAndBuildOrder({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       client_total_cents: 1977 + 595,
     });
@@ -249,6 +275,7 @@ describe('checkout tax + shipping — route (worked example end-to-end)', () => 
   it('POST a Utah order: response + ledger carry the full breakdown', async () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       payment_method: 'bookipi_invoice',
@@ -284,6 +311,7 @@ describe('checkout tax + shipping — route (worked example end-to-end)', () => 
   it('POST a Utah order claiming the pre-tax total is rejected with 422', async () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE],
+      shipping_address: SHIPPING_UT,
       customer: CUSTOMER,
       delivery_address: UT_ADDRESS,
       client_total_cents: 2572,

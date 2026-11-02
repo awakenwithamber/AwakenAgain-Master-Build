@@ -27,6 +27,18 @@ process.env.ORDERS_LEDGER_PATH = LEDGER;
 
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
 
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
+
 const VALID_SOAP_ITEM = {
   product_handle: 'gaias-rose-soap',
   quantity: 2,
@@ -90,6 +102,7 @@ describe('checkout route', () => {
       items: [VALID_SOAP_ITEM, VALID_CAPSULE_ITEM],
       bundle: bundlePayload(),
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: false,
       client_total_cents: 1177 * 2 + 1977 + 3577,
     };
@@ -125,6 +138,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [VALID_SOAP_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1, // server computes 2354 + 595 shipping = 2949
     });
     expect(status).toBe(422);
@@ -135,6 +149,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [{ ...VALID_SOAP_ITEM, unit_price_cents: 1 }],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2,
     });
     expect(status).toBe(422);
@@ -152,6 +167,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [bad],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2354,
     });
     expect(status).toBe(422);
@@ -172,6 +188,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [bad],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2354,
     });
     expect(status).toBe(422);
@@ -190,6 +207,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [bad],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2354,
     });
     expect(status).toBe(422);
@@ -200,6 +218,7 @@ describe('checkout route', () => {
     const noProduct = await postCheckout({
       items: [{ product_handle: 'not-a-real-product', quantity: 1, unit_price_cents: 100 }],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 100,
     });
     expect(noProduct.status).toBe(422);
@@ -214,6 +233,7 @@ describe('checkout route', () => {
         },
       ],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1977,
     });
     expect(noVariant.status).toBe(422);
@@ -223,6 +243,7 @@ describe('checkout route', () => {
     const { status } = await postCheckout({
       items: [{ product_handle: 'energy-work', quantity: 1, unit_price_cents: 0 }],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 0,
     });
     expect(status).toBe(422);
@@ -235,6 +256,7 @@ describe('checkout route', () => {
       items: [],
       bundle,
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 3577,
     });
     expect(status).toBe(422);
@@ -245,6 +267,7 @@ describe('checkout route', () => {
     const empty = await postCheckout({
       items: [],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 0,
     });
     expect(empty.status).toBe(422);
@@ -272,6 +295,7 @@ describe('checkout route', () => {
     const general = validateAndBuildOrder({
       items: [{ ...item }],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: false,
       client_total_cents: 2572,
     });
@@ -286,6 +310,7 @@ describe('checkout route', () => {
     const unverified = validateAndBuildOrder({
       items: [{ ...item }],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 2572,
     });
@@ -298,6 +323,7 @@ describe('checkout route', () => {
     const unverifiedDiscountedClaim = validateAndBuildOrder({
       items: [{ ...item }],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 1779, // round(1977 * 0.9) — the claimed preview total
     });
@@ -310,6 +336,7 @@ describe('checkout route', () => {
       {
         items: [{ ...item }],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         is_subscriber: true,
         client_total_cents: 1779,
       },
@@ -329,6 +356,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [VALID_CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1977 + 595,
     });
     expect(status).toBe(200);
@@ -344,6 +372,7 @@ describe('checkout route', () => {
     const omitted = await postCheckout({
       items: [VALID_CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1977,
     });
     expect(omitted.status).toBe(422);
@@ -364,6 +393,7 @@ describe('checkout route', () => {
         },
       ],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2354 + 595,
     });
     const scent = record.items[0].customization!.scent;
@@ -403,6 +433,7 @@ describe('checkout route', () => {
         },
       ],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 500,
     });
     expect(status).toBe(422);
@@ -420,6 +451,7 @@ describe('checkout route', () => {
         },
       ],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2354,
     });
     expect(status).toBe(422);
@@ -432,6 +464,7 @@ describe('checkout route', () => {
     const { status, json } = await postCheckout({
       items: [null],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 0,
     });
     expect(status).toBe(422);
@@ -460,6 +493,7 @@ describe('checkout route', () => {
         },
       ],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1177 + 595,
     });
     expect(status).toBe(200);
@@ -499,6 +533,7 @@ describe('checkout route', () => {
       items: [],
       bundle,
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 3577 + 595,
     });
     expect(status).toBe(200);
@@ -533,6 +568,7 @@ describe('checkout route', () => {
         phone: '(801) 819-6795',
         notes: 'x'.repeat(2000),
       },
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 2354 + 595,
     });
     expect(record.customer.name).toBe('Amber Patten');

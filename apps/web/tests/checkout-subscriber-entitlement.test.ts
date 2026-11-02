@@ -22,6 +22,18 @@ import { join } from 'node:path';
 import { POST } from '../app/api/checkout/route';
 import { validateAndBuildOrder } from '../lib/checkout/order';
 
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
+
+
 const DIR = mkdtempSync(join(tmpdir(), 'checkout-entitlement-'));
 const ORDERS_LEDGER = join(DIR, 'orders.jsonl');
 const SUBS_LEDGER = join(DIR, 'subscriptions.jsonl');
@@ -51,6 +63,7 @@ function subscriptionLine(email: string, status: string) {
     interval: 'month',
     status,
     customer: { name: 'Test Member', email },
+    shipping_address: SHIPPING_ADDRESS,
     confirmed_at: status === 'active' ? '2026-10-13T01:00:00.000Z' : null,
     confirmed_by: status === 'active' ? 'owner' : null,
     recurring_mechanic: 'NEEDS_VERIFICATION',
@@ -86,6 +99,7 @@ describe('checkout subscriber entitlement', () => {
     const standardClaim = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 2572,
     });
@@ -102,6 +116,7 @@ describe('checkout subscriber entitlement', () => {
     const discountedClaim = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 1779,
     });
@@ -120,6 +135,7 @@ describe('checkout subscriber entitlement', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: { name: 'Member', email: 'member@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 1779,
     });
@@ -143,6 +159,7 @@ describe('checkout subscriber entitlement', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: { name: 'Pending', email: 'pending@example.com' },
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 2572,
     });
@@ -160,6 +177,7 @@ describe('checkout subscriber entitlement', () => {
     const badTotal = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 1, // neither the standard nor the subscriber total
     });
@@ -171,6 +189,7 @@ describe('checkout subscriber entitlement', () => {
     const badPrice = await postCheckout({
       items: [{ ...CAPSULE_ITEM, unit_price_cents: 100 }],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 90,
     });
@@ -205,6 +224,7 @@ describe('checkout subscriber entitlement', () => {
         items: [],
         bundle,
         customer: { name: 'Member', email: 'member@example.com' },
+        shipping_address: SHIPPING_ADDRESS,
         is_subscriber: true,
         client_total_cents: 3219,
       },

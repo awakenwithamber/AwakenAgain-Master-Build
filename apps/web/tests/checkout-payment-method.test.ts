@@ -32,7 +32,15 @@
  *   component, and no checkout-session call (Stripe is parked dormant,
  *   its routes/library retained but unreachable from the UI).
  * - The order-intake pipeline (POST /api/orders) accepts the same field
- *   with the same default and carries it to the review-queue entry. */
+ *   with the same default and carries it to the review-queue entry.
+ * - Phase 2 (Workstream 1a, merged): a physical cart requires every
+ *   order body to carry a valid shipping_address (the merged
+ *   lib/checkout/order validates it with lib/checkout/shipping-address
+ *   and stores it on the record) — so every physical-order body below
+ *   sends the shared SHIPPING_ADDRESS fixture. The fixture changes no
+ *   total: sales tax keys off delivery_address, which these bodies
+ *   deliberately omit (the legacy no-address, no-tax behavior the
+ *   admin tax build preserves for address-less API bodies). */
 import { describe, expect, it } from 'vitest';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -49,6 +57,17 @@ process.env.ORDERS_LEDGER_PATH = ORDERS_LEDGER;
 process.env.SUBSCRIPTIONS_LEDGER_PATH = SUBS_LEDGER;
 
 const CUSTOMER = { name: 'Test Customer', email: 'test@example.com' };
+
+/** Phase 2 (WS1a): physical carts require a shipping address — the
+ * shared valid fixture every physical-order body in this file sends. */
+const SHIPPING_ADDRESS = {
+  name: 'Test Customer',
+  street: '239 S 1200 W',
+  city: 'Salt Lake City',
+  state: 'UT',
+  postal_code: '84104',
+  country: 'US',
+};
 const CAPSULE_ITEM = {
   product_handle: 'chill-pill-capsules',
   variant_id: 'chill-pill-capsules-2wk',
@@ -80,6 +99,7 @@ describe('checkout payment method', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       payment_method: 'bluevine_invoice',
       client_total_cents: 1977 + 595,
     });
@@ -99,12 +119,16 @@ describe('checkout payment method', () => {
     expect(String(payment.note)).not.toMatch(/card/i);
     expect(String(payment.note)).not.toMatch(/Bookipi/);
     expect(lastOrder().payment_method).toBe('bluevine_invoice');
+    // Phase 2 (WS1a): the validated shipping address is stored on the
+    // record, exactly as submitted (the fulfillment authority).
+    expect(lastOrder().shipping_address).toEqual(SHIPPING_ADDRESS);
   });
 
   it('normalizes the retired bookipi_invoice name to bluevine_invoice (alias, never stored)', async () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       payment_method: 'bookipi_invoice',
       client_total_cents: 1977 + 595,
     });
@@ -117,6 +141,7 @@ describe('checkout payment method', () => {
     const record = validateAndBuildOrder({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       payment_method: 'bookipi_invoice',
       client_total_cents: 1977 + 595,
     });
@@ -128,6 +153,7 @@ describe('checkout payment method', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       payment_method: 'bluevine_card_link',
       client_total_cents: 1977 + 595,
     });
@@ -139,6 +165,7 @@ describe('checkout payment method', () => {
       validateAndBuildOrder({
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         payment_method: 'bluevine_card_link',
         client_total_cents: 1977 + 595,
       }),
@@ -168,6 +195,7 @@ describe('checkout payment method', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       payment_method: 'bookipi_card_invoice',
       client_total_cents: 1977 + 595,
     });
@@ -182,6 +210,7 @@ describe('checkout payment method', () => {
       validateAndBuildOrder({
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         payment_method: 'bookipi_card_invoice',
         client_total_cents: 1977 + 595,
       }),
@@ -192,6 +221,7 @@ describe('checkout payment method', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       payment_method: 'carrier_pigeon',
       client_total_cents: 1977,
     });
@@ -204,6 +234,7 @@ describe('checkout payment method', () => {
       validateAndBuildOrder({
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         payment_method: 'card',
         client_total_cents: 1977,
       }),
@@ -214,6 +245,7 @@ describe('checkout payment method', () => {
     const { status, json } = await postCheckout({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       client_total_cents: 1977 + 595,
     });
     expect(status).toBe(200);
@@ -233,6 +265,7 @@ describe('checkout payment method', () => {
     const record = validateAndBuildOrder({
       items: [CAPSULE_ITEM],
       customer: CUSTOMER,
+      shipping_address: SHIPPING_ADDRESS,
       payment_method: 'cash_app_or_venmo',
       client_total_cents: 1977 + 595,
     });
@@ -266,12 +299,14 @@ describe('checkout payment method', () => {
     const viaHandles = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 1779,
     });
     const viaInvoice = await postCheckout({
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       payment_method: 'bluevine_invoice',
       client_total_cents: 1779,
@@ -292,6 +327,7 @@ describe('checkout payment method', () => {
     const base = {
       items: [CAPSULE_ITEM],
       customer,
+      shipping_address: SHIPPING_ADDRESS,
       is_subscriber: true,
       client_total_cents: 1779,
     };
@@ -321,6 +357,7 @@ describe('checkout payment method', () => {
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         payment_method: 'bookipi_card_invoice',
         client_total_cents: 1977 + 595,
       },
@@ -339,6 +376,7 @@ describe('checkout payment method', () => {
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         payment_method: 'bluevine_invoice',
         client_total_cents: 1977 + 595,
       },
@@ -354,6 +392,7 @@ describe('checkout payment method', () => {
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         payment_method: 'bookipi_invoice',
         client_total_cents: 1977 + 595,
       },
@@ -368,6 +407,7 @@ describe('checkout payment method', () => {
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         client_total_cents: 1977 + 595,
       },
       store,
@@ -381,6 +421,7 @@ describe('checkout payment method', () => {
       {
         items: [CAPSULE_ITEM],
         customer: CUSTOMER,
+        shipping_address: SHIPPING_ADDRESS,
         payment_method: 'beads',
         client_total_cents: 1977,
       },
