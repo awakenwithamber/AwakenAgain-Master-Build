@@ -16,7 +16,7 @@
  */
 import { NextResponse } from 'next/server';
 import {
-  accountOtpStore,
+  getAccountOtpStore,
   requestAccountCode,
   ACCOUNT_OTP_TTL_SECONDS,
 } from '../../../../lib/accounts/otp';
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 
   let issued: Awaited<ReturnType<typeof requestAccountCode>>;
   try {
-    issued = await requestAccountCode(accountOtpStore, email);
+    issued = await requestAccountCode(getAccountOtpStore(), email);
   } catch (err) {
     return accountFail([
       err instanceof Error ? err.message : 'Could not issue a code.',

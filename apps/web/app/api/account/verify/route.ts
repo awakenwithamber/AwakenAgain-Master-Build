@@ -15,7 +15,7 @@
  */
 import { NextResponse } from 'next/server';
 import {
-  accountOtpStore,
+  getAccountOtpStore,
   verifyAccountCode,
 } from '../../../../lib/accounts/otp';
 import {
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   }
 
   const verified = await verifyAccountCode(
-    accountOtpStore,
+    getAccountOtpStore(),
     body.request_id,
     body.code,
   );
