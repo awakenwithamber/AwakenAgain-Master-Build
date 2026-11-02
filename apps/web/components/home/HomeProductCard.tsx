@@ -87,14 +87,20 @@ export function HomeProductCard({ product }: { product: HomeProductCardModel }) 
             <span className={styles.productPrice}>
               <PriceDisplay cents={product.priceCents} />
             </span>
-            <button
-              type="button"
-              className={styles.addButton}
-              onClick={handleAdd}
-              disabled={added}
-            >
-              {added ? 'Added ✓' : 'Add'}
-            </button>
+            {product.ctaLink ? (
+              <Link className={styles.addButton} href={product.ctaLink.href}>
+                {product.ctaLink.label}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={handleAdd}
+                disabled={added}
+              >
+                {added ? 'Added ✓' : 'Add'}
+              </button>
+            )}
           </div>
           {error ? (
             <p className={styles.addError} role="alert">

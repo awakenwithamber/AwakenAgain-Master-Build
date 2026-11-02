@@ -28,7 +28,18 @@ export interface HomeProductCardModel {
   herbChips: HerbChipModel[];
   whyItWorks: { name: string; role: string | null }[];
   variantId?: string;
+  /**
+   * Link-instead-of-cart call to action (owner decision D5,
+   * 2026-10-25): the Alchemy Soap Collection card links to its
+   * configurator page and has NO direct add-to-cart.
+   */
+  ctaLink?: { href: string; label: string };
 }
+
+/** Handles whose Best Sellers card links out instead of adding to cart (D5). */
+export const BEST_SELLER_LINK_ONLY_HANDLES: ReadonlySet<string> = new Set([
+  'soap-style-collection-5',
+]);
 
 /** Canonical herb slug aliases for catalog ingredient names. */
 export const HERB_ALIASES: Record<string, string> = {
@@ -104,6 +115,14 @@ export function toCardModel(product: Product): HomeProductCardModel | null {
       firstVariant && typeof firstVariant.variant_id === 'string'
         ? firstVariant.variant_id
         : undefined,
+    ...(BEST_SELLER_LINK_ONLY_HANDLES.has(product.handle)
+      ? {
+          ctaLink: {
+            href: `/shop/${product.handle}`,
+            label: 'Customize yours',
+          },
+        }
+      : {}),
   };
 }
 

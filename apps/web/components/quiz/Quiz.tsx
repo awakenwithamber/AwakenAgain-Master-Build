@@ -59,6 +59,7 @@ import {
 } from '../../lib/quiz/quiz';
 import { FDA_STATEMENT } from '../../lib/safety/product-safety';
 import { trackContent, trackContentOnce } from '../../lib/analytics/content-posthog';
+import { trackMetaLead } from '../../lib/analytics/meta-pixel';
 import { recordInterestNow } from '../../lib/personalization/client';
 import { fetchAccountProfile } from '../../lib/accounts/client';
 import { ProfileInvite } from '../personalization/ProfileInvite';
@@ -256,6 +257,11 @@ export default function Quiz() {
       }
       setLeadStatus('done');
       // quiz_lead_captured is server-owned — the route fires it.
+      // Meta pixel Lead (ported 2026-11-02): fired only here, on the
+      // server's confirmed acceptance of the lead — never on submit
+      // attempts. Inert unless the pixel is configured and consent is
+      // accepted. No Purchase event exists anywhere in this build.
+      trackMetaLead();
       setPhase('results');
     } catch {
       setLeadErrors(['Something went wrong — please try again.']);

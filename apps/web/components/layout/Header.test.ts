@@ -55,9 +55,16 @@ describe('nav data (lib/nav.ts)', () => {
     if (!herbLibrary || herbLibrary.kind !== 'group') {
       throw new Error('herb-library group missing');
     }
+    // Phase 2 nav consolidation (2026-10-30): the duplicate
+    // 'Articles & Guides' label was removed — the group now carries
+    // ONE /herb-index entry, 'Herb Encyclopedia' (the destination's
+    // own title). The footer keeps its site-map link regardless.
     expect(
-      herbLibrary.links.find((l) => l.label === 'Articles & Guides')?.href,
-    ).toBe('/herb-index');
+      herbLibrary.links.filter((l) => l.href === '/herb-index'),
+    ).toEqual([{ href: '/herb-index', label: 'Herb Encyclopedia' }]);
+    expect(
+      herbLibrary.links.find((l) => l.label === 'Articles & Guides'),
+    ).toBeUndefined();
   });
 
   it('puts "Remedies" at the top of the Shop menu, exactly once (punch list)', () => {
@@ -77,15 +84,13 @@ describe('nav data (lib/nav.ts)', () => {
       if (entry.kind === 'link') all.push(entry.href);
       else all.push(...entry.links.map((l) => l.href));
     }
-    // Single documented exception (post-launch fix 2026-10-30): the
-    // Herb Library group carries two labels for the one library index
-    // — 'Herb Encyclopedia' and 'Articles & Guides' both land on
-    // /herb-index, mirroring the footer's two labels for the same
-    // page. Every other href must be unique.
+    // Phase 2 nav consolidation (2026-10-30) removed the one
+    // documented exception (the Herb Library group's second
+    // /herb-index label): every href in the nav is now unique.
     const counts = new Map<string, number>();
     for (const href of all) counts.set(href, (counts.get(href) ?? 0) + 1);
     const duplicated = [...counts.entries()].filter(([, n]) => n > 1);
-    expect(duplicated).toEqual([['/herb-index', 2]]);
+    expect(duplicated).toEqual([]);
     expect(NAV_ENTRIES.length).toBeGreaterThanOrEqual(6);
     expect(NAV_ENTRIES.length).toBeLessThanOrEqual(9);
     expect(NAV_ENTRIES.filter((e) => e.kind === 'group').length).toBe(4);

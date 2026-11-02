@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { BOTANICALS, SOAP_BASES, SOAP_COLORS } from '../../lib/catalog/oils';
 import { getShape } from '../../lib/catalog/shapes';
+import { scentSelectionLabel } from '../../lib/catalog/scents';
 import {
   BUNDLE_ID,
   BUNDLE_NAME,
@@ -45,9 +46,9 @@ function defaultSlot(slotIndex: number): BundleSlot {
 }
 
 function scentLabel(scent: ScentSelection): string {
-  return scent.type === 'signature'
-    ? `Signature: ${scent.recipe_id}`
-    : `Custom blend: ${scent.oils.join(' + ')}`;
+  // Customer-facing text resolves recipe IDs to names — a raw
+  // SCENT_RECIPE_* id must never render (Phase 2 fix, lib/catalog/scents).
+  return scentSelectionLabel(scent);
 }
 
 export function BundleBuilder() {

@@ -20,6 +20,15 @@ export interface HerbGridProps {
   selectedIds: string[];
   maxHerbs: number;
   onToggle: (id: string) => void;
+  /**
+   * Optional per-herb price badge override. When provided and it
+   * returns a string, that string replaces the default "+$X.XX" badge
+   * (the balm builder uses it to show which botanicals are included in
+   * the jar price vs charged as extras — Option C). Returning null
+   * keeps the default badge. Builders that don't pass it render
+   * exactly as before.
+   */
+  priceBadgeFor?: (herb: Herb) => string | null;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -41,7 +50,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   emotional: 'Emotional',
 };
 
-export function HerbGrid({ herbs, selectedIds, maxHerbs, onToggle }: HerbGridProps) {
+export function HerbGrid({ herbs, selectedIds, maxHerbs, onToggle, priceBadgeFor }: HerbGridProps) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<HerbCategory | ''>('');
 
@@ -112,7 +121,9 @@ export function HerbGrid({ herbs, selectedIds, maxHerbs, onToggle }: HerbGridPro
                   ))}
                 </span>
                 <span className="h-note">{h.traditionalNote}</span>
-                <span className="h-price">+{formatPrice(h.priceCents)}</span>
+                <span className="h-price">
+                  {priceBadgeFor?.(h) ?? `+${formatPrice(h.priceCents)}`}
+                </span>
               </button>
             );
           })}

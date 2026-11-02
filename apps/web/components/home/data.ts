@@ -114,12 +114,24 @@ export const TRUST_STATS: TrustStat[] = [
   },
 ];
 
-/** Catalog handles shown in the "Best Sellers" row. Real products only. */
+/**
+ * Catalog handles shown in the "Best Sellers" row. Real products only.
+ *
+ * Composition is owner decision D5 (2026-10-25, confirmed 2026-10-26):
+ * the Phase 1 pack's six favorites MERGED with Gaia's Rose Soap and
+ * the Alchemy Soap Collection — 8 cards total. This supersedes the
+ * earlier 4-handle row. Prices come from the catalog records
+ * themselves (display only); nothing is priced here.
+ */
 export const BEST_SELLER_HANDLES = [
   'dreamease-capsules',
-  'chill-pill-capsules',
-  'sacred-balance-capsules',
+  'vital-vitality-capsules',
+  'immune-at-ease-capsules',
+  'soothe-restore-botanical-balm',
+  'radiance-renewal-balm',
+  'root-scalp-revival-serum',
   'gaias-rose-soap',
+  'soap-style-collection-5',
 ] as const;
 
 /** Featured product that anchors the homepage Reviews section (wired to the real reviews system). */

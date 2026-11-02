@@ -21,8 +21,10 @@
  * - Scent: a signature scent recipe ID from lib/catalog/scents.ts, or
  *   unscented — persisted as an exact ID, never prose.
  * - Live price preview via lib/pricing (CLIENT=PREVIEW, integer
- *   cents): size base (mirrored from the balm records) + canonical
- *   per-botanical add-ons; the wax choice is never priced.
+ *   cents): size base (mirrored from the balm records); the first five
+ *   botanicals are included in the jar price and each extra botanical
+ *   adds its canonical per-botanical price (APPROVED Option C, owner
+ *   decision 2026-10-30); the wax choice is never priced.
  * - Add to Cart builds the payload via buildFormulaCartItem +
  *   buildOrderConfiguration — exact IDs persisted; the server
  *   recomputes every total authoritatively at checkout.
@@ -36,6 +38,7 @@ import {
   buildOrderConfiguration,
 } from '../../lib/cart/validation';
 import {
+  BALM_INCLUDED_BOTANICALS,
   CUSTOM_BALM_HANDLE,
   CUSTOM_BALM_SIZES,
   customFormulaPriceCents,
@@ -282,19 +285,38 @@ export function BalmBuilder() {
                 <span className="p-name">{s.name}</span>
                 <span className="p-sub">{s.unit}</span>
                 <span className="p-price">{formatPrice(s.baseCents)} base</span>
-                <span className="p-hint">+ botanical add-ons</span>
+                <span className="p-hint">First five botanicals included</span>
               </button>
             ))}
           </div>
         );
       case 'botanicals':
         return (
-          <HerbGrid
-            herbs={herbs}
-            selectedIds={sel.herbIds}
-            maxHerbs={MAX_FORMULA_HERBS}
-            onToggle={toggleHerb}
-          />
+          <div>
+            <p className="verify-note">
+              <strong>Botanical pricing:</strong> your first five
+              botanicals are included in the jar price. Each extra
+              botanical (up to {MAX_FORMULA_HERBS} in all) adds its
+              listed price — extras are marked on their cards.
+            </p>
+            <HerbGrid
+              herbs={herbs}
+              selectedIds={sel.herbIds}
+              maxHerbs={MAX_FORMULA_HERBS}
+              onToggle={toggleHerb}
+              priceBadgeFor={(h) => {
+                const index = sel.herbIds.indexOf(h.id);
+                if (index >= 0) {
+                  return index < BALM_INCLUDED_BOTANICALS
+                    ? 'Included in your jar price'
+                    : `+${formatPrice(h.priceCents)} — extra botanical`;
+                }
+                return sel.herbIds.length < BALM_INCLUDED_BOTANICALS
+                  ? 'Included — one of your first five'
+                  : `+${formatPrice(h.priceCents)} — extra botanical`;
+              }}
+            />
+          </div>
         );
       case 'preferences':
         return (
@@ -461,12 +483,16 @@ export function BalmBuilder() {
             <span>Balm base — {base.name}</span>
             <span>{formatPrice(0)} — same price either finish</span>
           </div>
-          {formula.herb_ids.map((id) => {
+          {formula.herb_ids.map((id, index) => {
             const h = herbs.find((x) => x.id === id);
             return (
               <div className="pb-row" key={id}>
                 <span>{h?.name ?? id}</span>
-                <span>+{formatPrice(h?.priceCents ?? 0)}</span>
+                <span>
+                  {index < BALM_INCLUDED_BOTANICALS
+                    ? 'Included in the jar price'
+                    : `+${formatPrice(h?.priceCents ?? 0)} — extra botanical`}
+                </span>
               </div>
             );
           })}
@@ -479,8 +505,10 @@ export function BalmBuilder() {
         <div className="verify-note">
           <strong>Pricing note.</strong> Size prices mirror the
           apothecary&apos;s balm jars exactly, and the wax choice never
-          changes the price. Every total is recomputed server-side at
-          checkout — the browser never sets the final price.
+          changes the price. Your first five botanicals are included in
+          the jar price; each extra botanical is listed above at its own
+          price. Every total is recomputed server-side at checkout — the
+          browser never sets the final price.
         </div>
 
         <p className="hint">

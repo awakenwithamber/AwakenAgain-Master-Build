@@ -65,8 +65,9 @@ export function bundleSavingsPct(): number {
 /* ---------------- Custom formula builders (G2 capsules, G10 tea, custom balm) ---------------- */
 
 /**
- * Custom-formula pricing — PROPOSED (pending owner confirmation).
+ * Custom-formula pricing.
  *
+ * CAPSULE + TEA — PROPOSED (pending owner confirmation).
  * Model (ported from the legacy #custom-formula flow, ccLivePrice):
  *   unit price = size base price + Σ per-herb add-on prices.
  * All values integer cents; the SERVER recomputes authoritatively at
@@ -81,6 +82,17 @@ export function bundleSavingsPct(): number {
  *   record provenance); the per-product newest value wins per owner
  *   instruction, price still PROPOSED.
  * - 2-week capsule counts unverified (28 vs 30 capsules in sources).
+ *
+ * BALM — APPROVED, owner decision 2026-10-30 ("Option C").
+ * The earlier every-botanical-charged balm model was only ever PROPOSED
+ * (pending owner confirmation); the owner replaced it with Option C:
+ *   unit price = size base price
+ *              + Σ per-herb prices of the botanicals AFTER the first five.
+ * The first five botanicals — in the customer's selection order, exactly
+ * as stored in the order configuration's herb_ids — are included in the
+ * jar price; each extra botanical (6th through the 12th, the standing
+ * selection cap) is charged its herb-library price. Size prices and
+ * per-herb list prices are unchanged by the decision.
  */
 
 export type FormulaKind = 'capsule' | 'tea' | 'balm';
@@ -151,8 +163,26 @@ export function getFormulaSize(
 }
 
 /**
- * Client-preview unit price for a custom formula: size base + per-herb
- * add-ons, integer cents. The server MUST recompute this identically at
+ * How many of a custom balm's botanicals are included in the jar price
+ * before per-herb charges begin — APPROVED Option C, owner decision
+ * 2026-10-30. Balm only; capsule and tea charge every botanical.
+ */
+export const BALM_INCLUDED_BOTANICALS = 5;
+
+/**
+ * The botanicals a formula is actually charged for, in selection order.
+ * Balm (Option C): only the entries after the first
+ * BALM_INCLUDED_BOTANICALS — the first five are included in the jar
+ * price. Capsule/tea: every selected botanical.
+ */
+export function chargedHerbIds(kind: FormulaKind, herbIds: string[]): string[] {
+  return kind === 'balm' ? herbIds.slice(BALM_INCLUDED_BOTANICALS) : herbIds;
+}
+
+/**
+ * Client-preview unit price for a custom formula: size base + the
+ * per-herb prices of the CHARGED botanicals (see chargedHerbIds),
+ * integer cents. The server MUST recompute this identically at
  * checkout (see priceFormulaCustomization in lib/cart/validation.ts) —
  * any mismatch rejects the order.
  */
@@ -164,8 +194,13 @@ export function customFormulaPriceCents(
   const size = getFormulaSize(kind, sizeId);
   if (!size) throw new Error(`Unknown formula size: ${sizeId}`);
   let total = size.baseCents;
-  for (const id of herbIds) {
-    total += herbPriceCents(id);
-  }
+  herbIds.forEach((id, index) => {
+    // Every id is price-checked even when it is not charged, so an
+    // unknown herb still fails closed instead of slipping in free.
+    const cents = herbPriceCents(id);
+    if (kind !== 'balm' || index >= BALM_INCLUDED_BOTANICALS) {
+      total += cents;
+    }
+  });
   return total;
 }
