@@ -20,6 +20,7 @@ import { HerbChip } from '../herbs/HerbChip';
 import { PriceDisplay } from '../catalog/PriceDisplay';
 import { toCents } from '../../lib/pricing/pricing';
 import { useCart } from '../checkout/cart-store';
+import { LikeButton } from './LikeButton';
 import { getProductDisplayImage } from '../../lib/media/product-image';
 import type { Product } from '../../types';
 import styles from './shop.module.css';
@@ -235,6 +236,12 @@ export function ProductCard({ product, goalLabels = [] }: ProductCardProps) {
             )}
           </div>
           <div className={styles.cardCtaRow}>
+            {/* The heart lives on the card itself, not only on the
+                product page: the account dashboard tells members to
+                "tap the heart on any product", and this listing is
+                where that instruction sends them (owner report
+                2026-11-02 — no heart was visible here). */}
+            <LikeButton handle={product.handle} />
             {added ? (
               <span className={styles.addedNote} role="status">
                 Added ✓

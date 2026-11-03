@@ -374,13 +374,27 @@ export class MusicEngine {
     // the gesture itself makes play() legal, and enable() fades in from
     // silence at the capped gentle volume.
     if (this.intentOn && !this.actuallyPlaying) {
-      this.boundGesture = () => {
-        this.disarmGestureResume();
-        if (this.intentOn && !this.actuallyPlaying) void this.enable();
-      };
-      windowRef.addEventListener('pointerdown', this.boundGesture);
-      windowRef.addEventListener('keydown', this.boundGesture);
+      this.armGestureResume();
     }
+  }
+
+  /**
+   * One-shot resume on the visitor's next gesture, for the moments when
+   * playback is wanted (intent on) but cannot start right now: a fresh
+   * document whose session intent was restored (GAP-3), or a return to
+   * the tab after pagehide unloaded the source and the browser refused
+   * a direct resume. The gesture itself makes play() legal — this never
+   * autoplays. Idempotent: at most one listener pair is ever armed.
+   */
+  private armGestureResume(): void {
+    const { windowRef } = this.deps;
+    if (!windowRef || this.boundGesture) return;
+    this.boundGesture = () => {
+      this.disarmGestureResume();
+      if (this.intentOn && !this.actuallyPlaying) void this.enable();
+    };
+    windowRef.addEventListener('pointerdown', this.boundGesture);
+    windowRef.addEventListener('keydown', this.boundGesture);
   }
 
   private disarmGestureResume(): void {
@@ -419,16 +433,32 @@ export class MusicEngine {
   }
 
   private resumeForVisibleTab(): Promise<void> {
-    if (!this.intentOn || this.actuallyPlaying || !this.audio || !this.sourceLoaded) {
+    if (!this.intentOn || this.actuallyPlaying || !this.audio) {
       return Promise.resolve();
     }
-    return this.audio.play().then(
+    if (!this.sourceLoaded) {
+      // pagehide unloaded the source while the tab was away — e.g. the
+      // visitor switched to their mail app to fetch a sign-in code
+      // (owner report 2026-11-02: the music never came back). Reload
+      // the source and try to resume below; if the browser refuses
+      // without a fresh gesture, the armed gesture resume brings the
+      // music back on the visitor's next tap or keypress instead of
+      // leaving it dead until the nav toggle.
+      this.ensureAudio();
+      this.armGestureResume();
+    }
+    const audio = this.audio;
+    return audio.play().then(
       () => {
+        this.disarmGestureResume();
         this.actuallyPlaying = true;
         this.emit();
       },
       () => {
-        /* still blocked — the nav toggle lets the user retry */
+        // Still blocked: stay armed for the next gesture (when this
+        // resume followed a pagehide unload) — the nav toggle also
+        // lets the user retry at any time.
+        this.armGestureResume();
       },
     );
   }

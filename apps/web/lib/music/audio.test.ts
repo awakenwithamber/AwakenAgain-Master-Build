@@ -497,6 +497,52 @@ describe('MusicEngine', () => {
     expect(audio.playCalls).toBe(2);
   });
 
+  it('returning to the tab after a pagehide unload reloads the source and resumes', async () => {
+    // Owner report 2026-11-02: switching away mid sign-in (mail app for
+    // the code) fired pagehide, and the music never came back.
+    const { deps, audio, doc, win } = makeHarness();
+    const engine = new MusicEngine(deps);
+    engine.initLifecycle();
+    await engine.enable();
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(engine.getSnapshot().playing).toBe(true);
+
+    win.fire('pagehide');
+    expect(engine.getSnapshot().playing).toBe(false);
+    expect(engine.getSnapshot().enabled).toBe(true); // intent retained
+
+    doc.hidden = false;
+    doc.fire('visibilitychange');
+    await flushMicrotasks();
+    expect(audio.src).toBe('/audio/ambient-apothecary.mp3'); // source reloaded
+    expect(engine.getSnapshot().playing).toBe(true);
+    expect(win.listenerCount('pointerdown')).toBe(0); // gesture resume disarmed
+  });
+
+  it('after a pagehide unload, a refused resume arms the next-gesture resume', async () => {
+    const { deps, audio, doc, win } = makeHarness();
+    const engine = new MusicEngine(deps);
+    engine.initLifecycle();
+    await engine.enable();
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+
+    win.fire('pagehide');
+    audio.rejectPlay = true;
+    doc.hidden = false;
+    doc.fire('visibilitychange');
+    await flushMicrotasks();
+    expect(engine.getSnapshot().playing).toBe(false);
+    expect(win.listenerCount('pointerdown')).toBe(1); // armed, not dead
+
+    audio.rejectPlay = false;
+    win.fire('pointerdown');
+    await flushMicrotasks();
+    expect(engine.getSnapshot().playing).toBe(true);
+    expect(win.listenerCount('pointerdown')).toBe(0); // one-shot
+  });
+
   it('initLifecycle is idempotent and destroy() removes listeners', () => {
     const { deps, doc, win } = makeHarness();
     const engine = new MusicEngine(deps);

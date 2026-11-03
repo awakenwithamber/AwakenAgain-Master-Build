@@ -20,6 +20,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { syncDeviceToProfile } from '../../lib/accounts/client';
 import { validatePhoneNumber } from '../../lib/accounts/phone';
 import {
@@ -71,6 +72,7 @@ function errorsOf(result: ApiResult, fallback: string): string[] {
 }
 
 export function AuthForms({ available }: { available: boolean }) {
+  const router = useRouter();
   const [view, setView] = useState<View>('signin');
   const [tab, setTab] = useState<'signin' | 'register'>('signin');
   const [busy, setBusy] = useState(false);
@@ -163,7 +165,15 @@ export function AuthForms({ available }: { available: boolean }) {
     // First-sign-in device sync (parity with the legacy code flow).
     await syncDeviceToProfile();
     setView('done');
-    window.location.assign('/account');
+    // Refresh in place instead of a full-page reload: the server
+    // re-renders /account with the new session and swaps this island
+    // for the profile, while the document — and the ambient-music
+    // engine living in the root layout — survives. The old
+    // location.assign reload tore the audio element down, so the
+    // music "stopped" the moment the dashboard opened (owner report
+    // 2026-11-02). router.refresh is the established pattern here —
+    // see CompleteProfileForm.
+    router.refresh();
   };
 
   /* ------------------------------ register ------------------------------ */
