@@ -87,8 +87,8 @@ describe('product sections — ingredients + allergen + FDA (Stage 4)', () => {
   });
 
   it('the FDA sentence renders for a bundle containing ingestibles whose own disclaimer is the short educational text', () => {
-    const html = renderSections('gentle-detox-ritual');
-    const record = getProductByHandle('gentle-detox-ritual')!;
+    const html = renderSections('gentle-flow-ritual');
+    const record = getProductByHandle('gentle-flow-ritual')!;
     expect(String(record.disclaimer)).not.toContain(
       'evaluated by the Food and Drug Administration',
     );

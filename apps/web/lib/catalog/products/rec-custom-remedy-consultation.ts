@@ -3,12 +3,18 @@
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
  * Generated: 2026-10-05
+ * 2026-11-02 (owner wording directive): handle renamed
+ * 'custom-remedy-consultation' → 'personalized-formula-consultation'
+ * (claim-word slug). next.config.mjs permanently redirects the old
+ * /shop/custom-remedy-consultation URL. SKU values unchanged (internal
+ * identifiers). The image file keeps its legacy filename until the
+ * renamed binary is uploaded; see lib/media/image-manifest.ts.
  */
 import type { Product } from '../../../types';
 
 export const RECORD: Product = {
   "title": "Personalized Formula Consultation",
-  "handle": "custom-remedy-consultation",
+  "handle": "personalized-formula-consultation",
   "sku": "AAA-CUSTOM-REMEDY-CONSULTATI",
   "category": "Custom & Consultations",
   "subcategory": "Services",

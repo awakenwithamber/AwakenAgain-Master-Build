@@ -192,11 +192,11 @@ export const RECORD: Product = {
     "radiance-renewal-balm",
     "chill-pill-capsules",
     "dreamease-capsules",
-    "stress-relief-ritual"
+    "unwind-ritual-bundle"
   ],
   "frequently_bought_together": [
     "chill-pill-capsules",
-    "stress-relief-ritual"
+    "unwind-ritual-bundle"
   ],
   "inventory_status": "NEEDS_VERIFICATION",
   "review_summary": {},

@@ -106,6 +106,24 @@ const nextConfig = {
         destination: '/shop/soap-style-collection-5',
         permanent: true,
       },
+      // Wording sweep 2026-11-02 (owner directive): claim-word product
+      // slugs renamed to compliant handles; the old URLs permanently
+      // redirect so no existing link breaks.
+      {
+        source: '/shop/custom-remedy-consultation',
+        destination: '/shop/personalized-formula-consultation',
+        permanent: true,
+      },
+      {
+        source: '/shop/gentle-detox-ritual',
+        destination: '/shop/gentle-flow-ritual',
+        permanent: true,
+      },
+      {
+        source: '/shop/stress-relief-ritual',
+        destination: '/shop/unwind-ritual-bundle',
+        permanent: true,
+      },
       {
         source: '/herbal-wisdom',
         destination: '/herb-index',

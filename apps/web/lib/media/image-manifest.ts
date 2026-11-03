@@ -535,15 +535,15 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   real(
     'asset_service_custom_remedy_consultation',
     '/images/products/custom-remedy-consultation.webp',
-    'Custom Remedy Consultation — owner-supplied artwork: apothecary bottles and a mortar on a candlelit workbench (shared with Personalized Botanical Consultation)',
+    'Personalized Formula Consultation — owner-supplied artwork: apothecary bottles and a mortar on a candlelit workbench (shared with Personalized Botanical Consultation)',
     'OWNER_UPLOADED',
     {
       notDocumentaryPhoto: true,
-      slotKey: 'custom-remedy-consultation',
+      slotKey: 'personalized-formula-consultation',
       stagedFrom: `${STAGE_UPLOADS}/f51defe1-3492-4bdf-b809-aeb2a7f3693e-1_all_19591_8_y4kk.webp`,
       deployed: true,
       notes:
-        'Owner-approved assignment 2026-10-23 (upload #8 of the 2026-10-22 mapping report, shared with Personalized Botanical Consultation — the apothecary-workbench artwork fits both consultation slots). The record formerly carried images: []. Overwrites a 19,602-byte placeholder fallback file previously deployed at this path. Artwork for a service; not a photograph.',
+        'Owner-approved assignment 2026-10-23 (upload #8 of the 2026-10-22 mapping report, shared with Personalized Botanical Consultation — the apothecary-workbench artwork fits both consultation slots). The record formerly carried images: []. Overwrites a 19,602-byte placeholder fallback file previously deployed at this path. Artwork for a service; not a photograph. 2026-11-02: product handle renamed to personalized-formula-consultation (owner wording directive) and slotKey follows the handle; the image FILE keeps its legacy filename for now — the renamed binary (personalized-formula-consultation.webp) must be uploaded before this path can change, since binaries cannot move through the text connector.',
     },
   ),
   real(
@@ -933,11 +933,11 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
-      slotKey: 'gentle-detox-ritual',
+      slotKey: 'gentle-flow-ritual',
       stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated-mega/media-generation-gentle-detox-ritual-0-e122314a-0cdc-4535-b555-dcf919948b10.webp`,
       deployed: true,
       notes:
-        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography.',
+        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography. 2026-11-02: product handle renamed to gentle-flow-ritual (owner wording directive) and slotKey follows the handle; the image FILE keeps its legacy filename for now — the renamed binary (gentle-flow-ritual.webp) must be uploaded before this path can change, since binaries cannot move through the text connector.',
     },
   ),
   real(
@@ -947,11 +947,11 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
     'GENERATED_PRODUCT_REPRESENTATION',
     {
       notDocumentaryPhoto: true,
-      slotKey: 'stress-relief-ritual',
+      slotKey: 'unwind-ritual-bundle',
       stagedFrom: `${STAGE_CONTENT_BUILD_2026_10_30}/generated-mega/media-generation-stress-relief-ritual-0-a1ba2729-339b-434e-b2c4-91848299dff4.webp`,
       deployed: true,
       notes:
-        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography.',
+        'Generated bundle representation created 2026-10-30 at the owner\'s direction — every package carries a photo. No text is baked into the image. It is not product photography. 2026-11-02: product handle renamed to unwind-ritual-bundle (owner wording directive) and slotKey follows the handle; the image FILE keeps its legacy filename for now — the renamed binary (unwind-ritual-bundle.webp) must be uploaded before this path can change, since binaries cannot move through the text connector.',
     },
   ),
   real(

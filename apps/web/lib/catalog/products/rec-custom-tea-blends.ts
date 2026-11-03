@@ -77,7 +77,7 @@ export const RECORD: Product = {
   "disclaimer": "These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease. If you are pregnant, nursing, taking medication, or have a medical condition, consult a qualified healthcare professional before use. Keep out of reach of children.",
   "related_products": [
     "alchemy-tea-blend",
-    "custom-remedy-consultation",
+    "personalized-formula-consultation",
     "personalized-herbal-protocols"
   ],
   "frequently_bought_together": [

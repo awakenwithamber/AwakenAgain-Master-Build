@@ -89,12 +89,12 @@ export const RECORD: Product = {
   "storage": "Store in a cool, dry place — standard care for herbal capsules. Product-specific storage instructions are not published in the source and are flagged NEEDS_VERIFICATION.",
   "disclaimer": "These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease. If you are pregnant, nursing, taking medication, or have a medical condition, consult a qualified healthcare professional before use. Keep out of reach of children.",
   "related_products": [
-    "custom-remedy-consultation",
+    "personalized-formula-consultation",
     "personalized-herbal-protocols",
     "custom-tea-blends"
   ],
   "frequently_bought_together": [
-    "custom-remedy-consultation",
+    "personalized-formula-consultation",
     "personalized-herbal-protocols"
   ],
   "inventory_status": "NEEDS_VERIFICATION",

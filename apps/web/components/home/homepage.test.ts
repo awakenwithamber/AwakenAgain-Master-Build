@@ -27,13 +27,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 describe('goal cards', () => {
   it('has exactly the 7 spec cards in order', () => {
     expect(GOAL_CARDS.map((c) => c.heading)).toEqual([
-      'Better Sleep',
-      'Reduced Stress',
-      'Balanced Hormones',
-      'Stronger Hair',
+      'Sleep Support',
+      'Calm & Stress Support',
+      "Women's Wellness",
+      'Hair & Scalp Care',
       'Natural Energy',
-      'Younger Skin',
-      'Pain Relief',
+      'Skin Radiance',
+      'Muscle & Joint Comfort',
     ]);
   });
 

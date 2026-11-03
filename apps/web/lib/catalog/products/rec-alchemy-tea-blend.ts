@@ -176,7 +176,7 @@ export const RECORD: Product = {
   "related_products": [
     "custom-tea-blends",
     "custom-herbal-capsules",
-    "custom-remedy-consultation",
+    "personalized-formula-consultation",
     "tarot-readings"
   ],
   "frequently_bought_together": [

@@ -150,7 +150,9 @@ describe('catalog physical/digital survey (pin)', () => {
       .sort();
     expect(digital).toEqual(
       [
-        'custom-remedy-consultation',
+        // Renamed 2026-11-02 (owner wording directive):
+        // custom-remedy-consultation → personalized-formula-consultation.
+        'personalized-formula-consultation',
         'energy-work',
         'grimoire-subscription',
         'home-aura-space-cleansing',

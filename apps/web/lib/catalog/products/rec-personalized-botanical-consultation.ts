@@ -49,7 +49,7 @@ export const RECORD: Product = {
   "related_products": [
     "grimoire-subscription",
     "tarot-readings",
-    "stress-relief-ritual"
+    "unwind-ritual-bundle"
   ],
   "frequently_bought_together": [],
   "inventory_status": "SERVICE — availability/scheduling not established; NEEDS_VERIFICATION",

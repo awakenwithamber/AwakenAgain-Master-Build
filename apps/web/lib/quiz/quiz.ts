@@ -522,7 +522,7 @@ export function getQuizResult(
   const form = getForm(formId);
   if (!entry || !form) return null;
   const handle = entry.products[form.id] ?? entry.products.any;
-  const candidates = [handle, 'alchemy-tea-blend', 'custom-remedy-consultation'];
+  const candidates = [handle, 'alchemy-tea-blend', 'personalized-formula-consultation'];
   const flagged = hasScreeningFlag(screening);
   const productHandles: string[] = [];
   const withheld: QuizWithheldProduct[] = [];

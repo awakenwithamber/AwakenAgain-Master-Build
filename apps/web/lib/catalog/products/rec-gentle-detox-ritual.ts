@@ -3,6 +3,13 @@
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
  * Generated: 2026-10-05
+ * 2026-11-02 (owner wording directive): handle renamed
+ * 'gentle-detox-ritual' → 'gentle-flow-ritual' (claim-word slug) and
+ * cleanse copy replaced per the wording sweep. next.config.mjs
+ * permanently redirects the old /shop/gentle-detox-ritual URL. SKU
+ * values unchanged (internal identifiers). The image file keeps its
+ * legacy filename until the renamed binary is uploaded; see
+ * lib/media/image-manifest.ts.
  */
 import type { Product } from '../../../types';
 
@@ -63,7 +70,7 @@ export const RECORD: Product = {
   "disclaimer": "For educational, spiritual, or informational purposes only. Not medical advice and not intended to diagnose, treat, cure, or prevent any disease. Seek qualified professional care for medical concerns.",
   "last_verified": "2026-10-05",
   "title": "Gentle Flow Ritual Bundle",
-  "handle": "gentle-detox-ritual",
+  "handle": "gentle-flow-ritual",
   "sku": "RITUAL-DETOX-001",
   "subcategory": "Wellness Bundle",
   "price": 27.99,
@@ -105,20 +112,19 @@ export const RECORD: Product = {
   ],
   "tags": [
     "bundle",
-    "cleanse",
     "digestion",
     "liver support",
     "gentle flow"
   ],
-  "short_description": "A graceful cleanse ritual for a lighter belly, clearer mind, and softer glow.",
-  "extended_description": "The Gentle Flow Ritual Bundle is a complete apothecary kit for feeling lighter without feeling punished. The digestive tea — built around dandelion root, fennel, ginger, and peppermint — anchors a daily reset cup. The botanical soap turns the shower into part of the cleanse. The 1 oz balm offers a soothing topical moment for the belly and body. And the 14-day capsule course wraps digestive and liver-support botanicals into one beautiful routine. Begin slowly, take with plenty of water, and support the reset with meals, minerals, and hydration — never a crash cleanse.",
+  "short_description": "A graceful ritual for a lighter belly, clearer mind, and softer glow.",
+  "extended_description": "The Gentle Flow Ritual Bundle is a complete apothecary kit for feeling lighter without feeling punished. The digestive tea — built around dandelion root, fennel, ginger, and peppermint — anchors a daily reset cup. The botanical soap turns the shower into part of the ritual. The 1 oz balm offers a soothing topical moment for the belly and body. And the 14-day capsule ritual wraps digestive and liver-support botanicals into one beautiful routine. Begin slowly, take with plenty of water, and support the reset with meals, minerals, and hydration — never a crash reset.",
   "bundle_highlights": "Key botanicals named in the baseline catalog for this bundle: Dandelion Root, Milk Thistle, Fennel, Ginger, Peppermint, Nettle. Full component formulas to be confirmed by owner.",
   "complete_ingredients": "See included products. Included component handles: not specified in baseline — NEEDS_VERIFICATION.",
   "traditional_uses": "The botanicals named for this bundle — dandelion root, milk thistle, fennel, ginger, peppermint, and nettle — are traditionally used to support digestion and the body’s natural cleansing processes. Individual experiences vary.",
   "properties": "Supports digestion. Encourages gentle normal elimination pathways. Includes full ritual set. Giftable wellness bundle. (Sourced from baseline benefits; no new claims added.)",
-  "formulation_rationale": "ROUTINE RATIONALE (bundle, not a formula): the four formats support a gentle reset from multiple angles — the tea delivers digestive botanicals as a daily warm cup, the capsule course provides the 14-day internal routine, the soap extends the ritual into the shower, and the balm adds a soothing topical pause. Sourced from the baseline description ('wraps digestive and liver-support botanicals into one beautiful reset ritual') and instructions ('Begin slowly... support with meals, minerals, and hydration'). Specific component products not yet confirmed by owner.",
-  "directions": "Take with plenty of water. Begin slowly. Do not use as a crash cleanse; support with meals, minerals, and hydration. (Baseline instructions, verbatim.) Steep the tea (about 1–2 tsp per 8 oz hot water, 10–15 minutes). Lather and rinse with the botanical soap; avoid eyes. Massage a small amount of balm into the desired area; external use only.",
-  "warnings": "Union of representative component cautions (baseline): use as a short-term wellness routine only; avoid during pregnancy or breastfeeding unless advised by a qualified professional; check contraindications for strong bitter/cleansing herbs; capsules — take with water; balm/soap — external use only, avoid eyes and open wounds, discontinue if irritation occurs, patch test if sensitive. Finalize once exact component products are confirmed by owner.",
+  "formulation_rationale": "ROUTINE RATIONALE (bundle, not a formula): the four formats support a gentle reset from multiple angles — the tea delivers digestive botanicals as a daily warm cup, the capsule ritual provides the 14-day internal routine, the soap extends the ritual into the shower, and the balm adds a soothing topical pause. Sourced from the baseline description ('wraps digestive and liver-support botanicals into one beautiful reset ritual') and instructions ('Begin slowly... support with meals, minerals, and hydration'). Specific component products not yet confirmed by owner.",
+  "directions": "Take with plenty of water. Begin slowly. Do not use as a crash reset; support with meals, minerals, and hydration. (Baseline instructions, verbatim.) Steep the tea (about 1–2 tsp per 8 oz hot water, 10–15 minutes). Lather and rinse with the botanical soap; avoid eyes. Massage a small amount of balm into the desired area; external use only.",
+  "warnings": "Union of representative component cautions (baseline): use as a short-term wellness routine only; avoid during pregnancy or breastfeeding unless advised by a qualified professional; check contraindications for strong bitter herbs; capsules — take with water; balm/soap — external use only, avoid eyes and open wounds, discontinue if irritation occurs, patch test if sensitive. Finalize once exact component products are confirmed by owner.",
   "allergens": "Not compiled at bundle level — see included products once component formulas are confirmed. NEEDS_VERIFICATION.",
   "storage": "Store in a cool, dry place away from direct sunlight; keep capsules sealed. (Standard guidance — not baseline-sourced.)",
   "included_items": [
@@ -155,7 +161,7 @@ export const RECORD: Product = {
   },
   "related_products": [
     "focus-clarity-ritual",
-    "stress-relief-ritual",
+    "unwind-ritual-bundle",
     "full-soap-collection"
   ],
   "frequently_bought_together": [

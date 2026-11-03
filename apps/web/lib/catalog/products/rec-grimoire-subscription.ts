@@ -62,12 +62,12 @@ export const RECORD: Product = {
   "related_products": [
     "tarot-readings",
     "rune-readings",
-    "stress-relief-ritual",
+    "unwind-ritual-bundle",
     "personalized-botanical-consultation"
   ],
   "frequently_bought_together": [
     "tarot-readings",
-    "stress-relief-ritual"
+    "unwind-ritual-bundle"
   ],
   "inventory_status": "DIGITAL — always available",
   "review_summary": {},

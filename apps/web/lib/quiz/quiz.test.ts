@@ -163,7 +163,7 @@ describe('safety screening (Stage 4, R-14/R-15)', () => {
       reason: 'pregnancy-ingestible',
     });
     // The consultation service is not ingestible and still shows.
-    expect(result.productHandles).toContain('custom-remedy-consultation');
+    expect(result.productHandles).toContain('personalized-formula-consultation');
     expect(result.hasSafetyFlags).toBe(true);
   });
 

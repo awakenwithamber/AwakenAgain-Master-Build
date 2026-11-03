@@ -154,8 +154,8 @@ export const RECORD: Product = {
     "arithmetic": "individual_total = soap 4.77 + tea 11.99 + balm 11.77 + 14-day capsules 16.09 (34.47*14/30) = 44.62; bundle_price = 27.99 (baseline newest-catalog value); savings = 44.62 - 27.99 = 16.63"
   },
   "related_products": [
-    "gentle-detox-ritual",
-    "stress-relief-ritual",
+    "gentle-flow-ritual",
+    "unwind-ritual-bundle",
     "full-soap-collection"
   ],
   "frequently_bought_together": [

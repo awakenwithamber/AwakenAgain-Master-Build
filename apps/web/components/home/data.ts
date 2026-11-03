@@ -18,26 +18,26 @@ export const GOAL_CARDS: GoalCard[] = [
   {
     emoji: '😴',
     badge: 'Best for beginners',
-    heading: 'Better Sleep',
+    heading: 'Sleep Support',
     copy: 'A moonlit capsule ritual for deep rest, a quiet mind, and mornings that feel softer.',
     link: { href: '/shop/dreamease-capsules', label: 'Go to recommended formula' },
   },
   {
     emoji: '🧘',
     badge: 'Most popular',
-    heading: 'Reduced Stress',
+    heading: 'Calm & Stress Support',
     copy: 'A calming botanical blend for relaxation, emotional balance, and everyday stress support.',
     link: { href: '/shop/chill-pill-capsules', label: 'Go to recommended formula' },
   },
   {
     emoji: '🌸',
-    heading: 'Balanced Hormones',
+    heading: "Women's Wellness",
     copy: 'A botanical blend supporting normal menstrual-cycle wellness, comfort, and steady daily energy.',
-    link: { href: '/shop/sacred-balance-capsules', label: 'Shop Hormones →' },
+    link: { href: '/shop/sacred-balance-capsules', label: "Shop Women's Wellness →" },
   },
   {
     emoji: '💇',
-    heading: 'Stronger Hair',
+    heading: 'Hair & Scalp Care',
     copy: 'A botanical scalp serum for conditioning, shine, and fuller-looking hair.',
     link: { href: '/shop/root-scalp-revival-serum', label: 'Shop Hair →' },
   },
@@ -49,15 +49,15 @@ export const GOAL_CARDS: GoalCard[] = [
   },
   {
     emoji: '✨',
-    heading: 'Younger Skin',
+    heading: 'Skin Radiance',
     copy: 'A rich botanical face-and-body balm that moisturizes, softens, and supports a radiant-looking complexion.',
     link: { href: '/shop/radiance-renewal-balm', label: 'Shop Skin →' },
   },
   {
     emoji: '🌿',
-    heading: 'Pain Relief',
+    heading: 'Muscle & Joint Comfort',
     copy: 'A comforting herbal massage balm for tired muscles and everyday body care.',
-    link: { href: '/shop/soothe-restore-botanical-balm', label: 'Shop Pain Relief →' },
+    link: { href: '/shop/soothe-restore-botanical-balm', label: 'Shop Balms & Comfort →' },
   },
 ];
 

@@ -32,7 +32,7 @@ const BOOKING_NOTE =
   'NEEDS VERIFICATION — booking flow, delivery format, and turnaround are not yet published. Owner confirmation required before this service advertises them.';
 
 const SERVICE_HANDLES = [
-  'custom-remedy-consultation',
+  'personalized-formula-consultation',
   'personalized-herbal-protocols',
   'personalized-botanical-consultation',
   'tarot-readings',

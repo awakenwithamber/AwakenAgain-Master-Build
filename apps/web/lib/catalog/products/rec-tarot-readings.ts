@@ -86,13 +86,13 @@ export const RECORD: Product = {
   "storage": "NOT_APPLICABLE — digital service; no physical product to store.",
   "disclaimer": "For educational, spiritual, or informational purposes only. Not medical advice and not intended to diagnose, treat, cure, or prevent any disease. Seek qualified professional care for medical concerns. For spiritual, reflective, and entertainment purposes; not professional medical, legal, or financial advice. (Combined sourced disclaimers.)",
   "related_products": [
-    "custom-remedy-consultation",
+    "personalized-formula-consultation",
     "personalized-herbal-protocols",
     "alchemy-tea-blend"
   ],
   "frequently_bought_together": [
     "alchemy-tea-blend",
-    "custom-remedy-consultation"
+    "personalized-formula-consultation"
   ],
   "inventory_status": "service — no inventory",
   "review_summary": "",

@@ -3,6 +3,12 @@
  * Source: awakenagain-migration/catalog-enrichment/products.canonical.v3.json
  * Status: DRAFT — owner approval pending (see UNRESOLVED_ITEMS_v3.md).
  * Generated: 2026-10-05
+ * 2026-11-02 (owner wording directive): handle renamed
+ * 'stress-relief-ritual' → 'unwind-ritual-bundle' (claim-word slug).
+ * next.config.mjs permanently redirects the old
+ * /shop/stress-relief-ritual URL. SKU values unchanged (internal
+ * identifiers). The image file keeps its legacy filename until the
+ * renamed binary is uploaded; see lib/media/image-manifest.ts.
  */
 import type { Product } from '../../../types';
 
@@ -63,7 +69,7 @@ export const RECORD: Product = {
   "disclaimer": "For educational, spiritual, or informational purposes only. Not medical advice and not intended to diagnose, treat, cure, or prevent any disease. Seek qualified professional care for medical concerns.",
   "last_verified": "2026-10-05",
   "title": "The Unwind Ritual Bundle",
-  "handle": "stress-relief-ritual",
+  "handle": "unwind-ritual-bundle",
   "sku": "RITUAL-STRESS-001",
   "subcategory": "Wellness Bundle",
   "price": 49.99,
@@ -136,7 +142,7 @@ export const RECORD: Product = {
   },
   "related_products": [
     "focus-clarity-ritual",
-    "gentle-detox-ritual",
+    "gentle-flow-ritual",
     "full-soap-collection"
   ],
   "frequently_bought_together": [

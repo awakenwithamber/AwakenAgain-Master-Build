@@ -166,8 +166,8 @@ export const RECORD: Product = {
   },
   "related_products": [
     "focus-clarity-ritual",
-    "gentle-detox-ritual",
-    "stress-relief-ritual"
+    "gentle-flow-ritual",
+    "unwind-ritual-bundle"
   ],
   "frequently_bought_together": [
     "grimoire-subscription"

@@ -37,7 +37,7 @@ describe('completeIngredients', () => {
 
   it('returns null for services (NOT_APPLICABLE) and empty lists', () => {
     expect(
-      completeIngredients(getProductByHandle('custom-remedy-consultation')!),
+      completeIngredients(getProductByHandle('personalized-formula-consultation')!),
     ).toBeNull();
     expect(
       completeIngredients(getProductByHandle('hearth-harvest-trio')!),
@@ -75,7 +75,7 @@ describe('allergenStatement', () => {
       'alchemy-tea-blend',
       'custom-herbal-capsules',
       'custom-tea-blends',
-      'gentle-detox-ritual',
+      'gentle-flow-ritual',
       'focus-clarity-ritual',
       'full-soap-collection',
     ]) {
@@ -112,7 +112,7 @@ describe('isIngestibleProduct', () => {
       expect.arrayContaining([
         'dreamease-capsules',
         'alchemy-tea-blend',
-        'gentle-detox-ritual', // bundle whose sizes list capsules + tea bags
+        'gentle-flow-ritual', // bundle whose sizes list capsules + tea bags
         'radiance-support-capsules', // sizes state "30 capsules"
         'custom-herbal-capsules',
         'wild-caught-omega-3-fish-oil',
@@ -132,7 +132,7 @@ describe('isIngestibleProduct', () => {
       'energy-work',
       'grimoire-subscription',
       'personalized-herbal-protocols',
-      'custom-remedy-consultation',
+      'personalized-formula-consultation',
     ]) {
       expect(isIngestibleProduct(getProductByHandle(handle)!), handle).toBe(false);
     }

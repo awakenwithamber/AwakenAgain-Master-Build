@@ -93,7 +93,6 @@ describe('generated / styled artwork — honest framing', () => {
       'energy-work',
       'home-aura-space-cleansing',
       'personalized-botanical-consultation',
-      'custom-remedy-consultation',
       'tarot-readings',
       'tarot-rune-reading',
     ]) {
@@ -104,6 +103,22 @@ describe('generated / styled artwork — honest framing', () => {
       expect(img!.caption, handle).toBe(REPRESENTATION_CAPTION);
       expect(img!.provenance, handle).toBe('OWNER_UPLOADED');
     }
+  });
+
+  it('the renamed consultation (2026-11-02) resolves via its legacy image filename', () => {
+    // Handle renamed custom-remedy-consultation →
+    // personalized-formula-consultation under the owner wording
+    // directive. The image binary keeps its legacy filename until the
+    // renamed file is uploaded (binaries cannot move through the text
+    // connector), so src is the legacy path while the slot follows the
+    // new handle.
+    const img = getProductDisplayImage(must('personalized-formula-consultation'));
+    expect(img).not.toBeNull();
+    expect(img!.src).toBe('/images/products/custom-remedy-consultation.webp');
+    expect(img!.documentaryPhoto).toBe(false);
+    expect(img!.caption).toBe(REPRESENTATION_CAPTION);
+    expect(img!.provenance).toBe('OWNER_UPLOADED');
+    expect(img!.alt).toContain('Personalized Formula Consultation');
   });
 });
 
@@ -171,10 +186,10 @@ describe('catalog-wide resolution census', () => {
         'wild-mint-meadow-tea',
         'collagen-supplement',
         'focus-clarity-ritual',
-        'gentle-detox-ritual',
-        'stress-relief-ritual',
+        'gentle-flow-ritual',
+        'unwind-ritual-bundle',
         'hearth-harvest-trio',
-        'custom-remedy-consultation',
+        'personalized-formula-consultation',
         'dreamease-capsules',
         'energy-work',
         'eucalyptus-mint-spa-renewal-soap',

@@ -21,7 +21,7 @@ export const SHOP_GOALS: ShopGoal[] = [
   {
     id: 'sleep',
     icon: '😴',
-    label: 'Better Sleep',
+    label: 'Sleep Support',
     handles: [
       'dreamease-capsules',
       'lavender-fairy-dream-soap',
@@ -32,24 +32,24 @@ export const SHOP_GOALS: ShopGoal[] = [
   {
     id: 'stress',
     icon: '🧘',
-    label: 'Reduced Stress',
+    label: 'Calm & Stress Support',
     handles: [
       'chill-pill-capsules',
       'alchemy-tea-blend',
       'lavender-fairy-dream-soap',
-      'stress-relief-ritual',
+      'unwind-ritual-bundle',
     ],
   },
   {
     id: 'hormonal',
     icon: '🌸',
-    label: 'Balanced Hormones',
+    label: "Women's Wellness",
     handles: ['sacred-balance-capsules', 'happy-pill-capsules'],
   },
   {
     id: 'hair',
     icon: '💇',
-    label: 'Stronger Hair',
+    label: 'Hair & Scalp Care',
     handles: ['root-scalp-revival-serum'],
   },
   {
@@ -65,7 +65,7 @@ export const SHOP_GOALS: ShopGoal[] = [
   {
     id: 'beauty',
     icon: '✨',
-    label: 'Younger Skin',
+    label: 'Skin Radiance',
     handles: [
       'radiance-renewal-balm',
       'radiance-support-capsules',
@@ -76,7 +76,7 @@ export const SHOP_GOALS: ShopGoal[] = [
   {
     id: 'pain',
     icon: '🌿',
-    label: 'Pain Relief',
+    label: 'Muscle Comfort',
     handles: [
       'soothe-restore-botanical-balm',
       'vital-connect-capsules',
@@ -93,7 +93,7 @@ export const SHOP_GOALS: ShopGoal[] = [
     id: 'digestive',
     icon: '🍃',
     label: 'Digestive Ease',
-    handles: ['seasonal-gut-reset', 'gentle-detox-ritual', 'alchemy-tea-blend'],
+    handles: ['seasonal-gut-reset', 'gentle-flow-ritual', 'alchemy-tea-blend'],
   },
 ];
 

@@ -68,13 +68,13 @@ export const RECORD: Product = {
   "storage": "NOT_APPLICABLE — digital deliverable; no physical product to store.",
   "disclaimer": "For general wellness and educational purposes only. Custom recommendations are not a diagnosis or treatment plan. Review ingredients for allergies, pregnancy, medication interactions, and individual contraindications, and consult a qualified healthcare professional when appropriate.",
   "related_products": [
-    "custom-remedy-consultation",
+    "personalized-formula-consultation",
     "custom-herbal-capsules",
     "alchemy-tea-blend",
     "custom-tea-blends"
   ],
   "frequently_bought_together": [
-    "custom-remedy-consultation",
+    "personalized-formula-consultation",
     "custom-herbal-capsules"
   ],
   "inventory_status": "service — no inventory",

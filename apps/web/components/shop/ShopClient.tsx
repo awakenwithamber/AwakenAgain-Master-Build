@@ -32,9 +32,9 @@ const FILTER_PILLS: Array<{ id: string; label: string; goalId: string | null }> 
 
 /** Ritual bundles shown at the top (superseded 9-bar collection excluded). */
 const RITUAL_BUNDLE_HANDLES = [
-  'stress-relief-ritual',
+  'unwind-ritual-bundle',
   'focus-clarity-ritual',
-  'gentle-detox-ritual',
+  'gentle-flow-ritual',
   'soap-style-collection-5',
 ];
 

@@ -138,7 +138,7 @@ export const RECORD: Product = {
   },
   "formulation_rationale": "Not established in source materials.",
   "process": "Not established in source materials. The baseline catalog does not state a hand-filled or batch process for this product.",
-  "directions": "Use as a short-term cleanse only. Avoid during pregnancy or breastfeeding. Check contraindications for strong bitter herbs. Suggested daily amount is not established in source materials.",
+  "directions": "Use as a short-term seasonal routine only. Avoid during pregnancy or breastfeeding. Check contraindications for strong bitter herbs. Suggested daily amount is not established in source materials.",
   "warnings": "For short-term use only. Avoid during pregnancy or breastfeeding. Check contraindications for strong bitter herbs (such as wormwood and black walnut, if included — their presence is not confirmed in source materials). May interact with medications; if you are taking medication or have a medical condition, consult a qualified healthcare professional before use.",
   "allergens": "None listed in source materials.",
   "storage": "Not established in source materials.",
