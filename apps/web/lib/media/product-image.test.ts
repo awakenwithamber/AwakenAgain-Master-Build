@@ -114,7 +114,7 @@ describe('generated / styled artwork — honest framing', () => {
     // new handle.
     const img = getProductDisplayImage(must('personalized-formula-consultation'));
     expect(img).not.toBeNull();
-    expect(img!.src).toBe('/images/products/custom-remedy-consultation.webp');
+    expect(img!.src).toBe('/images/products/personalized-formula-consultation.webp');
     expect(img!.documentaryPhoto).toBe(false);
     expect(img!.caption).toBe(REPRESENTATION_CAPTION);
     expect(img!.provenance).toBe('OWNER_UPLOADED');

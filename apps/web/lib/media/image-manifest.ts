@@ -534,7 +534,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   ),
   real(
     'asset_service_custom_remedy_consultation',
-    '/images/products/custom-remedy-consultation.webp',
+    '/images/products/personalized-formula-consultation.webp',
     'Personalized Formula Consultation — owner-supplied artwork: apothecary bottles and a mortar on a candlelit workbench (shared with Personalized Botanical Consultation)',
     'OWNER_UPLOADED',
     {
@@ -928,7 +928,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   ),
   real(
     'asset_product_gentle_detox_ritual',
-    '/images/products/gentle-detox-ritual.webp',
+    '/images/products/gentle-flow-ritual.webp',
     'Gentle Flow Ritual Bundle — generated representation: golden tea, botanical soap bar, balm tin and amber capsule bottle with dandelion, fennel and ginger on an apothecary table',
     'GENERATED_PRODUCT_REPRESENTATION',
     {
@@ -942,7 +942,7 @@ export const IMAGE_MANIFEST: readonly ImageAssetEntry[] = [
   ),
   real(
     'asset_product_stress_relief_ritual',
-    '/images/products/stress-relief-ritual.webp',
+    '/images/products/unwind-ritual-bundle.webp',
     'The Unwind Ritual Bundle — generated representation: steaming tea, botanical soap bar, balm tin and amber capsule bottle with lavender and chamomile in moonlit candlelight',
     'GENERATED_PRODUCT_REPRESENTATION',
     {

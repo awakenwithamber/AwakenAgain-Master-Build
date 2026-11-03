@@ -81,7 +81,7 @@ export const RECORD: Product = {
   "variants": [],
   "images": [
     {
-      "src": "/images/products/stress-relief-ritual.webp",
+      "src": "/images/products/unwind-ritual-bundle.webp",
       "alt": "The Unwind Ritual Bundle — generated representation: steaming tea, botanical soap bar, balm tin and amber capsule bottle with lavender and chamomile in moonlit candlelight",
       "provenance": "GENERATED_REPRESENTATION",
       "status": "GENERATED_REPRESENTATION"

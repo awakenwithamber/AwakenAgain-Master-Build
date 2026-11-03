@@ -101,7 +101,7 @@ export const RECORD: Product = {
   ],
   "images": [
     {
-      "src": "/images/products/gentle-detox-ritual.webp",
+      "src": "/images/products/gentle-flow-ritual.webp",
       "alt": "Gentle Flow Ritual Bundle — generated representation: golden tea, botanical soap bar, balm tin and amber capsule bottle with dandelion, fennel and ginger on an apothecary table",
       "provenance": "GENERATED_REPRESENTATION",
       "status": "GENERATED_REPRESENTATION"

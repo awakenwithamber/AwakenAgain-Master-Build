@@ -35,7 +35,7 @@ export const RECORD: Product = {
   "tags": [],
   "images": [
     {
-      "src": "/images/products/custom-remedy-consultation.webp",
+      "src": "/images/products/personalized-formula-consultation.webp",
       "alt": "Personalized Formula Consultation — apothecary bottles and a mortar on a candlelit workbench (illustrated representation)",
       "role": "primary",
       "status": "mapped_photo",
