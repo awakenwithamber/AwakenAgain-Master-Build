@@ -141,6 +141,32 @@ const LEGAL_LINKS = [
   { href: '/returns', label: 'Returns & Refunds' },
 ];
 
+const AWAKEN_NETWORK_LINKS = [
+  {
+    href: 'https://awakenflow-crm-awakenagain2.vercel.app',
+    label: 'AwakenFlow CRM',
+    note: 'Client care & follow-up for small businesses',
+  },
+  {
+    href: 'https://meta-free-awakenagain2.vercel.app',
+    label: 'Meta Free',
+    note: 'Your social workspace — free forever',
+  },
+  {
+    href: 'https://awaken-pages.vercel.app/garden-club.html',
+    label: 'Alchemy Garden Club',
+    note: 'A seasonal garden circle from the Apothecary',
+  },
+  {
+    href: 'https://awaken-social-awakenagain2.vercel.app',
+    label: 'Awaken Social',
+    note: 'Our own social home in the Awaken Network',
+  },
+  // PENDING — do not uncomment until it verifies live (HTTP 200) and
+  // Amber gives the launch word for that property:
+  // { href: 'https://PENDING-portfolio', label: 'Amber Patten — Portfolio', note: 'PENDING CLOUDFLARE DEPLOY' },
+];
+
 export default function Footer() {
   return (
     <footer className="site-footer">
@@ -194,6 +220,19 @@ export default function Footer() {
             {LEGAL_LINKS.map((l) => (
               <li key={l.href}>
                 <Link href={l.href}>{l.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <nav className="footer-col" aria-label="Awaken Network">
+          <h3>Awaken Network</h3>
+          <ul>
+            {AWAKEN_NETWORK_LINKS.map((l) => (
+              <li key={l.href}>
+                <a href={l.href} target="_blank" rel="noopener noreferrer">
+                  {l.label}
+                </a>
+                <span className="footer-link-note"> — {l.note}</span>
               </li>
             ))}
           </ul>
