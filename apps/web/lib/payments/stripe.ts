@@ -6,13 +6,6 @@
  * unchanged. (The former Bookipi invoice backup path was removed by
  * owner directive 2026-10-21.)
  *
- * AwakenPay (owner directive 2026-11-07): this stack is the
- * AwakenPay card rail — presented to customers under the AwakenPay
- * brand with Stripe disclosed as the processor (brand constants in
- * lib/payments/awakenpay-brand.ts; the fail-closed, mode-consistent
- * configuration gate in lib/payments/awakenpay.ts, which every card
- * surface consults in addition to this module's own env checks).
- *
  * Money-path laws:
  * - The order is created FIRST by the server-authoritative checkout
  *   (lib/checkout/order) and persisted UNPAID. Only then is a Checkout

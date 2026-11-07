@@ -23,7 +23,6 @@
  */
 import type { StripeClientLike } from '../payments/stripe';
 import { getStripeConfig } from '../payments/stripe';
-import { getAwakenPayState } from '../payments/awakenpay';
 import { normalizeSubscriptionEmail } from './entitlement';
 import { GRIMOIRE_PLAN } from './subscriptions';
 
@@ -36,17 +35,12 @@ export function grimoireSubscriptionPriceId(
   return env.STRIPE_GRIMOIRE_PRICE_ID?.trim() || null;
 }
 
-/**
- * True when a real subscription checkout can be created here: the
- * AwakenPay card gate is open (keys present, well-shaped,
- * mode-consistent — lib/payments/awakenpay.ts) AND the plan price
- * is configured.
- */
+/** True when a real subscription checkout can be created here. */
 export function grimoireSubscriptionCheckoutAvailable(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   return (
-    getAwakenPayState(env).cardAvailable &&
+    getStripeConfig(env).cardAvailable &&
     grimoireSubscriptionPriceId(env) !== null
   );
 }
