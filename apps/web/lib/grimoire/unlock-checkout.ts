@@ -19,7 +19,7 @@
  * SERVER-ONLY: uses the Stripe secret key. Never import client-side.
  */
 import type { StripeClientLike } from '../payments/stripe';
-import { getStripeConfig } from '../payments/stripe';
+import { getAwakenPayState } from '../payments/awakenpay';
 import { normalizeSubscriptionEmail } from '../subscriptions/entitlement';
 import {
   GRIMOIRE_EDITION_ID,
@@ -35,12 +35,17 @@ export function grimoireUnlockPriceId(
   return env.STRIPE_GRIMOIRE_UNLOCK_PRICE_ID?.trim() || null;
 }
 
-/** True when a real unlock checkout can be created on this server. */
+/**
+ * True when a real unlock checkout can be created on this server:
+ * the AwakenPay card gate is open (keys present, well-shaped,
+ * mode-consistent — lib/payments/awakenpay.ts) AND the unlock price
+ * is configured.
+ */
 export function grimoireUnlockCheckoutAvailable(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   return (
-    getStripeConfig(env).cardAvailable && grimoireUnlockPriceId(env) !== null
+    getAwakenPayState(env).cardAvailable && grimoireUnlockPriceId(env) !== null
   );
 }
 

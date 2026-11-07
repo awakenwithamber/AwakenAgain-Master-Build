@@ -133,9 +133,10 @@ export interface CheckoutRequestBody {
    * tax and shipping and make it work"). The checkout form collects it
    * for EVERY order — physical orders need it for fulfillment, and it
    * drives the sales-tax calculation for the invoice / Cash App /
-   * Venmo rails (see validateAndBuildOrder). The dormant
-   * 'stripe_card_embedded' rail ignores it entirely: that path keeps
-   * its Stripe-Tax-in-session behavior and is never double-taxed.
+   * Venmo rails (see validateAndBuildOrder). The AwakenPay card rail
+   * ('stripe_card_embedded') stores the address but never taxes from
+   * it here: that path keeps its Stripe-Tax-in-session behavior and
+   * is never double-taxed.
    */
   delivery_address?: OrderDeliveryAddressInput;
   /**
@@ -212,9 +213,8 @@ export interface OrderRecord {
   /**
    * Delivery address — present on invoice / Cash App / Venmo orders
    * placed with one (the checkout form always collects it, owner
-   * directive 2026-11-01). Absent on historical records and on the
-   * dormant card rail, which ignores the field; readers must treat
-   * absent as "no address on file".
+   * directive 2026-11-01). Absent on historical records; readers
+   * must treat absent as "no address on file".
    */
   delivery_address?: OrderDeliveryAddress;
   /**
@@ -222,7 +222,7 @@ export interface OrderRecord {
    * address on the DISCOUNTED merchandise subtotal — separately
    * stated shipping is never in the tax base. Present exactly when
    * tax_breakdown is present, and INCLUDED in total_cents (unlike
-   * the dormant card rail, where Stripe Tax adds tax in-session and
+   * the AwakenPay card rail, where Stripe Tax adds tax in-session and
    * total_cents stays the pre-tax figure the webhook verifies).
    */
   tax_cents?: number;
@@ -322,16 +322,23 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
  *   Stripe checkout. Card acceptance through Bluevine is NOT live
  *   until that link exists and is verified; while the config is unset
  *   the method is rejected here and no card wording renders anywhere.
- * - 'stripe_card_embedded' — DORMANT (parked 2026-10-24, NOT deleted):
- *   no longer offered in the checkout UI, and since the 2026-11-02
- *   combined merge it is REJECTED for new orders by this parser
- *   (adopting the card-merge build's dormant-hole fix: previously a
- *   crafted request could place an order routed to a card rail that
- *   does not exist). The value survives ONLY in StoredPaymentMethod,
- *   so historical records stay readable and the dormant session
- *   route, webhook, and paid-state joins keep working against them;
- *   the tax build's "dormant rail ignores the address" behavior now
- *   applies to those stored records, never to a new order.
+ * - 'stripe_card_embedded' — the AwakenPay CARD rail (built
+ *   2026-10-19; parked 2026-10-24; UN-PARKED by owner directive
+ *   2026-11-07 — "everywhere my checkout works on awakenagain.com
+ *   finish creating the copy of Stripe in my brand so I may use
+ *   it"): the embedded Stripe checkout, presented to customers
+ *   under the AwakenPay brand (Stripe stays the disclosed processor
+ *   underneath). FAIL-CLOSED GATED: this parser accepts it for a
+ *   new order ONLY when the caller reports the AwakenPay card rail
+ *   configured (ValidateOrderOptions.awakenPayCardAvailable — the
+ *   checkout route derives it from the env-gated, mode-consistent
+ *   key check in lib/payments/awakenpay.ts). While unconfigured it
+ *   is rejected exactly as before, so no crafted request can route
+ *   an order to a card rail that cannot run (the 2026-11-01
+ *   dormant-hole fix, preserved). On this rail the order total
+ *   stays PRE-TAX and Stripe Tax computes tax inside the session
+ *   (see validateAndBuildOrder) — the site tax engine never also
+ *   taxes a card order.
  * Any other value is rejected, with ONE alias: 'bookipi_invoice'
  * (the primary method's name from 2026-10-24 until this replacement)
  * is accepted and NORMALIZED to 'bluevine_invoice' — a stored record
@@ -345,7 +352,8 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
 export type PaymentMethod =
   | 'cash_app_or_venmo'
   | 'bluevine_invoice'
-  | 'bluevine_card_link';
+  | 'bluevine_card_link'
+  | 'stripe_card_embedded';
 
 /**
  * Payment methods as they can appear on a STORED order record. New
@@ -407,8 +415,17 @@ export function bluevineCardConfigured(): boolean {
   return bluevinePaymentLinkUrl() !== null;
 }
 
-/** Validate the optional payment_method field; absent means the default. */
-export function parsePaymentMethod(raw: unknown): PaymentMethod {
+/**
+ * Validate the optional payment_method field; absent means the
+ * default. The AwakenPay card value ('stripe_card_embedded') is
+ * accepted ONLY when the caller passes awakenPayCardAvailable —
+ * the fail-closed gate described on the PaymentMethod comment
+ * above. Direct/unit callers that pass nothing get the closed gate.
+ */
+export function parsePaymentMethod(
+  raw: unknown,
+  options?: { awakenPayCardAvailable?: boolean },
+): PaymentMethod {
   if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
   // Pre-replacement alias: normalized, never stored from a new order.
   if (raw === 'bookipi_invoice') return 'bluevine_invoice';
@@ -416,11 +433,11 @@ export function parsePaymentMethod(raw: unknown): PaymentMethod {
     return raw;
   }
   if (raw === 'stripe_card_embedded') {
-    // Dormant-hole fix (card-merge build 2026-11-01, adopted in the
-    // 2026-11-02 combined merge): the embedded-card value stays
-    // readable on STORED records but must never route a NEW order.
+    if (options?.awakenPayCardAvailable === true) return raw;
+    // Fail closed (the 2026-11-01 dormant-hole fix, preserved): an
+    // unconfigured card rail must never route a NEW order.
     throw new Error(
-      'That payment method is no longer accepted for new orders. Choose the Bluevine invoice, or Cash App or Venmo.',
+      'Card payment through AwakenPay is not available right now. Choose the Bluevine invoice, or Cash App or Venmo.',
     );
   }
   if (raw === 'bluevine_card_link') {
@@ -556,6 +573,15 @@ export interface ValidateOrderOptions {
     /** A prior recorded order for the email already used FIRST10. */
     hasUsedCoupon?: boolean;
   };
+  /**
+   * Whether the AwakenPay card rail is configured on this
+   * deployment (lib/payments/awakenpay.ts — keys present,
+   * well-shaped, mode-consistent). The checkout route ALWAYS
+   * supplies this in production. Defaults to false (fail closed):
+   * direct/unit callers and the order-intake pipeline get a closed
+   * card gate, exactly as when the rail was parked.
+   */
+  awakenPayCardAvailable?: boolean;
 }
 
 function generateOrderId(): string {
@@ -863,11 +889,15 @@ export function validateAndBuildOrder(
   }
   const notes = sanitizePlainText(customer.notes, 1000);
 
-  // Payment method: the client's choice, validated against the two
+  // Payment method: the client's choice, validated against the
   // supported rails; absent means the Cash App / Venmo default. The
   // choice never affects pricing — subscriber benefits compute
-  // identically for both methods.
-  const paymentMethod = parsePaymentMethod(body.payment_method);
+  // identically for every method. The AwakenPay card value is
+  // accepted only behind its fail-closed configuration gate.
+  const paymentMethod = parsePaymentMethod(body.payment_method, {
+    awakenPayCardAvailable: options.awakenPayCardAvailable === true,
+  });
+  const isAwakenPayCard = paymentMethod === 'stripe_card_embedded';
 
   // The checkbox is a claim the server verifies (see header note). The
   // bare boolean by itself grants NOTHING.
@@ -986,12 +1016,14 @@ export function validateAndBuildOrder(
   //   lib/tax). For these rails the tax is INCLUDED in total_cents:
   //   the tax-inclusive total is the amount the customer owes by
   //   invoice / Cash App / Venmo.
-  // - The DORMANT 'stripe_card_embedded' rail can no longer create
-  //   orders at all (the parser rejects it for new orders — see
-  //   parsePaymentMethod), so no new order can reach this code on
-  //   that rail; its stored records keep their in-session tax
-  //   behavior in the dormant session/webhook machinery and are
-  //   never double-taxed by this site-computed tax.
+  // - The AwakenPay card rail ('stripe_card_embedded', un-parked
+  //   2026-11-07 behind its configuration gate) keeps its original
+  //   in-session behavior: NO site-computed tax fields are recorded
+  //   and total_cents stays the PRE-TAX figure, because Stripe Tax
+  //   computes the tax inside the embedded session from the address
+  //   collected there, and the webhook verifies amount == total +
+  //   Stripe's reported tax. A card order is therefore never
+  //   double-taxed by this site-computed tax.
   // - A body with NO delivery_address (legacy / non-form API
   //   callers, e.g. the order-intake pipeline) keeps the exact legacy
   //   behavior: no tax fields, pre-tax totals. The checkout FORM
@@ -1047,7 +1079,9 @@ export function validateAndBuildOrder(
           shippingCents,
         })
       : undefined;
-  const taxBreakdown = taxForDiscount(totalDiscountCents);
+  const taxBreakdown = isAwakenPayCard
+    ? undefined
+    : taxForDiscount(totalDiscountCents);
   const taxCents = taxBreakdown?.taxCents ?? 0;
 
   // The total is the subtotal minus any VERIFIED subscriber discount
@@ -1073,9 +1107,12 @@ export function validateAndBuildOrder(
   // shared preview (components/checkout/cart-preview.ts, which imports
   // this same lib/tax engine) shows. Any other client total — including
   // a Utah total that omits the tax — is rejected.
-  const standardTaxCents = taxForDiscount(0)?.taxCents ?? 0;
-  const claimedTaxCents =
-    taxForDiscount(claimedDiscountCents)?.taxCents ?? 0;
+  const standardTaxCents = isAwakenPayCard
+    ? 0
+    : (taxForDiscount(0)?.taxCents ?? 0);
+  const claimedTaxCents = isAwakenPayCard
+    ? 0
+    : (taxForDiscount(claimedDiscountCents)?.taxCents ?? 0);
   const standardTotalCents =
     subtotalCents + standardShippingCents + standardTaxCents;
   const claimedSubscriberTotalCents =
