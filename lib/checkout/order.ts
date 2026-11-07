@@ -1,0 +1,1125 @@
+/**
+ * Server-side order validation + pricing — SERVER AUTHORITY.
+ *
+ * CLIENT = PREVIEW, SERVER = AUTHORITY: every total is recomputed here from
+ * canonical data (lib/pricing + lib/cart/validation). Any client-supplied
+ * total or unit price that mismatches the server computation is REJECTED.
+ *
+ * Lives in lib/ (not in a route module) because Next.js route files may only
+ * export HTTP handlers and route config — this function is exported for the
+ * regression tests and imported by app/api/checkout/route.ts.
+ */
+import { getProductByHandle } from '../catalog/products';
+import { isFixedFormulaProduct, isSupersededProduct } from '../catalog/status';
+import { BUNDLE_ID, formulaKindForHandle, getFormulaSize, toCents } from '../pricing/pricing';
+import {
+  sanitizeEmail,
+  sanitizePhone,
+  sanitizePlainText,
+} from '../security/validation';
+import {
+  buildBundleConfiguration,
+  priceCustomization,
+  priceFormulaCustomization,
+  validateCustomization,
+  validateFormulaCustomization,
+} from '../cart/validation';
+import {
+  productRequiresShipping,
+  validateShippingAddress,
+  type ShippingAddress,
+} from './shipping-address';
+
+export type { ShippingAddress } from './shipping-address';
+import type { BundleSlot, Customization, FormulaCustomization } from '../../types';
+import {
+  calculateSalesTax,
+  type TaxAddress,
+  type TaxCalculation,
+} from '../tax/tax';
+
+/**
+ * Product handle used by the "Create Your Own Alchemy Soap" builder for
+ * fully custom soaps. It is intentionally NOT in the generated product
+ * catalog (products.ts is GENERATED — do not hand-edit); it is recognized
+ * here as a soap product by handle so the builder flow validates.
+ */
+export const CUSTOM_BUILDER_HANDLE = 'custom-alchemy-soap';
+
+/** Customer-facing name for the custom-builder handle (ledger + UI). */
+export const CUSTOM_BUILDER_TITLE = 'Custom Alchemy Soap (your creation)';
+
+/**
+ * Customizations (shape/base/scent/botanical/color) are priced from the
+ * soap shape table — so they are only valid on soap products. Without this
+ * gate, a valid customization could be attached to a non-soap product
+ * (e.g. a $19.77 capsule variant priced at the $5.77 small-rose soap price),
+ * producing an internally inconsistent order record. Mirrors the UI rule:
+ * shop/[slug] renders SoapCustomizer only for category 'Soaps'.
+ */
+export function isSoapProduct(productHandle: string): boolean {
+  if (productHandle === CUSTOM_BUILDER_HANDLE) return true;
+  const product = getProductByHandle(productHandle);
+  if (!product) return false;
+  // Owner ruling 2026-10-30: a fixed-formula product (fixed_formula:
+  // true — first carrier: the Shea & Goat Milk Small Rose Soap) sits in
+  // the 'Soaps' category so it shelves with the soaps, but it is sold
+  // exactly as pictured: NO customization may attach to it, so for
+  // customization-gating purposes it is not a customizable soap. Its
+  // plain variant purchases flow through the standard variant path.
+  if (isFixedFormulaProduct(product)) return false;
+  return product.category === 'Soaps';
+}
+
+/**
+ * Custom-formula products (G2 capsules, G10 tea, custom balm): fully
+ * custom blends are only valid on these catalog handles. Without this gate, a formula
+ * could be attached to any product (e.g. a standard capsule variant priced
+ * without its herb add-ons), producing an internally inconsistent order
+ * record. Mirrors the isSoapProduct gate above.
+ */
+export function isFormulaProduct(productHandle: string): boolean {
+  return formulaKindForHandle(productHandle) !== null;
+}
+
+/** Customer-facing title for a formula line: product + size. */
+export function formulaLineTitle(
+  productHandle: string,
+  formula: FormulaCustomization,
+): string {
+  const product = getProductByHandle(productHandle);
+  const base = product?.title ?? productHandle;
+  const kind = formulaKindForHandle(productHandle);
+  const size = kind ? getFormulaSize(kind, formula.size_id) : undefined;
+  return size ? `${base} — ${size.name} (your formula)` : `${base} (your formula)`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Types                                                               */
+/* ------------------------------------------------------------------ */
+
+export interface CheckoutItemInput {
+  product_handle: string;
+  variant_id?: string;
+  quantity: number;
+  customization?: Customization;
+  /** Custom capsule/tea/balm formula — mutually exclusive with customization. */
+  formula?: FormulaCustomization;
+  unit_price_cents: number;
+}
+
+export interface CheckoutBundleInput {
+  bundle_id: string;
+  slots: BundleSlot[];
+}
+
+export interface CheckoutRequestBody {
+  items: CheckoutItemInput[];
+  bundle?: CheckoutBundleInput | null;
+  customer: { name: string; email: string; phone?: string; notes?: string };
+  is_subscriber?: boolean;
+  client_total_cents: number;
+  /** Optional — defaults to 'cash_app_or_venmo' when absent. */
+  payment_method?: PaymentMethod;
+  /**
+   * Optional coupon code entered at checkout (owner request 2026-10-24).
+   * A CLAIM, never proof: the server normalizes + validates it here and
+   * the checkout route supplies the first-time/once-per-customer
+   * eligibility lookup (see ValidateOrderOptions.couponEligibility).
+   */
+  coupon_code?: string;
+  /**
+   * Delivery address (owner directive 2026-11-01: "Make it calculate
+   * tax and shipping and make it work"). The checkout form collects it
+   * for EVERY order — physical orders need it for fulfillment, and it
+   * drives the sales-tax calculation for the invoice / Cash App /
+   * Venmo rails (see validateAndBuildOrder). The dormant
+   * 'stripe_card_embedded' rail ignores it entirely: that path keeps
+   * its Stripe-Tax-in-session behavior and is never double-taxed.
+   */
+  delivery_address?: OrderDeliveryAddressInput;
+  /**
+   * Shipping address (Phase 2, Workstream 1a): REQUIRED when the cart
+   * contains anything physical (see orderLinesRequireShipping);
+   * ignored for digital-only carts. Validated by
+   * lib/checkout/shipping-address and stored on the order record —
+   * the order's copy is authoritative for fulfillment. The checkout
+   * form collects ONE address and submits it under both this field
+   * (fulfillment, physical carts) and delivery_address (tax, every
+   * order).
+   */
+  shipping_address?: ShippingAddress | null;
+}
+
+/** Delivery address as it may arrive in a checkout body (unsanitized). */
+export interface OrderDeliveryAddressInput {
+  line1?: unknown;
+  line2?: unknown;
+  city?: unknown;
+  state?: unknown;
+  postal_code?: unknown;
+  country?: unknown;
+}
+
+/** A sanitized US delivery address, as stored on an order record. */
+export type OrderDeliveryAddress = TaxAddress;
+
+export interface OrderLine {
+  product_handle: string;
+  title: string;
+  variant_id?: string;
+  variant_name?: string;
+  quantity: number;
+  unit_price_cents: number;
+  customization?: Customization;
+  formula?: FormulaCustomization;
+}
+
+export interface OrderRecord {
+  order_id: string;
+  created_at: string;
+  computed_by: 'server';
+  ledger_version: 1;
+  customer: { name: string; email: string; phone?: string; notes?: string };
+  items: OrderLine[];
+  bundle: {
+    bundle_id: string;
+    slots: BundleSlot[];
+    price_cents: number;
+    savings_cents: number;
+  } | null;
+  subtotal_cents: number;
+  /** 10% Living Grimoire subscriber discount — VERIFIED subscribers only. */
+  subscriber_discount_cents: number;
+  /**
+   * Coupon applied to this order (2026-10-24): the normalized code
+   * ('FIRST10') or null. Optional on the type because records written
+   * before the coupon feature omit both coupon fields — readers must
+   * treat absent as no coupon (coupon_discount_cents ?? 0).
+   */
+  coupon_code?: string | null;
+  /** 10% FIRST10 coupon discount — first-time customers only, never stacked with the subscriber discount. */
+  coupon_discount_cents?: number;
+  /**
+   * Customer-facing note when a coupon was entered but not applied
+   * (the subscriber no-stack case). Absent when no coupon was entered
+   * or the coupon applied cleanly.
+   */
+  coupon_message?: string;
+  shipping_cents: number;
+  shipping_status: ShippingStatus;
+  free_shipping_threshold_cents: number;
+  /**
+   * Delivery address — present on invoice / Cash App / Venmo orders
+   * placed with one (the checkout form always collects it, owner
+   * directive 2026-11-01). Absent on historical records and on the
+   * dormant card rail, which ignores the field; readers must treat
+   * absent as "no address on file".
+   */
+  delivery_address?: OrderDeliveryAddress;
+  /**
+   * Sales tax for this order (lib/tax), computed from the delivery
+   * address on the DISCOUNTED merchandise subtotal — separately
+   * stated shipping is never in the tax base. Present exactly when
+   * tax_breakdown is present, and INCLUDED in total_cents (unlike
+   * the dormant card rail, where Stripe Tax adds tax in-session and
+   * total_cents stays the pre-tax figure the webhook verifies).
+   */
+  tax_cents?: number;
+  /**
+   * The full tax breakdown (jurisdiction, rate, provenance, taxable
+   * base, per-line detail, assumptions) recorded at order time.
+   * Present on an invoice / Cash App / Venmo order whenever a
+   * delivery address was given — including out-of-state orders,
+   * where it records tax_cents 0 and the named no-nexus assumption
+   * (see lib/tax/tax.ts; an assumption for the owner/CPA, not legal
+   * advice).
+   */
+  tax_breakdown?: TaxCalculation;
+  total_cents: number;
+  /** The client claimed subscriber status (body.is_subscriber === true). */
+  is_subscriber_asserted: boolean;
+  /**
+   * The claim was verified server-side against the subscription ledger
+   * (lib/subscriptions/entitlement). Benefits (subscriber shipping
+   * threshold + discount) apply ONLY when this is true — the asserted
+   * boolean alone never grants them.
+   */
+  is_subscriber_verified: boolean;
+  /** Stored type: legacy records may carry the retired Bookipi-era values. */
+  payment_method: StoredPaymentMethod;
+  /** Order lifecycle — 'pending_payment' until payment confirmed. */
+  status?: OrderStatus;
+  /**
+   * The shipping address AS USED FOR THIS ORDER (Phase 2, Workstream
+   * 1a). Present exactly when the cart was physical. This copy is
+   * authoritative for fulfillment: a later edit to the customer's
+   * saved profile address never rewrites a placed order. Absent on
+   * digital-only orders and on records written before Phase 2.
+   */
+  shipping_address?: ShippingAddress;
+}
+
+/**
+ * Order display/lifecycle status (Stage 1, audit G-4/G-5/G-7).
+ *
+ * 'pending_payment' | 'paid' | 'cancelled' are the original states.
+ * 'refunded' and 'disputed' were added when the Stripe webhook gained
+ * charge.refunded / charge.dispute.created handlers: they are NOT
+ * written onto the order record (paid state is a read-time join — see
+ * lib/orders/paid-state.ts); the values live here so every surface
+ * (order-status route, account profile, admin, return page) shares
+ * one status vocabulary.
+ */
+export type OrderStatus =
+  | 'pending_payment'
+  | 'paid'
+  | 'cancelled'
+  | 'refunded'
+  | 'disputed';
+
+/* ------------------------------------------------------------------ */
+/* Server-side pricing + validation                                     */
+/* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* Payment identity — owner-confirmed 2026-10-04.                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Cash App + Venmo ONLY, per the owner's payment directive.
+ * (Kept here — not in the route module — because Next.js route files may
+ * only export handlers and route config.)
+ */
+export const CASH_APP_HANDLE = '$AmberPatten347';
+export const VENMO_HANDLE = '@AwakenwithAmber';
+
+/**
+ * How an order is paid (owner decisions 2026-10-13 + 2026-10-19 +
+ * 2026-10-21; the 2026-10-24 Bookipi flow SUPERSEDED by the owner
+ * directive 2026-11-01 — "Replace our checkout with the bluevine set
+ * up", Stripe still parked dormant):
+ * - 'bluevine_invoice' — the PRIMARY method (owner directive
+ *   2026-11-01). The order is placed on the site; a Bluevine invoice
+ *   for the exact order total is emailed to the customer; the customer
+ *   pays it by ACH bank transfer or check per the invoice, or with
+ *   Venmo @AwakenwithAmber / Cash App $AmberPatten347, using the order
+ *   number as the payment reference. The order is prepared once Amber
+ *   confirms payment (manual mark-paid). No card payment is offered
+ *   anywhere in this flow.
+ * - 'cash_app_or_venmo' — the customer sends payment to the handles
+ *   above after ordering (still offered at checkout as the alternative,
+ *   and still the server default when the field is absent, so API
+ *   clients that predate the invoice flow keep their exact behavior).
+ * - 'bluevine_card_link' — the FUTURE Bluevine card option (owner
+ *   directive 2026-10-31: a live card option through Bluevine),
+ *   GATED OFF: it is accepted for a new order ONLY when the verified
+ *   Bluevine payment link is configured
+ *   (NEXT_PUBLIC_BLUEVINE_PAYMENT_LINK_URL — see
+ *   bluevinePaymentLinkUrl below), and the checkout UI renders the
+ *   choice only then. The customer pays the order total by card on
+ *   Bluevine's secure HOSTED payment page — never an on-site or
+ *   Stripe checkout. Card acceptance through Bluevine is NOT live
+ *   until that link exists and is verified; while the config is unset
+ *   the method is rejected here and no card wording renders anywhere.
+ * - 'stripe_card_embedded' — DORMANT (parked 2026-10-24, NOT deleted):
+ *   no longer offered in the checkout UI, and since the 2026-11-02
+ *   combined merge it is REJECTED for new orders by this parser
+ *   (adopting the card-merge build's dormant-hole fix: previously a
+ *   crafted request could place an order routed to a card rail that
+ *   does not exist). The value survives ONLY in StoredPaymentMethod,
+ *   so historical records stay readable and the dormant session
+ *   route, webhook, and paid-state joins keep working against them;
+ *   the tax build's "dormant rail ignores the address" behavior now
+ *   applies to those stored records, never to a new order.
+ * Any other value is rejected, with ONE alias: 'bookipi_invoice'
+ * (the primary method's name from 2026-10-24 until this replacement)
+ * is accepted and NORMALIZED to 'bluevine_invoice' — a stored record
+ * never carries it from a new order, so pre-replacement API clients
+ * keep working while every new order is a Bluevine order. The
+ * 2026-10-13 'bookipi_card_invoice' value is the LEGACY name of the
+ * earlier invoice path: removed as a new-order method on 2026-10-21,
+ * it stays a stored-record value only (see StoredPaymentMethod
+ * below) and is rejected here, never coerced.
+ */
+export type PaymentMethod =
+  | 'cash_app_or_venmo'
+  | 'bluevine_invoice'
+  | 'bluevine_card_link';
+
+/**
+ * Payment methods as they can appear on a STORED order record. New
+ * orders can only carry a PaymentMethod; the two Bookipi-era values
+ * ('bookipi_invoice', primary 2026-10-24 → 2026-11-01, and
+ * 'bookipi_card_invoice', the 2026-10-13 name removed 2026-10-21) can
+ * still exist on records written in those windows. They stay in this
+ * stored-record type ONLY so those historical records remain readable
+ * with their correct labels/instructions (admin views, order-status
+ * lookups, review entries, account history) — neither is accepted for
+ * a new order as itself: 'bookipi_invoice' normalizes to
+ * 'bluevine_invoice' in parsePaymentMethod, and
+ * 'bookipi_card_invoice' is rejected outright.
+ */
+export type StoredPaymentMethod =
+  | PaymentMethod
+  | 'bookipi_invoice'
+  | 'bookipi_card_invoice'
+  | 'stripe_card_embedded';
+
+export const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'cash_app_or_venmo';
+
+/** The primary customer-facing method (owner directive 2026-11-01). */
+export const PRIMARY_PAYMENT_METHOD: PaymentMethod = 'bluevine_invoice';
+
+export const PAYMENT_METHODS: readonly PaymentMethod[] = [
+  'bluevine_invoice',
+  'cash_app_or_venmo',
+  'bluevine_card_link',
+];
+
+/**
+ * The verified Bluevine payment link (Bluevine Payment Links) that
+ * powers the future Bluevine card option. Config name follows the
+ * codebase's public-config convention (NEXT_PUBLIC_POSTHOG_*,
+ * NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY): the checkout UI needs the URL
+ * to render the gated card choice, and the same value is readable
+ * server-side. DEFAULT UNSET = the card option does not exist: the
+ * parser rejects 'bluevine_card_link' and no card wording renders.
+ * Only an absolute https URL counts — anything else is treated as
+ * unset (fail closed), and no value is ever invented in code.
+ */
+export const BLUEVINE_PAYMENT_LINK_ENV =
+  'NEXT_PUBLIC_BLUEVINE_PAYMENT_LINK_URL' as const;
+
+export function bluevinePaymentLinkUrl(): string | null {
+  const raw = process.env[BLUEVINE_PAYMENT_LINK_ENV];
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** True only when a verified Bluevine payment link is configured. */
+export function bluevineCardConfigured(): boolean {
+  return bluevinePaymentLinkUrl() !== null;
+}
+
+/** Validate the optional payment_method field; absent means the default. */
+export function parsePaymentMethod(raw: unknown): PaymentMethod {
+  if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
+  // Pre-replacement alias: normalized, never stored from a new order.
+  if (raw === 'bookipi_invoice') return 'bluevine_invoice';
+  if (raw === 'cash_app_or_venmo' || raw === 'bluevine_invoice') {
+    return raw;
+  }
+  if (raw === 'stripe_card_embedded') {
+    // Dormant-hole fix (card-merge build 2026-11-01, adopted in the
+    // 2026-11-02 combined merge): the embedded-card value stays
+    // readable on STORED records but must never route a NEW order.
+    throw new Error(
+      'That payment method is no longer accepted for new orders. Choose the Bluevine invoice, or Cash App or Venmo.',
+    );
+  }
+  if (raw === 'bluevine_card_link') {
+    if (bluevineCardConfigured()) return raw;
+    throw new Error(
+      'Unknown payment method: bluevine_card_link. Card payment through ' +
+        'Bluevine is not available — choose the Bluevine invoice, or ' +
+        'Cash App or Venmo.',
+    );
+  }
+  throw new Error(
+    `Unknown payment method: ${String(raw)}. Choose the Bluevine invoice, or Cash App or Venmo.`,
+  );
+}
+
+export const FREE_SHIPPING_GENERAL_CENTS = 4500;
+export const FREE_SHIPPING_SUBSCRIBER_CENTS = 0;
+
+/**
+ * Shipping model (owner decision 2026-10-20, superseding the
+ * 2026-10-10 "shipping never added to the total" rule): orders at or
+ * above the free-shipping threshold ship FREE; verified Living Grimoire
+ * subscribers always ship FREE; every other order is charged a FLAT
+ * $5.95 shipping, added to the order total. 'FLAT' replaces the old
+ * 'TO_BE_CONFIRMED' status (nothing is left to confirm — the rate is
+ * fixed and charged at checkout).
+ */
+export const FLAT_SHIPPING_CENTS = 595;
+export type ShippingStatus = 'FREE' | 'FLAT';
+
+/**
+ * The advertised Living Grimoire subscriber discount: 10% off, storewide.
+ * Rounding follows the codebase convention (lib/catalog/shapes.ts):
+ * the discounted price is Math.round(cents * 0.9).
+ *
+ * The membership fee itself is exempt — the grimoire-subscription catalog
+ * record states the 10% benefit "applies to storewide product purchases"
+ * and there is "no subscriber discount on the membership fee".
+ */
+export const SUBSCRIBER_DISCOUNT_EXEMPT_HANDLES: readonly string[] = [
+  'grimoire-subscription',
+];
+
+/** Price after the 10% subscriber discount, rounded to the cent. */
+export function subscriberDiscountedCents(cents: number): number {
+  return Math.round(cents * 0.9);
+}
+
+/* ------------------------------------------------------------------ */
+/* Coupon codes (owner request 2026-10-24)                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * FIRST10 — the first-order welcome code from the owner's social post
+ * (2026-10-24): 10% off the product subtotal for FIRST-TIME customers,
+ * once per customer. Rules, all enforced server-side:
+ * - same discountable base + rounding as the subscriber discount
+ *   (membership fee exempt; shipping is NEVER discounted);
+ * - first-time only: the checkout route looks the customer email up in
+ *   the order store and reports prior orders / prior coupon use via
+ *   ValidateOrderOptions.couponEligibility — any prior recorded order
+ *   for the email makes the customer not-first-time;
+ * - NO STACKING: a verified Living Grimoire subscriber already gets
+ *   the same 10% — the coupon is not applied on top (the larger single
+ *   discount is kept; both are 10% today, so the subscriber discount
+ *   is the one that stands) and the order carries a coupon_message
+ *   explaining that, which the checkout response surfaces to the
+ *   customer. The total is exactly the subscriber-only total.
+ */
+export const COUPON_CODE_FIRST10 = 'FIRST10';
+
+export const COUPON_CODES: readonly string[] = [COUPON_CODE_FIRST10];
+
+/** Normalize a raw coupon entry: trim + uppercase; empty → null. */
+export function normalizeCouponCode(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const normalized = raw.trim().toUpperCase();
+  return normalized ? normalized : null;
+}
+
+/**
+ * Resolve a raw coupon entry to a known code. Absent/blank → null (no
+ * coupon claimed). An unknown non-blank code is a hard error with a
+ * friendly message — the order is NOT placed and no total changes.
+ */
+export function parseCouponCode(raw: unknown): string | null {
+  const normalized = normalizeCouponCode(raw);
+  if (normalized === null) return null;
+  if (COUPON_CODES.includes(normalized)) return normalized;
+  throw new Error(
+    `That coupon code doesn't look right — please check the code and try again, or place your order without a code.`,
+  );
+}
+
+export const COUPON_MESSAGE_SUBSCRIBER_NO_STACK =
+  'FIRST10 can\u2019t be combined with your Living Grimoire subscriber ' +
+  'discount — your 10% subscriber discount (the larger single discount) ' +
+  'has been applied instead, and FIRST10 stays unused for a future ' +
+  'first order as a non-subscriber.';
+
+export const COUPON_ERROR_ALREADY_USED =
+  'FIRST10 has already been used with this email address — it\u2019s a ' +
+  'one-time welcome code, so it can\u2019t be applied again. Your order ' +
+  'has not been placed; you can place it without the code.';
+
+export const COUPON_ERROR_NOT_FIRST_TIME =
+  'FIRST10 is a welcome treat for first-time customers, and an order ' +
+  'is already on file for this email address, so it can\u2019t be ' +
+  'applied here. Your order has not been placed; you can place it ' +
+  'without the code.';
+
+export interface ValidateOrderOptions {
+  /**
+   * Server-verified subscriber entitlement for the order email. The
+   * checkout route computes this from the subscription ledger
+   * (lib/subscriptions/entitlement — latest record for the email must be
+   * 'active', i.e. owner-confirmed). Defaults to false: an unverified
+   * claim receives standard shipping pricing and no discount, without
+   * blocking the order.
+   */
+  isSubscriberVerified?: boolean;
+  /**
+   * First-time / once-per-customer eligibility for a coupon claim,
+   * computed by the checkout route from the order store (the same
+   * read-only store the order-status route uses). Only consulted when
+   * the body carries a coupon code. Defaults (direct/unit callers):
+   * eligible — the route ALWAYS supplies this in production, the same
+   * way it always supplies isSubscriberVerified.
+   */
+  couponEligibility?: {
+    /** Any prior recorded order exists for the customer email. */
+    hasPriorOrder?: boolean;
+    /** A prior recorded order for the email already used FIRST10. */
+    hasUsedCoupon?: boolean;
+  };
+}
+
+function generateOrderId(): string {
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `AWK-${date}-${rand}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function priceItem(input: CheckoutItemInput): OrderLine {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    throw new Error('Order item must be an object.');
+  }
+  const { product_handle, variant_id, quantity, customization, formula } = input;
+
+  if (!product_handle || typeof product_handle !== 'string') {
+    throw new Error('Item is missing product_handle.');
+  }
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) {
+    throw new Error(`Invalid quantity for ${product_handle}: ${String(quantity)}.`);
+  }
+  if (!Number.isInteger(input.unit_price_cents) || input.unit_price_cents < 0) {
+    throw new Error(`Invalid unit price claim for ${product_handle}.`);
+  }
+
+  // Superseded products are reference-only. The record stays in the
+  // catalog (provenance, redirects, image registry) but the product can
+  // never be ordered — at any price, subscriber or not. This guard sits
+  // ABOVE the formula / customization / plain branch split below, so no
+  // pricing path can bypass it (a customization or formula attached to a
+  // superseded product is rejected here, not priced from the shape or
+  // herb tables). The bundle path needs no equivalent check: priceBundle
+  // accepts only BUNDLE_ID — the current Alchemy collection — and never
+  // resolves a per-product record.
+  const resolvedProduct = getProductByHandle(product_handle);
+  if (resolvedProduct && isSupersededProduct(resolvedProduct)) {
+    throw new Error(
+      `Product ${product_handle} is no longer available — it has been superseded and cannot be ordered.`,
+    );
+  }
+
+  let serverUnitCents: number;
+  let variantName: string | undefined;
+  let lineTitle: string | undefined;
+  let cleanFormula: FormulaCustomization | undefined;
+
+  if (formula !== undefined) {
+    // Custom capsule/tea/balm formula: exact herb IDs persisted; the server
+    // reprices from canonical data via the shared pricing path (size base
+    // + charged botanicals — balm charges only extras past the first five,
+    // APPROVED Option C, owner decision 2026-10-30).
+    if (variant_id !== undefined || customization !== undefined) {
+      throw new Error(
+        `Item ${product_handle} has a formula plus a variant/customization — these are mutually exclusive.`,
+      );
+    }
+    if (!isFormulaProduct(product_handle)) {
+      throw new Error(
+        `Item ${product_handle} is not a custom-formula product — formulas apply to custom capsules, custom teas, and custom balms only.`,
+      );
+    }
+    const validation = validateFormulaCustomization(product_handle, formula);
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid formula for ${product_handle}: ${validation.errors.join('; ')}`,
+      );
+    }
+    // Sanitize customer free-text before it enters the order record —
+    // the ledger is the order system of record, no markup belongs in it.
+    cleanFormula = {
+      herb_ids: [...formula.herb_ids],
+      size_id: formula.size_id,
+      ...(formula.creation_name
+        ? { creation_name: sanitizePlainText(formula.creation_name, 80) }
+        : {}),
+      ...(formula.intention
+        ? { intention: sanitizePlainText(formula.intention, 120) }
+        : {}),
+      ...(formula.notes ? { notes: sanitizePlainText(formula.notes, 500) } : {}),
+      // Balm-only fields (additive, 2026-10-30): exact validated IDs,
+      // never free text — present only on balm order lines, so
+      // capsule/tea records are unchanged.
+      ...(formula.base_id ? { base_id: formula.base_id } : {}),
+      ...(formula.purpose_id ? { purpose_id: formula.purpose_id } : {}),
+      ...(formula.scent_id ? { scent_id: formula.scent_id } : {}),
+    };
+    serverUnitCents = priceFormulaCustomization(product_handle, cleanFormula);
+    lineTitle = formulaLineTitle(product_handle, cleanFormula);
+  } else if (customization !== undefined) {
+    if (variant_id !== undefined) {
+      throw new Error(
+        `Item ${product_handle} has both a variant and a customization — these are mutually exclusive.`,
+      );
+    }
+    if (!isSoapProduct(product_handle)) {
+      throw new Error(
+        `Item ${product_handle} is not a soap product — customizations apply to soaps only.`,
+      );
+    }
+    const validation = validateCustomization(customization);
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid customization for ${product_handle}: ${validation.errors.join('; ')}`,
+      );
+    }
+    serverUnitCents = priceCustomization(customization);
+  } else {
+    const product = getProductByHandle(product_handle);
+    if (!product) {
+      throw new Error(`Unknown product: ${product_handle}.`);
+    }
+    if (variant_id !== undefined) {
+      const variant = (product.variants ?? []).find(
+        (v) =>
+          v.variant_id === variant_id ||
+          v.name === variant_id ||
+          (typeof v.sku === 'string' && v.sku === variant_id),
+      );
+      if (!variant || typeof variant.price !== 'number') {
+        throw new Error(
+          `Unknown variant "${String(variant_id)}" for ${product_handle}.`,
+        );
+      }
+      serverUnitCents = toCents(variant.price);
+      variantName = String(variant.name ?? variant.size ?? variant_id);
+    } else {
+      if (typeof product.price !== 'number') {
+        throw new Error(
+          `Product ${product_handle} has no established price — cannot be ordered yet.`,
+        );
+      }
+      serverUnitCents = toCents(product.price);
+    }
+  }
+
+  if (input.unit_price_cents !== serverUnitCents) {
+    throw new Error(
+      `Price mismatch for ${product_handle}: client claimed ${input.unit_price_cents}, server computes ${serverUnitCents}.`,
+    );
+  }
+
+  const product = getProductByHandle(product_handle);
+  return {
+    product_handle,
+    title:
+      lineTitle ??
+      product?.title ??
+      (product_handle === CUSTOM_BUILDER_HANDLE ? CUSTOM_BUILDER_TITLE : product_handle),
+    quantity,
+    unit_price_cents: serverUnitCents,
+    ...(variant_id !== undefined ? { variant_id: String(variant_id) } : {}),
+    ...(variantName !== undefined ? { variant_name: variantName } : {}),
+    ...(customization !== undefined ? { customization } : {}),
+    ...(cleanFormula !== undefined ? { formula: cleanFormula } : {}),
+  };
+}
+
+function priceBundle(input: CheckoutBundleInput): OrderRecord['bundle'] {
+  if (input.bundle_id !== BUNDLE_ID) {
+    throw new Error(`Unknown bundle: ${String(input.bundle_id)}.`);
+  }
+  const bundle = buildBundleConfiguration(input.slots);
+  return {
+    bundle_id: bundle.bundle_id,
+    slots: bundle.slots,
+    price_cents: bundle.price_cents,
+    savings_cents: bundle.savings_cents,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Delivery address + sales tax (owner directive 2026-11-01)           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Does this priced cart need a shipping address? (Phase 2, Workstream
+ * 1a.) A line ships when it carries a soap customization or a custom
+ * formula (physical goods by construction), or when its catalog
+ * record is physical under lib/checkout/shipping-address's rule
+ * (positively-identified digital only). A bundle is five physical
+ * soaps — always ships. The custom-builder handle has no catalog
+ * record and counts as physical (the rule's fail-safe).
+ */
+export function orderLinesRequireShipping(
+  lines: readonly Pick<OrderLine, 'product_handle' | 'customization' | 'formula'>[],
+  bundle: OrderRecord['bundle'],
+): boolean {
+  if (bundle) return true;
+  return lines.some((line) => {
+    if (line.customization || line.formula) return true;
+    return productRequiresShipping(getProductByHandle(line.product_handle));
+  });
+}
+
+const US_STATE_CODES: ReadonlySet<string> = new Set([
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA',
+  'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY',
+  'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX',
+  'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+]);
+
+/**
+ * Sanitize + validate a checkout delivery address. Throws a clear
+ * error on anything unusable — an address that cannot determine tax
+ * must never silently price an order. Adapted from the Oct 28 staged
+ * build's parseShippingAddress (there it served card orders only;
+ * here it serves the live invoice / Cash App / Venmo rails).
+ */
+export function parseDeliveryAddress(
+  raw: unknown,
+): OrderDeliveryAddress {
+  if (!isRecord(raw)) {
+    throw new Error(
+      'A delivery address is required, so your order can be shipped ' +
+        'and sales tax can be calculated from it.',
+    );
+  }
+  const line1 = sanitizePlainText(raw.line1, 120);
+  const line2 = sanitizePlainText(raw.line2, 120);
+  const city = sanitizePlainText(raw.city, 80);
+  const state =
+    typeof raw.state === 'string' ? raw.state.trim().toUpperCase() : '';
+  const postalCode =
+    typeof raw.postal_code === 'string' ? raw.postal_code.trim() : '';
+  const country =
+    typeof raw.country === 'string' && raw.country.trim()
+      ? raw.country.trim().toUpperCase()
+      : 'US';
+  if (!line1 || !city) {
+    throw new Error(
+      'Please provide the street address and city for delivery, so ' +
+        'sales tax can be calculated from your address.',
+    );
+  }
+  if (!US_STATE_CODES.has(state)) {
+    throw new Error(
+      'Please provide a valid two-letter US state for the delivery ' +
+        'address, so sales tax can be calculated from your address.',
+    );
+  }
+  if (!/^\d{5}(-\d{4})?$/.test(postalCode)) {
+    throw new Error(
+      'Please provide a valid ZIP code for the delivery address, so ' +
+        'sales tax can be calculated from your address.',
+    );
+  }
+  if (country !== 'US') {
+    throw new Error('We currently ship within the United States only.');
+  }
+  return {
+    line1,
+    ...(line2 ? { line2 } : {}),
+    city,
+    state,
+    postalCode,
+    country: 'US',
+  };
+}
+
+/**
+ * Validate + price an entire checkout payload. Throws on any problem.
+ * Exported for the regression tests (no HTTP needed).
+ *
+ * Subscriber benefits: body.is_subscriber is a CLAIM, never proof. The
+ * subscriber shipping threshold and the 10% discount apply only when the
+ * caller passes options.isSubscriberVerified (computed server-side from
+ * the subscription ledger). An unverified claim is priced standard —
+ * never an error — because the client preview legitimately shows the
+ * claimed benefits and the server recomputes authoritatively.
+ */
+export function validateAndBuildOrder(
+  body: unknown,
+  options: ValidateOrderOptions = {},
+): OrderRecord {
+  if (!isRecord(body)) throw new Error('Request body must be a JSON object.');
+
+  const items = body.items;
+  if (!Array.isArray(items)) throw new Error('items must be an array.');
+  if (items.length > 100) throw new Error('Too many items.');
+
+  const customer = body.customer;
+  if (!isRecord(customer)) throw new Error('customer is required.');
+  // Sanitize customer fields before they enter the order record: strip
+  // HTML/control chars, normalize the email, validate the phone. The
+  // ledger is the order system of record — no markup belongs in it.
+  const name = sanitizePlainText(customer.name, 120);
+  const email = sanitizeEmail(customer.email);
+  if (!name) throw new Error('Customer name is required.');
+  if (!email) throw new Error('A valid customer email is required.');
+  const phoneRaw =
+    typeof customer.phone === 'string' ? customer.phone.trim() : '';
+  let phone: string | undefined;
+  if (phoneRaw) {
+    const normalized = sanitizePhone(phoneRaw);
+    if (!normalized) {
+      throw new Error(
+        'Please provide a valid phone number, or leave it blank.',
+      );
+    }
+    phone = normalized;
+  }
+  const notes = sanitizePlainText(customer.notes, 1000);
+
+  // Payment method: the client's choice, validated against the two
+  // supported rails; absent means the Cash App / Venmo default. The
+  // choice never affects pricing — subscriber benefits compute
+  // identically for both methods.
+  const paymentMethod = parsePaymentMethod(body.payment_method);
+
+  // The checkbox is a claim the server verifies (see header note). The
+  // bare boolean by itself grants NOTHING.
+  const isSubscriberAsserted = body.is_subscriber === true;
+  const isSubscriberVerified =
+    isSubscriberAsserted && options.isSubscriberVerified === true;
+
+  const lines: OrderLine[] = items.map((item) =>
+    priceItem(item as CheckoutItemInput),
+  );
+
+  if (lines.length === 0 && (body.bundle === undefined || body.bundle === null)) {
+    throw new Error('Order has no items.');
+  }
+
+  let bundle: OrderRecord['bundle'] = null;
+  if (body.bundle !== undefined && body.bundle !== null) {
+    bundle = priceBundle(body.bundle as CheckoutBundleInput);
+  }
+
+  // Shipping address (Phase 2, Workstream 1a): required exactly when
+  // the cart ships something physical; digital-only carts (e.g. a
+  // Grimoire subscription alone) are never forced through address
+  // fields. The validated address is stored on the order record and
+  // is the fulfillment authority for this order. An address sent with
+  // a digital-only cart is ignored, not stored. Address validation
+  // never touches any price or total.
+  let shippingAddress: ShippingAddress | undefined;
+  if (orderLinesRequireShipping(lines, bundle)) {
+    const validated = validateShippingAddress(
+      (body as Record<string, unknown>).shipping_address,
+    );
+    if (!validated.ok) {
+      throw new Error(
+        `Shipping address needs attention: ${validated.errors.join(' ')}`,
+      );
+    }
+    shippingAddress = validated.address;
+  }
+
+  const subtotal = lines.reduce(
+    (sum, line) => sum + line.unit_price_cents * line.quantity,
+    0,
+  );
+  const bundleTotal = bundle ? bundle.price_cents : 0;
+  const subtotalCents = subtotal + bundleTotal;
+
+  // Subscriber discount — VERIFIED subscribers only. The discountable
+  // base excludes the membership fee itself (see the exempt-handles note
+  // above); the bundle is a storewide product purchase and is included.
+  const discountableCents =
+    lines.reduce(
+      (sum, line) =>
+        sum +
+        (SUBSCRIBER_DISCOUNT_EXEMPT_HANDLES.includes(line.product_handle)
+          ? 0
+          : line.unit_price_cents * line.quantity),
+      0,
+    ) + bundleTotal;
+  const claimedDiscountCents =
+    discountableCents - subscriberDiscountedCents(discountableCents);
+  const subscriberDiscountCents = isSubscriberVerified
+    ? claimedDiscountCents
+    : 0;
+
+  // Coupon (FIRST10) — server-validated, never trusted from the client.
+  // Unknown code → hard error (above, in parseCouponCode). Already-used
+  // or not-first-time → hard error: no order is recorded and no total
+  // changes. Verified subscriber → NO STACKING: the coupon is not
+  // applied, the subscriber discount (same 10% today — the larger
+  // single discount) stands, and a clear message rides the record +
+  // the checkout response.
+  const requestedCoupon = parseCouponCode(
+    (body as Record<string, unknown>).coupon_code,
+  );
+  let couponCode: string | null = null;
+  let couponDiscountCents = 0;
+  let couponMessage: string | undefined;
+  if (requestedCoupon !== null) {
+    if (options.couponEligibility?.hasUsedCoupon === true) {
+      throw new Error(COUPON_ERROR_ALREADY_USED);
+    }
+    if (options.couponEligibility?.hasPriorOrder === true) {
+      throw new Error(COUPON_ERROR_NOT_FIRST_TIME);
+    }
+    if (isSubscriberVerified) {
+      couponMessage = COUPON_MESSAGE_SUBSCRIBER_NO_STACK;
+    } else {
+      couponCode = requestedCoupon;
+      couponDiscountCents = claimedDiscountCents;
+    }
+  }
+  const totalDiscountCents = subscriberDiscountCents + couponDiscountCents;
+
+  const threshold = isSubscriberVerified
+    ? FREE_SHIPPING_SUBSCRIBER_CENTS
+    : FREE_SHIPPING_GENERAL_CENTS;
+  // Shipping (owner decision 2026-10-20): flat $5.95 below the general
+  // threshold, FREE at/above it; verified subscribers always ship FREE
+  // (their threshold is 0, so the general rule already yields 0 — the
+  // standard figure below is what a NON-subscriber pays for the same
+  // cart, used by the client-total check).
+  const standardShippingCents =
+    subtotalCents >= FREE_SHIPPING_GENERAL_CENTS ? 0 : FLAT_SHIPPING_CENTS;
+  const shippingCents = isSubscriberVerified ? 0 : standardShippingCents;
+  const shippingStatus: ShippingStatus = shippingCents === 0 ? 'FREE' : 'FLAT';
+
+  // Sales tax (owner decisions 2026-10-20 — tax calculated from the
+  // customer's address; 2026-10-28 — the provider-agnostic engine in
+  // lib/tax, ported from that staged build; 2026-11-01 — "Make it
+  // calculate tax and shipping and make it work"):
+  // - Applies to the LIVE rails only ('bluevine_invoice',
+  //   'bluevine_card_link', and 'cash_app_or_venmo'), computed from the submitted delivery
+  //   address, on the DISCOUNTED merchandise subtotal; separately
+  //   stated shipping is never in the tax base (Utah Pub 25 — see
+  //   lib/tax). For these rails the tax is INCLUDED in total_cents:
+  //   the tax-inclusive total is the amount the customer owes by
+  //   invoice / Cash App / Venmo.
+  // - The DORMANT 'stripe_card_embedded' rail can no longer create
+  //   orders at all (the parser rejects it for new orders — see
+  //   parsePaymentMethod), so no new order can reach this code on
+  //   that rail; its stored records keep their in-session tax
+  //   behavior in the dormant session/webhook machinery and are
+  //   never double-taxed by this site-computed tax.
+  // - A body with NO delivery_address (legacy / non-form API
+  //   callers, e.g. the order-intake pipeline) keeps the exact legacy
+  //   behavior: no tax fields, pre-tax totals. The checkout FORM
+  //   always collects and submits the address, so every order placed
+  //   through the site is taxed from its address. A SUBMITTED but
+  //   malformed address is a hard error (parseDeliveryAddress) —
+  //   never a silent zero-tax order.
+  let deliveryAddress: OrderDeliveryAddress | undefined;
+  if (body.delivery_address !== undefined && body.delivery_address !== null) {
+    deliveryAddress = parseDeliveryAddress(body.delivery_address);
+  }
+  const taxLinesFor = (discountCents: number) => [
+    ...lines.map((line) => ({
+      description: line.title,
+      amountCents: line.unit_price_cents * line.quantity,
+      // Product classification (e.g. Utah's reduced grocery-food
+      // rate for a tea sold for ingestion) is an owner/CPA decision
+      // that has NOT been made — every merchandise line is taxed at
+      // the general rate until it is (see lib/tax/tax.ts).
+      taxable: true,
+      category: 'merchandise',
+    })),
+    ...(bundle
+      ? [
+          {
+            description: bundle.bundle_id,
+            amountCents: bundle.price_cents,
+            taxable: true,
+            category: 'merchandise',
+          },
+        ]
+      : []),
+    ...(discountCents > 0
+      ? [
+          {
+            description: 'Discounts (subscriber / coupon)',
+            amountCents: -discountCents,
+            taxable: true,
+            category: 'discount',
+          },
+        ]
+      : []),
+  ];
+  const taxForDiscount = (
+    discountCents: number,
+  ): TaxCalculation | undefined =>
+    deliveryAddress
+      ? calculateSalesTax({
+          destination: deliveryAddress,
+          lines: taxLinesFor(discountCents),
+          // Shipping is separately stated, so it is never in the
+          // base (Utah Publication 25 — see lib/tax/tax.ts).
+          shippingCents,
+        })
+      : undefined;
+  const taxBreakdown = taxForDiscount(totalDiscountCents);
+  const taxCents = taxBreakdown?.taxCents ?? 0;
+
+  // The total is the subtotal minus any VERIFIED subscriber discount
+  // and any applied coupon discount (never both — no stacking), plus
+  // the shipping charged for this order, plus the sales tax above.
+  // Shipping is computed from the pre-discount subtotal and is never
+  // itself discounted.
+  const totalCents =
+    subtotalCents - totalDiscountCents + shippingCents + taxCents;
+
+  // Total check. Without a subscriber claim the client total must equal
+  // the server total exactly (tamper rejection, unchanged). With a claim,
+  // the client preview legitimately shows one of two server-computable
+  // figures — the standard total (no discount, standard shipping) or the
+  // claimed-subscriber total (claimed discount, free shipping) — so both
+  // are accepted; the RECORDED total is always the server's own figure for
+  // the verification outcome. A coupon claim adds one more legitimate
+  // preview figure: subtotal − coupon discount + standard shipping (the
+  // coupon never changes shipping). Since 2026-11-01 every variant is
+  // TAX-INCLUSIVE, computed for the submitted address: the standard
+  // variant carries tax on the undiscounted base, each claimed variant
+  // carries tax on its claimed-discounted base — the same figures the
+  // shared preview (components/checkout/cart-preview.ts, which imports
+  // this same lib/tax engine) shows. Any other client total — including
+  // a Utah total that omits the tax — is rejected.
+  const standardTaxCents = taxForDiscount(0)?.taxCents ?? 0;
+  const claimedTaxCents =
+    taxForDiscount(claimedDiscountCents)?.taxCents ?? 0;
+  const standardTotalCents =
+    subtotalCents + standardShippingCents + standardTaxCents;
+  const claimedSubscriberTotalCents =
+    subtotalCents - claimedDiscountCents + claimedTaxCents;
+  const claimedCouponTotalCents =
+    subtotalCents - claimedDiscountCents + standardShippingCents + claimedTaxCents;
+  const acceptableTotals = new Set<number>([standardTotalCents]);
+  if (isSubscriberAsserted) acceptableTotals.add(claimedSubscriberTotalCents);
+  if (requestedCoupon !== null) acceptableTotals.add(claimedCouponTotalCents);
+  if (!acceptableTotals.has(body.client_total_cents as number)) {
+    throw new Error(
+      `Total mismatch: client claimed ${String(body.client_total_cents)}, server computes ${totalCents}.`,
+    );
+  }
+
+  return {
+    order_id: generateOrderId(),
+    created_at: new Date().toISOString(),
+    computed_by: 'server',
+    ledger_version: 1,
+    customer: {
+      name,
+      email,
+      ...(phone ? { phone } : {}),
+      ...(notes ? { notes } : {}),
+    },
+    items: lines,
+    bundle,
+    subtotal_cents: subtotalCents,
+    subscriber_discount_cents: subscriberDiscountCents,
+    coupon_code: couponCode,
+    coupon_discount_cents: couponDiscountCents,
+    ...(couponMessage ? { coupon_message: couponMessage } : {}),
+    shipping_cents: shippingCents,
+    shipping_status: shippingStatus,
+    free_shipping_threshold_cents: threshold,
+    ...(deliveryAddress ? { delivery_address: deliveryAddress } : {}),
+    ...(taxBreakdown
+      ? { tax_cents: taxBreakdown.taxCents, tax_breakdown: taxBreakdown }
+      : {}),
+    total_cents: totalCents,
+    is_subscriber_asserted: isSubscriberAsserted,
+    is_subscriber_verified: isSubscriberVerified,
+    payment_method: paymentMethod,
+    ...(shippingAddress ? { shipping_address: shippingAddress } : {}),
+  };
+}
