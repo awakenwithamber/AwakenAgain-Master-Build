@@ -1,7 +1,7 @@
 /**
  * Service landing pages — registry coverage tests (Phase 2, 2026-10-14).
  *
- * Guards the contract for the nine /services/<slug> landing pages:
+ * Guards the contract for the fourteen /services/<slug> landing pages:
  * every slug has a complete record, a sitemap-registry entry, and a
  * sitemap emission; mapped pages resolve to real catalog records;
  * prices come ONLY from the catalog (no landing copy may state one);
@@ -28,6 +28,11 @@ const EXPECTED_SLUGS = [
   'aura-cleansing',
   'spirit-resolution',
   'past-life-regression',
+  'guided-hypnotherapy',
+  'mediumship',
+  'spiritual-guidance',
+  'protections',
+  'ceremonies',
   'inner-renewal',
   'business-setup',
   'web-development',
@@ -47,11 +52,11 @@ function allCopy(e: (typeof SERVICE_PAGES)[number]): string {
 }
 
 describe('service landing page registry', () => {
-  it('has exactly the nine planned pages, uniquely slugged', () => {
+  it('has exactly the fourteen planned pages, uniquely slugged', () => {
     expect(SERVICE_PAGES.map((p) => p.slug).sort()).toEqual(
       [...EXPECTED_SLUGS].sort(),
     );
-    expect(new Set(SERVICE_PAGES.map((p) => p.slug)).size).toBe(9);
+    expect(new Set(SERVICE_PAGES.map((p) => p.slug)).size).toBe(14);
   });
 
   it('every page has complete content sections', () => {
