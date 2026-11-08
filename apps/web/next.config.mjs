@@ -38,6 +38,17 @@ const nextConfig = {
   // No provider adapters, no provider SDKs in app code. `standalone` output keeps
   // the app runnable on any Node host or container platform.
   output: 'standalone',
+  // Reader security hardening (2026-11-07, rewrite variant): the
+  // Grimoire page facsimiles stay on disk in public/grimoire/, but
+  // the beforeFiles rewrites below intercept every image request
+  // for them and send it through the gated route
+  // app/api/grimoire-assets, which checks session + entitlement
+  // before serving a single byte. The route reads the files from
+  // disk at request time, so they must be traced into that
+  // function's bundle.
+  outputFileTracingIncludes: {
+    '/api/grimoire-assets/**': ['./public/grimoire/**'],
+  },
   reactStrictMode: true,
   // Do not advertise the framework: Next.js otherwise sends
   // `X-Powered-By: Next.js` on page responses (Aikido surface-monitoring
@@ -72,6 +83,40 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  // Reader security hardening (2026-11-07, rewrite variant):
+  // intercept image requests under /grimoire/<work>/ BEFORE the
+  // filesystem is consulted (beforeFiles), so the public files are
+  // never served directly — every such request goes through the
+  // gated asset route, which applies the free-preview boundary
+  // and, past it, per-request session + entitlement checks. The
+  // patterns are scoped to image extensions only: the /grimoire
+  // page, /grimoire/subscribe and every other route are untouched.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/grimoire/:assetPath(.*\\.jpg)',
+          destination: '/api/grimoire-assets/:assetPath',
+        },
+        {
+          source: '/grimoire/:assetPath(.*\\.jpeg)',
+          destination: '/api/grimoire-assets/:assetPath',
+        },
+        {
+          source: '/grimoire/:assetPath(.*\\.png)',
+          destination: '/api/grimoire-assets/:assetPath',
+        },
+        {
+          source: '/grimoire/:assetPath(.*\\.webp)',
+          destination: '/api/grimoire-assets/:assetPath',
+        },
+        {
+          source: '/grimoire/:assetPath(.*\\.gif)',
+          destination: '/api/grimoire-assets/:assetPath',
+        },
+      ],
+    };
   },
   // Site audit 2026-10-10: Herb Encyclopedia + Ingredient Library consolidated
   // into /herb-index per owner instruction.
