@@ -18,6 +18,15 @@
  * - img-src https://d2xsxph8kpxj0f.cloudfront.net +
  *   https://files.manuscdn.com — herb illustration images referenced by
  *   lib/herbs/illustrations.ts and rendered on the herb library pages.
+ * - img-src https://upload.wikimedia.org +
+ *   https://thumb.wikimedia.org (added 2026-11-08) — the Wikimedia
+ *   Commons botanical illustrations in the same map: the entries the
+ *   2026-10-29 correction pass verified as the correct species, with
+ *   licenses and credits recorded in ILLUSTRATION_CREDITS. Rendered by
+ *   the herb library pages and — via the verified-asset gate in
+ *   lib/quiz/ally-illustrations.ts — on quiz results ally cards.
+ *   Without these origins the Commons illustrations the codebase
+ *   already references were silently CSP-blocked.
  * - connect-src https://us.posthog.com (the configured api_host —
  *   NEXT_PUBLIC_POSTHOG_HOST, lib/analytics/posthog.ts) +
  *   https://us.i.posthog.com (the ingestion host the SDK derives from
@@ -54,7 +63,7 @@ export function buildContentSecurityPolicy(nonce: string): string {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://us-assets.i.posthog.com https://js.stripe.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https://d2xsxph8kpxj0f.cloudfront.net https://files.manuscdn.com",
+    "img-src 'self' data: blob: https://d2xsxph8kpxj0f.cloudfront.net https://files.manuscdn.com https://upload.wikimedia.org https://thumb.wikimedia.org",
     "media-src 'self'",
     "connect-src 'self' https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.stripe.com",
     'frame-src https://player.vimeo.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com',

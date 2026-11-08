@@ -17,7 +17,10 @@
  *   files themselves are served from fonts.gstatic.com.
  * - img-src https://d2xsxph8kpxj0f.cloudfront.net +
  *   https://files.manuscdn.com — herb illustration images referenced by
- *   lib/herbs/illustrations.ts and rendered on the herb library pages.
+ *   lib/herbs/illustrations.ts and rendered on the herb library pages;
+ *   plus https://upload.wikimedia.org + https://thumb.wikimedia.org
+ *   (2026-11-08) for that map's verified Wikimedia Commons entries
+ *   (see lib/security/csp.ts for the full evidence record).
  * - connect-src https://us.posthog.com (the configured api_host —
  *   NEXT_PUBLIC_POSTHOG_HOST, lib/analytics/posthog.ts) +
  *   https://us.i.posthog.com (the ingestion host the SDK derives from
