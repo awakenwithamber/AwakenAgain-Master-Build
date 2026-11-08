@@ -413,6 +413,23 @@ function partForEditionPage(
   );
 }
 
+/**
+ * Book-asset URL translation (reader security hardening,
+ * 2026-11-07): content data keys page images by their canonical
+ * '/grimoire/<work>/<file>' asset key; the reader is served them
+ * ONLY through the gated route (app/api/grimoire-assets) — direct
+ * requests for the public paths are intercepted by the beforeFiles
+ * rewrites in next.config.mjs and forced through the same route,
+ * which maps the key back to its composed page and enforces
+ * session + entitlement for gated pages. External (http)
+ * illustration URLs pass through untouched.
+ */
+export function grimoireAssetUrl(assetKey: string): string {
+  return assetKey.startsWith('/grimoire/')
+    ? `/api/grimoire-assets/${assetKey.slice('/grimoire/'.length)}`
+    : assetKey;
+}
+
 function contentFields(
   meta: CollectionBookMeta,
   src: BookPageContent,
@@ -424,8 +441,8 @@ function contentFields(
     heading: src.heading,
     paragraphs: src.paragraphs,
   };
-  if (src.images?.length) fields.images = src.images;
-  if (src.pageImage) fields.pageImage = src.pageImage;
+  if (src.images?.length) fields.images = src.images.map(grimoireAssetUrl);
+  if (src.pageImage) fields.pageImage = grimoireAssetUrl(src.pageImage);
   if (attribution) fields.attribution = attribution;
   return fields;
 }
@@ -474,7 +491,7 @@ export function buildGrimoirePages(
     }
     const fields = contentFields(meta, src, meta.attribution);
     if (meta.cover) {
-      fields.images = [meta.cover, ...(fields.images ?? [])];
+      fields.images = [grimoireAssetUrl(meta.cover), ...(fields.images ?? [])];
     }
     const pageNumber = next();
     samplePages.set(meta.id, pageNumber);

@@ -198,7 +198,9 @@ describe('grimoire composed book', () => {
     for (const p of albertus) {
       if (p.kind !== 'collection-page') throw new Error('shape');
       expect(p.paragraphs).toEqual([]);
-      expect(p.pageImage).toMatch(/^\/grimoire\/albertus[^/]+\/page-\d+\.jpg$/);
+      // Facsimile paths are issued ONLY through the gated asset
+      // route (2026-11-07 reader hardening) — never a public path.
+      expect(p.pageImage).toMatch(/^\/api\/grimoire-assets\/albertus[^/]+\/page-\d+\.jpg$/);
     }
   });
 

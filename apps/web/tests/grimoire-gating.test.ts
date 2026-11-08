@@ -27,6 +27,7 @@ import {
   displayPagesFor,
   FREE_PREVIEW_LAST_PAGE,
   GRIMOIRE_INDEX,
+  grimoireAssetUrl,
 } from '../components/grimoire/grimoireContent';
 import { getEditionManifest } from '../lib/grimoire/manifest';
 import { getBookContent } from '../lib/grimoire/book-content';
@@ -115,8 +116,11 @@ describe('locked viewer payload', () => {
 
   it('gated facsimile paths are absent from the locked payload', () => {
     const albertus = content.books['albertus-magnus-egyptian-secrets'];
-    const gatedImage = albertus[100].pageImage;
-    expect(gatedImage).toBeTruthy();
+    // Display payloads carry the gated-route URL for the raw path
+    // (2026-11-07 reader hardening); it is that issued URL which
+    // must be absent from the locked payload.
+    const gatedImage = grimoireAssetUrl(albertus[100].pageImage as string);
+    expect(gatedImage).toContain('/api/grimoire-assets/');
     expect(lockedPayload).not.toContain(gatedImage);
     expect(entitledPayload).toContain(gatedImage);
   });
