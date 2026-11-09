@@ -29,7 +29,7 @@ interface GrimoireGateProps {
   gateTitle?: string;
 }
 
-export function GrimoireGate({ children, gateTitle = 'Living Grimoire — 333-page edition' }: GrimoireGateProps) {
+export function GrimoireGate({ children, gateTitle = 'The Living Grimoire' }: GrimoireGateProps) {
   const router = useRouter();
   const [state, setState] = useState<GateState>({ step: 'email' });
   const [email, setEmail] = useState('');
@@ -132,9 +132,9 @@ export function GrimoireGate({ children, gateTitle = 'Living Grimoire — 333-pa
       <>
         {children ?? (
           <p role="status">
-            Verified — the full composed Living Grimoire (the complete
-            333-page edition together with the collected works) is open
-            above.
+            Verified — the full composed Living Grimoire (The Grimoire
+            of Remembered Light complete, together with the collected
+            works) is open above.
           </p>
         )}
       </>

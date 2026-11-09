@@ -11,19 +11,35 @@
  *
  *   free preview (16 composed pages: cover/title, the ancestor's
  *   note ×2, framing teaser, book overview, generated TOC, generated
- *   index, and one sample page from EACH of the nine publishable
- *   collected works) → the framing FULL version → reading guidance →
- *   the concern index → the family edition COMPLETE (333 pages) →
+ *   index, one sample page from EACH of the five publishable
+ *   collected works, the framing FULL version, reading guidance, and
+ *   the concern index) → the family edition COMPLETE (333 pages) →
  *   the original sigil-making lesson → the collected works IN FULL →
  *   colophon. Pages 17+ are gated (subscription ∪ PERMANENT_UNLOCK ∪
  *   keeper — lib/grimoire/entitlement).
  *
+ * REMOVAL (owner decision 2026-11-08, "remove all copyrighted
+ * conflicts"): four editions whose files carried unresolved rights
+ * conflicts were REMOVED from the compilation entirely — the
+ * Emerald Tablet of Hermes (20th-century apparatus file), the Book
+ * of Raziel (modern undated transcription), Albertus Magnus —
+ * Egyptian Secrets (unidentified scan edition), and Grimorium
+ * Verum (1999 Phil Legard transcription). They contribute no pages,
+ * no samples, and no listings; their source files are quarantined
+ * outside the served tree (hashes recorded in the removal build
+ * report), not deleted. The composed book is now 1,051 pages
+ * (1,033 digitized source pages). Retained collected works: Pow-Wows
+ * (1820), Sepher Sephiroth (1912), Waite (1913), Seymour (1913),
+ * Forbidden Knowledge (early-20th-c.).
+ *
  * THE 16TH PREVIEW PAGE, reconciled: Option B's six fixed elements +
- * nine publishable samples = 15. The sixteenth page is the SECOND
- * page of the ancestor's note (the owner's own prose closing the
- * note), which the assembly manifest's front-matter budget already
- * carries (front matter pp. 2–3) and Option B had condensed into one
- * page. No book's sample was dropped to make the count.
+ * publishable samples once summed past 15; the second page of the
+ * ancestor's note (the owner's own prose closing the note) sits in
+ * the front matter (pp. 2–3), and after the 2026-11-08 removal the
+ * five samples (pp. 8–12) are followed inside the free 16 by the
+ * framing FULL version, the reading guidance, and the concern
+ * index — all front matter, no collected-work body pages. No
+ * retained book's sample was dropped to make the count.
  *
  * RIGHTS HOLD: The Black Books of Elverum (© 1999 Mary S. Rustad)
  * is metadata ONLY here — `held: true`. It contributes no pages, no
@@ -106,63 +122,6 @@ export interface CollectionBookMeta {
  * compilation last). Page counts measured in the assembly package.
  */
 export const COLLECTION_BOOKS: readonly CollectionBookMeta[] = [
-  {
-    id: 'emerald-tablet-of-hermes',
-    title: 'The Emerald Tablet of Hermes',
-    pageCount: 17,
-    strategy: 'text',
-    rights:
-      'Underlying text ancient / public domain; this file’s history and apparatus are 20th-century scholarship — LOW–MODERATE flag.',
-    attribution:
-      'The Emerald Tablet of Hermes — the ancient Tabula Smaragdina with its history and translations, incl. Isaac Newton’s (c. 1680).',
-    indexLine:
-      'History of the Tablet; translations — Latin, Giorgio Beato, Isaac Newton (c. 1680), Kriegsmann, Roger Bacon’s Secretum Secretorum.',
-    cover: '/grimoire/emerald-tablet-of-hermes/cover.jpg',
-    sampleSourcePage: 4, // the Newton translation page (manifest §5)
-  },
-  {
-    id: 'book-of-raziel',
-    title: 'The Book of Raziel (Sefer Raziel HaMalakh / Liber Razielis)',
-    pageCount: 74,
-    strategy: 'page-image-text',
-    rights:
-      'Medieval text, public domain; this file is a modern folio-marked scholarly transcription of unstated provenance — LOW–MODERATE flag.',
-    attribution:
-      'The Book of Raziel — the medieval Liber Razielis in Middle English translation, shown in facsimile with its text.',
-    indexLine:
-      'The ix Precepts; seven treatises (incl. the Treatise of Times); the names of God; the Solomonic frame.',
-    cover: '/grimoire/book-of-raziel/cover.jpg',
-    sampleSourcePage: 1, // the Precepts opening (manifest §5)
-  },
-  {
-    id: 'albertus-magnus-egyptian-secrets',
-    title:
-      'Albertus Magnus — Egyptian Secrets, or White and Black Art for Man and Beast',
-    pageCount: 216,
-    strategy: 'page-image',
-    rights:
-      'Pre-1929 pamphlet tradition, public-domain-likely; this scan’s edition is unidentified until OCR — pending identification.',
-    attribution:
-      'Albertus Magnus — Egyptian Secrets: a scanned pamphlet of the Albertus Magnus “Secrets” tradition, shown page by page as facsimile (text awaits OCR).',
-    indexLine:
-      'Remedies, charms and “white and black art” for man and beast — contents not yet enumerable: scanned pages only, OCR pending.',
-    cover: '/grimoire/albertus-magnus-egyptian-secrets/cover.jpg',
-    sampleSourcePage: 1, // facsimile scan page (manifest §5)
-  },
-  {
-    id: 'grimorium-verum',
-    title: 'Grimorium Verum (The True Grimoire)',
-    pageCount: 27,
-    strategy: 'text-images',
-    rights:
-      '18th-century French original, public domain; this file is the 1999 Phil Legard PDF transcription — LOW flag.',
-    attribution:
-      'Grimorium Verum — “translated from the Hebrew by Plangiere”, from the 18th-century French original (1999 PDF edition, Phil Legard).',
-    indexLine:
-      'Book I: Characters of the Daemons; Book II: Natural & Supernatural Secrets; Book III: Key to the Work — Lucifer, Beelzebuth, Astaroth.',
-    cover: null,
-    sampleSourcePage: 1, // title page (manifest §5)
-  },
   {
     id: 'pow-wows-long-lost-friend',
     title: 'Pow-Wows; or, The Long Lost Friend (John George Hohman, 1820)',
@@ -278,7 +237,7 @@ export const COLOPHON_PAGE_COUNT = 1;
 
 export interface EditionManifest {
   editionId: 'living-grimoire-333';
-  editionName: 'Living Grimoire — 333-page edition';
+  editionName: 'The Living Grimoire — 1,051 pages of preserved works';
   parts333: readonly EditionPart[];
   /** Pages in the family edition (complete, ingested). */
   familyPageCount: number;
@@ -288,7 +247,7 @@ export interface EditionManifest {
 export function getEditionManifest(): EditionManifest {
   return {
     editionId: 'living-grimoire-333',
-    editionName: 'Living Grimoire — 333-page edition',
+    editionName: 'The Living Grimoire — 1,051 pages of preserved works',
     parts333: EDITION_333_PARTS,
     familyPageCount: FAMILY_EDITION_PAGE_COUNT,
     collectionBooks: COLLECTION_BOOKS,

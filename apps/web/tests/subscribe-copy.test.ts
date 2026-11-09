@@ -52,7 +52,9 @@ describe('subscribe copy (Phase 2 manual rail)', () => {
     expect(FORM).toContain('unaffected by subscription cancellation');
     expect(FORM).toContain('Amber confirms every subscription personally');
     expect(PAGE).toContain('no automatic card charge');
-    expect(PAGE).toContain('unaffected by subscription cancellation');
+    // Owner model update 2026-11-08: the page now protects pre-model
+    // permanent-unlock holders in these words instead.
+    expect(PAGE).toContain('never removed by subscribing or cancelling');
   });
 
   it('no surface promises card auto-renewal or a customer portal anymore', () => {

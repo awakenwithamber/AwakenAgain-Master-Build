@@ -133,18 +133,21 @@ function rewriteMatcher(source: string): RegExp {
 }
 
 describe('asset storage + routing gate (rewrite variant)', () => {
-  it('the book files stay on disk in public/grimoire — 628 files, exactly the mapped set', () => {
+  it('the book files stay on disk in public/grimoire — 309 files, exactly the mapped set', () => {
     // The variant does NOT move the files: no data/grimoire-assets
     // store exists, and public/grimoire carries exactly the book's
     // mapped assets — nothing lost, nothing unmapped smuggled in.
+    // 309 after the 2026-11-08 removal: the four removed editions'
+    // 319 files left the served tree for quarantine (owner
+    // decision), so disk and map agree on the retained works only.
     expect(existsSync(join(ROOT, 'data', 'grimoire-assets'))).toBe(false);
     const assetRoot = join(ROOT, 'public', 'grimoire');
     expect(existsSync(assetRoot)).toBe(true);
     const onDisk = readdirSync(assetRoot, { recursive: true })
       .map((f) => String(f))
       .filter((f) => /\.(jpe?g|png|webp)$/i.test(f));
-    expect(onDisk).toHaveLength(628);
-    expect(assetMap.size).toBe(628);
+    expect(onDisk).toHaveLength(309);
+    expect(assetMap.size).toBe(309);
     for (const key of onDisk) expect(assetMap.has(key)).toBe(true);
   });
 
@@ -181,42 +184,47 @@ describe('asset storage + routing gate (rewrite variant)', () => {
     const matchers = rules.map((r) => rewriteMatcher(r.source));
     const matches = (url: string) => matchers.some((re) => re.test(url));
     // Image files under a work directory ARE intercepted…
-    expect(matches('/grimoire/book-of-raziel/page-02.jpg')).toBe(true);
-    expect(matches('/grimoire/book-of-raziel/page-01.jpg')).toBe(true);
+    expect(matches('/grimoire/sepher-sephiroth/page-018.jpg')).toBe(true);
     expect(matches('/grimoire/sepher-sephiroth/page-017.jpg')).toBe(true);
-    expect(matches('/grimoire/book-of-raziel/cover.png')).toBe(true);
+    expect(matches('/grimoire/book-of-ceremonial-magic-waite-1913/cover.jpg')).toBe(true);
+    expect(matches('/grimoire/sepher-sephiroth/cover.png')).toBe(true);
     expect(matches('/grimoire/some-work/figure.webp')).toBe(true);
     expect(matches('/grimoire/some-work/figure.gif')).toBe(true);
     // …and nothing else is: not the reader pages, not a bare work
     // path, not non-image files, not other directories.
     expect(matches('/grimoire')).toBe(false);
     expect(matches('/grimoire/subscribe')).toBe(false);
-    expect(matches('/grimoire/book-of-raziel')).toBe(false);
-    expect(matches('/grimoire/book-of-raziel/notes.txt')).toBe(false);
-    expect(matches('/images/grimoire/book-of-raziel/page-02.jpg')).toBe(false);
+    expect(matches('/grimoire/sepher-sephiroth')).toBe(false);
+    expect(matches('/grimoire/sepher-sephiroth/notes.txt')).toBe(false);
+    expect(matches('/images/grimoire/sepher-sephiroth/page-018.jpg')).toBe(false);
   });
 
   it('the asset map covers the book and splits free vs gated at the preview boundary', () => {
     // STEP 0 boundary (verified against the live code): the gate is
     // COMPOSED page 17 (owner directive 2026-11-07; was 16). Exactly
-    // 8 assets are preview assets (their earliest composed page is
-    // ≤17) — the covers and sample pages the free preview already
-    // shows every visitor today. The split is UNCHANGED by the move
-    // to 17: composed page 17 is a text page carrying no facsimile
-    // asset, so no asset's earliest page is 17.
+    // 3 assets are preview assets (their earliest composed page is
+    // ≤17) — the sample-page images and covers the free preview
+    // shows every visitor. (Before the 2026-11-08 removal there
+    // were 8; the other five belonged to the removed editions or
+    // their samples. The split is unchanged by the move to 17:
+    // composed page 17 is the family edition's first page — text
+    // only, carrying no facsimile asset.)
     const free = [...assetMap.values()].filter((p) => p <= FREE_PREVIEW_LAST_PAGE);
     const gated = [...assetMap.values()].filter((p) => p > FREE_PREVIEW_LAST_PAGE);
-    expect(free).toHaveLength(8);
-    expect(gated).toHaveLength(620);
+    expect(free).toHaveLength(3);
+    expect(gated).toHaveLength(306);
     expect(freeKey).toBeTruthy();
     expect(gatedKey).toBeTruthy();
     expect(assetMap.get(gatedKey)).toBeGreaterThan(FREE_PREVIEW_LAST_PAGE);
-    // The two files named in the owner's check: both are SOURCE-book
-    // pages used as free-preview samples (Raziel p.1 → composed p.9;
-    // Sepher Sephiroth p.17 → composed p.13) — public because the
-    // preview is public, NOT because the gate moved.
-    expect(assetMap.get('book-of-raziel/page-01.jpg')).toBe(9);
-    expect(assetMap.get('sepher-sephiroth/page-017.jpg')).toBe(13);
+    // The file named in the owner's check: a SOURCE-book page used
+    // as a free-preview sample (Sepher Sephiroth p.17 → composed
+    // p.9) — public because the preview is public, NOT because the
+    // gate moved.
+    expect(assetMap.get('sepher-sephiroth/page-017.jpg')).toBe(9);
+    // The removed editions are not in the map at all — the route
+    // 404s their keys for every persona (see the persona matrix).
+    expect(assetMap.has('book-of-raziel/page-01.jpg')).toBe(false);
+    expect(assetMap.has('albertus-magnus-egyptian-secrets/page-001.jpg')).toBe(false);
   });
 
   it('display pages reference assets ONLY through the gated route', () => {
@@ -226,7 +234,7 @@ describe('asset storage + routing gate (rewrite variant)', () => {
     expect(entitled).toContain('/api/grimoire-assets/');
     // Every asset URL in the entitled payload is a mapped asset.
     const urls = [...entitled.matchAll(/\/api\/grimoire-assets\/([^"\\]+)/g)].map((m) => m[1]);
-    expect(urls.length).toBeGreaterThan(400);
+    expect(urls.length).toBeGreaterThan(300);
     for (const key of urls) expect(assetMap.has(key)).toBe(true);
   });
 

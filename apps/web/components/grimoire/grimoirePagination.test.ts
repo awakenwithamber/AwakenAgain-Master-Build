@@ -2,8 +2,9 @@
  * Grimoire pagination regression suite (benchmark task C3).
  *
  * The punch-list defect, translated to the current book: the book no
- * longer has 8 pages — buildGrimoirePages() composes 1,389 pages
- * after the 2026-10-21 ingestion (17-page free preview + the family
+ * longer has 8 pages — buildGrimoirePages() composes 1,051 pages
+ * after the 2026-11-08 removal of the four copyright-conflicted
+ * editions (1,389 before it, at the 2026-10-21 ingestion) (17-page free preview + the family
  * edition complete + the collected works in full + colophon). On
  * MOBILE every page was reachable. On DESKTOP the final page was
  * trapped: at the last spread the Next control stayed enabled and
@@ -12,7 +13,7 @@
  * and PageView throws reading page.kind. These tests pin the fixed
  * rules in grimoirePagination.ts. (The sheet-index sweep samples
  * boundaries + a stride instead of the old exhaustive N² loop —
- * at N=1,389 the full cross-product is ~7.7M cases; the sampled set
+ * at N=1,051 the full cross-product is ~4.4M cases; the sampled set
  * covers every edge the formulas treat specially.)
  */
 import { describe, expect, it } from 'vitest';
@@ -30,8 +31,8 @@ const pages = buildGrimoirePages(getEditionManifest(), getBookContent());
 const N = pages.length;
 
 describe('the book under test', () => {
-  it('has 1,389 pages (composed book — not the punch list’s 8)', () => {
-    expect(N).toBe(1389);
+  it('has 1,051 pages (composed book — not the punch list’s 8)', () => {
+    expect(N).toBe(1051);
     expect(pages[N - 1].kind).toBe('colophon');
   });
 });
@@ -59,8 +60,8 @@ describe('desktop navigation (two-page spreads)', () => {
   });
 
   it('the final spread is the end: Next there is a no-op target', () => {
-    const last = lastSpreadBase(N, true); // 1388 for the 1,389-page book
-    expect(last).toBe(1388);
+    const last = lastSpreadBase(N, true); // 1050 for the 1,051-page book
+    expect(last).toBe(1050);
     expect(clampNavigationTarget(last + 2, N, true)).toBe(last);
     // The End key asks for the last page; it must land on its spread base.
     expect(clampNavigationTarget(N - 1, N, true)).toBe(last);

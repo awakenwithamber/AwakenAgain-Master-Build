@@ -2,9 +2,9 @@
  * Grimoire entitlement matrix + PERMANENT_UNLOCK ledger (Stage 2).
  *
  * Laws under test (owner decisions 2026-10-21 §13(1)/(2)/(5)):
- * - Anonymous → pages 1–17 only. Active subscriber → all 1,389.
- *   Unlock holder → all 1,389. Keeper (env set + verified session
- *   email) → all 1,389. Cancelled subscriber → 1–17. Revoked → 1–17.
+ * - Anonymous → pages 1–17 only. Active subscriber → all 1,051.
+ *   Unlock holder → all 1,051. Keeper (env set + verified session
+ *   email) → all 1,051. Cancelled subscriber → 1–17. Revoked → 1–17.
  * - Unlock survives subscription cancellation (independent ledgers).
  * - Keeper with NO session email (anonymous) is never entitled —
  *   email possession alone is not access.
@@ -178,7 +178,7 @@ describe('entitlement matrix', () => {
 });
 
 describe('unlock ledger', () => {
-  it('grant records the 333-page edition, scope, and transaction refs', async () => {
+  it('grant records the edition, scope, and transaction refs', async () => {
     const record = await grantUnlock({
       email: 'Buyer@Example.com',
       stripe_session_id: 'cs_9',
@@ -188,7 +188,7 @@ describe('unlock ledger', () => {
     expect(record.email).toBe('buyer@example.com');
     expect(record.type).toBe('PERMANENT_UNLOCK');
     expect(record.edition_id).toBe('living-grimoire-333');
-    expect(record.scope).toContain('333-page edition');
+    expect(record.scope).toContain('Grimoire of Remembered Light');
     expect(record.scope).toContain('future chapters');
     expect(record.scope).toContain('not included');
     expect(record.transaction_ref).toBe('pi_9');

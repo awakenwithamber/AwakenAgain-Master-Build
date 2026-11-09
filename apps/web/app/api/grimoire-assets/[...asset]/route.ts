@@ -3,7 +3,9 @@
  * (reader security hardening, 2026-11-07).
  *
  * WHY THIS EXISTS: the book's page facsimiles and illustrations sit
- * in public/grimoire/ — 628 files the web server used to hand to
+ * in public/grimoire/ — 309 files (after the 2026-11-08 removal
+ * of the four copyright-conflicted editions; their 319 files left
+ * the served tree for quarantine) the web server used to hand to
  * ANYONE who guessed a URL, no session, no entitlement. The files
  * stay on disk there, but they are no longer reachable directly:
  * the beforeFiles rewrites in next.config.mjs intercept EVERY
@@ -17,7 +19,9 @@
  *   unmapped key — including every traversal attempt — is a 404.
  * - Assets whose earliest composed page is inside the free preview
  *   (pages 1–16) are served without a session: they are already
- *   public on /grimoire itself (covers + one sample page per work).
+ *   public on /grimoire itself (the retained works' sample-page
+ *   images and covers). A key from a REMOVED work is not in the map
+ *   at all → 404 for every requester, entitled or not.
  * - Every later asset requires the reader's OTP session AND a live
  *   entitlement resolved per request (lib/grimoire/entitlement —
  *   the CURRENT, unmodified resolver: active subscriber,

@@ -47,11 +47,16 @@ import {
 
 const DAY = 24 * 60 * 60 * 1000;
 const assetMap = grimoireAssetPageMap();
-/** Preview assets (earliest composed page ≤16) — public today. */
-const RAZIEL_SAMPLE = 'book-of-raziel/page-01.jpg'; // composed p.9
-const SEPHER_SAMPLE = 'sepher-sephiroth/page-017.jpg'; // composed p.13
+/** Preview assets (earliest composed page ≤17) — public today. */
+const SEPHER_SAMPLE = 'sepher-sephiroth/page-017.jpg'; // composed p.9
+const WAITE_COVER = 'book-of-ceremonial-magic-waite-1913/cover.jpg'; // composed p.10
 /** A gated asset from the same book as a preview sample. */
-const RAZIEL_GATED = 'book-of-raziel/page-02.jpg';
+const SEPHER_GATED = 'sepher-sephiroth/page-018.jpg';
+/** A REMOVED work's asset (owner decision 2026-11-08): the Book of
+ *  Raziel left the compilation, so its keys are no longer in the
+ *  asset map at all and the route must 404 them for EVERY persona —
+ *  not 401/403-with-content, and not 200 for the entitled. */
+const REMOVED_ASSET = 'book-of-raziel/page-01.jpg';
 
 const ENV_KEYS = [
   'DATABASE_URL',
@@ -128,16 +133,21 @@ function callRoute(key: string, token?: string) {
 }
 
 describe('persona matrix against the gated asset route', () => {
-  it('boundary pins: the samples are preview assets, page-02 of Raziel is gated', () => {
-    expect(assetMap.get(RAZIEL_SAMPLE)).toBeLessThanOrEqual(16);
-    expect(assetMap.get(SEPHER_SAMPLE)).toBeLessThanOrEqual(16);
-    expect(assetMap.get(RAZIEL_GATED)).toBeGreaterThan(16);
+  it('boundary pins: the samples are preview assets, a deep Sepher page is gated, removed works are unmapped', () => {
+    expect(assetMap.get(SEPHER_SAMPLE)).toBeLessThanOrEqual(17);
+    expect(assetMap.get(WAITE_COVER)).toBeLessThanOrEqual(17);
+    expect(assetMap.get(SEPHER_GATED)).toBeGreaterThan(17);
+    expect(assetMap.has(REMOVED_ASSET)).toBe(false);
+    expect(assetMap.has('albertus-magnus-egyptian-secrets/page-001.jpg')).toBe(false);
+    expect(assetMap.has('grimorium-verum/img-000.png')).toBe(false);
+    expect(assetMap.has('emerald-tablet-of-hermes/cover.jpg')).toBe(false);
   });
 
   it('1. VISITOR (no session): preview public, everything else refused', async () => {
-    expect((await callRoute(RAZIEL_SAMPLE)).status).toBe(200);
     expect((await callRoute(SEPHER_SAMPLE)).status).toBe(200);
-    expect((await callRoute(RAZIEL_GATED)).status).toBe(401);
+    expect((await callRoute(WAITE_COVER)).status).toBe(200);
+    expect((await callRoute(SEPHER_GATED)).status).toBe(401);
+    expect((await callRoute(REMOVED_ASSET)).status).toBe(404);
     const r = await resolveGrimoireEntitlement(null);
     expect(r.entitled).toBe(false);
   });
@@ -145,11 +155,11 @@ describe('persona matrix against the gated asset route', () => {
   it('2. ACTIVE SUBSCRIBER: full access, exactly as today', async () => {
     writeSubscriptions([subscriptionRecord('member@example.com', 'active')]);
     const token = await mintSession('member@example.com');
-    const res = await callRoute(RAZIEL_GATED, token);
+    const res = await callRoute(SEPHER_GATED, token);
     expect(res.status).toBe(200);
     expect(res.headers.get('content-disposition')).toBe('inline');
     expect(res.headers.get('cache-control')).toBe('private, no-store');
-    expect((await callRoute(RAZIEL_SAMPLE, token)).status).toBe(200);
+    expect((await callRoute(SEPHER_SAMPLE, token)).status).toBe(200);
     const r = await resolveGrimoireEntitlement('member@example.com');
     expect(r.entitled).toBe(true);
     expect(r.is_subscriber).toBe(true);
@@ -162,9 +172,9 @@ describe('persona matrix against the gated asset route', () => {
       }),
     ]);
     const token = await mintSession('lapsed@example.com');
-    expect((await callRoute(RAZIEL_GATED, token)).status).toBe(403);
+    expect((await callRoute(SEPHER_GATED, token)).status).toBe(403);
     // The free preview is still theirs, like everyone else's.
-    expect((await callRoute(RAZIEL_SAMPLE, token)).status).toBe(200);
+    expect((await callRoute(SEPHER_SAMPLE, token)).status).toBe(200);
     const r = await resolveGrimoireEntitlement('lapsed@example.com');
     expect(r.entitled).toBe(false);
   });
@@ -176,7 +186,7 @@ describe('persona matrix against the gated asset route', () => {
       }),
     ]);
     const token = await mintSession('grace@example.com');
-    expect((await callRoute(RAZIEL_GATED, token)).status).toBe(200);
+    expect((await callRoute(SEPHER_GATED, token)).status).toBe(200);
     const r = await resolveGrimoireEntitlement('grace@example.com');
     expect(r.entitled).toBe(true);
   });
@@ -187,9 +197,27 @@ describe('persona matrix against the gated asset route', () => {
       subscriptionRecord('gone@example.com', 'cancelled'),
     ]);
     const token = await mintSession('gone@example.com');
-    expect((await callRoute(RAZIEL_GATED, token)).status).toBe(403);
+    expect((await callRoute(SEPHER_GATED, token)).status).toBe(403);
     const r = await resolveGrimoireEntitlement('gone@example.com');
     expect(r.entitled).toBe(false);
+  });
+
+  it('6. REMOVED WORKS: 404 for every persona, entitled or not', async () => {
+    // The route resolves the asset map BEFORE any auth: an unmapped
+    // key is a 404 even with a fully entitled session — the removed
+    // works are not hidden behind the gate, they are GONE.
+    writeSubscriptions([subscriptionRecord('member@example.com', 'active')]);
+    const token = await mintSession('member@example.com');
+    for (const key of [
+      REMOVED_ASSET,
+      'book-of-raziel/page-02.jpg',
+      'albertus-magnus-egyptian-secrets/page-001.jpg',
+      'grimorium-verum/img-000.png',
+      'emerald-tablet-of-hermes/cover.jpg',
+    ]) {
+      expect((await callRoute(key)).status, key).toBe(404);
+      expect((await callRoute(key, token)).status, key).toBe(404);
+    }
   });
 
   it('4. PERMANENT-UNLOCK HOLDER (legacy record shape): full access, however old the grant', async () => {
@@ -206,7 +234,7 @@ describe('persona matrix against the gated asset route', () => {
     const stored = await findLatestUnlock('holder@example.com');
     expect(stored).not.toHaveProperty('access_model');
     const token = await mintSession('holder@example.com');
-    expect((await callRoute(RAZIEL_GATED, token)).status).toBe(200);
+    expect((await callRoute(SEPHER_GATED, token)).status).toBe(200);
     const r = await resolveGrimoireEntitlement('holder@example.com');
     expect(r.entitled).toBe(true);
     expect(r.has_permanent_unlock).toBe(true);
@@ -220,7 +248,7 @@ describe('persona matrix against the gated asset route', () => {
     });
     await revokeUnlockByTransactionRef('LEGACY-2025-002', 'refund');
     const token = await mintSession('refunded@example.com');
-    expect((await callRoute(RAZIEL_GATED, token)).status).toBe(403);
+    expect((await callRoute(SEPHER_GATED, token)).status).toBe(403);
     const r = await resolveGrimoireEntitlement('refunded@example.com');
     expect(r.entitled).toBe(false);
   });
@@ -228,9 +256,9 @@ describe('persona matrix against the gated asset route', () => {
   it('5. ADMIN / OWNER (keeper): full access with a verified session; the email alone grants nothing', async () => {
     process.env.GRIMOIRE_KEEPER_EMAILS = 'owner@example.com';
     // No session → refused even for the keeper's own email.
-    expect((await callRoute(RAZIEL_GATED)).status).toBe(401);
+    expect((await callRoute(SEPHER_GATED)).status).toBe(401);
     const token = await mintSession('owner@example.com');
-    expect((await callRoute(RAZIEL_GATED, token)).status).toBe(200);
+    expect((await callRoute(SEPHER_GATED, token)).status).toBe(200);
     const r = await resolveGrimoireEntitlement('owner@example.com');
     expect(r.entitled).toBe(true);
     expect(r.is_keeper).toBe(true);
