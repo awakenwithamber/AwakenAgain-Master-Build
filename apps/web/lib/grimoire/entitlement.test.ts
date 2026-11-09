@@ -178,7 +178,7 @@ describe('entitlement matrix', () => {
 });
 
 describe('unlock ledger', () => {
-  it('grant records the 333-page edition, scope, and transaction refs', async () => {
+  it('grant records the edition, scope, and transaction refs', async () => {
     const record = await grantUnlock({
       email: 'Buyer@Example.com',
       stripe_session_id: 'cs_9',
@@ -188,7 +188,7 @@ describe('unlock ledger', () => {
     expect(record.email).toBe('buyer@example.com');
     expect(record.type).toBe('PERMANENT_UNLOCK');
     expect(record.edition_id).toBe('living-grimoire-333');
-    expect(record.scope).toContain('333-page edition');
+    expect(record.scope).toContain('Grimoire of Remembered Light');
     expect(record.scope).toContain('future chapters');
     expect(record.scope).toContain('not included');
     expect(record.transaction_ref).toBe('pi_9');

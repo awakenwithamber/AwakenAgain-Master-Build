@@ -2,7 +2,7 @@
  * Grimoire PERMANENT_UNLOCK checkout — POST /api/grimoire-unlock/checkout.
  *
  * Creates a one-time Stripe Checkout Session for the $8.88 unlock of
- * the Living Grimoire — 333-page edition. This route grants NOTHING:
+ * the Living Grimoire (1,389 pages of preserved works). This route grants NOTHING:
  * the entitlement is written only by the signature-verified webhook
  * when the session completes. GET reports availability so the UI can
  * degrade truthfully when STRIPE_GRIMOIRE_UNLOCK_PRICE_ID (or the

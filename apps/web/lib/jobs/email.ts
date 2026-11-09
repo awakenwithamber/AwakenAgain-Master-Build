@@ -772,7 +772,8 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
         subject: 'Your Living Grimoire permanent unlock is active',
         text:
           `Your permanent unlock is active.\n\n` +
-          `The Living Grimoire — 333-page edition is now open to ` +
+          `The Living Grimoire — 1,389 pages of preserved works is ` +
+          `now open to ` +
           `${job.to}, including all future chapters and revisions of ` +
           `this edition. Your unlock is permanent: it stays yours even ` +
           `if you later subscribe and cancel.\n\n` +

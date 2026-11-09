@@ -157,7 +157,7 @@ function TitlePageView({
 }) {
   return (
     <PageShell page={page} side={side}>
-      <p className={styles.categoryRow}>✦ Living Grimoire — 333-page edition ✦</p>
+      <p className={styles.categoryRow}>✦ The Living Grimoire ✦</p>
       <h2 className={styles.handTitle}>{GRIMOIRE_TITLE}</h2>
       <p className={styles.quote}>“{PARACELSUS_QUOTE}”</p>
       <p className={styles.attribution}>— Paracelsus</p>
@@ -334,9 +334,9 @@ function TocPageView({
     <PageShell page={page} side={side}>
       <h2 className={styles.handHeading}>Table of Contents</h2>
       <p className={styles.handBody}>
-        The Living Grimoire — 333-page edition, together with the
-        owner&apos;s collected works. The full book may grow beyond 333
-        pages as the collection is added.
+        The Living Grimoire — The Grimoire of Remembered Light
+        complete, together with the collected works preserved with it.
+        The book keeps growing as more works are digitized.
       </p>
       <ul className={styles.handList}>
         {page.entries.map((e) => (
@@ -596,11 +596,11 @@ function ColophonPageView({
     <PageShell page={page} side={side}>
       <h2 className={styles.handHeading}>Colophon</h2>
       <p className={`${styles.handBody} ${styles.dropcap}`}>
-        Here ends this volume of the Living Grimoire of Light & Magic — the
-        family edition complete in its 333 pages, the keeper&apos;s own
-        lessons, and the collected works in full, kept together as one book.
-        The book is alive, and it will keep growing as more of the family
-        archive is transcribed and verified.
+        Here ends this volume of the Living Grimoire of Light & Magic —
+        The Grimoire of Remembered Light complete in its 333 pages, the
+        keeper&apos;s own lessons, and the collected works in full, kept
+        together as one book. The book is alive, and it will keep growing
+        as more found works are digitized and verified.
       </p>
       <p className={styles.handBody}>
         Keepers of the Living Grimoire of Light & Magic receive new entries, monthly rituals,
@@ -633,7 +633,7 @@ function LockedPageView({
 }) {
   return (
     <PageShell page={page} side={side}>
-      <p className={styles.categoryRow}>✦ Living Grimoire — 333-page edition ✦</p>
+      <p className={styles.categoryRow}>✦ The Living Grimoire ✦</p>
       {page.herbName ? (
         <h2 className={`${styles.hand} ${styles.herbName}`}>{page.herbName}</h2>
       ) : page.bookTitle ? (
@@ -646,8 +646,8 @@ function LockedPageView({
         <h2 className={styles.handHeading}>A Kept Page</h2>
       )}
       <p className={`${styles.handBody} ${styles.dropcap}`}>
-        This page is kept for members of the Living Grimoire — 333-page
-        edition. Subscribers and permanent-unlock holders who have verified
+        This page is kept for members of the Living Grimoire.
+        Subscribers and permanent-unlock holders who have verified
         their email see it in full; everyone else sees the first sixteen
         pages freely.
       </p>

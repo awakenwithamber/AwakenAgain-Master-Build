@@ -3,6 +3,10 @@ import { SubscribeForm } from '../../../components/grimoire/SubscribeForm';
 import { UnlockPurchase } from '../../../components/grimoire/UnlockPurchase';
 import { BRAND_NAME } from '../../../lib/seo/config';
 import {
+  getEditionManifest,
+  publishableBooks,
+} from '../../../lib/grimoire/manifest';
+import {
   ANCESTOR_PULL_QUOTE,
   ANCESTOR_PULL_QUOTE_ATTRIBUTION,
   GRIMOIRE_OVERVIEW_CLOSING,
@@ -13,36 +17,174 @@ import {
 } from '../../../components/grimoire/grimoireContent';
 
 export const metadata: Metadata = {
-  title: `Living Grimoire — 333-page edition — ${BRAND_NAME}`,
+  title: `The Living Grimoire — 1,389 pages of preserved works — ${BRAND_NAME}`,
   description:
-    'Two ways into the Living Grimoire — 333-page edition: a one-time $8.88 permanent unlock (the full composed edition — the complete 333-page edition together with the collected works, 1,389 pages in all — plus all future chapters of it), or the $7.77/month subscription with 10% off storewide, monthly articles and rituals, and exclusive recipes.',
+    'The Living Grimoire is a preservation of the collective works of generations — spells, rituals, and lost knowledge, found book by book and digitized to hold their magic and history for generations to come. A $7.77/month membership opens the full compilation; an $8.88 activation fee is charged only once. Plus 10% off storewide, exclusive articles and rituals, and more.',
 };
 
 /**
- * Living Grimoire subscribe page — server component (Stage 2 rewrite
- * for truthfulness): the $8.88 PERMANENT_UNLOCK and the $7.77/month
- * subscription are presented as the two SEPARATE offers they are —
- * the old "Full access: $8.88 — or join…" framing conflated them.
- * Owner copy (Overview + ancestor pull-quote + framing teaser) is
- * VERBATIM from the 2026-10-21 owner files, Overview first, then the
- * framing teaser. No imagery is added (owner heirloom pictures are
- * pending; generated substitutes are never used).
+ * One-line contents description per collected work, keyed by the
+ * manifest's book id. Grounded in the manifest's own attribution and
+ * index lines (lib/grimoire/manifest.ts) — nothing invented.
+ */
+const WORK_DESCRIPTIONS: Record<string, string> = {
+  'emerald-tablet-of-hermes':
+    'The ancient Tabula Smaragdina — the foundation text of alchemy, with its history and translations.',
+  'book-of-raziel':
+    'The medieval Liber Razielis — the ix Precepts, seven treatises including the Treatise of Times, and the names of God, shown in facsimile with its text.',
+  'albertus-magnus-egyptian-secrets':
+    'Charms and “white and black art” for man and beast from the Albertus Magnus “Secrets” tradition, shown page by page as facsimile (its text awaits OCR).',
+  'grimorium-verum':
+    'Book I: the characters of the daemons; Book II: natural and supernatural secrets; Book III: the Key to the Work.',
+  'pow-wows-long-lost-friend':
+    'Arts and remedies for man and animals — charms, cures, and protections, closing with the book’s own printed index.',
+  'sepher-sephiroth':
+    'The Qabalistic dictionary proper — Hebrew words arranged by numerical value (gematria), shown in facsimile with its text.',
+  'book-of-ceremonial-magic-waite-1913':
+    'Part I surveys the literature of ceremonial magic — the Key of Solomon, Abramelin, the Grimorium Verum and more; Part II is the Complete Grimoire of ritual texts.',
+  'irish-witchcraft-and-demonology':
+    'Nine chapters on Irish witchcraft trials, fairy-faith, and demonology, from the 1324 Kilkenny proceedings forward.',
+  'book-of-forbidden-knowledge':
+    'An item-numbered compendium — charms and spells, fortune-telling, physiognomy, natal astrology, and dream lore.',
+};
+
+/** Edition / year / translator facts per work, from the manifest. */
+const WORK_EDITIONS: Record<string, string> = {
+  'emerald-tablet-of-hermes':
+    'Ancient text; translations include Isaac Newton’s (c. 1680); this edition’s apparatus is 20th-century scholarship.',
+  'book-of-raziel':
+    'Medieval text in Middle English translation; this file is a modern folio-marked scholarly transcription.',
+  'albertus-magnus-egyptian-secrets':
+    'Pre-1929 pamphlet tradition; this scan’s edition is not yet identified.',
+  'grimorium-verum':
+    '18th-century French original; this file is the 1999 transcription by Phil Legard.',
+  'pow-wows-long-lost-friend':
+    'John George Hohman, first published in the U.S. in 1820.',
+  'sepher-sephiroth':
+    'Aleister Crowley and Allan Bennett, The Equinox Vol. I No. 8 (1912).',
+  'book-of-ceremonial-magic-waite-1913':
+    'Arthur Edward Waite, London, 1913 (first edition 1898).',
+  'irish-witchcraft-and-demonology':
+    'St. John D. Seymour, 1913; this file is Project Gutenberg eBook #43651.',
+  'book-of-forbidden-knowledge':
+    'Early-20th-century U.S. compendium in the Johnson Smith & Co. tradition.',
+};
+
+/** Placeholder the owner fills with how each book came to her.
+ *  Muse never invents a book's finding story. */
+const STORY_PLACEHOLDER = '[STORY]';
+
+/**
+ * Rights-review flags (owner reviews before launch; NOT rendered).
+ * Editions published after 1930, modern transcriptions, and
+ * unidentified editions in this digitized set.
+ */
+const RIGHTS_REVIEW_FLAGS: Record<string, string> = {
+  'grimorium-verum':
+    'POST-1930 FILE: 1999 Phil Legard transcription — owner copyright review before launch.',
+  'book-of-raziel':
+    'MODERN TRANSCRIPTION, undated provenance — owner copyright review before launch.',
+  'emerald-tablet-of-hermes':
+    '20th-century scholarly apparatus — owner copyright review before launch.',
+  'albertus-magnus-egyptian-secrets':
+    'SCAN EDITION UNIDENTIFIED (OCR pending) — owner copyright review before launch.',
+};
+// Referenced for the pre-launch rights pass; intentionally unused in render.
+void RIGHTS_REVIEW_FLAGS;
+
+/**
+ * Living Grimoire subscribe page — server component.
  *
- * Phase 2 (2026-10-30): both offers now run on the manual payment
- * rail — the unlock through the Workstream-3 request/grant flow and
- * the subscription through Amber-confirmed manual payments. No card
- * checkout is offered or described here.
+ * Copy corrected 2026-11-08 (owner, with a screenshot of the live
+ * page): the old "333-page edition" headline and the "Amber's Family
+ * Grimoire — handmade by the women in my family, passed down from
+ * mother to daughter" claim were untrue and are gone. The honest
+ * story is the owner's: the books were found, each in its own way;
+ * the Living Grimoire is a preservation of the collective works of
+ * generations. The works list renders from the edition manifest —
+ * the same data the book itself is composed from — so it cannot
+ * drift from what is actually in the volume. The held Elverum entry
+ * is named for honesty and marked not-readable; rights-held material
+ * is never marketed as readable content.
+ *
+ * Offers: the $8.88 unlock and the $7.77/month membership are the
+ * two separate offers they are, presented after the owner's own
+ * membership framing. Both run on the manual payment rail — no card
+ * checkout is offered or described here. Owner copy (Overview +
+ * ancestor pull-quote + framing teaser) is VERBATIM from the
+ * 2026-10-21 owner files.
  */
 export default function GrimoireSubscribePage() {
+  const manifest = getEditionManifest();
+  const works = publishableBooks(manifest);
+  const held = manifest.collectionBooks.filter((b) => b.held);
   return (
     <>
       <main id="main-content">
-        <h1>Living Grimoire — 333-page edition</h1>
+        <h1>The Living Grimoire — 1,389 Pages of Preserved Works</h1>
         <p>
-          <strong>Amber&apos;s Family Grimoire</strong> — a book, handmade by the women
-          in my family, passed down from mother to daughter through generations.
-          A book of true magic, recipes, spells, herbal wisdom, and more.
+          These books weren&apos;t handed down to me. I found them, each in
+          its own way: a strange little bookstore, a random garage sale.
+          Every one arrived like a blessing. The Living Grimoire preserves
+          them: generations of spells, rituals, and lost knowledge,
+          carefully digitized to protect the integrity of the magic and its
+          history for generations to come.
         </p>
+
+        <section aria-labelledby="grimoire-profile-cta-heading">
+          <h2 id="grimoire-profile-cta-heading">Begin with your profile</h2>
+          <p>Start here — your profile is your home at the Apothecary.</p>
+          <p>
+            <a href="/account">Create your profile</a>
+          </p>
+        </section>
+
+        <section aria-labelledby="grimoire-works-heading">
+          <h2 id="grimoire-works-heading">The works preserved in this volume</h2>
+          <p>
+            Counted exactly: 1,389 pages — The Grimoire of Remembered Light
+            complete, an original sigil-making lesson, and nine collected
+            works in full.
+          </p>
+          <ul>
+            <li>
+              <strong>The Grimoire of Remembered Light</strong> — the
+              333-page volume at the heart of the compilation: foundations,
+              the wheel of the year, herbal allies, the five elements,
+              rituals and reflections, recipes, and the apothecary, opened
+              by the Ancestor&apos;s Note of T.H. Arthur.
+              <br />
+              Edition: the volume itself, complete in its 333 pages, with
+              the Ancestor&apos;s Note by T.H. Arthur.
+              <br />
+              {STORY_PLACEHOLDER}
+            </li>
+            {works.map((book) => (
+              <li key={book.id}>
+                <strong>{book.title}</strong> —{' '}
+                {WORK_DESCRIPTIONS[book.id] ?? book.indexLine}
+                <br />
+                Edition: {WORK_EDITIONS[book.id] ?? book.attribution}
+                <br />
+                {STORY_PLACEHOLDER}
+              </li>
+            ))}
+            <li>
+              <strong>An original sigil-making lesson</strong> — written for
+              this volume, one page.
+            </li>
+            {held.map((book) => (
+              <li key={book.id}>
+                <strong>{book.title}</strong> — two Norwegian black books of
+                the Cyprianus tradition. © 1999 Mary S. Rustad.{' '}
+                <em>
+                  Rights pending — catalogued here for honesty; its pages
+                  are not yet readable.
+                </em>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <section aria-labelledby="grimoire-about-heading">
           <h2 id="grimoire-about-heading">About this book</h2>
@@ -68,15 +210,40 @@ export default function GrimoireSubscribePage() {
           ))}
         </section>
 
+        <section aria-labelledby="grimoire-membership-heading">
+          <h2 id="grimoire-membership-heading">
+            Become a keeper of the Living Grimoire
+          </h2>
+          <p>
+            Your small $7.77/month membership allows you to unlock the full
+            world of light magic. Joining carries a one-time $8.88
+            activation fee — charged once, when you first join, never
+            again. Plus more:
+          </p>
+          <ul>
+            <li>📖 The Living Grimoire</li>
+            <li>✨ 10% off storewide</li>
+            <li>🌿 Exclusive articles &amp; rituals</li>
+            <li>🎁 Subscriber-only gifts and offers</li>
+            <li>🔮 Early access to new releases</li>
+            <li>💌 Personalized recommendations</li>
+          </ul>
+          <p>
+            Already hold the permanent unlock from before this membership
+            model? What you bought stays yours — your access does not
+            change.
+          </p>
+        </section>
+
         <UnlockPurchase />
 
         <section aria-labelledby="grimoire-subscription-heading">
           <h2 id="grimoire-subscription-heading">
-            Subscription — $7.77/month (Living Grimoire — 333-page edition)
+            Subscription — $7.77/month
           </h2>
           <p>
-            The subscription is a separate offer from the permanent unlock
-            above: $7.77/month while your subscription is active, with new
+            Membership works like this: $7.77/month while your
+            subscription is active, with new
             chapters every other month, plus 10% off storewide, monthly
             articles and rituals, and exclusive recipes. Membership runs
             on the manual rail: you join with Cash App or Venmo (or an
@@ -85,9 +252,8 @@ export default function GrimoireSubscribePage() {
             is no automatic card charge. To cancel, just contact Amber;
             access continues through the paid period. If your
             subscription ends, subscription access ends with it — a
-            permanent unlock, if you hold one, is never removed by
-            subscribing or cancelling, and the separate $8.88 unlock is
-            unaffected by subscription cancellation.
+            permanent unlock bought before this membership model, if you
+            hold one, is never removed by subscribing or cancelling.
           </p>
           <SubscribeForm />
         </section>
