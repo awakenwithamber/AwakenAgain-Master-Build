@@ -136,8 +136,8 @@ describe('seasonal features — configurable data', () => {
     }
   });
 
-  it('Nov + Dec 2026 resolve to the fall themes the owner confirmed 2026-10-15', () => {
-    expect(getSeasonalFeature(11, 2026)?.id).toBe('cedar-hearth-nov-2026');
+  it('Nov 2026 resolves to Pecan Pie (owner supersession 2026-11-09); Dec 2026 still resolves to Alpine Frost (owner-confirmed 2026-10-15)', () => {
+    expect(getSeasonalFeature(11, 2026)?.id).toBe('pecan-pie-nov-2026');
     expect(getSeasonalFeature(12, 2026)?.id).toBe('alpine-frost-dec-2026');
   });
 

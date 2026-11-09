@@ -345,10 +345,13 @@ export interface SeasonalFeature {
    * Confirmation status. 'confirmed' entries are owner-approved and may be
    * served by getSeasonalFeature(). 'proposed' entries are planning data —
    * they are NEVER returned by getSeasonalFeature(); use
-   * getProposedSeasonalFeature() for planning/preview. Absent = confirmed
-   * (back-compat with the October 2026 owner-verified entry).
+   * getProposedSeasonalFeature() for planning/preview. 'superseded' entries
+   * are retired records retained in SEASONAL_SCENTS for history (a theme
+   * the owner replaced mid-season) — they are NEVER served either.
+   * Absent = confirmed (back-compat with the October 2026 owner-verified
+   * entry).
    */
-  status?: 'confirmed' | 'proposed';
+  status?: 'confirmed' | 'proposed' | 'superseded';
   /**
    * When the seasonal theme follows a curated signature recipe (which may
    * use the owner's full inventory, including finished blends), link it

@@ -5,12 +5,19 @@
 import type { SeasonalFeature } from '../../types';
 
 /**
- * CONFIRMED seasonal features only — owner-approved entries that the
- * SeasonalBanner may serve. October 2026 = Pumpkin Spice (owner-verified).
- * November 2026 = Cedar & Hearth and December 2026 = Alpine Frost were
- * confirmed on 2026-10-15 by the owner's approval of the Fall 2026 soap
- * collection proposal — that approval carried their signature recipes
- * (SCENT_RECIPE_11 and SCENT_RECIPE_04) with them.
+ * Seasonal features as data — CONFIRMED entries are owner-approved and
+ * servable; getSeasonalFeature() filters on status, so the SUPERSEDED
+ * record retained in this array is never served. October 2026 = Pumpkin
+ * Spice (owner-verified). December 2026 = Alpine Frost was confirmed on
+ * 2026-10-15 by the owner's approval of the Fall 2026 soap collection
+ * proposal (SCENT_RECIPE_04).
+ * November 2026 history: Cedar & Hearth (SCENT_RECIPE_11), confirmed
+ * 2026-10-15, is November's live feature until this stage ships. On
+ * 2026-11-09 the owner superseded it with Pecan Pie — binding to
+ * SCENT_RECIPE_05 approved the same day — as a standalone mid-month
+ * stage. The Cedar & Hearth record is retained below with status
+ * 'superseded': the month's history stays truthful, and nothing
+ * back-dates Pecan Pie.
  */
 export const SEASONAL_SCENTS: readonly SeasonalFeature[] = [
   {
@@ -38,11 +45,19 @@ export const SEASONAL_SCENTS: readonly SeasonalFeature[] = [
     availability: 'Seasonal limited run — small batch.',
   },
   {
+    /**
+     * SUPERSEDED RECORD — retained for history, never served.
+     * Cedar & Hearth was November 2026's confirmed feature from
+     * 2026-10-15 until the owner's 2026-11-09 supersession (below).
+     * The record is preserved verbatim apart from its status; the
+     * recipe itself (SCENT_RECIPE_11 "Cedar Hollow") remains in the
+     * signature-scent catalog untouched.
+     */
     id: 'cedar-hearth-nov-2026',
     month: 11,
     year: 2026,
     name: 'Cedar & Hearth',
-    status: 'confirmed',
+    status: 'superseded',
     tagline: 'November Soap of the Month',
     recipe_id: 'SCENT_RECIPE_11',
     oils: ['Cedarwood', 'Frankincense'],
@@ -50,6 +65,31 @@ export const SEASONAL_SCENTS: readonly SeasonalFeature[] = [
     copy: 'Dry warm wood wrapped in sacred resin — a cabin-in-the-pines bar for the turn toward winter.',
     copyRule: 'Theme naming only.',
     safetyNote: 'No major flags per recipe (SCENT_RECIPE_11).',
+    availability: 'Seasonal limited run — small batch.',
+  },
+  {
+    id: 'pecan-pie-nov-2026',
+    month: 11,
+    year: 2026,
+    name: 'Pecan Pie',
+    status: 'confirmed',
+    tagline: 'November Soap of the Month',
+    /**
+     * Curated signature path: this theme follows SCENT_RECIPE_05
+     * ("Sweet Serenity" — jasmine measured + vanilla-mimic warmth, best
+     * base Goat Milk + Shea Butter), the only recipe in a creamy, warm,
+     * sweet register. Theme binding approved by the owner 2026-11-09.
+     * The theme is the story; the scent is the recipe's own truth — an
+     * exotic soft floral with creamy warmth, not a nut or baked-goods
+     * scent. Oils and palette below are the recipe's own fields.
+     */
+    recipe_id: 'SCENT_RECIPE_05',
+    oils: ['Jasmine (measured)', 'vanilla-mimic (warmth)'],
+    palette: ['Rose / Pink', 'Amber / Gold'],
+    copy: 'Soft blossoms and golden warmth — jasmine over creamy vanilla in a rich goat milk and shea bar. A cozy late-autumn theme, named for the pie on the holiday table.',
+    copyRule:
+      'Scent-theme naming only — NEVER state or imply pecan, butter, or brown sugar is an ingredient. None is in the formula.',
+    safetyNote: 'Jasmine is potent — measured dose (per SCENT_RECIPE_05).',
     availability: 'Seasonal limited run — small batch.',
   },
   {
@@ -175,10 +215,16 @@ export const PROPOSED_SEASONAL_FEATURES: readonly SeasonalFeature[] = [
 
 /**
  * Resolve the CONFIRMED featured seasonal scent for a given month/year.
- * Proposed entries are never served — this is the customer-facing lookup.
+ * Only confirmed entries are served — proposed entries are planning
+ * data, and superseded records are retained history; neither is ever
+ * returned. This status filter is what keeps a month with both a
+ * superseded record and a confirmed successor (November 2026)
+ * unambiguous: exactly the confirmed entry can match.
  */
 export function getSeasonalFeature(month: number, year: number): SeasonalFeature | undefined {
-  return SEASONAL_SCENTS.find((s) => s.month === month && s.year === year);
+  return SEASONAL_SCENTS.find(
+    (s) => s.month === month && s.year === year && (s.status ?? 'confirmed') === 'confirmed',
+  );
 }
 
 /**

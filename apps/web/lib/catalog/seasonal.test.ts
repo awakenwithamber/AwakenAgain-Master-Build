@@ -3,8 +3,12 @@
  * Laws: getSeasonalFeature() serves CONFIRMED entries only; proposed
  * entries are never served, always carry status 'proposed' + a pending
  * copyRule, and reference real recipe IDs from lib/catalog/scents.ts.
- * Nov/Dec 2026 were confirmed by the owner on 2026-10-15 (Fall 2026
- * collection approval); Jan 2027 remains proposed.
+ * Superseded records (November 2026's Cedar & Hearth) are retained in
+ * SEASONAL_SCENTS for history and are never served. Dec 2026 was
+ * confirmed by the owner on 2026-10-15 (Fall 2026 collection approval);
+ * Nov 2026's Cedar & Hearth (confirmed the same day) was superseded by
+ * Pecan Pie on 2026-11-09, binding approved the same day; Jan 2027
+ * remains proposed.
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -29,15 +33,61 @@ describe('confirmed seasonal features', () => {
     expect(f?.status ?? 'confirmed').toBe('confirmed');
   });
 
-  it('November 2026 resolves to Cedar & Hearth (owner-confirmed 2026-10-15)', () => {
+  it('November 2026 resolves to Pecan Pie (owner-approved binding 2026-11-09)', () => {
     const f = getSeasonalFeature(11, 2026);
-    expect(f?.id).toBe('cedar-hearth-nov-2026');
-    expect(f?.name).toBe('Cedar & Hearth');
-    expect(f?.recipe_id).toBe('SCENT_RECIPE_11');
+    expect(f?.id).toBe('pecan-pie-nov-2026');
+    expect(f?.name).toBe('Pecan Pie');
+    expect(f?.recipe_id).toBe('SCENT_RECIPE_05');
     expect(f?.status).toBe('confirmed');
     expect(f?.tagline).toBe('November Soap of the Month');
     expect(f?.copyRule).not.toMatch(/proposed/i);
     expect(f?.availability).not.toMatch(/proposed|pending/i);
+  });
+
+  it('Pecan Pie never states or implies pecan, butter, or brown sugar is an ingredient', () => {
+    const f = getSeasonalFeature(11, 2026)!;
+    // The honesty rule itself names the three theme foods as non-ingredients.
+    expect(f.copyRule).toMatch(/never/i);
+    expect(f.copyRule).toMatch(/pecan, butter, or brown sugar is an ingredient/i);
+    // No customer-facing field may present a theme food as contents.
+    const claims =
+      /(contains|made with|infused with|real)\s+(pecan|butter|brown sugar)|(pecan|butter|brown sugar)\s+(oil|extract|puree|infused)/i;
+    expect(f.copy).not.toMatch(claims);
+    expect(f.tagline).not.toMatch(claims);
+    expect(f.availability ?? '').not.toMatch(claims);
+    // The scent description stays the recipe's truth: floral + vanilla warmth.
+    expect(f.copy.toLowerCase()).toMatch(/jasmine/);
+    expect(f.copy.toLowerCase()).toMatch(/vanilla/);
+  });
+
+  it('Pecan Pie entry derives from SCENT_RECIPE_05 fields (no invented content)', () => {
+    const f = getSeasonalFeature(11, 2026)!;
+    const recipe = SIGNATURE_SCENTS.find((r) => r.id === 'SCENT_RECIPE_05')!;
+    expect(recipe.name).toBe('Sweet Serenity');
+    expect(f.oils).toEqual(recipe.oils);
+    expect(f.palette).toEqual(recipe.palette);
+  });
+
+  it('Cedar & Hearth is retained as a superseded record — present, never served', () => {
+    const record = SEASONAL_SCENTS.find((s) => s.id === 'cedar-hearth-nov-2026');
+    expect(record).toBeDefined();
+    expect(record?.status).toBe('superseded');
+    expect(record?.name).toBe('Cedar & Hearth');
+    expect(record?.recipe_id).toBe('SCENT_RECIPE_11');
+    expect(getSeasonalFeature(11, 2026)?.id).not.toBe('cedar-hearth-nov-2026');
+  });
+
+  it('exactly one servable (confirmed) entry exists for each confirmed month', () => {
+    for (const [month, year] of [
+      [10, 2026],
+      [11, 2026],
+      [12, 2026],
+    ] as const) {
+      const servable = SEASONAL_SCENTS.filter(
+        (s) => s.month === month && s.year === year && (s.status ?? 'confirmed') === 'confirmed',
+      );
+      expect(servable).toHaveLength(1);
+    }
   });
 
   it('December 2026 resolves to Alpine Frost (owner-confirmed 2026-10-15)', () => {
@@ -56,13 +106,13 @@ describe('confirmed seasonal features', () => {
     expect(getSeasonalFeature(10, 2027)).toBeUndefined();
   });
 
-  it('every confirmed entry is confirmed (never proposed)', () => {
+  it('every SEASONAL_SCENTS entry is confirmed or a retained superseded record (never proposed)', () => {
     for (const s of SEASONAL_SCENTS) {
-      expect(s.status ?? 'confirmed').toBe('confirmed');
+      expect(['confirmed', 'superseded']).toContain(s.status ?? 'confirmed');
     }
   });
 
-  it('confirmed recipe_ids reference real catalog recipes (no invented themes)', () => {
+  it('entry recipe_ids reference real catalog recipes (no invented themes)', () => {
     for (const s of SEASONAL_SCENTS) {
       expect(s.recipe_id).toBeDefined();
       expect(RECIPE_IDS.has(s.recipe_id as string)).toBe(true);
