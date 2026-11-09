@@ -100,12 +100,39 @@ describe('Content-Security-Policy (lib/security/csp, nonce-based)', () => {
     expect(directive(csp, 'default-src')).toBe("default-src 'self'");
     expect(directive(csp, 'frame-ancestors')).toBe("frame-ancestors 'none'");
     expect(directive(csp, 'base-uri')).toBe("base-uri 'self'");
-    expect(directive(csp, 'form-action')).toBe("form-action 'self'");
+    expect(directive(csp, 'form-action')).toBe(
+      "form-action 'self' https://accept.authorize.net https://test.authorize.net",
+    );
     expect(directive(csp, 'object-src')).toBe("object-src 'none'");
     // HTTPS-upgrade enforcement: browsers upgrade any http:// subresource.
     expect(directive(csp, 'upgrade-insecure-requests')).toBe(
       'upgrade-insecure-requests',
     );
+  });
+
+  it('CSP names ONLY Authorize.net for card payments — no stale processor origins (2026-11-09)', () => {
+    // The Accept Hosted form POST targets (production + sandbox).
+    expect(directive(csp, 'form-action')).toContain(
+      'https://accept.authorize.net',
+    );
+    expect(directive(csp, 'form-action')).toContain(
+      'https://test.authorize.net',
+    );
+    // Every stale Stripe origin is gone from every directive.
+    for (const stale of [
+      'js.stripe.com',
+      'api.stripe.com',
+      'hooks.stripe.com',
+      'checkout.stripe.com',
+      'stripe.com',
+    ]) {
+      expect(csp).not.toContain(stale);
+    }
+    // No gateway script/connect/frame origins: the hosted flow needs
+    // none (the browser only form-POSTs a token).
+    expect(directive(csp, 'script-src')).not.toContain('authorize.net');
+    expect(directive(csp, 'connect-src')).not.toContain('authorize.net');
+    expect(directive(csp, 'frame-src')).not.toContain('authorize.net');
   });
 
   it('CSP allows the evidenced origins', () => {
