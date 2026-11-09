@@ -293,6 +293,48 @@ export function displayPageTitle(page: GrimoireDisplayPage): string {
   return pageTitle(page);
 }
 
+/* ------------------------------------------------------------------ */
+/* Reader front Contents page (owner directive 2026-11-09)            */
+/*                                                                    */
+/* The reader shows a Contents page in its front matter (between the  */
+/* reader-level Introduction and composed page 1). It is derived      */
+/* ENTIRELY from the composed book's own generated TOC page (kind     */
+/* 'toc', composed page 6 — inside the free preview, so its entries   */
+/* reach every viewer in full): same labels, same order, and each     */
+/* entry's starting page parsed from the TOC detail the composition   */
+/* itself wrote ('page 1', 'pages 2–3', 'in full — pages 351–1050').  */
+/* Entries whose detail carries no page (rights-pending works) get a  */
+/* null startPage and are listed but cannot be jumped to. Nothing is  */
+/* invented here, and the front page itself never enters the          */
+/* pagination — the composed book stays exactly 1,051 pages.          */
+/* ------------------------------------------------------------------ */
+
+export interface FrontContentsEntry {
+  label: string;
+  detail: string;
+  /** 1-based composed page the section starts on; null = no jump target. */
+  startPage: number | null;
+}
+
+/** First page number named in a TOC detail string, or null. */
+export function tocEntryStartPage(detail: string): number | null {
+  const m = detail.match(/pages?\s+(\d+)/);
+  return m ? Number.parseInt(m[1], 10) : null;
+}
+
+/** Front-Contents entries derived from the composed TOC page in `pages`. */
+export function frontContentsEntries(
+  pages: readonly GrimoireDisplayPage[],
+): FrontContentsEntry[] {
+  const toc = pages.find((p) => p.kind === 'toc');
+  if (!toc || toc.kind !== 'toc') return [];
+  return toc.entries.map((e) => ({
+    label: e.label,
+    detail: e.detail,
+    startPage: tocEntryStartPage(e.detail),
+  }));
+}
+
 /** Allies: fellow volume-one herbs sharing a category (never self). */
 function alliesFor(slug: string, categories: readonly string[]): string[] {
   return GRIMOIRE_HERB_ORDER.filter(

@@ -24,14 +24,23 @@
  * a photorealistic centuries-old handmade leather book whose title is
  * tooled into the artwork itself ("The Living Grimoire — The Collective
  * Works of Light Magic & Lost Knowledge"). No text is overlaid on the
- * book and no heading repeats the title above it. Entry is a short
- * cinematic sequence: the standing cover with a pulsing "✦ Click to
- * enter ✦" prompt below it (the tagline sits there too; tapping the
- * book itself also enters) → a crossfade to the book lying on its
- * velvet table scene (~1s beat) → a zoom into the book as it opens,
- * landing on a reader-level INTRODUCTION page that is NOT part of the
- * composed 1,051-page pagination. The one-time-per-session swipe
- * tutorial hint appears on the introduction page.
+ * book and no heading repeats the title above it. Below the book sit
+ * the tagline and a pulsing "✦ Click to enter ✦" prompt; tapping the
+ * book itself also enters.
+ *
+ * READER FIX (2026-11-09, owner correction the same day): the shipped
+ * cinematic entry (table-scene beat → zoom) "does not seem to work" on
+ * her phone, so it is GONE — tapping the cover opens the book directly
+ * and immediately. The book opens onto reader-level FRONT PAGES that
+ * are NOT part of the composed 1,051-page pagination: first the
+ * INTRODUCTION page (owner's words, verbatim), then a CONTENTS page
+ * derived entirely from the composed book's own generated table of
+ * contents (tap a section to jump to it), then composed page 1.
+ * Turning back from page 1 returns through Contents to Introduction.
+ * Navigation is the plain way it worked before the overhaul: brass
+ * arrows under the book, swipe, keys, bottom-corner tap zones — and
+ * one quiet line of instruction under the arrows. No tutorial
+ * overlays.
  */
 import {
   createContext,
@@ -62,7 +71,9 @@ import {
   categoryLabel,
   displayPageTitle,
   FREE_PREVIEW_LAST_PAGE,
+  frontContentsEntries,
   herbDisplayName,
+  type FrontContentsEntry,
   type GrimoireDisplayPage,
   type GrimoireLockedPage,
   type GrimoirePage,
@@ -80,11 +91,6 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const TURN_MS = 600;
 /** JS lockout matching the CSS 0.01s animation under reduced motion. */
 const TURN_MS_REDUCED = 10;
-/** Entry sequence (2026-11-09): the table-scene beat, then the zoom. */
-const ENTRY_SCENE_MS = 1000;
-const ENTRY_ZOOM_MS = 1150;
-/** Intro-page turn-away when the reader begins the composed book. */
-const INTRO_TURN_MS = 450;
 
 interface TurnState {
   dir: 'fwd' | 'back';
@@ -188,21 +194,19 @@ function TitlePageView({
 }
 
 /**
- * The INTRODUCTION page (owner directive 2026-11-09) — a reader-level
- * entry page, deliberately NOT a composed page: it has no page number,
- * no place in the 1,051-page pagination, and no entitlement gate (it
- * is front matter every visitor lands on after the entry sequence).
- * The text is the owner's, verbatim. Turning from it (button, arrows,
- * swipe, keys) enters the composed book at its first page; turning
- * back from that page returns here.
+ * The INTRODUCTION page (owner directive 2026-11-09) — the first of
+ * the reader-level front pages, deliberately NOT a composed page: it
+ * has no page number, no place in the 1,051-page pagination, and no
+ * entitlement gate (it is front matter every visitor lands on when the
+ * book opens). The text is the owner's, verbatim. Turning from it
+ * (button, arrows, swipe, keys) advances to the Contents page;
+ * turning back from there returns here.
  */
 function IntroPageView({
   side,
-  leaving,
   onBegin,
 }: {
   side: 'left' | 'right';
-  leaving: boolean;
   onBegin: () => void;
 }) {
   return (
@@ -216,7 +220,7 @@ function IntroPageView({
           tabIndex={0}
           aria-label="Introduction — scrollable page content"
         >
-          <div className={leaving ? styles.introLeaving : styles.introPage}>
+          <div className={styles.introPage}>
             <p className={styles.categoryRow}>✦ The Living Grimoire ✦</p>
             <h2 className={styles.handTitle}>Introduction</h2>
             <p className={`${styles.handBody} ${styles.dropcap}`}>
@@ -252,6 +256,80 @@ function IntroPageView({
                 Turn the page to begin ✦
               </button>
             </p>
+          </div>
+        </div>
+        <p className={styles.pageNum} aria-hidden="true">
+          ✦
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The CONTENTS page (owner directive 2026-11-09) — the second
+ * reader-level front page, between the Introduction and composed
+ * page 1, in the same pattern as the Introduction: no page number, no
+ * place in the pagination, no entitlement gate. Its entries come
+ * ENTIRELY from the composed book's own generated table of contents
+ * (see frontContentsEntries in ./grimoireContent) — same labels, same
+ * order, each with its starting page. Tapping an entry jumps straight
+ * to that section's first page; entries with no page of their own yet
+ * (rights-pending works) are listed plainly and cannot be tapped. The
+ * list scrolls inside the page when it overflows, like any long page
+ * in this book. Turning forward enters the composed book at page 1;
+ * turning back returns to the Introduction.
+ */
+function ContentsPageView({
+  side,
+  entries,
+  onJump,
+}: {
+  side: 'left' | 'right';
+  entries: FrontContentsEntry[];
+  onJump: (pageIndex: number) => void;
+}) {
+  return (
+    <div className={styles.pageSlot}>
+      <div
+        className={`${styles.page} ${side === 'left' ? styles.pageLeft : styles.pageRight}`}
+      >
+        <div
+          className={styles.pageScroll}
+          data-grimoire-scroll=""
+          tabIndex={0}
+          aria-label="Contents — scrollable page content"
+        >
+          <div className={styles.introPage}>
+            <p className={styles.categoryRow}>✦ The Living Grimoire ✦</p>
+            <h2 className={styles.handTitle}>Contents</h2>
+            <p className={styles.contentsHint}>Tap a section to jump to it.</p>
+            <ul className={styles.contentsList}>
+              {entries.map((e) => {
+                const startPage = e.startPage;
+                return (
+                  <li key={e.label} className={styles.contentsItem}>
+                    {startPage !== null ? (
+                      <button
+                        type="button"
+                        className={styles.contentsBtn}
+                        onClick={() => onJump(startPage - 1)}
+                      >
+                        <span className={styles.contentsLabel}>{e.label}</span>
+                        <span className={styles.contentsPage}>
+                          page {startPage}
+                        </span>
+                      </button>
+                    ) : (
+                      <span className={styles.contentsStatic}>
+                        <span className={styles.contentsLabel}>{e.label}</span>
+                        <span className={styles.contentsPage}>{e.detail}</span>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
         <p className={styles.pageNum} aria-hidden="true">
@@ -832,25 +910,19 @@ export interface GrimoireBookProps {
 }
 
 export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
-  const [coverState, setCoverState] = useState<
-    'closed' | 'scene' | 'zooming' | 'open'
-  >('closed');
+  const [coverState, setCoverState] = useState<'closed' | 'open'>('closed');
   /*
-   * The introduction page (2026-11-09) is where an opened book lands.
-   * It is reader-level state only — `page` always indexes the composed
-   * pages, so the intro never enters the pagination.
+   * The front pages (2026-11-09): an opened book lands on the
+   * Introduction, turns forward to the Contents, then into the
+   * composed book. Reader-level state only — `page` always indexes
+   * the composed pages, so the front pages never enter the
+   * pagination. null = reading the composed book itself.
    */
-  const [atIntro, setAtIntro] = useState(true);
-  const [introLeaving, setIntroLeaving] = useState(false);
-  const entryTimer = useRef<number | null>(null);
-  /*
-   * Swipe tutorial hint (2026-11-09): 'waiting' until the book first
-   * opens this session, then 'shown' until the first page turn or ~6
-   * seconds pass, then 'done' for the rest of the session.
-   */
-  const [swipeHint, setSwipeHint] = useState<'waiting' | 'shown' | 'done'>(
-    'waiting',
+  const [frontPage, setFrontPage] = useState<'intro' | 'contents' | null>(
+    'intro',
   );
+  const atIntro = frontPage === 'intro';
+  const atContents = frontPage === 'contents';
   const [isDesktop, setIsDesktop] = useState(false);
   const [page, setPage] = useState(0);
   const [turn, setTurn] = useState<TurnState | null>(null);
@@ -874,16 +946,23 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   const displayPage = turn ? turn.from : page;
   const spreadBase = spreadBaseFor(displayPage, isDesktop);
 
+  /* Contents-page entries, derived from the composed book's own TOC
+     page (present in full for every viewer — it sits in the free
+     preview). Recomputed only when the page payload changes. */
+  const contentsEntries = frontContentsEntries(pages);
+
   /* Ref mirror of guard state so delayed calls (ribbon → open → jump) never
      act on a stale closure. */
   const guardRef = useRef({
     turn: null as TurnState | null,
     bookOpen: false,
     page: 0,
+    frontPage: 'intro' as 'intro' | 'contents' | null,
   });
   guardRef.current.turn = turn;
   guardRef.current.bookOpen = bookOpen;
   guardRef.current.page = page;
+  guardRef.current.frontPage = frontPage;
 
   /* Viewport tracking — desktop gets a two-page spread. */
   useEffect(() => {
@@ -901,7 +980,6 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   useEffect(() => {
     return () => {
       if (timer.current) clearTimeout(timer.current);
-      if (entryTimer.current) clearTimeout(entryTimer.current);
     };
   }, []);
 
@@ -915,16 +993,6 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     return () => mq.removeEventListener('change', apply);
   }, []);
 
-  /* Swipe hint lifecycle: show when the book first opens; the 6-second
-     timer is only a backstop — a first page turn dismisses it sooner
-     (see goTo), and either path lands on 'done' for the session. */
-  useEffect(() => {
-    if (!bookOpen || swipeHint !== 'waiting') return;
-    setSwipeHint('shown');
-    const t = window.setTimeout(() => setSwipeHint('done'), 6000);
-    return () => window.clearTimeout(t);
-  }, [bookOpen, swipeHint]);
-
   const goTo = useCallback(
     (target: number) => {
       const g = guardRef.current;
@@ -933,13 +1001,16 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
       // targeting the final page index directly made the turn sheet read
       // pages[pages.length] (undefined) and throw. See grimoirePagination.
       const t = clampNavigationTarget(target, pages.length, isDesktop);
-      if (t === g.page) return;
+      if (t === g.page) {
+        /* Already on that page — but if a front page is showing, the
+           navigation still means "take me into the book, here". */
+        if (g.frontPage !== null) setFrontPage(null);
+        return;
+      }
       const dir: TurnState['dir'] = t > g.page ? 'fwd' : 'back';
       setTurn({ dir, from: g.page, to: t });
-      /* The first real page turn dismisses the swipe tutorial hint. */
-      setSwipeHint((s) => (s === 'shown' ? 'done' : s));
-      /* Any composed-page navigation leaves the introduction behind. */
-      setAtIntro(false);
+      /* Any composed-page navigation leaves the front pages behind. */
+      setFrontPage(null);
       setPage(t);
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => {
@@ -953,90 +1024,92 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   const step = isDesktop ? 2 : 1;
 
   /*
-   * Leaving the introduction: a short turn-away, then the composed
-   * book's first page. Advancing from the intro is also a page turn
-   * for the swipe tutorial hint (it dismisses).
+   * Moving through the front pages: Introduction → Contents → the
+   * composed book's first page. Plain state changes — no staged
+   * animation between front pages (owner directive 2026-11-09).
    */
-  const advanceFromIntro = useCallback(() => {
-    if (!bookOpen || !atIntro || introLeaving) return;
-    setSwipeHint((s) => (s === 'shown' ? 'done' : s));
-    if (reducedMotion) {
-      setAtIntro(false);
-      setAnnounce(
-        `Page 1 of ${pages.length} — ${displayPageTitle(pages[0])}`,
-      );
+  const advanceFront = useCallback(() => {
+    if (!bookOpen) return;
+    if (frontPage === 'intro') {
+      setFrontPage('contents');
+      setAnnounce('Contents — tap a section to jump to it.');
       return;
     }
-    setIntroLeaving(true);
-    window.setTimeout(() => {
-      setAtIntro(false);
-      setIntroLeaving(false);
+    if (frontPage === 'contents') {
+      setFrontPage(null);
       setAnnounce(
         `Page 1 of ${pages.length} — ${displayPageTitle(pages[0])}`,
       );
-    }, INTRO_TURN_MS);
-  }, [atIntro, bookOpen, introLeaving, pages, reducedMotion]);
+    }
+  }, [bookOpen, frontPage, pages]);
+
+  /*
+   * A Contents entry tap: jump straight to that section's first
+   * composed page. Instant, like the front-page turns — the flip
+   * sheet belongs to page-by-page reading inside the composed book.
+   */
+  const jumpFromContents = useCallback(
+    (target: number) => {
+      if (!bookOpen) return;
+      const t = clampNavigationTarget(target, pages.length, isDesktop);
+      setFrontPage(null);
+      setPage(t);
+      setAnnounce(
+        `Page ${t + 1} of ${pages.length} — ${displayPageTitle(pages[t])}`,
+      );
+    },
+    [bookOpen, isDesktop, pages],
+  );
 
   const next = useCallback(() => {
-    if (atIntro) {
-      advanceFromIntro();
+    if (frontPage !== null) {
+      advanceFront();
       return;
     }
     goTo(page + step);
-  }, [advanceFromIntro, atIntro, goTo, page, step]);
+  }, [advanceFront, frontPage, goTo, page, step]);
 
   const prev = useCallback(() => {
-    if (!bookOpen || turn || atIntro) return;
-    if (page <= 0) {
-      /* Turning back from the first composed page returns to the
-         introduction, as turning back in a real book would. */
-      setAtIntro(true);
+    if (!bookOpen || turn) return;
+    if (frontPage === 'contents') {
+      /* Back from the Contents page returns to the Introduction. */
+      setFrontPage('intro');
       setAnnounce('Introduction — turn the page to begin.');
       return;
     }
+    if (frontPage === 'intro') return;
+    if (page <= 0) {
+      /* Turning back from the first composed page returns to the
+         Contents page, as turning back in a real book would. */
+      setFrontPage('contents');
+      setAnnounce('Contents — tap a section to jump to it.');
+      return;
+    }
     goTo(page - step);
-  }, [atIntro, bookOpen, goTo, page, step, turn]);
+  }, [bookOpen, frontPage, goTo, page, step, turn]);
 
   /*
-   * The entry sequence (owner directive 2026-11-09): standing cover →
-   * the book on its velvet table scene (a ~1s beat) → a zoom into the
-   * book as it opens → the introduction page. Reduced motion skips the
-   * scene and the zoom entirely — the book simply opens.
+   * Entry (owner correction 2026-11-09): the book simply opens —
+   * directly and immediately onto the Introduction. The earlier
+   * table-scene/zoom sequence is removed entirely; there is nothing
+   * to wait for and nothing that can stall on a phone.
    */
   const openBook = useCallback(() => {
     if (coverState !== 'closed') return;
-    if (reducedMotion) {
-      setCoverState('open');
-      setAnnounce('The grimoire is open. Introduction — turn the page to begin.');
-      return;
-    }
-    setCoverState('scene');
-    entryTimer.current = window.setTimeout(() => {
-      setCoverState('zooming');
-      entryTimer.current = window.setTimeout(() => {
-        setCoverState('open');
-        setAnnounce(
-          'The grimoire is open. Introduction — turn the page to begin.',
-        );
-      }, ENTRY_ZOOM_MS);
-    }, ENTRY_SCENE_MS);
-  }, [coverState, reducedMotion]);
+    setCoverState('open');
+    setAnnounce('The grimoire is open. Introduction — turn the page to begin.');
+  }, [coverState]);
 
   const goToIndex = useCallback(() => {
     if (!guardRef.current.bookOpen) {
       openBook();
-      // The entry sequence takes ~2.2s (near-instant under reduced
-      // motion); goTo reads live guard state.
-      window.setTimeout(
-        () => goTo(2),
-        reducedMotion
-          ? TURN_MS_REDUCED + 50
-          : ENTRY_SCENE_MS + ENTRY_ZOOM_MS + 100,
-      );
+      // The book now opens instantly; the short delay only lets the
+      // open state land before goTo reads live guard state.
+      window.setTimeout(() => goTo(2), 100);
     } else {
       goTo(2);
     }
-  }, [goTo, openBook, reducedMotion]);
+  }, [goTo, openBook]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     // Let focused buttons/links handle their own keys (avoids double-open).
@@ -1271,33 +1344,21 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
             </div>
           )}
 
-          {/* Entry sequence beat 2 (2026-11-09): the book lying on its
-              velvet table scene, then the zoom into it as it opens. */}
-          {(coverState === 'scene' || coverState === 'zooming') && (
-            <div
-              className={`${styles.scene} ${coverState === 'zooming' ? styles.sceneZoom : ''}`}
-              aria-hidden="true"
-            >
-              <img
-                className={styles.sceneArt}
-                src="/images/living-grimoire-table-scene.webp"
-                alt=""
-                draggable={false}
-              />
-            </div>
-          )}
-
           <div
-            className={`${styles.spread} ${coverState === 'closed' || coverState === 'scene' ? styles.spreadClosed : ''}`}
+            className={`${styles.spread} ${coverState === 'closed' ? styles.spreadClosed : ''}`}
             aria-hidden={!bookOpen}
           >
-            {atIntro ? (
+            {frontPage !== null ? (
               <>
-                <IntroPageView
-                  side="left"
-                  leaving={introLeaving}
-                  onBegin={advanceFromIntro}
-                />
+                {frontPage === 'intro' ? (
+                  <IntroPageView side="left" onBegin={advanceFront} />
+                ) : (
+                  <ContentsPageView
+                    side="left"
+                    entries={contentsEntries}
+                    onJump={jumpFromContents}
+                  />
+                )}
                 {isDesktop && (
                   <div className={styles.pageSlot}>
                     <div className={`${styles.page} ${styles.pageRight}`}>
@@ -1351,20 +1412,6 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
             )}
           </div>
 
-          {/* Visual swipe tutorial (owner directive 2026-11-09): shown
-              once per session when the book first opens, at the bottom
-              edge of the page area; pointer-events are off in CSS so it
-              never blocks reading or swiping. */}
-          {bookOpen && atIntro && swipeHint === 'shown' && (
-            <div className={styles.swipeHint} role="note">
-              <span aria-hidden="true">‹</span>
-              <span className={styles.swipeGlyph} aria-hidden="true">
-                ✦
-              </span>
-              <span aria-hidden="true">›</span>
-              <span>Swipe to turn the page — or use the arrows</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -1402,10 +1449,10 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
           {bookOpen
             ? atIntro
               ? 'Introduction'
-              : `Page ${displayPage + 1} of ${pages.length}`
-            : coverState === 'closed'
-              ? 'The book is closed'
-              : 'Opening…'}
+              : atContents
+                ? 'Contents'
+                : `Page ${displayPage + 1} of ${pages.length}`
+            : 'The book is closed'}
         </p>
         <button
           type="button"
@@ -1417,6 +1464,14 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
           ›
         </button>
       </div>
+
+      {/* One quiet line of instruction (owner directive 2026-11-09 —
+          the plain way the reader worked before the overhaul). No
+          overlays, no tutorials: just the words, under the arrows,
+          whenever the book is open. */}
+      {bookOpen && (
+        <p className={styles.navHint}>Use the arrows or swipe to turn the pages.</p>
+      )}
 
       <p className={styles.srOnly} aria-live="polite" role="status">
         {announce}

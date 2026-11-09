@@ -520,71 +520,12 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Entry sequence — table scene + zoom (2026-11-09)                    */
+/* Entry (2026-11-09, owner correction): the book opens directly —    */
+/* the table-scene beat and the zoom that shipped earlier the same    */
+/* day are removed entirely ("the animating of the book does not      */
+/* seem to work"). No entry animation styles remain; the table-scene  */
+/* image file stays in the repo, simply unreferenced.                 */
 /* ------------------------------------------------------------------ */
-
-/*
- * Beat 2 of the entry: the same book lying flat on its royal-purple
- * velvet table scene. Same panel geometry as the cover, so the
- * crossfade from the standing cover settles without a jump. The zoom
- * scales toward the book's position in the scene (its centre, ~48% /
- * 50% of the frame) while fading out over the introduction page
- * beneath — durations match ENTRY_SCENE_MS / ENTRY_ZOOM_MS in the
- * component.
- */
-.scene {
-  position: absolute;
-  top: clamp(10px, 2vw, 18px);
-  bottom: clamp(10px, 2vw, 18px);
-  left: 50%;
-  aspect-ratio: 1040 / 2272;
-  max-width: calc(100% - 2 * clamp(10px, 2vw, 18px));
-  transform: translateX(-50%);
-  transform-origin: 48% 50%;
-  z-index: 30;
-  background: #150a24;
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  animation: sceneIn 0.45s ease-out;
-}
-
-.sceneArt {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.sceneZoom {
-  animation: sceneZoom 1.15s ease-in forwards;
-}
-
-@keyframes sceneIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes sceneZoom {
-  0% {
-    transform: translateX(-50%) scale(1);
-    opacity: 1;
-  }
-  65% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) scale(2.4);
-    opacity: 0;
-  }
-}
 
 /* The "✦ Click to enter ✦" prompt: a gentle gold pulse. */
 .enterBtn {
@@ -611,24 +552,12 @@
   animation: introIn 0.35s ease-out;
 }
 
-.introLeaving {
-  transform-origin: left center;
-  animation: introTurn 0.45s ease-in forwards;
-}
-
 @keyframes introIn {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
-  }
-}
-
-@keyframes introTurn {
-  to {
-    transform: rotateY(-24deg) translateX(-10px);
-    opacity: 0;
   }
 }
 
@@ -658,7 +587,7 @@
   outline-offset: 2px;
 }
 
-/* The quiet flyleaf opposite the introduction on desktop spreads. */
+/* The quiet flyleaf opposite a front page on desktop spreads. */
 .flyleafMark {
   text-align: center;
   color: #b08d4f;
@@ -668,9 +597,8 @@
 }
 
 /*
- * While the book is closed (and during the table-scene beat), the
- * pages beneath stay hidden; the zoom fade reveals the introduction
- * page as the scene lifts (the class comes off when the zoom starts).
+ * While the book is closed, the pages beneath stay hidden; opening
+ * the book reveals the Introduction at once.
  */
 .spreadClosed {
   visibility: hidden;
@@ -700,63 +628,86 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Swipe tutorial hint                                                 */
+/* Contents page (reader-level front page, 2026-11-09)                 */
 /* ------------------------------------------------------------------ */
 
 /*
- * One-time visual tutorial (owner directive 2026-11-09): a gold glyph
- * sweeping left and right at the bottom edge of the page area, shown
- * when the book first opens in a session. pointer-events: none — it
- * never blocks reading, tapping, or swiping.
+ * The front Contents page: a book page in the book's own hand —
+ * parchment, ink, dotted leaders to the page number. Each entry is a
+ * full-width row; tappable entries are buttons, the rest plain text.
+ * The list lives inside the page's own scroll region, so a long
+ * contents simply scrolls within the page.
  */
-.swipeHint {
-  position: absolute;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  z-index: 26;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(212, 175, 105, 0.6);
-  background: rgba(20, 11, 5, 0.88);
-  color: #f0d9a8;
+.contentsHint {
   font-family: Georgia, serif;
   font-size: 15px;
+  letter-spacing: 0.03em;
+  color: #7a4a1e;
+  text-align: center;
+  margin: 0.2em 0 1em;
+}
+
+.contentsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.contentsItem {
+  margin: 0;
+}
+
+.contentsBtn,
+.contentsStatic {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 4px;
+  border: 0;
+  border-bottom: 1px dotted rgba(122, 74, 30, 0.4);
+  font-family: 'Caveat', cursive;
+  font-size: 21px;
+  line-height: 1.25;
+  color: #3a2415;
+  text-align: left;
+}
+
+.contentsBtn {
+  background: none;
+  cursor: pointer;
+}
+
+.contentsBtn:hover {
+  color: #5a2f10;
+  background: rgba(212, 175, 55, 0.14);
+}
+
+.contentsBtn:focus-visible {
+  outline: 3px solid rgba(122, 74, 30, 0.55);
+  outline-offset: 2px;
+}
+
+.contentsStatic {
+  color: rgba(58, 36, 21, 0.62);
+}
+
+.contentsLabel {
+  flex: 1 1 auto;
+}
+
+.contentsPage {
+  font-family: Georgia, serif;
+  font-size: 13px;
   letter-spacing: 0.04em;
+  color: #7a4a1e;
   white-space: nowrap;
-  pointer-events: none;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-  animation: hintIn 0.35s ease-out;
 }
 
-@keyframes hintIn {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-.swipeGlyph {
-  display: inline-block;
-  color: #d4af37;
-  font-size: 17px;
-  animation: swipeSweep 1.3s ease-in-out infinite alternate;
-}
-
-@keyframes swipeSweep {
-  from {
-    transform: translateX(-13px);
-  }
-  to {
-    transform: translateX(13px);
-  }
+.contentsStatic .contentsPage {
+  font-size: 12.5px;
+  font-style: italic;
 }
 
 .openBtn {
@@ -913,6 +864,20 @@
 }
 
 /*
+ * The one quiet instruction line under the arrows (owner directive
+ * 2026-11-09 — plain words, shown simply, replacing the animated
+ * swipe-tutorial chip).
+ */
+.navHint {
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: rgba(201, 160, 95, 0.85);
+  margin: 10px 0 0;
+}
+
+/*
  * PROJECT 1 FIX (2026-10-20): turn zones are the designated bottom page
  * CORNERS only (72 × 104px) — no longer full-height edge strips, which
  * intercepted taps and touches meant for reading and scrolling.
@@ -982,38 +947,25 @@
   .navRow {
     margin-top: 16px;
   }
-
-  .swipeHint {
-    white-space: normal;
-    text-align: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    max-width: calc(100% - 20px);
-    font-size: 14px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   /*
    * This block sits AFTER every animation rule it overrides and uses
    * the same single-class specificity, so it WINS under reduced
-   * motion: page turns and the (JS-bypassed) entry zoom collapse to
-   * 0.01s ≈ instant, matching the JS TURN_MS_REDUCED lockout, and the
-   * entry prompt, swipe hint, and intro page are fully static. (The
-   * component also skips the scene/zoom states entirely under reduced
-   * motion — these overrides are the belt to that suspender.)
+   * motion: page turns collapse to 0.01s ≈ instant, matching the JS
+   * TURN_MS_REDUCED lockout, and the entry prompt and the front
+   * pages' fade-in are fully static. (Entry itself is instant for
+   * everyone since the 2026-11-09 reader fix — there is no entry
+   * animation left to bypass.)
    */
   .sheetFwd,
-  .sheetBack,
-  .sceneZoom {
+  .sheetBack {
     animation-duration: 0.01s;
   }
 
   .enterBtn,
-  .swipeGlyph,
-  .swipeHint,
-  .introPage,
-  .introLeaving {
+  .introPage {
     animation: none;
   }
 }
