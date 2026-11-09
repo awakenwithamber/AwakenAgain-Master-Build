@@ -81,6 +81,7 @@ const PAYMENT_METHOD_LABELS: Record<StoredPaymentMethod, string> = {
   cash_app_or_venmo: 'Cash App / Venmo',
   bluevine_invoice: 'Invoice — Bluevine (ACH / check / Venmo / Cash App)',
   bluevine_card_link: 'Card — Bluevine (hosted payment page)',
+  authorizenet_card_hosted: 'Card — Authorize.net hosted checkout',
   // Historical labels — records written under the Bookipi setup keep
   // naming it; only new orders carry the Bluevine values above.
   bookipi_invoice: 'Invoice — Bookipi (ACH / Venmo / Cash App)',

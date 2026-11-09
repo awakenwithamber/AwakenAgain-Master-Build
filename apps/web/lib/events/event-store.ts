@@ -67,6 +67,34 @@ export const EVENT_STREAMS = {
    */
   stripeOrderStatus: 'stripe_order_status',
   /**
+   * Authorize.net webhook paid marks (card checkout build 2026-11-09,
+   * SHOP ORDERS ONLY) — lib/payments/authorizenet. Append-only, keyed
+   * by order_id, written only by the signature-verified webhook.
+   */
+  authorizenetPayments: 'authorizenet_payments',
+  /**
+   * Authorize.net webhook event ledger (card checkout build
+   * 2026-11-09) — lib/payments/authorizenet. One event per
+   * successfully processed delivery, keyed by the Authorize.net
+   * notification id — the idempotency authority for webhook handling.
+   */
+  authorizenetEvents: 'authorizenet_events',
+  /**
+   * Authorize.net order-status transitions (card checkout build
+   * 2026-11-09) — lib/payments/authorizenet. Append-only refund /
+   * void / fraud / decline transitions keyed by order_id, joined at
+   * read time by lib/orders/paid-state.ts. Latest event wins.
+   */
+  authorizenetOrderStatus: 'authorizenet_order_status',
+  /**
+   * Authorize.net card-order lifecycle AUDIT (owner spec 2026-11-09):
+   * one row for EVERY card-order state change —
+   * awaiting_payment (placement) -> paid / failed / refunded —
+   * keyed by order_id. Written by the checkout route (placement) and
+   * by the signature-verified webhook processor (paid/failed/refunded).
+   */
+  authorizenetOrderAudit: 'authorizenet_order_audit',
+  /**
    * Grimoire PERMANENT_UNLOCK entitlement ledger (Stage 2) —
    * lib/grimoire/unlock.ts. Append-only grant/revoke records keyed by
    * normalized email ('living-grimoire-333' edition); latest wins.
