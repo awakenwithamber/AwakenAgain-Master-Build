@@ -35,7 +35,7 @@ export const GRIMOIRE_EDITION_NAME = 'The Living Grimoire — 1,051 pages of pre
 export const GRIMOIRE_UNLOCK_PRICE_CENTS = 888;
 export const GRIMOIRE_UNLOCK_SCOPE =
   'The Living Grimoire — composed edition (1,051 pages): The ' +
-  'Grimoire of Remembered Light complete (its 333 pages) together ' +
+  'Grimoire of Ancient Teachings complete, together ' +
   'with the collected works bound with it, plus all future chapters ' +
   'and revisions of this composed edition. Future separate editions ' +
   'and add-on products are not included.';

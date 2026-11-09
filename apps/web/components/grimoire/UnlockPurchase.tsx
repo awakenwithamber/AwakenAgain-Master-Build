@@ -127,7 +127,7 @@ export function UnlockPurchase() {
         setState({
           step: 'active',
           message:
-            'Your permanent unlock is active — the full composed Living Grimoire (The Grimoire of Remembered Light complete, together with the collected works) is open to this email.',
+            'Your permanent unlock is active — the full composed Living Grimoire (The Grimoire of Ancient Teachings complete, together with the collected works) is open to this email.',
         });
       } else if (data.state === 'pending') {
         setNotice(

@@ -90,8 +90,8 @@ export async function POST(request: Request) {
       email,
       message:
         'This email already holds the permanent unlock — the full ' +
-        'composed Living Grimoire (The Grimoire of Remembered ' +
-        'Light complete, together with the collected works) is open ' +
+        'composed Living Grimoire (The Grimoire of Ancient ' +
+        'Teachings complete, together with the collected works) is open ' +
         'to you.',
     });
   }

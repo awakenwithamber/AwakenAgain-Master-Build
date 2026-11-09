@@ -596,8 +596,8 @@ export function buildGrimoirePages(
     { label: 'How to Read this Grimoire', detail: `page ${aboutPage}` },
     { label: 'Consult the Index', detail: `page ${concernIndexSlot}` },
     {
-      label: 'The Grimoire of Remembered Light — the family edition, complete',
-      detail: `pages ${familyStart}–${familyEnd} · the 333-page edition in full`,
+      label: 'The Grimoire of Ancient Teachings — complete',
+      detail: `pages ${familyStart}–${familyEnd} · The Grimoire of Ancient Teachings in full`,
     },
   );
   for (const part of manifest.parts333) {

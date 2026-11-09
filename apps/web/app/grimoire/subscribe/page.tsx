@@ -114,20 +114,21 @@ export default function GrimoireSubscribePage() {
         <section aria-labelledby="grimoire-works-heading">
           <h2 id="grimoire-works-heading">The works preserved in this volume</h2>
           <p>
-            Counted exactly: 1,051 pages — The Grimoire of Remembered Light
+            Counted exactly: 1,051 pages — The Grimoire of Ancient Teachings
             complete, an original sigil-making lesson, and five collected
             works in full.
           </p>
           <ul>
             <li>
-              <strong>The Grimoire of Remembered Light</strong> — the
-              333-page volume at the heart of the compilation: foundations,
-              the wheel of the year, herbal allies, the five elements,
-              rituals and reflections, recipes, and the apothecary, opened
+              <strong>The Grimoire of Ancient Teachings</strong> — a
+              compilation of light magic: unique spells, rituals,
+              protection, and the lost knowledge of our ancestors.
+              Foundations, the wheel of the year, herbal allies, the five
+              elements, reflections, recipes, and the apothecary — opened
               by the Ancestor&apos;s Note of T.H. Arthur.
               <br />
-              Edition: the volume itself, complete in its 333 pages, with
-              the Ancestor&apos;s Note by T.H. Arthur.
+              Edition: the volume itself, complete, with the Ancestor&apos;s
+              Note by T.H. Arthur.
               <br />
               {STORY_PLACEHOLDER}
             </li>

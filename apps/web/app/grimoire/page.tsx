@@ -77,7 +77,7 @@ export default async function GrimoirePage() {
         <section aria-label="Member access">
           <GrimoireGate gateTitle="The Living Grimoire" />
           <p>
-            No membership yet? The first sixteen pages above are free. See the{' '}
+            No membership yet? The first seventeen pages above are free. See the{' '}
             <a href="/grimoire/subscribe">
               $8.88 permanent unlock and $7.77/month subscription options
             </a>{' '}

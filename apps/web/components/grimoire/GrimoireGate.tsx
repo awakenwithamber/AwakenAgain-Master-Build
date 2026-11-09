@@ -133,7 +133,7 @@ export function GrimoireGate({ children, gateTitle = 'The Living Grimoire' }: Gr
         {children ?? (
           <p role="status">
             Verified — the full composed Living Grimoire (The Grimoire
-            of Remembered Light complete, together with the collected
+            of Ancient Teachings complete, together with the collected
             works) is open above.
           </p>
         )}

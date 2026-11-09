@@ -188,7 +188,7 @@ describe('unlock ledger', () => {
     expect(record.email).toBe('buyer@example.com');
     expect(record.type).toBe('PERMANENT_UNLOCK');
     expect(record.edition_id).toBe('living-grimoire-333');
-    expect(record.scope).toContain('Grimoire of Remembered Light');
+    expect(record.scope).toContain('Grimoire of Ancient Teachings');
     expect(record.scope).toContain('future chapters');
     expect(record.scope).toContain('not included');
     expect(record.transaction_ref).toBe('pi_9');

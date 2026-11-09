@@ -184,8 +184,8 @@ function AboutPageView({
         Turn these pages as you would a real book. Tap a bottom page corner,
         use the brass arrows, swipe left or right, or press your ← → keys.
         Longer entries scroll gently within their own page — scrolling never
-        turns the page. Ahead lie the family edition complete — all 333
-        pages — and the collected works in full; the oldest books are shown
+        turns the page. Ahead lie The Grimoire of Ancient Teachings complete
+        and the collected works in full; the oldest books are shown
         as facsimiles of their own printed pages, exactly as they were
         handed down.
       </p>
@@ -334,7 +334,7 @@ function TocPageView({
     <PageShell page={page} side={side}>
       <h2 className={styles.handHeading}>Table of Contents</h2>
       <p className={styles.handBody}>
-        The Living Grimoire — The Grimoire of Remembered Light
+        The Living Grimoire — The Grimoire of Ancient Teachings
         complete, together with the collected works preserved with it.
         The book keeps growing as more works are digitized.
       </p>
@@ -427,7 +427,7 @@ function EditionPageView({
   return (
     <PageShell page={page} side={side}>
       <p className={styles.categoryRow}>
-        ✦ The Grimoire of Remembered Light — Part {page.part} · {page.partTitle}{' '}
+        ✦ The Grimoire of Ancient Teachings — Part {page.part} · {page.partTitle}{' '}
         ✦
       </p>
       <h2 className={styles.handHeading}>{page.heading}</h2>
@@ -437,8 +437,8 @@ function EditionPageView({
         </p>
       ))}
       <p className={styles.footnote}>
-        Edition page {page.editionPageNumber} of 333 — the family edition,
-        complete.
+        Edition page {page.editionPageNumber} — The Grimoire of Ancient
+        Teachings, complete.
       </p>
     </PageShell>
   );
@@ -597,7 +597,7 @@ function ColophonPageView({
       <h2 className={styles.handHeading}>Colophon</h2>
       <p className={`${styles.handBody} ${styles.dropcap}`}>
         Here ends this volume of the Living Grimoire of Light & Magic —
-        The Grimoire of Remembered Light complete in its 333 pages, the
+        The Grimoire of Ancient Teachings complete, the
         keeper&apos;s own lessons, and the collected works in full, kept
         together as one book. The book is alive, and it will keep growing
         as more found works are digitized and verified.
@@ -648,7 +648,7 @@ function LockedPageView({
       <p className={`${styles.handBody} ${styles.dropcap}`}>
         This page is kept for members of the Living Grimoire.
         Subscribers and permanent-unlock holders who have verified
-        their email see it in full; everyone else sees the first sixteen
+        their email see it in full; everyone else sees the first seventeen
         pages freely.
       </p>
       <p className={styles.handBody}>
