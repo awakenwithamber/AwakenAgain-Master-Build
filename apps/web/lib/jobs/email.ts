@@ -476,7 +476,9 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
             ? d.payment_link_url
               ? `Card: pay on Bluevine's secure hosted payment page: ${d.payment_link_url} — enter your order total there and use your order ID as the payment reference.\n\n`
               : `Card: you chose to pay by card on Bluevine's secure hosted payment page — your order is prepared once payment is confirmed.\n\n`
-            : d.payment_method === 'stripe_card_embedded'
+            : d.payment_method === 'authorizenet_card_hosted'
+              ? `Card: you paid by card through our secure payment page — your order is prepared once payment is confirmed. No card details are ever sent by email.\n\n`
+              : d.payment_method === 'stripe_card_embedded'
               ? `Card: you chose to pay by card — your order is prepared once payment is confirmed.\n\n`
               : '') +
           `Questions about your order? Reply to this email and we'll help.` +
