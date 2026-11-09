@@ -35,16 +35,31 @@
  *   from the assets host via XHR/fetch — owner-directed fix, 2026-10-15).
  * - frame-src https://player.vimeo.com — the welcome-video iframe in
  *   components/home/WelcomeVideo.tsx.
- * - Stripe (embedded card checkout, lib/payments/stripe.ts +
- *   components/checkout/StripeEmbeddedCheckout.tsx; Stripe's official
- *   CSP guidance): script-src https://js.stripe.com (the Stripe.js
- *   loader), connect-src https://api.stripe.com (Stripe.js calls),
- *   frame-src https://js.stripe.com + https://hooks.stripe.com +
- *   https://checkout.stripe.com (the embedded checkout iframe and the
- *   3-D Secure hooks iframe). Without the frame-src entries the
- *   embedded checkout renders Stripe's "This content is blocked"
- *   placeholder — found by the 2026-10-22 live E2E test order (third
- *   layer, after the tax_code and ui_mode fixes).
+ * - Authorize.net Accept Hosted (card checkout build 2026-11-09;
+ *   lib/payments/authorizenet.ts + the AuthorizeNetCardContinue step
+ *   in components/checkout/CheckoutForm.tsx): form-action
+ *   https://accept.authorize.net (production hosted payment page)
+ *   + https://test.authorize.net (sandbox hosted payment page).
+ *   The ONLY cross-origin step in the hosted flow is the browser's
+ *   form POST of a one-time token to the hosted page — card data is
+ *   entered there, never here — so no script-src, connect-src, or
+ *   frame-src entry is needed or added (evidence: the hosted-page
+ *   request is built server-side in lib/payments/authorizenet.ts;
+ *   the browser sends no fetch/XHR to the gateway and embeds no
+ *   gateway iframe).
+ * - REMOVED 2026-11-09 (card checkout build): the former Stripe
+ *   origins (script-src https://js.stripe.com, connect-src
+ *   https://api.stripe.com, frame-src https://js.stripe.com +
+ *   https://hooks.stripe.com + https://checkout.stripe.com). The
+ *   embedded checkout component that needed them
+ *   (components/checkout/StripeEmbeddedCheckout.tsx) is dormant —
+ *   verified 2026-11-09: it is imported by no page or component
+ *   (the checkout payment-method test asserts the checkout form
+ *   does not reference it), the checkout parser rejects its method
+ *   for new orders, and Stripe is off the table by owner directive
+ *   2026-11-07. Removing these origins therefore breaks no live or
+ *   flag-off surface; the two live payment options (Bluevine
+ *   invoice, Cash App/Venmo) use no cross-origin resources at all.
  *
  * 'upgrade-insecure-requests' is included so browsers auto-upgrade any
  * http:// subresource request to https:// (HTTPS-upgrade enforcement,
@@ -60,16 +75,16 @@
 export function buildContentSecurityPolicy(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://us-assets.i.posthog.com https://js.stripe.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://us-assets.i.posthog.com`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://d2xsxph8kpxj0f.cloudfront.net https://files.manuscdn.com https://upload.wikimedia.org https://thumb.wikimedia.org",
     "media-src 'self'",
-    "connect-src 'self' https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.stripe.com",
-    'frame-src https://player.vimeo.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com',
+    "connect-src 'self' https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com",
+    'frame-src https://player.vimeo.com',
     "frame-ancestors 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://accept.authorize.net https://test.authorize.net",
     "object-src 'none'",
     'upgrade-insecure-requests',
   ].join('; ');
