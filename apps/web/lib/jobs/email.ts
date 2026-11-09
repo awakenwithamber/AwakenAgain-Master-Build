@@ -75,7 +75,12 @@ export type EmailTemplate =
   | 'order_shipped'
   | 'admin_new_order'
   | 'grimoire_unlock_requested'
-  | 'grimoire_unlock_active';
+  | 'grimoire_unlock_active'
+  /* Gaia member profile (2026-11-08) — builders live in
+     lib/jobs/profile-emails.ts; sends route through the same provider
+     factory as everything else. */
+  | 'profile_welcome'
+  | 'progress_checkin_reminder';
 
 export interface PurchaseConfirmationData {
   order_id: string;
@@ -232,6 +237,30 @@ export interface GrimoireUnlockActiveData {
   request_id: string;
 }
 
+/**
+ * Profile welcome (Gaia build, Phase C): sent once, when a member
+ * profile is first created. Carries only the member's first name and
+ * their sun sign — the email explains the profile, the feed, the
+ * privacy controls, and the photo check-ins in the owner's voice.
+ */
+export interface ProfileWelcomeData {
+  first_name: string;
+  sun_sign: string | null;
+  profile_url: string;
+}
+
+/**
+ * Progress check-in reminder (Gaia build, Phase B): OPT-IN ONLY —
+ * queued solely for members whose profile says
+ * progress_reminders_opt_in. Every reminder carries a one-click
+ * unsubscribe link (tokenized, no sign-in needed).
+ */
+export interface ProgressCheckinReminderData {
+  first_name: string;
+  checkin_url: string;
+  unsubscribe_url: string | null;
+}
+
 export type EmailTemplateData =
   | { template: 'purchase_confirmation'; data: PurchaseConfirmationData }
   | { template: 'weekly_promo'; data: WeeklyPromoData }
@@ -246,7 +275,9 @@ export type EmailTemplateData =
   | { template: 'order_shipped'; data: OrderShippedData }
   | { template: 'admin_new_order'; data: AdminNewOrderData }
   | { template: 'grimoire_unlock_requested'; data: GrimoireUnlockRequestedData }
-  | { template: 'grimoire_unlock_active'; data: GrimoireUnlockActiveData };
+  | { template: 'grimoire_unlock_active'; data: GrimoireUnlockActiveData }
+  | { template: 'profile_welcome'; data: ProfileWelcomeData }
+  | { template: 'progress_checkin_reminder'; data: ProgressCheckinReminderData };
 
 export type EmailJobStatus = 'queued' | 'sent' | 'failed';
 
@@ -268,7 +299,9 @@ export interface EmailJob {
     | OrderShippedData
     | AdminNewOrderData
     | GrimoireUnlockRequestedData
-    | GrimoireUnlockActiveData;
+    | GrimoireUnlockActiveData
+    | ProfileWelcomeData
+    | ProgressCheckinReminderData;
   queued_at: string;
   status: EmailJobStatus;
   attempts: number;
@@ -783,6 +816,52 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
           SIGN_OFF,
       };
     }
+    case 'profile_welcome': {
+      const d = job.data as ProfileWelcomeData;
+      return {
+        subject: 'Welcome to your Awaken Again profile ✦ Gaia has your garden ready',
+        text:
+          `Hello ${d.first_name},\n\n` +
+          `Gaia here — your profile is planted, and I saved you a sunny spot.\n\n` +
+          `Here is what your profile does for you:\n\n` +
+          `• Your home feed gathers the products you love (your favorites), ` +
+          `the herbal allies from your quiz results, and your star chart` +
+          (d.sun_sign ? ` — your sun sign is ${d.sun_sign}, and your feed carries its qualities.` : '.') +
+          `\n\n` +
+          `• Your feed is public by default, so friends can see your garden grow. ` +
+          `You hold the gate: one toggle in your profile makes the whole feed private, ` +
+          `any time. Your address, phone number, and exact birthday are never shown ` +
+          `publicly — not in public mode, not ever.\n\n` +
+          `• Every other week, your feed invites a progress check-in: a photo of where ` +
+          `you are, beside where you began, so you can watch your own progress bloom. ` +
+          `Your before-and-after photos are private by default — they are shared only ` +
+          `if you choose to share them. (Check-ins are a grown-up garden: they open at 18.)\n\n` +
+          `• Add your Facebook, TikTok, or Instagram profile links from your profile ` +
+          `so your people can find you everywhere.\n\n` +
+          `Come see your garden:\n${d.profile_url}\n\n` +
+          `With both hands in the earth,\nGaia — and Amber` +
+          SIGN_OFF,
+      };
+    }
+    case 'progress_checkin_reminder': {
+      const d = job.data as ProgressCheckinReminderData;
+      return {
+        subject: 'Time for your progress photo ✦ Awaken Again',
+        text:
+          `Hello ${d.first_name},\n\n` +
+          `Two weeks have turned since your last progress check-in — the garden ` +
+          `is asking for its photo. When you are ready, add this week's picture ` +
+          `beside your last one and watch how far you've come:\n\n` +
+          `${d.checkin_url}\n\n` +
+          `Your photos stay private unless you choose to share them.\n\n` +
+          (d.unsubscribe_url
+            ? `You asked for these reminders, and you can stop them any time, ` +
+              `one click, no sign-in needed:\n${d.unsubscribe_url}\n`
+            : `You asked for these reminders; you can stop them any time from ` +
+              `your profile's privacy settings.\n`) +
+          SIGN_OFF,
+      };
+    }
   }
 }
 
@@ -1175,6 +1254,28 @@ export function buildAccountPasswordResetCodeJob(
     throw new Error('Password-reset code job requires the 6-digit code.');
   }
   return buildEmailJob({ to, template: 'account_password_reset_code', data });
+}
+
+/** Profile welcome factory (Gaia build, Phase C). */
+export function buildProfileWelcomeJob(
+  to: unknown,
+  data: ProfileWelcomeData,
+): EmailJob {
+  if (!data.first_name?.trim()) {
+    throw new Error('Profile welcome requires the member first name.');
+  }
+  return buildEmailJob({ to, template: 'profile_welcome', data });
+}
+
+/** Progress check-in reminder factory (Gaia build, Phase B — opt-in only). */
+export function buildProgressCheckinReminderJob(
+  to: unknown,
+  data: ProgressCheckinReminderData,
+): EmailJob {
+  if (!data.first_name?.trim()) {
+    throw new Error('Progress reminder requires the member first name.');
+  }
+  return buildEmailJob({ to, template: 'progress_checkin_reminder', data });
 }
 
 /** Contact auto-response factory — the send is routed via the EmailProvider. */

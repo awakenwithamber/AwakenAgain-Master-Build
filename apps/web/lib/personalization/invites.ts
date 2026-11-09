@@ -120,7 +120,9 @@ export const INVITE_COPY: Record<
   'quiz-results': {
     line: 'Keep your allies close — a free profile saves your results, likes, and searches across visits.',
     ctaLabel: 'Create your profile',
-    ctaHref: '/account',
+    // Gaia-guided onboarding (owner spec 2026-11-08): "Create my
+    // profile" routes to Gaia, never to a subscribe page.
+    ctaHref: '/profile/create',
   },
   cart: {
     line: 'Living Grimoire of Light & Magic members save 10% and ship free — sign in with just your email, no password to remember.',

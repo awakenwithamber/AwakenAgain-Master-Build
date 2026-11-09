@@ -181,7 +181,7 @@ describe('gaia nudge selection', () => {
     const nudge = nextGaiaNudge(ctx(), state, T0 + 60_000);
     expect(nudge?.kind).toBe('profile');
     expect(nudge?.href).toBe(INVITE_COPY['quiz-results'].ctaHref);
-    expect(nudge?.href).toBe('/account');
+    expect(nudge?.href).toBe('/profile/create');
   });
 
   it('a tied or weak profile yields no product nudge', () => {

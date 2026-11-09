@@ -305,6 +305,23 @@ export function AccountProfile({ profile }: { profile: ProfileView }) {
         </div>
       </section>
 
+      <section className={styles.card} aria-labelledby="account-garden">
+        <h2 id="account-garden">🌿 Your garden — Gaia’s profile</h2>
+        <p>
+          Your member profile and home feed live in your garden: favorites, herbal
+          allies, your star chart, and your progress photos — planted with Gaia,
+          gated by your own privacy choices.
+        </p>
+        <div className={styles.actions}>
+          <Link className="btn-primary" href="/profile">
+            Visit your garden →
+          </Link>{' '}
+          <Link className="btn-secondary" href="/profile/create">
+            Create / edit my profile — with Gaia
+          </Link>
+        </div>
+      </section>
+
       <DetailsSection profile={profile} />
 
       <SubscriptionSection profile={profile} />

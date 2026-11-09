@@ -183,6 +183,87 @@ export interface AccountShippingAddressSetRecord extends AccountRecordBase {
   address: ShippingAddress;
 }
 
+/* Gaia member profile (2026-11-08, owner spec) — ADDITIVE events only.
+   The member profile is the public-garden layer of the account: what
+   the member's home feed shows. It is validated and composed by
+   lib/accounts/member-profile.ts + lib/accounts/member-feed.ts; this
+   module only stores the events. PRIVACY: address, phone, and the
+   exact birthday inside a member profile are NEVER part of any public
+   read model (see member-feed.ts — the public view's type has no such
+   fields). */
+export interface MemberSocialLinks {
+  facebook?: string;
+  tiktok?: string;
+  instagram?: string;
+}
+
+export interface MemberProfileData {
+  full_name: string;
+  /** YYYY-MM-DD — PRIVATE. Only month/day ever feed a public surface (the sun sign). */
+  birthday: string;
+  bio: string;
+  /** Cleaned (EXIF-stripped) image data URL — see lib/media/exif-strip.ts. */
+  photo_data_url: string;
+  /** Normalized '+<dial><digits>', or null. PRIVATE — never public. */
+  phone: string | null;
+  /** The member's address, or null. PRIVATE — never public. */
+  address: ShippingAddress | null;
+  /** 'HH:MM' 24h, or null — feeds the full star chart. */
+  birth_time: string | null;
+  /** Free-text birth place, or null — feeds the full star chart. */
+  birth_place: string | null;
+  /** Feed visibility — public by default (owner spec). */
+  feed_visibility: 'public' | 'private';
+  /** Before/after photos — PRIVATE by default, independent of the feed toggle. */
+  progress_photos_visibility: 'private' | 'shared';
+  /** Phase B: reminder emails are OPT-IN (default false). */
+  progress_reminders_opt_in: boolean;
+  socials: MemberSocialLinks;
+}
+
+export interface ProgressCheckin {
+  id: string;
+  kind: 'before' | 'after' | 'checkin';
+  /** Cleaned (EXIF-stripped) image data URL. */
+  photo_data_url: string;
+  note: string | null;
+  recorded_at: string;
+}
+
+export interface AccountMemberProfileSetRecord extends AccountRecordBase {
+  type: 'account.member_profile_set';
+  profile: MemberProfileData;
+}
+export interface AccountProgressCheckinAddedRecord extends AccountRecordBase {
+  type: 'account.progress_checkin_added';
+  checkin: ProgressCheckin;
+}
+export interface AccountProgressReminderSentRecord extends AccountRecordBase {
+  type: 'account.progress_reminder_sent';
+  /** The due date (ISO) this reminder was sent for — one reminder per due cycle. */
+  sent_for_due_at: string;
+  /** Provider-honesty label: 'resend' = real send accepted; 'preview' = logging provider, NO real send. */
+  delivery: 'resend' | 'preview';
+}
+export interface AccountProfileWelcomeSentRecord extends AccountRecordBase {
+  type: 'account.profile_welcome_sent';
+  delivery: 'resend' | 'preview';
+}
+/** The member's computed star chart — computed automatically at
+ *  profile-save time from the stored birth data (lib/accounts/
+ *  star-chart.ts) and appended whenever the birth data changes. */
+export interface StoredStarChart {
+  sun_sign_id: string;
+  moon_phase: { name: string; illumination: number; age_days: number };
+  has_birth_details: boolean;
+  computed_from: { birthday: string; birth_time: string | null; birth_place: string | null };
+  computed_at: string;
+}
+export interface AccountStarChartComputedRecord extends AccountRecordBase {
+  type: 'account.star_chart_computed';
+  chart: StoredStarChart;
+}
+
 export type AccountRecord =
   | AccountCreatedRecord
   | AccountProfileUpdatedRecord
@@ -197,7 +278,12 @@ export type AccountRecord =
   | AccountRegistrationDetailsRecord
   | AccountPasswordSetRecord
   | AccountEmailVerifiedRecord
-  | AccountShippingAddressSetRecord;
+  | AccountShippingAddressSetRecord
+  | AccountMemberProfileSetRecord
+  | AccountProgressCheckinAddedRecord
+  | AccountProgressReminderSentRecord
+  | AccountProfileWelcomeSentRecord
+  | AccountStarChartComputedRecord;
 
 export type AccountRecordType = AccountRecord['type'];
 
@@ -245,6 +331,18 @@ export interface AccountState {
   has_registration: boolean;
   /** Default shipping address (Phase 2B), or null when never saved. */
   shipping_address: ShippingAddress | null;
+  /* Gaia member profile (2026-11-08) additive fold fields — null/empty
+     for every account that has not created a member profile. */
+  /** The member profile snapshot (latest member_profile_set wins). */
+  member_profile: MemberProfileData | null;
+  /** Progress check-ins in append order (oldest first). */
+  progress_checkins: ProgressCheckin[];
+  /** Latest progress-reminder send: the due date it covered + when. */
+  last_progress_reminder: { sent_for_due_at: string; sent_at: string } | null;
+  /** ISO timestamp the profile welcome email was invoked, or null. */
+  profile_welcomed_at: string | null;
+  /** The latest computed star chart (auto-computed at profile save). */
+  star_chart: StoredStarChart | null;
 }
 
 export const MAX_LIKES = 200;
@@ -269,6 +367,11 @@ export function emptyAccountState(email: string): AccountState {
     email_verified_at: null,
     has_registration: false,
     shipping_address: null,
+    member_profile: null,
+    progress_checkins: [],
+    last_progress_reminder: null,
+    profile_welcomed_at: null,
+    star_chart: null,
   };
 }
 
@@ -287,6 +390,11 @@ const ACCOUNT_RECORD_TYPES: ReadonlySet<string> = new Set([
   'account.password_set',
   'account.email_verified',
   'account.shipping_address_set',
+  'account.member_profile_set',
+  'account.progress_checkin_added',
+  'account.progress_reminder_sent',
+  'account.profile_welcome_sent',
+  'account.star_chart_computed',
 ]);
 
 /**
@@ -410,6 +518,38 @@ export function foldAccountRecords(
       case 'account.shipping_address_set':
         if (record.address && typeof record.address === 'object') {
           state.shipping_address = record.address;
+        }
+        break;
+      case 'account.member_profile_set':
+        if (record.profile && typeof record.profile === 'object') {
+          state.member_profile = record.profile;
+        }
+        break;
+      case 'account.progress_checkin_added':
+        if (
+          record.checkin &&
+          typeof record.checkin.id === 'string' &&
+          typeof record.checkin.photo_data_url === 'string'
+        ) {
+          state.progress_checkins.push(record.checkin);
+        }
+        break;
+      case 'account.progress_reminder_sent':
+        if (typeof record.sent_for_due_at === 'string') {
+          state.last_progress_reminder = {
+            sent_for_due_at: record.sent_for_due_at,
+            sent_at: record.recorded_at,
+          };
+        }
+        break;
+      case 'account.profile_welcome_sent':
+        if (state.profile_welcomed_at === null) {
+          state.profile_welcomed_at = record.recorded_at;
+        }
+        break;
+      case 'account.star_chart_computed':
+        if (record.chart && typeof record.chart.sun_sign_id === 'string') {
+          state.star_chart = record.chart;
         }
         break;
     }
@@ -825,6 +965,88 @@ export async function setAccountShippingAddressAsync(
     type: 'account.shipping_address_set',
     recorded_at: nowIso(),
     address,
+  });
+  return loadAccountAsync(email);
+}
+
+/* ------------------------------------------------------------------ */
+/* Gaia member-profile mutations (2026-11-08; validated upstream by   */
+/* lib/accounts/member-profile.ts — these append already-clean data)  */
+/* ------------------------------------------------------------------ */
+
+/** Save (or replace) the member profile snapshot. */
+export async function setMemberProfileAsync(
+  emailInput: unknown,
+  profile: MemberProfileData,
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.member_profile_set',
+    recorded_at: nowIso(),
+    profile,
+  });
+  return loadAccountAsync(email);
+}
+
+/** Append one progress check-in. */
+export async function addProgressCheckinAsync(
+  emailInput: unknown,
+  checkin: ProgressCheckin,
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.progress_checkin_added',
+    recorded_at: checkin.recorded_at,
+    checkin,
+  });
+  return loadAccountAsync(email);
+}
+
+/** Record that a progress-reminder email was invoked for a due date. */
+export async function recordProgressReminderSentAsync(
+  emailInput: unknown,
+  sentForDueAt: string,
+  delivery: 'resend' | 'preview',
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.progress_reminder_sent',
+    recorded_at: nowIso(),
+    sent_for_due_at: sentForDueAt,
+    delivery,
+  });
+  return loadAccountAsync(email);
+}
+
+/** Record that the profile welcome email was invoked (fires once). */
+export async function recordProfileWelcomeSentAsync(
+  emailInput: unknown,
+  delivery: 'resend' | 'preview',
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.profile_welcome_sent',
+    recorded_at: nowIso(),
+    delivery,
+  });
+  return loadAccountAsync(email);
+}
+
+/** Store a freshly computed star chart (auto-computed at profile save). */
+export async function recordStarChartComputedAsync(
+  emailInput: unknown,
+  chart: StoredStarChart,
+): Promise<AccountState> {
+  const email = normalizeAccountEmail(emailInput);
+  await appendAccountRecord({
+    email,
+    type: 'account.star_chart_computed',
+    recorded_at: nowIso(),
+    chart,
   });
   return loadAccountAsync(email);
 }

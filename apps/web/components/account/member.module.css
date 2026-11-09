@@ -1,0 +1,151 @@
+/* Gaia member profile + feed — plum/gold theme, matching the account
+   surfaces. The error banner follows the owner's visible-notices rule:
+   a full-width, high-contrast banner where the action happens —
+   never a small line of text. */
+
+.noticeBanner {
+  border: 2px solid #e0654a;
+  background: #4a1420;
+  color: #ffd9cf;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin: 0 0 1.25rem;
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.noticeBanner ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.reminderBanner {
+  border: 2px solid var(--gold, #d4af37);
+  background: #2a1a40;
+  color: #f4e8d0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin: 0 0 1.25rem;
+  line-height: 1.55;
+}
+
+.gaiaBubble {
+  border: 1px solid var(--gold, #d4af37);
+  background: #241239;
+  border-radius: 16px 16px 16px 4px;
+  padding: 1rem 1.25rem;
+  margin: 0 0 0.75rem;
+  line-height: 1.65;
+}
+
+.gaiaName {
+  color: var(--gold, #d4af37);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  margin: 0 0 0.35rem;
+}
+
+.requirement {
+  color: var(--text-muted, #cbb8e0);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.stepNav {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+}
+
+.feedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.feedHeader {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.profilePhoto {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--gold, #d4af37);
+}
+
+.photoPreview {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--gold, #d4af37);
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.starSign {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 1.6rem;
+  color: var(--gold, #d4af37);
+  margin: 0.25rem 0;
+}
+
+.checkinGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.checkinFigure {
+  margin: 0;
+}
+
+.checkinFigure img {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--gold, #d4af37);
+  display: block;
+}
+
+.checkinFigure figcaption {
+  font-size: 0.85rem;
+  color: var(--text-muted, #cbb8e0);
+  margin-top: 0.35rem;
+  line-height: 1.45;
+}
+
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+}
+
+.shareRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.emptyState {
+  color: var(--text-muted, #cbb8e0);
+  line-height: 1.6;
+}

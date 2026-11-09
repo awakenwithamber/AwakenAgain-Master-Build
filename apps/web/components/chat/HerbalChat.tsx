@@ -95,7 +95,7 @@ export function HerbalChat() {
         <p>
           <strong>Your apothecary profile keeps your allies, likes, and
           orders together.</strong>{' '}
-          <Link href="/account">Create your free profile</Link> — or{' '}
+          <Link href="/profile/create">Create your free profile</Link> — or{' '}
           <Link href="/account">sign in</Link> if you already have one.
         </p>
       </div>

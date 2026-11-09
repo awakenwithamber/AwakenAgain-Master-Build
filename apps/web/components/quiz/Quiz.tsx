@@ -967,7 +967,7 @@ export default function Quiz() {
                 Share your email and we&apos;ll send your full results —
                 your patterns, your allies, and why each was chosen — and
                 save them with the apothecary. Or{' '}
-                <Link href="/account">create a free profile</Link> to keep
+                <Link href="/profile/create">create a free profile</Link> to keep
                 them with your likes and searches.
               </p>
               <label>

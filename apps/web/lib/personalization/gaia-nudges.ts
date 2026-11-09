@@ -140,8 +140,9 @@ const SUBSCRIPTION_NUDGE: GaiaNudge = {
 
 /**
  * Profile nudge destination = the same one ProfileInvite uses for its
- * profile moment (INVITE_COPY['quiz-results'] → /account), so the two
- * profile prompts can never drift apart.
+ * profile moment (INVITE_COPY['quiz-results'] → /profile/create, the
+ * Gaia-guided onboarding since 2026-11-08), so the two profile
+ * prompts can never drift apart.
  */
 const PROFILE_NUDGE: GaiaNudge = {
   kind: 'profile',
