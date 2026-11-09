@@ -18,13 +18,15 @@
  *     module is only ever consulted with the email of a VERIFIED
  *     session (see app/api/grimoire-otp/route.ts + app/grimoire).
  *
- * FREE_PREVIEW is the first 16 composed pages of the site book
+ * FREE_PREVIEW is the first 17 composed pages of the site book
  * (cover/title, the ancestor's note pp. 2–3, the framing teaser, the
  * Overview, the generated TOC, the generated index of the full book,
- * and one sample page from each of the nine publishable collected
+ * one sample page from each of the nine publishable collected
  * works — owner directive 2026-10-21, the assembly manifest's
  * Option B; supersedes the interim 13-page composition and the
- * pages 1–8 model); pages 17+ require one of the sources above.
+ * pages 1–8 model — plus the first page of the framing FULL text,
+ * composed page 17, added by owner directive 2026-11-07: "17 free
+ * pages ONLY!"); pages 18+ require one of the sources above.
  *
  * SERVER-ONLY: reads server env + the ledgers. Never import from a
  * client component — GRIMOIRE_KEEPER_EMAILS values must never reach
@@ -42,8 +44,8 @@ import { composedPageCount, getEditionManifest } from './manifest';
  *  (1,389 after the 2026-10-21 ingestion: real family edition +
  *  collected works; the held Elverum contributes nothing). */
 export const GRIMOIRE_TOTAL_PAGES = composedPageCount(getEditionManifest());
-/** Last free-preview page number (composed pages 1–16 are free). */
-export const FREE_PREVIEW_LAST_PAGE = 16;
+/** Last free-preview page number (composed pages 1–17 are free). */
+export const FREE_PREVIEW_LAST_PAGE = 17;
 
 /** Keeper emails from server env (normalized; empty when unset). */
 export function keeperEmails(

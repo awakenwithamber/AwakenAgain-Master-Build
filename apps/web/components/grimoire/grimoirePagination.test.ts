@@ -3,7 +3,7 @@
  *
  * The punch-list defect, translated to the current book: the book no
  * longer has 8 pages — buildGrimoirePages() composes 1,389 pages
- * after the 2026-10-21 ingestion (16-page free preview + the family
+ * after the 2026-10-21 ingestion (17-page free preview + the family
  * edition complete + the collected works in full + colophon). On
  * MOBILE every page was reachable. On DESKTOP the final page was
  * trapped: at the last spread the Next control stayed enabled and

@@ -5,9 +5,9 @@
  * viewer's OTP session cookie is read here, entitlements are
  * resolved server-side (subscription ∪ PERMANENT_UNLOCK ∪ keeper —
  * lib/grimoire/entitlement), and ONLY the pages the viewer is
- * entitled to are passed to the client reader: pages 1–16 (free
+ * entitled to are passed to the client reader: pages 1–17 (free
  * preview) in full for everyone, locked placeholders (page number /
- * kind / label only) for pages 17+ unless entitled. Gated body text
+ * kind / label only) for pages 18+ unless entitled. Gated body text
  * never reaches a locked viewer's payload.
  *
  * The edition is the "Living Grimoire — 333-page edition" (owner

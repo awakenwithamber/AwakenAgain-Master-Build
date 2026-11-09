@@ -3,15 +3,17 @@
  *
  * THE COMPOSED BOOK (ingestion follow-on, owner directives
  * 2026-10-21: "Make the full grimoire first", "Add them all", free
- * preview = 16 pages / Option B):
+ * preview = 16 pages / Option B; extended to 17 free pages by
+ * owner directive 2026-11-07):
  *
- *   pp. 1–16   FREE PREVIEW — cover/title · the ancestor's note (the
+ *   pp. 1–17   FREE PREVIEW — cover/title · the ancestor's note (the
  *              quoted note, then the keeper's prose) · the framing
  *              TEASER · the book Overview · the generated table of
  *              contents · the generated index of the full book · one
  *              sample page from EACH of the nine publishable
- *              collected works (the held Elverum contributes none).
- *   pp. 17+    GATED — the framing FULL version · reading guidance ·
+ *              collected works (the held Elverum contributes none)
+ *              · the first page of the framing FULL version (p. 17).
+ *   pp. 18+    GATED — the framing FULL version (from p. 18) · reading guidance ·
  *              the concern index · the family edition COMPLETE (333
  *              pages, real extracted text) · the original sigil
  *              lesson · the collected works IN FULL · colophon.
@@ -193,9 +195,10 @@ export type GrimoirePage =
 
 /* ------------------------------------------------------------------ */
 /* Server-side gating (Stage 2 mechanism, unchanged; boundary moved   */
-/* to the owner's 16-page preview, 2026-10-21).                        */
+/* to the owner's 16-page preview, 2026-10-21, then to 17 pages by    */
+/* owner directive 2026-11-07).                                       */
 /*                                                                    */
-/* FREE_PREVIEW = the first 16 composed pages. Pages 17+ are          */
+/* FREE_PREVIEW = the first 17 composed pages. Pages 18+ are          */
 /* members-only: the SERVER replaces them with a locked placeholder   */
 /* carrying ONLY non-content metadata — page number, kind, and a      */
 /* label that already appears in the free TOC/index (herb name, book  */
@@ -204,7 +207,7 @@ export type GrimoirePage =
 /* the entitled payload for held content).                            */
 /* ------------------------------------------------------------------ */
 
-export const FREE_PREVIEW_LAST_PAGE = 16;
+export const FREE_PREVIEW_LAST_PAGE = 17;
 
 export interface GrimoireLockedPage {
   kind: 'locked';
@@ -264,7 +267,7 @@ export function lockedPageFor(page: GrimoirePage): GrimoireLockedPage {
 /**
  * The payload the server may hand the client reader for a viewer:
  * entitled viewers get every page in full; everyone else gets pages
- * 1–16 in full and locked placeholders for 17+.
+ * 1–17 in full and locked placeholders for 18+.
  */
 export function displayPagesFor(
   pages: GrimoirePage[],

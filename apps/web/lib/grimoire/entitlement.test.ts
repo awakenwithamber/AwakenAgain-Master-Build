@@ -2,9 +2,9 @@
  * Grimoire entitlement matrix + PERMANENT_UNLOCK ledger (Stage 2).
  *
  * Laws under test (owner decisions 2026-10-21 §13(1)/(2)/(5)):
- * - Anonymous → pages 1–16 only. Active subscriber → all 1,389.
+ * - Anonymous → pages 1–17 only. Active subscriber → all 1,389.
  *   Unlock holder → all 1,389. Keeper (env set + verified session
- *   email) → all 1,389. Cancelled subscriber → 1–16. Revoked → 1–16.
+ *   email) → all 1,389. Cancelled subscriber → 1–17. Revoked → 1–17.
  * - Unlock survives subscription cancellation (independent ledgers).
  * - Keeper with NO session email (anonymous) is never entitled —
  *   email possession alone is not access.
@@ -88,7 +88,7 @@ afterEach(() => {
 });
 
 describe('entitlement matrix', () => {
-  it('anonymous → preview pages 1–16 only', async () => {
+  it('anonymous → preview pages 1–17 only', async () => {
     const r = await resolveGrimoireEntitlement(null);
     expect(r.entitled).toBe(false);
     expect(r.entitled_pages).toEqual(PREVIEW_PAGES);

@@ -1,13 +1,15 @@
 /**
  * WORKSTREAM D — Living Grimoire content regression suite
  * (ingestion follow-on, owner directives 2026-10-21: "Make the full
- * grimoire first", "Add them all", free preview = 16 pages).
+ * grimoire first", "Add them all", free preview = 16 pages;
+ * extended to 17 by owner directive 2026-11-07).
  *
  * Laws under test:
- * - Composed book = 1,389 pages: free preview pp. 1–16 (title,
+ * - Composed book = 1,389 pages: free preview pp. 1–17 (title,
  *   ancestor note ×2, framing teaser, overview, TOC, full-book
  *   index, one sample from EACH of the nine publishable collected
- *   works) → gated framing FULL (17–18) → about (19) → concern
+ *   works, and the first framing FULL page) → gated framing FULL
+ *   (p. 18) → about (19) → concern
  *   index (20) → the family edition COMPLETE (21–353 = its 333
  *   pages) → the original sigil lesson (354) → the collected works
  *   in full (355–1388) → colophon (1389).
@@ -78,7 +80,7 @@ describe('grimoire composed book', () => {
     expect(pages[1388].kind).toBe('colophon');
   });
 
-  it('free preview pp. 1–16: front matter + one sample per publishable book', () => {
+  it('preview front block pp. 1–16: front matter + one sample per publishable book', () => {
     expect(pages.slice(0, 7).map((p) => p.kind)).toEqual([
       'title',
       'ancestor-note',
@@ -290,11 +292,11 @@ describe('grimoire composed book', () => {
     expect(small[small.length - 1].kind).toBe('colophon');
   });
 
-  it('displayPagesFor keeps pp. 1–16 open and locks 17+', () => {
+  it('displayPagesFor keeps pp. 1–17 open and locks 18+', () => {
     const free = displayPagesFor(pages, false);
-    expect(free.slice(0, 16).every((p) => p.kind !== 'locked')).toBe(true);
-    expect(free[16].kind).toBe('locked');
-    expect(free.filter((p) => p.kind === 'locked')).toHaveLength(1389 - 16);
+    expect(free.slice(0, 17).every((p) => p.kind !== 'locked')).toBe(true);
+    expect(free[17].kind).toBe('locked');
+    expect(free.filter((p) => p.kind === 'locked')).toHaveLength(1389 - 17);
   });
 });
 

@@ -157,10 +157,10 @@ describe('scent-name regression (WS2d)', () => {
 });
 
 describe('GrimoireGate copy (WS2e)', () => {
-  it('states the true rule: first 16 pages free, page 17 onward locked', () => {
+  it('states the true rule: first 17 pages free, page 18 onward locked', () => {
     const src = read('components/grimoire/GrimoireGate.tsx');
-    expect(src).toContain('first 16 pages are free');
-    expect(src).toContain('Page 17 onward');
+    expect(src).toContain('first 17 pages are free');
+    expect(src).toContain('Page 18 onward');
     expect(src).not.toContain('Pages 14 and onward');
   });
 });

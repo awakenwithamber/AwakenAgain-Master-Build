@@ -198,9 +198,12 @@ describe('asset storage + routing gate (rewrite variant)', () => {
 
   it('the asset map covers the book and splits free vs gated at the preview boundary', () => {
     // STEP 0 boundary (verified against the live code): the gate is
-    // COMPOSED page 16. Exactly 8 assets are preview assets (their
-    // earliest composed page is ≤16) — the covers and sample pages
-    // the free preview already shows every visitor today.
+    // COMPOSED page 17 (owner directive 2026-11-07; was 16). Exactly
+    // 8 assets are preview assets (their earliest composed page is
+    // ≤17) — the covers and sample pages the free preview already
+    // shows every visitor today. The split is UNCHANGED by the move
+    // to 17: composed page 17 is a text page carrying no facsimile
+    // asset, so no asset's earliest page is 17.
     const free = [...assetMap.values()].filter((p) => p <= FREE_PREVIEW_LAST_PAGE);
     const gated = [...assetMap.values()].filter((p) => p > FREE_PREVIEW_LAST_PAGE);
     expect(free).toHaveLength(8);
