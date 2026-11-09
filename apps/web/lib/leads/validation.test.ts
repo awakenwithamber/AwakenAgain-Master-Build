@@ -10,7 +10,6 @@ describe('validateQuizLead', () => {
   const good = {
     name: 'Amber',
     email: '  A.Friend@Example.COM ',
-    consent: true,
     concernId: 'sleep',
     formId: 'tea',
   };
@@ -21,16 +20,52 @@ describe('validateQuizLead', () => {
     expect(r.value).toMatchObject({
       name: 'Amber',
       email: 'a.friend@example.com',
-      consent: true,
       concernId: 'sleep',
       formId: 'tea',
     });
   });
 
-  it('rejects missing/invalid email and missing consent', () => {
+  it('requires a valid email — the results email cannot be sent without one', () => {
     expect(validateQuizLead({ ...good, email: 'not-an-email' }).ok).toBe(false);
-    expect(validateQuizLead({ ...good, consent: false }).ok).toBe(false);
-    expect(validateQuizLead({ ...good, consent: undefined }).ok).toBe(false);
+    expect(validateQuizLead({ ...good, email: '' }).ok).toBe(false);
+    expect(validateQuizLead({ ...good, email: undefined }).ok).toBe(false);
+    const missing = { ...good } as Record<string, unknown>;
+    delete missing.email;
+    expect(validateQuizLead(missing).ok).toBe(false);
+  });
+
+  it('does NOT gate the transactional results email on newsletter consent', () => {
+    // No consent field at all → still valid; newsletter stays opted out.
+    const r = validateQuizLead(good);
+    expect(r.ok).toBe(true);
+    expect(r.value?.newsletterConsent).toBe(false);
+    // The legacy combined `consent` field no longer means newsletter signup.
+    const legacy = validateQuizLead({ ...good, consent: true });
+    expect(legacy.ok).toBe(true);
+    expect(legacy.value?.newsletterConsent).toBe(false);
+  });
+
+  it('records newsletter consent only from the literal newsletterConsent: true', () => {
+    expect(
+      validateQuizLead({ ...good, newsletterConsent: true }).value?.newsletterConsent,
+    ).toBe(true);
+    expect(
+      validateQuizLead({ ...good, newsletterConsent: false }).value?.newsletterConsent,
+    ).toBe(false);
+    expect(
+      validateQuizLead({ ...good, newsletterConsent: 'yes' }).value?.newsletterConsent,
+    ).toBe(false);
+  });
+
+  it('name is optional — blank or absent names do not block the results email', () => {
+    const blank = validateQuizLead({ ...good, name: '   ' });
+    expect(blank.ok).toBe(true);
+    expect(blank.value?.name).toBeNull();
+    const absent = { ...good } as Record<string, unknown>;
+    delete absent.name;
+    const r = validateQuizLead(absent);
+    expect(r.ok).toBe(true);
+    expect(r.value?.name).toBeNull();
   });
 
   it('rejects unknown quiz ids (no orphan leads)', () => {
@@ -38,8 +73,7 @@ describe('validateQuizLead', () => {
     expect(validateQuizLead({ ...good, formId: 'pill' }).ok).toBe(false);
   });
 
-  it('rejects empty name and non-object bodies', () => {
-    expect(validateQuizLead({ ...good, name: '   ' }).ok).toBe(false);
+  it('rejects non-object bodies', () => {
     expect(validateQuizLead(null).ok).toBe(false);
     expect(validateQuizLead('x').ok).toBe(false);
   });

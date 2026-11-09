@@ -38,8 +38,20 @@ import { createLogger } from '../observability/logger';
 const log = createLogger('jobs:email');
 import { formatPrice } from '../pricing/pricing';
 import { siteUrl } from '../seo/config';
-import type { QuizResultSnapshot } from '../quiz/quiz';
-import { ADVISOR_WHY_ALLIES_PARAGRAPHS } from '../quiz/advisor';
+import {
+  QUIZ_SAFETY_BANNER,
+  hasScreeningFlag,
+  type QuizResultSnapshot,
+} from '../quiz/quiz';
+import {
+  ADVISOR_WHY_ALLIES_PARAGRAPHS,
+  groupByDimension,
+} from '../quiz/advisor';
+import {
+  enrichAdvisorResult,
+  enrichClassicResult,
+  safetyLinesFor,
+} from '../quiz/herb-enrichment';
 import { renderEmail } from './purchase-confirmation-email';
 
 /* ------------------------------------------------------------------ */
@@ -362,6 +374,62 @@ export interface RenderedEmail {
 
 const SIGN_OFF = '\n\n— Amber\'s Alchemy Apothecary · Awaken Again';
 
+/* ------------------------------------------------------------------ */
+/* Quiz-results footer (owner spec 2026-11-07)                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The site's FDA disclaimer, verbatim — identical to the `disclaimer`
+ * field carried by the catalog product records (e.g.
+ * lib/catalog/products/rec-happy-pill-capsules.ts). A test pins this
+ * constant to the product records so the two can never drift apart.
+ */
+export const QUIZ_FOOTER_FDA_DISCLAIMER =
+  'These statements have not been evaluated by the Food and Drug Administration. ' +
+  'This product is not intended to diagnose, treat, cure, or prevent any disease. ' +
+  'If you are pregnant, nursing, taking medication, or have a medical condition, ' +
+  'consult a qualified healthcare professional before use. Keep out of reach of children.';
+
+export const BUSINESS_NAME = 'Awaken With Amber LLC';
+export const BUSINESS_MAILING_ADDRESS =
+  '239 South 1200 West, Salt Lake City, UT 84104';
+
+export const GRIMOIRE_INVITATION =
+  'If you’d like to keep exploring, the Living Grimoire — Amber’s growing ' +
+  'library of herbal wisdom — is there whenever you’re ready. No pressure, ever.';
+
+/** Retake link + gentle Grimoire invitation + FDA disclaimer + LLC. */
+function quizResultsFooter(): string {
+  const base = siteUrl();
+  return (
+    `\n\nRetake the quiz anytime:\n${base}/quiz\n\n` +
+    `${GRIMOIRE_INVITATION}\n${base}/grimoire\n\n` +
+    `${QUIZ_FOOTER_FDA_DISCLAIMER}\n\n` +
+    `${BUSINESS_NAME}\n${BUSINESS_MAILING_ADDRESS}`
+  );
+}
+
+/** The per-herb safety block — always present, never omitted. */
+function safetyBlockLines(allyName: string, indent: string): string[] {
+  return [
+    `${indent}Safety notes:`,
+    ...safetyLinesFor(allyName).map((n) => `${indent}  - ${n}`),
+  ];
+}
+
+/** The per-herb shop block — present only when the catalog matches. */
+function shopBlockLines(
+  products: { handle: string; title: string }[],
+  base: string,
+  indent: string,
+): string[] {
+  if (products.length === 0) return [];
+  return [
+    `${indent}From the shop:`,
+    ...products.map((p) => `${indent}  - ${p.title}: ${base}/shop/${p.handle}`),
+  ];
+}
+
 /**
  * Render a job to subject + plain-text body. Plain text only: the
  * account_signin_code body carries the 6-digit code — that delivery is
@@ -453,13 +521,41 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
       // rituals, and Amber's "why these allies" narrative.
       if (r.advisor) {
         const a = r.advisor;
-        const allyLines = a.allies
+        const base = siteUrl();
+        // Owner spec 2026-11-07 enrichment: each ally also carries its
+        // Herb Library link (when it has a page), its safety block
+        // (never omitted), and its matching shop products.
+        const enriched = enrichAdvisorResult(a, base);
+        // Results First (2026-11-08): allies are grouped under Body /
+        // Mind / Soul headings, exactly as on the results page.
+        const allyBlocks = a.allies.map((ally, i) => {
+          const section = enriched[i];
+          return {
+            dimension: section.dimension,
+            block: [
+              `• ${ally.name}${ally.latin ? ` (${ally.latin})` : ''} — ${ally.benefit}`,
+              `  ${ally.whyLine}`,
+              ...(ally.traditionalNote
+                ? [`  Traditional use: ${ally.traditionalNote}`]
+                : []),
+              ...(section.libraryUrl
+                ? [`  Herb Library: ${section.libraryUrl}`]
+                : []),
+              ...(section.preparation
+                ? [`  Preparation: ${section.preparation}`]
+                : []),
+              ...safetyBlockLines(ally.name, '  '),
+              ...shopBlockLines(section.products, base, '  '),
+            ].join('\n'),
+          };
+        });
+        const allyLines = groupByDimension(allyBlocks)
           .map(
-            (ally) =>
-              `• ${ally.name}${ally.latin ? ` (${ally.latin})` : ''} — ${ally.benefit}\n` +
-              `  ${ally.whyLine}${ally.traditionalNote ? `\n  Traditional use: ${ally.traditionalNote}` : ''}`,
+            ({ section, items }) =>
+              `${section.heading} — ${section.sub}\n` +
+              items.map((item) => item.block).join('\n'),
           )
-          .join('\n');
+          .join('\n\n');
         const patternLines = a.patterns
           .map((p) => `• ${p.name} — root support: ${p.rootSupport}`)
           .join('\n');
@@ -479,32 +575,69 @@ export function renderEmailMessage(job: EmailJob): RenderedEmail {
             `Your personal herbal allies:\n${allyLines}\n\n` +
             `Why these plants are calling to you:\n${ADVISOR_WHY_ALLIES_PARAGRAPHS.join('\n\n')}\n\n` +
             (ritualLines ? `Gentle rituals for your pattern:\n${ritualLines}\n\n` : '') +
-            `Your remedy form: ${a.formExplanation}\n` +
+            // Label aligned 2026-11-08 with the on-screen results
+            // ("Your Custom …" / "Prepared as …"): the site retired
+            // "remedy" wording for results (lineage drift register
+            // item 2); the form explanation text itself is unchanged.
+            `Your chosen form: ${a.formExplanation}\n` +
             (productLines ? `\nFrom the apothecary:\n${productLines}\n` : '') +
             `\nBook a call or Zoom with Amber, or simply reply to this email:\n${siteUrl()}/contact\n\n` +
             `These botanical recommendations support general wellness and self-care. They are not intended to diagnose, treat, cure, or prevent any disease, and they are education, not medical advice.` +
-            SIGN_OFF,
+            quizResultsFooter(),
         };
       }
-      const allyLines = r.allies
-        .map((a) => `• ${a.name} (${a.latin}) — ${a.note}`)
-        .join('\n');
-      const productLines = r.productHandles
-        .map((h) => `• ${siteUrl()}/shop/${h}`)
-        .join('\n');
+      // Classic matrix result — owner spec 2026-11-07 enrichment: per
+      // herb, the linked name, traditional use, why-it-matched (from
+      // the visitor's concern + form), the safety block (never
+      // omitted), and matching shop products. Results First
+      // (2026-11-08): grouped under Body / Mind / Soul, as everywhere.
+      const base = siteUrl();
+      const sections = enrichClassicResult(r, base);
+      const allyBlocks = groupByDimension(sections)
+        .map(
+          ({ section, items }) =>
+            `${section.heading} — ${section.sub}\n\n` +
+            items
+              .map((item) =>
+                [
+                  `${item.name} (${item.latin})`,
+                  ...(item.libraryUrl
+                    ? [`Herb Library: ${item.libraryUrl}`]
+                    : []),
+                  `Traditionally used for: ${item.traditionalUse}`,
+                  `Why it matched you: ${item.whyMatched}`,
+                  ...(item.preparation
+                    ? [`Preparation: ${item.preparation}`]
+                    : []),
+                  ...safetyBlockLines(item.name, ''),
+                  ...shopBlockLines(item.products, base, ''),
+                ].join('\n'),
+              )
+              .join('\n\n'),
+        )
+        .join('\n\n');
+      const screeningNote =
+        r.screening && hasScreeningFlag(r.screening)
+          ? `\n${QUIZ_SAFETY_BANNER}\n`
+          : '';
+      const withheldNote =
+        r.withheld && r.withheld.length > 0
+          ? `\nSome product suggestions were withheld based on your safety-screening answers — the botanicals above remain yours to explore and discuss with your clinician or pharmacist.\n`
+          : '';
       return {
         subject: 'Your Herbal Allies quiz results — Awaken Again',
         text:
           `${d.name ? `Hello ${d.name},` : 'Hello,'}\n\n` +
           `Here are your Herbal Allies results — the same ones you saw on the site.\n\n` +
           `Focus: ${r.concernLabel}\n` +
-          `Preferred form: ${r.formLabel}\n\n` +
-          `Your herbal allies:\n${allyLines}\n\n` +
+          `Preferred form: ${r.formLabel}\n` +
+          screeningNote +
+          `\nYour herbal allies:\n\n${allyBlocks}\n\n` +
           `${r.productReason}\n` +
-          (productLines ? `\nRecommended from the apothecary:\n${productLines}\n` : '') +
+          withheldNote +
           `\nThese notes reflect traditional use and the evidence context shown ` +
           `with each ally — they are education, not medical advice.` +
-          SIGN_OFF,
+          quizResultsFooter(),
       };
     }
     case 'contact_received': {

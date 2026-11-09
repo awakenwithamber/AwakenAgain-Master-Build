@@ -3,8 +3,12 @@
  * partner-idea captures added 2026-10-15, audit fix #8).
  *
  * Pure functions — no I/O. Route Handlers call these before touching the
- * LeadStore. Rules: RFC-ish email shape, explicit consent required, answers
- * must reference real quiz ids. No PII leaves the validation layer.
+ * LeadStore. Rules: RFC-ish email shape; newsletter signup requires
+ * explicit consent (its own validators below); the quiz results email
+ * is transactional (requested by the visitor — owner spec 2026-11-07)
+ * and requires a valid email address, with the name optional and
+ * newsletter signup as a separate opt-in; answers must reference real
+ * quiz ids. No PII leaves the validation layer.
  */
 import {
   isValidConcernId,
@@ -45,9 +49,17 @@ function cleanString(v: unknown, max: number): string | null {
 }
 
 export interface QuizLeadInput {
-  name: string;
+  /** Optional — the results email needs an address, not a name. */
+  name: string | null;
   email: string;
-  consent: true;
+  /**
+   * Newsletter opt-in ONLY (owner spec 2026-11-07): a separate,
+   * unchecked-by-default checkbox. The results email itself is
+   * transactional — the visitor asked for it — so it is NOT gated on
+   * this flag, and no marketing email is ever sent from the quiz flow.
+   * Only the literal boolean true counts.
+   */
+  newsletterConsent: boolean;
   concernId: string;
   formId: string;
   /** Stage 4 screening answers (absent → all "no", the legacy shape). */
@@ -67,12 +79,17 @@ export function validateQuizLead(body: unknown): ValidationResult<QuizLeadInput>
     return { ok: false, errors: ['Request body must be a JSON object.'] };
   }
   const b = body as Record<string, unknown>;
-  const name = cleanString(b.name, MAX_NAME);
+  // Name is optional now; a present-but-blank/overlong name is ignored
+  // rather than blocking the results email the visitor asked for.
+  const name =
+    typeof b.name === 'string' && b.name.trim().length > 0
+      ? cleanString(b.name, MAX_NAME)
+      : null;
   const email = typeof b.email === 'string' ? b.email.trim() : '';
-  if (!name) errors.push('Please share your first name (up to 120 characters).');
-  if (!isValidEmail(email)) errors.push('Please provide a valid email address.');
-  if (b.consent !== true)
-    errors.push('Consent is required — check the consent box to receive your results.');
+  if (!isValidEmail(email))
+    errors.push(
+      'Please provide a valid email address — we’ll email you your Herbal Allies so you have a copy.',
+    );
   if (!isValidConcernId(b.concernId))
     errors.push('Unknown quiz concern — please restart the quiz.');
   if (!isValidFormId(b.formId))
@@ -96,9 +113,9 @@ export function validateQuizLead(body: unknown): ValidationResult<QuizLeadInput>
     ok: true,
     errors: [],
     value: {
-      name: name!,
+      name,
       email: email.toLowerCase(),
-      consent: true,
+      newsletterConsent: b.newsletterConsent === true,
       concernId: b.concernId as string,
       formId: b.formId as string,
       screening: normalizeQuizScreening(b.screening),
