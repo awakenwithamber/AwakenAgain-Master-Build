@@ -64,6 +64,7 @@ import {
   queueAdminOrderNotification,
 } from '../../../lib/jobs/order-notifications';
 import { createLogger } from '../../../lib/observability/logger';
+import { recordAuthorizeNetOrderAudit } from '../../../lib/payments/authorizenet';
 
 const log = createLogger('api:checkout');
 import { enforceRateLimit } from '../../../lib/security/rate-limit';
@@ -205,6 +206,18 @@ function paymentInstructions(record: OrderRecord) {
         'Your order is prepared once payment is confirmed.',
     };
   }
+  if (record.payment_method === 'authorizenet_card_hosted') {
+    return {
+      method: record.payment_method,
+      order_id: record.order_id,
+      note:
+        'You chose to pay by card. Your order is saved and waiting ' +
+        'for payment — continue to the secure card payment page to ' +
+        'finish. Your card details are entered on that secure page, ' +
+        'never on this site. Your order is prepared once your payment ' +
+        'is confirmed, and your confirmation email arrives then.',
+    };
+  }
   if (record.payment_method === 'stripe_card_embedded') {
     return {
       method: record.payment_method,
@@ -263,6 +276,30 @@ export async function POST(request: Request) {
     );
   }
 
+  // Card orders (Authorize.net, 2026-11-09): record the lifecycle
+  // audit row for placement — state 'awaiting_payment' in the
+  // 'authorizenet_order_audit' stream. Awaited with a logged catch:
+  // the write is guaranteed attempted before the response, but its
+  // failure can never fail an accepted order (the order ledger is
+  // the truth; a missing audit row is visible in logs). Other
+  // methods write no audit row.
+  if (record.payment_method === 'authorizenet_card_hosted') {
+    await recordAuthorizeNetOrderAudit({
+      order_id: record.order_id,
+      state: 'awaiting_payment',
+      reason: null,
+      trans_id: null,
+      notification_id: null,
+      recorded_at: new Date().toISOString(),
+      source: 'checkout_route',
+    }).catch((err: unknown) => {
+      log.error('card order audit write failed (order saved)', {
+        order_id: record.order_id,
+        error: err,
+      });
+    });
+  }
+
   // Order-confirmation email job — queued exactly once per accepted
   // order, after persistence (trigger wired 2026-10-19; before this, the
   // purchase_confirmation contract existed but no route ever queued one).
@@ -274,12 +311,18 @@ export async function POST(request: Request) {
   // email is visible to the owner. The order flow is unchanged: email
   // can still never fail or delay an accepted order — the ledger is
   // the order system of record.
-  void queueOrderConfirmation(record).catch((err: unknown) => {
-    log.error('order confirmation email failed (order saved)', {
-      order_id: record.order_id,
-      error: err,
+  // Card orders (2026-11-09): NO confirmation email at placement —
+  // an unpaid card order must not read as confirmed. The verified
+  // webhook queues it at payment instead (lib/payments/
+  // authorizenet-webhook, markPaid). All other methods unchanged.
+  if (record.payment_method !== 'authorizenet_card_hosted') {
+    void queueOrderConfirmation(record).catch((err: unknown) => {
+      log.error('order confirmation email failed (order saved)', {
+        order_id: record.order_id,
+        error: err,
+      });
     });
-  });
+  }
 
   // Owner notification (Phase 2, Workstream 1b): every accepted order
   // also emails the owner inbox with the customer, items, ship-to,

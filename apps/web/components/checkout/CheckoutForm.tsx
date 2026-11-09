@@ -34,9 +34,14 @@
  * customer's saved profile address pre-fills the address fields —
  * and their name / email / phone — without ever overwriting anything
  * already typed.
- * No card payment is offered: the
- * Stripe embedded checkout is PARKED DORMANT (its component, routes,
- * and webhook remain in the tree, unreachable from this UI).
+ * Card payment (2026-11-09): 'Pay by card' through Authorize.net's
+ * hosted page is offered ONLY when the server reports the rail
+ * available (feature flag OFF by default — see the cardAvailable
+ * state below); with the flag off this UI renders exactly the
+ * invoice + Cash App/Venmo checkout above, with no card wording.
+ * The older embedded card checkout remains PARKED DORMANT (its
+ * component, routes, and webhook remain in the tree, unreachable
+ * from this UI).
  * No PII in analytics — order_completed carries order_id/total/item count only.
  */
 'use client';
@@ -65,7 +70,104 @@ import type { CartItem } from '../../types';
 type PaymentMethodChoice =
   | 'bluevine_invoice'
   | 'cash_app_or_venmo'
-  | 'bluevine_card_link';
+  | 'bluevine_card_link'
+  | 'authorizenet_card_hosted';
+
+/**
+ * The "continue to card payment" step on the order-received screen
+ * for the Authorize.net hosted method (2026-11-09): fetch a one-time
+ * hosted token for the recorded order, then hand the browser to
+ * Authorize.net's payment page with a real form POST (the token is
+ * single-use and short-lived; CSP form-action allows exactly the
+ * two gateway hosts). Payment confirmation comes only from the
+ * verified webhook — returning from the gateway page proves nothing
+ * by itself. A failure here is shown as a big, plain message and
+ * changes nothing: the order stays saved as waiting-for-payment and
+ * the customer can retry or choose another way to pay.
+ */
+function AuthorizeNetCardContinue({
+  orderId,
+  email,
+}: {
+  orderId: string;
+  email: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const continueToCardPayment = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await fetch('/api/checkout/authorizenet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId, email }),
+      });
+      const data = (await res.json()) as {
+        ok: boolean;
+        token?: string;
+        form_post_url?: string;
+        errors?: string[];
+      };
+      if (!res.ok || !data.ok || !data.token || !data.form_post_url) {
+        setError(
+          data.errors?.join(' ') ??
+            'Card payment could not be started. Your order is saved — please try again, or pay with the Bluevine invoice, Cash App, or Venmo.',
+        );
+        return;
+      }
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = data.form_post_url;
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'token';
+      input.value = data.token;
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+    } catch {
+      setError(
+        'Card payment could not be started. Your order is saved — please try again, or pay with the Bluevine invoice, Cash App, or Venmo.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <p>
+        Your order is saved, but it is <strong>not paid yet</strong>.
+        Continue to the secure card payment page to pay by card — your
+        card details are entered on that secure page, never on this
+        site.
+      </p>
+      {error ? (
+        <p
+          role="alert"
+          style={{
+            border: '2px solid #b00020',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            fontWeight: 600,
+          }}
+        >
+          {error}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        className="btn-primary"
+        onClick={continueToCardPayment}
+        disabled={busy}
+      >
+        {busy ? 'Opening secure payment…' : '✦ Continue to card payment'}
+      </button>
+    </>
+  );
+}
 
 /**
  * The Bluevine card choice exists only while the verified Bluevine
@@ -188,6 +290,27 @@ export function CheckoutForm() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethodChoice>('bluevine_invoice');
+  // Authorize.net card availability, from the server (fail closed:
+  // the 'Pay by card' option renders ONLY when the server reports
+  // the rail available — flag ON + credentials present. With the
+  // flag OFF this stays false forever and checkout renders exactly
+  // as it did before the card build: invoice + Cash App/Venmo only,
+  // with no card wording.)
+  const [cardAvailable, setCardAvailable] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/checkout/authorizenet')
+      .then((res) => res.json())
+      .then((data: { card_available?: boolean }) => {
+        if (!cancelled && data.card_available) setCardAvailable(true);
+      })
+      .catch(() => {
+        /* unavailable — the card option simply stays hidden */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<OrderResponse | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -310,7 +433,12 @@ export function CheckoutForm() {
       const data = (await res.json()) as OrderResponse;
       if (res.ok && data.ok) {
         setResult(data);
-        clear();
+        // Card orders keep their cart until payment succeeds: if the
+        // card attempt fails or is declined, nothing the customer
+        // picked is lost — they can retry or choose another way to
+        // pay without rebuilding the cart. Other methods clear here
+        // exactly as before.
+        if (paymentMethod !== 'authorizenet_card_hosted') clear();
         // Client-side: the customer saw the confirmation + the payment
         // instructions for their chosen method. The authoritative order event (order_created) is
         // emitted server-side by the checkout Route Handler — this client
@@ -350,7 +478,12 @@ export function CheckoutForm() {
         <section aria-label="Payment instructions">
           <h2>Complete your payment</h2>
           <p>{result.payment?.note}</p>
-          {method === 'bluevine_invoice' ? (
+          {method === 'authorizenet_card_hosted' ? (
+            <AuthorizeNetCardContinue
+              orderId={result.order_id ?? ''}
+              email={email.trim()}
+            />
+          ) : method === 'bluevine_invoice' ? (
             <>
               <p>
                 Your Bluevine invoice will arrive by email. You can pay
@@ -782,6 +915,24 @@ export function CheckoutForm() {
                   with your order number as the reference.
                 </label>
               ) : null}
+              {cardAvailable ? (
+                <label>
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value="authorizenet_card_hosted"
+                    checked={paymentMethod === 'authorizenet_card_hosted'}
+                    onChange={() =>
+                      setPaymentMethod('authorizenet_card_hosted')
+                    }
+                  />
+                  <strong>Pay by card</strong> — place your order now,
+                  then pay on a secure card payment page. Your card
+                  details are entered on that secure page, never on
+                  this site. Your order is prepared once your payment
+                  is confirmed.
+                </label>
+              ) : null}
               <label>
                 <input
                   type="radio"
@@ -796,7 +947,27 @@ export function CheckoutForm() {
               </label>
             </section>
 
-            {formError ? <p role="alert">{formError}</p> : null}
+            {formError ? (
+              paymentMethod === 'authorizenet_card_hosted' ? (
+                // Card attempts (flag ON only): the failure is a big,
+                // plain banner where the action happens, and it says
+                // the cart survived (visible-notices rule, 2026-11-09).
+                <p
+                  role="alert"
+                  style={{
+                    border: '2px solid #b00020',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {formError} Your cart is still here — nothing you
+                  picked was removed.
+                </p>
+              ) : (
+                <p role="alert">{formError}</p>
+              )
+            ) : null}
             <button
               type="button"
               className="btn-primary"
@@ -847,10 +1018,9 @@ export function CheckoutForm() {
             </section>
             <p>
               <small>
-                Payment is by emailed Bluevine invoice, or with Cash App
-                or Venmo — you&apos;ll get the payment details for your
-                chosen method, and your order ID, right after placing
-                your order.
+                {cardAvailable
+                  ? 'Payment is by card on our secure payment page, by emailed Bluevine invoice, or with Cash App or Venmo — you’ll get the payment details for your chosen method, and your order ID, right after placing your order.'
+                  : 'Payment is by emailed Bluevine invoice, or with Cash App or Venmo — you’ll get the payment details for your chosen method, and your order ID, right after placing your order.'}
               </small>
             </p>
           </>
