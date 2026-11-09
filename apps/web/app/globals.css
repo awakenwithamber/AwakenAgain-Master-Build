@@ -1293,19 +1293,24 @@ h1, h2, h3,
 /* previously had no styles at all, so the widget rendered in flow   */
 /* at the bottom-left of the page.                                     */
 /* ------------------------------------------------------------------ */
+/* Size trim (owner directive 2026-11-09): the pill shrank ~20–25% so
+   Gaia stays out of the way on every page — font-size 0.95rem →
+   0.78rem, padding 0.7rem 1.3rem → 0.62rem 0.95rem. Tap height stays
+   ≥40px; position, colors, label and behavior are unchanged, and the
+   chat panel keeps its size — only this button shrank. */
 .gaia-fab {
   position: fixed;
   right: 1.25rem;
   bottom: 1.25rem;
   z-index: 950;
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   letter-spacing: 0.05em;
   color: var(--plum-dark);
   background: linear-gradient(135deg, var(--brass), var(--brass-lt));
   border: none;
   border-radius: 999px;
-  padding: 0.7rem 1.3rem;
+  padding: 0.62rem 0.95rem;
   cursor: pointer;
   box-shadow: var(--shadow);
   transition: transform var(--transition);

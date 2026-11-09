@@ -93,7 +93,10 @@ export default function GrimoireSubscribePage() {
   return (
     <>
       <main id="main-content">
-        <h1>The Living Grimoire — 1,051 Pages of Preserved Works</h1>
+        <h1>
+          The Living Grimoire — The Collective Works of Light Magic &amp; Lost
+          Knowledge
+        </h1>
         <p>
           These books weren&apos;t handed down to me. I found them, each in
           its own way: a strange little bookstore, a random garage sale.

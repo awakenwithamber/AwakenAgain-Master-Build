@@ -88,7 +88,7 @@ const SITE_LINKS: HubLink[] = [
   {
     href: '/grimoire',
     label: 'The Living Grimoire',
-    note: 'The Living Grimoire of Light & Magic — read the opening pages and join the membership.',
+    note: 'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge. Read the opening pages and join the membership.',
     image: {
       src: '/images/brand/living-grimoire-cover.jpg',
       alt: "The Living Grimoire cover art, Amber's Alchemy Apothecary",

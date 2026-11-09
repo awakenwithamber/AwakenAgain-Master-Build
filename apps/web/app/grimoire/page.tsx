@@ -39,9 +39,10 @@ import {
 import { resolveGrimoireEntitlement } from '../../lib/grimoire/entitlement';
 
 export const metadata: Metadata = {
-  title: 'Living Grimoire of Light & Magic — 1,051 pages of preserved works',
+  title:
+    'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge — 1,051 pages of preserved works',
   description:
-    "Open the Living Grimoire of Light & Magic: a preservation of the collective works of generations — spells, rituals, recipes, and lost knowledge, 1,051 pages in all, each book found by Amber in its own way and digitized with care. The first seventeen pages are a free preview; the full compilation opens to subscribers and permanent-unlock holders.",
+    "Open The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge: a preservation of the collective works of generations — spells, rituals, recipes, and lost knowledge, 1,051 pages in all, each book found by Amber in its own way and digitized with care. The first seventeen pages are a free preview; the full compilation opens to subscribers and permanent-unlock holders.",
 };
 
 // Session + entitlement state is per-request — never static.
@@ -64,9 +65,14 @@ export default async function GrimoirePage() {
           visually hidden via the global .visually-hidden utility
           (position:absolute, 1×1px, clipped) — it changes no pixels,
           layout, design, or reader behavior; it only gives the page a
-          proper top-level heading for assistive technology and SEO. */}
+          proper top-level heading for assistive technology and SEO.
+          Owner retitle 2026-11-09: the h1 carries the book's new title
+          and STAYS visually hidden on purpose — the title is tooled
+          into the cover art itself, and a visible heading above the
+          book would repeat it (the repetition she objected to). */}
       <h1 className="visually-hidden">
-        Living Grimoire of Light &amp; Magic — 1,051 pages of preserved works
+        The Living Grimoire — The Collective Works of Light Magic &amp; Lost
+        Knowledge
       </h1>
       <InterestTracker category="grimoire" signalKey="grimoire" />
       <GrimoireBook

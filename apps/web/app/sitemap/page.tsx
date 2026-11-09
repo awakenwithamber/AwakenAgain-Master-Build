@@ -32,7 +32,10 @@ const SHOP_LINKS = [
 ];
 
 const GRIMOIRE_LINKS = [
-  { href: '/grimoire', label: 'The Living Grimoire of Light & Magic' },
+  {
+    href: '/grimoire',
+    label: 'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge',
+  },
   { href: '/grimoire/subscribe', label: 'Living Grimoire Membership' },
 ];
 

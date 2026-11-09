@@ -31,7 +31,14 @@
  * unlock scope below states the composed-edition coverage.
  */
 export const GRIMOIRE_EDITION_ID = 'living-grimoire-333' as const;
-export const GRIMOIRE_EDITION_NAME = 'The Living Grimoire — 1,051 pages of preserved works';
+/*
+ * Owner retitle 2026-11-09: the book is titled "The Living Grimoire —
+ * The Collective Works of Light Magic & Lost Knowledge" (the title is
+ * tooled into the cover art itself). The counted total (1,051 pages)
+ * still lives in the unlock scope below and the page copy.
+ */
+export const GRIMOIRE_EDITION_NAME =
+  'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge';
 export const GRIMOIRE_UNLOCK_PRICE_CENTS = 888;
 export const GRIMOIRE_UNLOCK_SCOPE =
   'The Living Grimoire — composed edition (1,051 pages): The ' +

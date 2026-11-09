@@ -19,6 +19,19 @@
  * horizontal swipe — vertical scrolling never turns a page. Each page's
  * scroll position is remembered and restored when the reader returns.
  * Turn zones are the bottom page corners only, not full-height edges.
+ *
+ * COVER OVERHAUL (2026-11-09, owner directive): the cover is PURE ART —
+ * a photorealistic centuries-old handmade leather book whose title is
+ * tooled into the artwork itself ("The Living Grimoire — The Collective
+ * Works of Light Magic & Lost Knowledge"). No text is overlaid on the
+ * book and no heading repeats the title above it. Entry is a short
+ * cinematic sequence: the standing cover with a pulsing "✦ Click to
+ * enter ✦" prompt below it (the tagline sits there too; tapping the
+ * book itself also enters) → a crossfade to the book lying on its
+ * velvet table scene (~1s beat) → a zoom into the book as it opens,
+ * landing on a reader-level INTRODUCTION page that is NOT part of the
+ * composed 1,051-page pagination. The one-time-per-session swipe
+ * tutorial hint appears on the introduction page.
  */
 import {
   createContext,
@@ -67,7 +80,11 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const TURN_MS = 600;
 /** JS lockout matching the CSS 0.01s animation under reduced motion. */
 const TURN_MS_REDUCED = 10;
-const COVER_OPEN_MS = 650;
+/** Entry sequence (2026-11-09): the table-scene beat, then the zoom. */
+const ENTRY_SCENE_MS = 1000;
+const ENTRY_ZOOM_MS = 1150;
+/** Intro-page turn-away when the reader begins the composed book. */
+const INTRO_TURN_MS = 450;
 
 interface TurnState {
   dir: 'fwd' | 'back';
@@ -167,6 +184,81 @@ function TitlePageView({
         in a living hand so their stories are never lost.
       </p>
     </PageShell>
+  );
+}
+
+/**
+ * The INTRODUCTION page (owner directive 2026-11-09) — a reader-level
+ * entry page, deliberately NOT a composed page: it has no page number,
+ * no place in the 1,051-page pagination, and no entitlement gate (it
+ * is front matter every visitor lands on after the entry sequence).
+ * The text is the owner's, verbatim. Turning from it (button, arrows,
+ * swipe, keys) enters the composed book at its first page; turning
+ * back from that page returns here.
+ */
+function IntroPageView({
+  side,
+  leaving,
+  onBegin,
+}: {
+  side: 'left' | 'right';
+  leaving: boolean;
+  onBegin: () => void;
+}) {
+  return (
+    <div className={styles.pageSlot}>
+      <div
+        className={`${styles.page} ${side === 'left' ? styles.pageLeft : styles.pageRight}`}
+      >
+        <div
+          className={styles.pageScroll}
+          data-grimoire-scroll=""
+          tabIndex={0}
+          aria-label="Introduction — scrollable page content"
+        >
+          <div className={leaving ? styles.introLeaving : styles.introPage}>
+            <p className={styles.categoryRow}>✦ The Living Grimoire ✦</p>
+            <h2 className={styles.handTitle}>Introduction</h2>
+            <p className={`${styles.handBody} ${styles.dropcap}`}>
+              This book was not written by one hand. It was gathered — page
+              by page, book by book — from ancient grimoires, some reaching
+              back as far as four thousand years. Their words have been
+              translated and compiled here so they would not be lost.
+            </p>
+            <p className={styles.handBody}>
+              Many of us come to this knowledge as orphans of it. The wisdom
+              our families once carried — the spells, the rituals, the
+              protections, the plant lore — was scattered, forgotten, or
+              left behind along the way. This book was compiled for us: for
+              those who lost that knowledge in their own families, and are
+              finding their way back to it.
+            </p>
+            <p className={styles.handBody}>
+              So read slowly, and learn deeply. And as you learn, I
+              encourage you to begin a grimoire of your own — write down
+              what you discover, what has helped you, and how it has shaped
+              your life — so one day you can pass it on, and this knowledge
+              will never be lost again.
+            </p>
+            <p className={styles.quote}>
+              The door is open. Turn the page, and begin.
+            </p>
+            <p className={styles.introAdvanceRow}>
+              <button
+                type="button"
+                className={styles.introAdvance}
+                onClick={onBegin}
+              >
+                Turn the page to begin ✦
+              </button>
+            </p>
+          </div>
+        </div>
+        <p className={styles.pageNum} aria-hidden="true">
+          ✦
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -740,8 +832,24 @@ export interface GrimoireBookProps {
 }
 
 export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
-  const [coverState, setCoverState] = useState<'closed' | 'opening' | 'open'>(
-    'closed',
+  const [coverState, setCoverState] = useState<
+    'closed' | 'scene' | 'zooming' | 'open'
+  >('closed');
+  /*
+   * The introduction page (2026-11-09) is where an opened book lands.
+   * It is reader-level state only — `page` always indexes the composed
+   * pages, so the intro never enters the pagination.
+   */
+  const [atIntro, setAtIntro] = useState(true);
+  const [introLeaving, setIntroLeaving] = useState(false);
+  const entryTimer = useRef<number | null>(null);
+  /*
+   * Swipe tutorial hint (2026-11-09): 'waiting' until the book first
+   * opens this session, then 'shown' until the first page turn or ~6
+   * seconds pass, then 'done' for the rest of the session.
+   */
+  const [swipeHint, setSwipeHint] = useState<'waiting' | 'shown' | 'done'>(
+    'waiting',
   );
   const [isDesktop, setIsDesktop] = useState(false);
   const [page, setPage] = useState(0);
@@ -793,6 +901,7 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   useEffect(() => {
     return () => {
       if (timer.current) clearTimeout(timer.current);
+      if (entryTimer.current) clearTimeout(entryTimer.current);
     };
   }, []);
 
@@ -806,6 +915,16 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     return () => mq.removeEventListener('change', apply);
   }, []);
 
+  /* Swipe hint lifecycle: show when the book first opens; the 6-second
+     timer is only a backstop — a first page turn dismisses it sooner
+     (see goTo), and either path lands on 'done' for the session. */
+  useEffect(() => {
+    if (!bookOpen || swipeHint !== 'waiting') return;
+    setSwipeHint('shown');
+    const t = window.setTimeout(() => setSwipeHint('done'), 6000);
+    return () => window.clearTimeout(t);
+  }, [bookOpen, swipeHint]);
+
   const goTo = useCallback(
     (target: number) => {
       const g = guardRef.current;
@@ -817,6 +936,10 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
       if (t === g.page) return;
       const dir: TurnState['dir'] = t > g.page ? 'fwd' : 'back';
       setTurn({ dir, from: g.page, to: t });
+      /* The first real page turn dismisses the swipe tutorial hint. */
+      setSwipeHint((s) => (s === 'shown' ? 'done' : s));
+      /* Any composed-page navigation leaves the introduction behind. */
+      setAtIntro(false);
       setPage(t);
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => {
@@ -828,31 +951,87 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   );
 
   const step = isDesktop ? 2 : 1;
-  const next = useCallback(() => goTo(page + step), [goTo, page, step]);
-  const prev = useCallback(() => goTo(page - step), [goTo, page, step]);
 
+  /*
+   * Leaving the introduction: a short turn-away, then the composed
+   * book's first page. Advancing from the intro is also a page turn
+   * for the swipe tutorial hint (it dismisses).
+   */
+  const advanceFromIntro = useCallback(() => {
+    if (!bookOpen || !atIntro || introLeaving) return;
+    setSwipeHint((s) => (s === 'shown' ? 'done' : s));
+    if (reducedMotion) {
+      setAtIntro(false);
+      setAnnounce(
+        `Page 1 of ${pages.length} — ${displayPageTitle(pages[0])}`,
+      );
+      return;
+    }
+    setIntroLeaving(true);
+    window.setTimeout(() => {
+      setAtIntro(false);
+      setIntroLeaving(false);
+      setAnnounce(
+        `Page 1 of ${pages.length} — ${displayPageTitle(pages[0])}`,
+      );
+    }, INTRO_TURN_MS);
+  }, [atIntro, bookOpen, introLeaving, pages, reducedMotion]);
+
+  const next = useCallback(() => {
+    if (atIntro) {
+      advanceFromIntro();
+      return;
+    }
+    goTo(page + step);
+  }, [advanceFromIntro, atIntro, goTo, page, step]);
+
+  const prev = useCallback(() => {
+    if (!bookOpen || turn || atIntro) return;
+    if (page <= 0) {
+      /* Turning back from the first composed page returns to the
+         introduction, as turning back in a real book would. */
+      setAtIntro(true);
+      setAnnounce('Introduction — turn the page to begin.');
+      return;
+    }
+    goTo(page - step);
+  }, [atIntro, bookOpen, goTo, page, step, turn]);
+
+  /*
+   * The entry sequence (owner directive 2026-11-09): standing cover →
+   * the book on its velvet table scene (a ~1s beat) → a zoom into the
+   * book as it opens → the introduction page. Reduced motion skips the
+   * scene and the zoom entirely — the book simply opens.
+   */
   const openBook = useCallback(() => {
     if (coverState !== 'closed') return;
-    setCoverState('opening');
-    window.setTimeout(
-      () => {
+    if (reducedMotion) {
+      setCoverState('open');
+      setAnnounce('The grimoire is open. Introduction — turn the page to begin.');
+      return;
+    }
+    setCoverState('scene');
+    entryTimer.current = window.setTimeout(() => {
+      setCoverState('zooming');
+      entryTimer.current = window.setTimeout(() => {
         setCoverState('open');
         setAnnounce(
-          `The grimoire is open. Page 1 of ${pages.length} — ${displayPageTitle(pages[0])}`,
+          'The grimoire is open. Introduction — turn the page to begin.',
         );
-      },
-      reducedMotion ? TURN_MS_REDUCED : COVER_OPEN_MS,
-    );
-  }, [coverState, pages, reducedMotion]);
+      }, ENTRY_ZOOM_MS);
+    }, ENTRY_SCENE_MS);
+  }, [coverState, reducedMotion]);
 
   const goToIndex = useCallback(() => {
     if (!guardRef.current.bookOpen) {
       openBook();
-      // The book finishes opening at ~650ms (near-instant under reduced
+      // The entry sequence takes ~2.2s (near-instant under reduced
       // motion); goTo reads live guard state.
       window.setTimeout(
         () => goTo(2),
-        reducedMotion ? TURN_MS_REDUCED + 50 : COVER_OPEN_MS + 100,
+        reducedMotion
+          ? TURN_MS_REDUCED + 50
+          : ENTRY_SCENE_MS + ENTRY_ZOOM_MS + 100,
       );
     } else {
       goTo(2);
@@ -1035,7 +1214,6 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     );
   }
 
-  const atStart = page <= 0;
   // On desktop the book ends at the final SPREAD (base of the last page),
   // not at the last page index — the old comparison left Next enabled on
   // the final spread and invited the crashing extra turn.
@@ -1047,7 +1225,7 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     <section
       className={styles.stage}
       role="region"
-      aria-label="Living Grimoire of Light & Magic — an interactive handmade-style book of herbal wisdom"
+      aria-label="The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge — an interactive handmade book of botanical wisdom"
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
@@ -1078,57 +1256,77 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
         onPointerUp={onPointerUp}
       >
         <div className={styles.book}>
-          {coverState !== 'open' && (
-            <div
-              className={`${styles.cover} ${coverState === 'opening' ? styles.coverOpening : ''}`}
-            >
-              <div className={styles.coverInner}>
-                <p className={styles.coverBrand}>
-                  Amber&apos;s Alchemy Apothecary
-                </p>
-                <h2 className={styles.coverTitle}>
-                  Living Grimoire
-                  <br />
-                  of Light
-                  <br />
-                  &amp; Magic
-                </h2>
-                <p className={styles.coverRule} aria-hidden="true">
-                  ✦ ✦ ✦
-                </p>
-                <p className={styles.coverSub}>
-                  a handmade book of botanical wisdom,
-                  <br />
-                  written in a living hand
-                </p>
-                <button
-                  type="button"
-                  className={styles.openBtn}
-                  onClick={openBook}
-                  disabled={coverState === 'opening'}
-                >
-                  Open the Living Grimoire of Light &amp; Magic ✦
-                </button>
-              </div>
+          {coverState === 'closed' && (
+            <div className={styles.cover} onClick={openBook}>
+              {/* Pure cover art (owner directive 2026-11-09): the title is
+                  tooled into the artwork itself, so NO text is overlaid on
+                  the book. Tapping/clicking the book enters it; the
+                  labelled entry prompt sits below the book (coverActions). */}
+              <img
+                className={styles.coverArt}
+                src="/images/living-grimoire-cover.webp"
+                alt="The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge: a centuries-old handmade leather book with brass corners and a gold sun-and-crescent emblem"
+                draggable={false}
+              />
             </div>
           )}
 
-          <div className={styles.spread} aria-hidden={!bookOpen}>
-            <PageView
-              page={leftPage}
-              side="left"
-              query={query}
-              setQuery={setQuery}
-              onJump={goTo}
-            />
-            {isDesktop && rightPage && (
-              <PageView
-                page={rightPage}
-                side="right"
-                query={query}
-                setQuery={setQuery}
-                onJump={goTo}
+          {/* Entry sequence beat 2 (2026-11-09): the book lying on its
+              velvet table scene, then the zoom into it as it opens. */}
+          {(coverState === 'scene' || coverState === 'zooming') && (
+            <div
+              className={`${styles.scene} ${coverState === 'zooming' ? styles.sceneZoom : ''}`}
+              aria-hidden="true"
+            >
+              <img
+                className={styles.sceneArt}
+                src="/images/living-grimoire-table-scene.webp"
+                alt=""
+                draggable={false}
               />
+            </div>
+          )}
+
+          <div
+            className={`${styles.spread} ${coverState === 'closed' || coverState === 'scene' ? styles.spreadClosed : ''}`}
+            aria-hidden={!bookOpen}
+          >
+            {atIntro ? (
+              <>
+                <IntroPageView
+                  side="left"
+                  leaving={introLeaving}
+                  onBegin={advanceFromIntro}
+                />
+                {isDesktop && (
+                  <div className={styles.pageSlot}>
+                    <div className={`${styles.page} ${styles.pageRight}`}>
+                      <p className={styles.flyleafMark} aria-hidden="true">
+                        ✦
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <PageView
+                  page={leftPage}
+                  side="left"
+                  query={query}
+                  setQuery={setQuery}
+                  onJump={goTo}
+                />
+                {isDesktop && rightPage && (
+                  <PageView
+                    page={rightPage}
+                    side="right"
+                    query={query}
+                    setQuery={setQuery}
+                    onJump={goTo}
+                  />
+                )}
+              </>
             )}
             {sheet}
             {bookOpen && (
@@ -1137,7 +1335,7 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
                   type="button"
                   className={`${styles.edgeZone} ${styles.edgeZoneLeft}`}
                   onClick={prev}
-                  disabled={atStart || !!turn}
+                  disabled={atIntro || !!turn}
                   aria-label="Previous page — turn from the bottom-left page corner"
                   tabIndex={-1}
                 />
@@ -1152,23 +1350,62 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
               </>
             )}
           </div>
+
+          {/* Visual swipe tutorial (owner directive 2026-11-09): shown
+              once per session when the book first opens, at the bottom
+              edge of the page area; pointer-events are off in CSS so it
+              never blocks reading or swiping. */}
+          {bookOpen && atIntro && swipeHint === 'shown' && (
+            <div className={styles.swipeHint} role="note">
+              <span aria-hidden="true">‹</span>
+              <span className={styles.swipeGlyph} aria-hidden="true">
+                ✦
+              </span>
+              <span aria-hidden="true">›</span>
+              <span>Swipe to turn the page — or use the arrows</span>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Closed view only (owner directives 2026-11-09): below the book
+          sit the tagline and the single entry prompt — a gently pulsing
+          "✦ Click to enter ✦" button. Nothing is written over the cover
+          art, and the title is never repeated in text. Clicking the
+          book itself enters too. */}
+      {coverState === 'closed' && (
+        <div className={styles.coverActions}>
+          <p className={styles.coverTagline}>
+            a handmade book of botanical wisdom, written in a living hand
+          </p>
+          <button
+            type="button"
+            className={`${styles.openBtn} ${styles.enterBtn}`}
+            onClick={openBook}
+          >
+            ✦ Click to enter ✦
+          </button>
+        </div>
+      )}
 
       <div className={styles.navRow}>
         <button
           type="button"
           className={styles.navBtn}
           onClick={prev}
-          disabled={!bookOpen || atStart || !!turn}
+          disabled={!bookOpen || atIntro || !!turn}
           aria-label="Turn to the previous page"
         >
           ‹
         </button>
         <p className={styles.pageStatus} aria-hidden="true">
           {bookOpen
-            ? `Page ${displayPage + 1} of ${pages.length}`
-            : 'The book is closed'}
+            ? atIntro
+              ? 'Introduction'
+              : `Page ${displayPage + 1} of ${pages.length}`
+            : coverState === 'closed'
+              ? 'The book is closed'
+              : 'Opening…'}
         </p>
         <button
           type="button"
