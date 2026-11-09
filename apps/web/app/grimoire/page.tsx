@@ -5,9 +5,9 @@
  * viewer's OTP session cookie is read here, entitlements are
  * resolved server-side (subscription ∪ PERMANENT_UNLOCK ∪ keeper —
  * lib/grimoire/entitlement), and ONLY the pages the viewer is
- * entitled to are passed to the client reader: pages 1–16 (free
+ * entitled to are passed to the client reader: pages 1–17 (free
  * preview) in full for everyone, locked placeholders (page number /
- * kind / label only) for pages 17+ unless entitled. Gated body text
+ * kind / label only) for pages 18+ unless entitled. Gated body text
  * never reaches a locked viewer's payload.
  *
  * The reader renders the FULL composed book (1,051 pages): The
@@ -41,7 +41,7 @@ import { resolveGrimoireEntitlement } from '../../lib/grimoire/entitlement';
 export const metadata: Metadata = {
   title: 'Living Grimoire of Light & Magic — 1,051 pages of preserved works',
   description:
-    "Open the Living Grimoire of Light & Magic: a preservation of the collective works of generations — spells, rituals, recipes, and lost knowledge, 1,051 pages in all, each book found by Amber in its own way and digitized with care. The first sixteen pages are a free preview; the full compilation opens to subscribers and permanent-unlock holders.",
+    "Open the Living Grimoire of Light & Magic: a preservation of the collective works of generations — spells, rituals, recipes, and lost knowledge, 1,051 pages in all, each book found by Amber in its own way and digitized with care. The first seventeen pages are a free preview; the full compilation opens to subscribers and permanent-unlock holders.",
 };
 
 // Session + entitlement state is per-request — never static.

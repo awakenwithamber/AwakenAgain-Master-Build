@@ -6,7 +6,7 @@
  * Laws under test:
  * - Composed book = 1,051 pages (after the 2026-11-08 removal of
  *   the four copyright-conflicted editions — owner decision
- *   2026-11-08): free preview pp. 1–16 (title, ancestor note ×2,
+ *   2026-11-08): free preview pp. 1–17 (title, ancestor note ×2,
  *   framing teaser, overview, TOC, full-book index, one sample
  *   from EACH of the five publishable collected works pp. 8–12,
  *   framing FULL 13–14, about 15, concern index 16) → the family
@@ -326,11 +326,11 @@ describe('grimoire composed book', () => {
     expect(small[small.length - 1].kind).toBe('colophon');
   });
 
-  it('displayPagesFor keeps pp. 1–16 open and locks 17+', () => {
+  it('displayPagesFor keeps pp. 1–17 open and locks 18+', () => {
     const free = displayPagesFor(pages, false);
-    expect(free.slice(0, 16).every((p) => p.kind !== 'locked')).toBe(true);
-    expect(free[16].kind).toBe('locked');
-    expect(free.filter((p) => p.kind === 'locked')).toHaveLength(1051 - 16);
+    expect(free.slice(0, 17).every((p) => p.kind !== 'locked')).toBe(true);
+    expect(free[17].kind).toBe('locked');
+    expect(free.filter((p) => p.kind === 'locked')).toHaveLength(1051 - 17);
   });
 });
 

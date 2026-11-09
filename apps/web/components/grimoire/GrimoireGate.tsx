@@ -145,7 +145,7 @@ export function GrimoireGate({ children, gateTitle = 'The Living Grimoire' }: Gr
     <section aria-labelledby="grimoire-gate-heading">
       <h2 id="grimoire-gate-heading">{gateTitle} — member access</h2>
       <p>
-        The first 16 pages are free to read. Page 17 onward is for Living Grimoire
+        The first 17 pages are free to read. Page 18 onward is for Living Grimoire
         subscribers, permanent-unlock holders, and keepers. Enter your email and we&apos;ll send a
         one-time code to verify your access.
       </p>

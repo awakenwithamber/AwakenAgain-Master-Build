@@ -47,7 +47,7 @@ import {
 
 const DAY = 24 * 60 * 60 * 1000;
 const assetMap = grimoireAssetPageMap();
-/** Preview assets (earliest composed page ≤16) — public today. */
+/** Preview assets (earliest composed page ≤17) — public today. */
 const SEPHER_SAMPLE = 'sepher-sephiroth/page-017.jpg'; // composed p.9
 const WAITE_COVER = 'book-of-ceremonial-magic-waite-1913/cover.jpg'; // composed p.10
 /** A gated asset from the same book as a preview sample. */
@@ -134,9 +134,9 @@ function callRoute(key: string, token?: string) {
 
 describe('persona matrix against the gated asset route', () => {
   it('boundary pins: the samples are preview assets, a deep Sepher page is gated, removed works are unmapped', () => {
-    expect(assetMap.get(SEPHER_SAMPLE)).toBeLessThanOrEqual(16);
-    expect(assetMap.get(WAITE_COVER)).toBeLessThanOrEqual(16);
-    expect(assetMap.get(SEPHER_GATED)).toBeGreaterThan(16);
+    expect(assetMap.get(SEPHER_SAMPLE)).toBeLessThanOrEqual(17);
+    expect(assetMap.get(WAITE_COVER)).toBeLessThanOrEqual(17);
+    expect(assetMap.get(SEPHER_GATED)).toBeGreaterThan(17);
     expect(assetMap.has(REMOVED_ASSET)).toBe(false);
     expect(assetMap.has('albertus-magnus-egyptian-secrets/page-001.jpg')).toBe(false);
     expect(assetMap.has('grimorium-verum/img-000.png')).toBe(false);

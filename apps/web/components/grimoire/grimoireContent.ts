@@ -3,20 +3,23 @@
  *
  * THE COMPOSED BOOK (ingestion follow-on, owner directives
  * 2026-10-21: "Make the full grimoire first", "Add them all", free
- * preview = 16 pages / Option B):
+ * preview = 16 pages / Option B; extended to 17 free pages by
+ * owner directive 2026-11-07):
  *
- *   pp. 1–16   FREE PREVIEW — front matter (cover/title · the
+ *   pp. 1–17   FREE PREVIEW — front matter (cover/title · the
  *              ancestor's note, the quoted note then the keeper's
  *              prose · the framing TEASER · the book Overview · the
  *              generated table of contents · the generated index of
- *              the full book) · one sample page from EACH of the five
- *              publishable collected works (pp. 8–12; the held
+ *              the full book) · one sample page from EACH of the
+ *              five publishable collected works (pp. 8–12; the held
  *              Elverum contributes none) · the framing FULL version
  *              (pp. 13–14) · the about page (p. 15) · the concern
- *              index (p. 16).
- *   pp. 17+    GATED — the family edition COMPLETE (333 pages, real
- *              extracted text, pp. 17–349) · the original sigil
- *              lesson (p. 350) · the collected works IN FULL
+ *              index (p. 16) · the family edition's first page
+ *              (p. 17, text only — the 17th free page, owner
+ *              directive 2026-11-07).
+ *   pp. 18+    GATED — the family edition COMPLETE (333 pages,
+ *              real extracted text, pp. 17–349) · the original
+ *              sigil lesson (p. 350) · the collected works IN FULL
  *              (pp. 351–1050) · colophon (p. 1051). 1,051 composed
  *              pages in all, after the 2026-11-08 removal of the
  *              four copyright-conflicted editions (owner decision
@@ -199,9 +202,10 @@ export type GrimoirePage =
 
 /* ------------------------------------------------------------------ */
 /* Server-side gating (Stage 2 mechanism, unchanged; boundary moved   */
-/* to the owner's 16-page preview, 2026-10-21).                        */
+/* to the owner's 16-page preview, 2026-10-21, then to 17 pages by    */
+/* owner directive 2026-11-07).                                       */
 /*                                                                    */
-/* FREE_PREVIEW = the first 16 composed pages. Pages 17+ are          */
+/* FREE_PREVIEW = the first 17 composed pages. Pages 18+ are          */
 /* members-only: the SERVER replaces them with a locked placeholder   */
 /* carrying ONLY non-content metadata — page number, kind, and a      */
 /* label that already appears in the free TOC/index (herb name, book  */
@@ -210,7 +214,7 @@ export type GrimoirePage =
 /* the entitled payload for held content).                            */
 /* ------------------------------------------------------------------ */
 
-export const FREE_PREVIEW_LAST_PAGE = 16;
+export const FREE_PREVIEW_LAST_PAGE = 17;
 
 export interface GrimoireLockedPage {
   kind: 'locked';
@@ -270,7 +274,7 @@ export function lockedPageFor(page: GrimoirePage): GrimoireLockedPage {
 /**
  * The payload the server may hand the client reader for a viewer:
  * entitled viewers get every page in full; everyone else gets pages
- * 1–16 in full and locked placeholders for 17+.
+ * 1–17 in full and locked placeholders for 18+.
  */
 export function displayPagesFor(
   pages: GrimoirePage[],

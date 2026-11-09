@@ -730,8 +730,8 @@ function PageView({
 export interface GrimoireBookProps {
   /**
    * Pages as resolved SERVER-SIDE (Stage 2): entitled viewers receive
-   * all composed pages in full; everyone else receives pages 1–16 in full and
-   * locked placeholders for 17+. This component never builds content
+   * all composed pages in full; everyone else receives pages 1–17 in full and
+   * locked placeholders for 18+. This component never builds content
    * itself — gated body text is simply absent from its props.
    */
   pages: GrimoireDisplayPage[];

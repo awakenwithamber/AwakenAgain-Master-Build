@@ -4,14 +4,15 @@
  * the owner's 16-page preview).
  *
  * Laws under test:
- * - A locked viewer's serialized payload contains pages 1–16 in full
+ * - A locked viewer's serialized payload contains pages 1–17 in full
  *   and ONLY locked placeholders (page number, kind, and a label that
- *   already appears in the free TOC/index) for pages 17+: no gated
+ *   already appears in the free TOC/index) for pages 18+: no gated
  *   body text — not family-edition text, not collected-work text,
  *   not gated facsimile paths. (After the 2026-11-08 removal the
  *   framing FULL version, about page and concern index fall INSIDE
- *   pp. 1–16 — the composition is manifest-driven and the boundary
- *   stayed at composed page 16 — so that text is free-preview
+ *   the preview (pp. 13–16 of pp. 1–17) — the composition is
+ *   manifest-driven and the boundary stayed at the owner's page
+ *   count — so that text is free-preview
  *   content now, present in both payloads.)
  * - An entitled viewer's payload contains the full gated text.
  * - The held Black Books of Elverum leaks NOWHERE: its text is
@@ -46,13 +47,13 @@ const lockedPayload = JSON.stringify(displayPagesFor(pages, false));
 const entitledPayload = JSON.stringify(displayPagesFor(pages, true));
 
 describe('locked viewer payload', () => {
-  it('the boundary is page 16/17 (owner Option B, 2026-10-21)', () => {
-    expect(FREE_PREVIEW_LAST_PAGE).toBe(16);
+  it('the boundary is page 17/18 (Option B 2026-10-21, extended by owner directive 2026-11-07)', () => {
+    expect(FREE_PREVIEW_LAST_PAGE).toBe(17);
     const display = displayPagesFor(pages, false);
-    expect(display.slice(0, 16).every((p) => p.kind !== 'locked')).toBe(true);
+    expect(display.slice(0, 17).every((p) => p.kind !== 'locked')).toBe(true);
     const locked = display.filter((p) => p.kind === 'locked');
-    expect(locked).toHaveLength(1051 - 16);
-    expect(locked[0].pageNumber).toBe(17);
+    expect(locked).toHaveLength(1051 - 17);
+    expect(locked[0].pageNumber).toBe(18);
     expect(locked[locked.length - 1].pageNumber).toBe(1051);
   });
 
