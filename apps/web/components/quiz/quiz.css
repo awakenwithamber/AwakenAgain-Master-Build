@@ -302,49 +302,10 @@
   cursor: not-allowed;
 }
 
-.quiz-ghost {
-  background: none;
-  border: none;
-  color: var(--parchment-dim, #d8cdb2);
-  font: inherit;
-  font-size: 0.92rem;
-  cursor: pointer;
-  text-decoration: underline;
-  display: block;
-  margin: 0.9rem auto 0;
-}
-
-.quiz-ghost:hover {
-  color: var(--gold, #d4af37);
-}
-
-/* ---------- lead capture ---------- */
-
-.quiz-lead-hero {
-  text-align: center;
-}
-
-.quiz-lead-icon {
-  font-size: 2.2rem;
-}
-
-.quiz-focus-badge {
-  display: inline-block;
-  border: 1px solid var(--border, rgba(212, 175, 55, 0.28));
-  border-radius: 999px;
-  padding: 0.3rem 0.9rem;
-  color: var(--gold-lt, #e9cf7a);
-}
-
-.quiz-lead-benefits {
-  list-style: none;
-  padding: 0;
-  margin: 1rem auto;
-  max-width: 26rem;
-  display: grid;
-  gap: 0.35rem;
-  color: var(--parchment-dim, #d8cdb2);
-}
+/* ---------- results-page email panel ---------- */
+/* Results First (2026-11-08): the lead step is gone — no gate, no
+   ghost skip link. What remains of .quiz-lead* styles the OPTIONAL
+   email panel on the results page and the profile-save block. */
 
 .quiz-lead {
   background: var(--plum-deep, #1f1336);
@@ -468,10 +429,70 @@
   font-size: 0.9rem;
 }
 
+/* Botanical illustration on an ally card — rendered only for herbs
+   with a verified asset (lib/quiz/ally-illustrations.ts). The credit
+   line is the license-required attribution for CC BY / CC BY-SA
+   images; it is part of the figure, never optional decoration. */
+.quiz-ally-figure {
+  margin: 0 0 0.6rem;
+}
+
+.quiz-ally-img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(212, 175, 55, 0.28));
+}
+
+.quiz-ally-credit {
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--parchment-dim, #d8cdb2);
+}
+
 .quiz-ally-card p {
   margin: 0.35rem 0;
   font-size: 0.94rem;
   line-height: 1.45;
+}
+
+/* Body / Mind / Soul grouping on the results (2026-11-08). */
+.quiz-dimension {
+  margin: 1.4rem 0 0.4rem;
+}
+
+.quiz-dimension-heading {
+  color: var(--gold-lt, #e9cf7a);
+  font-size: 1.15rem;
+  margin: 0 0 0.15rem;
+}
+
+.quiz-dimension-sub {
+  color: var(--parchment-dim, #d8cdb2);
+  margin: 0 0 0.6rem;
+  font-size: 0.94rem;
+}
+
+/* Per-herb safety block on the results cards — always rendered
+   (on-file notes, or the standard no-notes-on-file line). */
+.quiz-ally-safety {
+  border-top: 1px solid var(--border, rgba(212, 175, 55, 0.28));
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+}
+
+.quiz-ally-safety ul {
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.quiz-ally-safety li {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  margin: 0.2rem 0;
 }
 
 .quiz-download-row {

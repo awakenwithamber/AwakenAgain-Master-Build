@@ -5,19 +5,33 @@
  * "The Synthesis" — from the legacy site, rebuilt as a React island on
  * the shared engine in lib/quiz/advisor.ts. A calm, mystical
  * conversation in phases: intro → Foundation (multi-select goals) →
- * Shape → Whole Human → Nuance → safety screening → lead capture →
- * the Synthesis (patterns, personal allies, rituals, one personalized formula).
+ * Shape → Whole Human → Nuance → safety screening → the Synthesis
+ * (patterns, personal allies, rituals, one personalized formula).
  *
  * The Stage 4 safety screening stays (owner-kept): its answers gate
  * product suggestions exactly as before (lib/quiz/quiz.ts rules, applied
  * inside computeAdvisorSynthesis), and the result snapshot stores them.
  *
- * Results (owner directives 2026-10-15 + 2026-10-22): sharing an email
- * saves the lead AND sends the full results to that email through the
- * Resend-bound provider; a signed-in visitor can save to their profile;
- * the results can be downloaded as a real PDF; and the path onward —
- * build a custom formula, or book a call / Zoom / text Amber — is
- * woven into the Synthesis itself.
+ * RESULTS FIRST (owner decision 2026-11-08, superseding the 2026-11-07
+ * email-first spec): completing the screening lands DIRECTLY on the
+ * Synthesis — there is no lead/email phase and nothing to skip. The
+ * email capture is an optional panel ON the results page: sharing an
+ * email sends the full results to that email through the Resend-bound
+ * provider (transactional — the visitor asked for it — with the line
+ * "We'll email you your Herbal Allies so you have a copy."), and
+ * newsletter signup is a separate, unchecked-by-default checkbox.
+ * Results never depend on that panel: validation errors, consent
+ * state, rate limits, store failures, and delivery failures can only
+ * change the panel's own status message. A signed-in visitor can save
+ * to their profile; the results can be downloaded as a real PDF; and
+ * the path onward — build a custom formula, or book a call / Zoom /
+ * text Amber — is woven into the Synthesis itself.
+ *
+ * Persistence (2026-11-08): in-progress answers, screening answers,
+ * and the phase persist to sessionStorage (lib/quiz/quiz-session.ts)
+ * and restore on mount, so a refresh or interruption — even on the
+ * results — brings the visitor back to exactly where they were.
+ * Start Over clears the saved session.
  *
  * Styles live in ./quiz.css — imported here. (The pre-restore island
  * shipped with NO stylesheet at all, which is why its buttons rendered
@@ -47,11 +61,24 @@ import {
   ADVISOR_SPECIALTIES_LINE,
   CAPSULE_EXPLAINER,
   EMPTY_ADVISOR_ANSWERS,
+  advisorDimensionSection,
   advisorLegacyIds,
   computeAdvisorSynthesis,
+  groupByDimension,
   type AdvisorAnswers,
   type AdvisorOption,
 } from '../../lib/quiz/advisor';
+import {
+  clearQuizSession,
+  loadQuizSession,
+  saveQuizSession,
+  type QuizPhase,
+} from '../../lib/quiz/quiz-session';
+import {
+  preparationFor,
+  safetyLinesFor,
+} from '../../lib/quiz/herb-enrichment';
+import { allyIllustrationFor } from '../../lib/quiz/ally-illustrations';
 import {
   QUIZ_SAFETY_BANNER,
   QUIZ_SCREENING_QUESTIONS,
@@ -67,25 +94,20 @@ import { PRODUCTS } from '../../lib/catalog/products';
 import { BRAND_NAME, BRAND_PHONE_DISPLAY, BRAND_PHONE_TEL } from '../../lib/seo/config';
 import './quiz.css';
 
-type Phase =
-  | 'intro'
-  | 'foundation'
-  | 'shape'
-  | 'whole'
-  | 'nuance'
-  | 'screening'
-  | 'lead'
-  | 'results';
+type Phase = QuizPhase;
 
-/** Question phases in order, for the progress label (lead = step 6). */
+/** Question phases in order, for the progress label. Results First
+ *  (2026-11-08): the screening is the last question step — completing
+ *  it goes straight to the results. */
 const PHASE_STEP: Partial<Record<Phase, number>> = {
   foundation: 1,
   shape: 2,
   whole: 3,
   nuance: 4,
   screening: 5,
-  lead: 6,
 };
+
+const TOTAL_STEPS = 5;
 
 type ScreeningAnswers = Record<keyof QuizScreening, boolean | null>;
 
@@ -98,7 +120,8 @@ const EMPTY_SCREENING: ScreeningAnswers = {
 interface LeadState {
   name: string;
   email: string;
-  consent: boolean;
+  /** Newsletter opt-in only — separate from the transactional results email. */
+  newsletter: boolean;
 }
 
 function productTitle(handle: string): string {
@@ -109,9 +132,11 @@ export default function Quiz() {
   const [phase, setPhase] = useState<Phase>('intro');
   const [answers, setAnswers] = useState<AdvisorAnswers>(EMPTY_ADVISOR_ANSWERS);
   const [screeningAnswers, setScreeningAnswers] = useState<ScreeningAnswers>(EMPTY_SCREENING);
+  const [sessionRestored, setSessionRestored] = useState(false);
   const [capFlash, setCapFlash] = useState(false);
-  const [lead, setLead] = useState<LeadState>({ name: '', email: '', consent: false });
+  const [lead, setLead] = useState<LeadState>({ name: '', email: '', newsletter: false });
   const [leadStatus, setLeadStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+  const [emailStatus, setEmailStatus] = useState<'sent' | 'preview' | 'failed' | null>(null);
   const [leadErrors, setLeadErrors] = useState<string[]>([]);
   const [accountEmail, setAccountEmail] = useState<string | null | undefined>(undefined);
   const [profileSave, setProfileSave] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -145,6 +170,33 @@ export default function Quiz() {
       cancelled = true;
     };
   }, [phase]);
+
+  /* --------------------- session persistence (2026-11-08) ------------------ */
+
+  // Restore once on mount: a refresh or interruption anywhere in the
+  // flow — the results included — returns the visitor to where they
+  // were. The synthesis recomputes from the restored answers, so the
+  // results they see are the results they had.
+  useEffect(() => {
+    const saved = loadQuizSession(window.sessionStorage);
+    if (saved) {
+      setAnswers(saved.answers);
+      setScreeningAnswers(saved.screening);
+      setPhase(saved.phase);
+    }
+    setSessionRestored(true);
+  }, []);
+
+  // Persist on every change (only after the restore pass, so the
+  // initial empty state never overwrites a saved session).
+  useEffect(() => {
+    if (!sessionRestored) return;
+    saveQuizSession(window.sessionStorage, {
+      phase,
+      answers,
+      screening: screeningAnswers,
+    });
+  }, [sessionRestored, phase, answers, screeningAnswers]);
 
   /* ------------------------------ selections ------------------------------ */
 
@@ -214,15 +266,19 @@ export default function Quiz() {
     });
     // Interest profile (2026-10-14): completing the quiz is a +3 signal.
     recordInterestNow('quiz', 3);
-    setPhase('lead');
+    // Results First (2026-11-08): the results render immediately.
+    // There is no email step between the visitor and their Synthesis.
+    setPhase('results');
   };
 
   const restart = () => {
+    clearQuizSession(window.sessionStorage);
     setPhase('intro');
     setAnswers(EMPTY_ADVISOR_ANSWERS);
     setScreeningAnswers(EMPTY_SCREENING);
-    setLead({ name: '', email: '', consent: false });
+    setLead({ name: '', email: '', newsletter: false });
     setLeadStatus('idle');
+    setEmailStatus(null);
     setLeadErrors([]);
     setProfileSave('idle');
     setPdfStatus('idle');
@@ -232,6 +288,18 @@ export default function Quiz() {
 
   const submitLead = async () => {
     if (!synthesis) return;
+    // The optional results-page email panel: an email address is
+    // required for the email itself (there is nowhere to send without
+    // one) — and a missing/invalid one is only ever a message inside
+    // this panel. The results above it are already the visitor's and
+    // never depend on this action.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(lead.email.trim())) {
+      setLeadErrors([
+        'Please enter your email — we’ll email you your Herbal Allies so you have a copy.',
+      ]);
+      setLeadStatus('error');
+      return;
+    }
     setLeadStatus('sending');
     setLeadErrors([]);
     const legacy = advisorLegacyIds(synthesis);
@@ -242,7 +310,7 @@ export default function Quiz() {
         body: JSON.stringify({
           name: lead.name,
           email: lead.email,
-          consent: lead.consent,
+          newsletterConsent: lead.newsletter,
           concernId: legacy.concernId,
           formId: legacy.formId,
           screening,
@@ -255,6 +323,13 @@ export default function Quiz() {
         setLeadStatus('error');
         return;
       }
+      setEmailStatus(
+        json.emailStatus === 'sent'
+          ? 'sent'
+          : json.emailStatus === 'preview'
+            ? 'preview'
+            : 'failed',
+      );
       setLeadStatus('done');
       // quiz_lead_captured is server-owned — the route fires it.
       // Meta pixel Lead (ported 2026-11-02): fired only here, on the
@@ -262,7 +337,7 @@ export default function Quiz() {
       // attempts. Inert unless the pixel is configured and consent is
       // accepted. No Purchase event exists anywhere in this build.
       trackMetaLead();
-      setPhase('results');
+      // No navigation: the visitor is already looking at their results.
     } catch {
       setLeadErrors(['Something went wrong — please try again.']);
       setLeadStatus('error');
@@ -324,7 +399,7 @@ export default function Quiz() {
   const stepHeader = (reassuranceKey: string) => (
     <>
       {PHASE_STEP[phase] && (
-        <p className="quiz-progress">Step {PHASE_STEP[phase]} of 6</p>
+        <p className="quiz-progress">Step {PHASE_STEP[phase]} of {TOTAL_STEPS}</p>
       )}
       {ADVISOR_REASSURANCE[reassuranceKey] && (
         <p className="quiz-reassurance">✦ {ADVISOR_REASSURANCE[reassuranceKey]}</p>
@@ -649,99 +724,6 @@ export default function Quiz() {
         </div>
       )}
 
-      {phase === 'lead' && synthesis && (
-        <div className="quiz-step quiz-lead-step">
-          {stepHeader('lead')}
-          <div className="quiz-lead-hero">
-            <div className="quiz-lead-icon">✨</div>
-            <h2>Your report is ready.</h2>
-            <p>
-              We&apos;ve matched your answers to a pattern and chosen your
-              herbal allies. Enter your email to unlock it — and we&apos;ll
-              send a copy you can return to.
-            </p>
-            <p className="quiz-focus-badge">
-              Focus:{' '}
-              {answers.symptoms
-                .map((id) => ADVISOR_GOALS.find((g) => g.id === id)?.label ?? id)
-                .slice(0, 3)
-                .join(' · ')}
-            </p>
-          </div>
-          <ul className="quiz-lead-benefits">
-            <li>✦ Your personal herbal allies, matched to your pattern</li>
-            <li>✦ Gentle wellness tips for your pattern</li>
-            <li>✦ First look at seasonal creations</li>
-            <li>✦ A refill reminder when you&apos;re near the end</li>
-          </ul>
-          <div className="quiz-lead">
-            <label>
-              First name
-              <input
-                type="text"
-                value={lead.name}
-                onChange={(e) => setLead({ ...lead, name: e.target.value })}
-                maxLength={120}
-                autoComplete="given-name"
-                placeholder="Your first name"
-              />
-            </label>
-            <label>
-              Email address
-              <input
-                type="email"
-                value={lead.email}
-                onChange={(e) => setLead({ ...lead, email: e.target.value })}
-                maxLength={254}
-                autoComplete="email"
-                placeholder="you@example.com"
-              />
-            </label>
-            <label className="quiz-consent">
-              <input
-                type="checkbox"
-                checked={lead.consent}
-                onChange={(e) => setLead({ ...lead, consent: e.target.checked })}
-              />
-              Yes — email my full results to me, save them with the
-              apothecary, and send occasional apothecary notes. I can
-              unsubscribe anytime. We never sell or share your information.
-            </label>
-            {leadErrors.length > 0 && (
-              <ul className="quiz-errors" role="alert">
-                {leadErrors.map((e) => (
-                  <li key={e}>{e}</li>
-                ))}
-              </ul>
-            )}
-            <div className="quiz-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setPhase('screening')}
-              >
-                ← Back
-              </button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={submitLead}
-                disabled={leadStatus === 'sending'}
-              >
-                {leadStatus === 'sending' ? 'Unlocking…' : 'Unlock My Results →'}
-              </button>
-            </div>
-            <button
-              type="button"
-              className="quiz-ghost"
-              onClick={() => setPhase('results')}
-            >
-              Skip — just show me
-            </button>
-          </div>
-        </div>
-      )}
-
       {phase === 'results' && synthesis && (
         <div className="quiz-step quiz-results">
           <p className="quiz-reassurance">✦ {ADVISOR_REASSURANCE.results}</p>
@@ -758,7 +740,8 @@ export default function Quiz() {
                   className={`quiz-pattern-panel${idx === 0 ? ' primary' : ''}`}
                 >
                   <p className="quiz-pattern-label">
-                    {idx === 0 ? 'Primary Pattern' : 'Also Present'}
+                    {idx === 0 ? 'Primary Pattern' : 'Also Present'} ·{' '}
+                    {advisorDimensionSection(entry.pattern.dimension).heading}
                   </p>
                   <h3>{entry.pattern.name}</h3>
                   <p>
@@ -788,30 +771,74 @@ export default function Quiz() {
             what you shared. Traditionally used, gently prepared, and
             blended into one formula for you.
           </p>
-          <div className="quiz-allies">
-            {synthesis.allies.map((ally) => (
-              <article key={ally.id} className="quiz-ally-card">
-                <h4>
-                  {ally.emoji} {ally.name}
-                </h4>
-                {ally.latin && <p className="quiz-ally-latin">{ally.latin}</p>}
-                <p>
-                  <strong>Primary benefit:</strong> {ally.benefit}
-                </p>
-                <p>
-                  <strong>Chosen for you because:</strong> {ally.whyLine.replace('Chosen because of ', '').replace(/\.$/, '')}
-                </p>
-                {ally.traditionalNote && (
-                  <p>
-                    <strong>Traditional use:</strong> {ally.traditionalNote}
-                  </p>
-                )}
-                <p>
-                  <strong>Why it may help now:</strong> {ally.primaryBenefit}
-                </p>
-              </article>
-            ))}
-          </div>
+          {groupByDimension(synthesis.allies).map(({ section, items }) => (
+            <div key={section.id} className="quiz-dimension">
+              <h4 className="quiz-dimension-heading">{section.heading}</h4>
+              <p className="quiz-dimension-sub">{section.sub}</p>
+              <div className="quiz-allies">
+                {items.map((ally) => {
+                  const preparation = preparationFor(ally.name);
+                  // Botanical illustration ONLY where a verified,
+                  // renderable asset exists (lib/quiz/ally-illustrations);
+                  // every other card keeps the emoji header — no
+                  // placeholders, no dead hotlinks.
+                  const illustration = allyIllustrationFor(ally.id);
+                  return (
+                    <article key={ally.id} className="quiz-ally-card">
+                      <h4>
+                        {ally.emoji} {ally.name}
+                      </h4>
+                      {ally.latin && <p className="quiz-ally-latin">{ally.latin}</p>}
+                      {illustration && (
+                        <figure className="quiz-ally-figure">
+                          <img
+                            className="quiz-ally-img"
+                            src={illustration.src}
+                            alt={ally.name}
+                            loading="lazy"
+                          />
+                          {illustration.credit && (
+                            <figcaption className="quiz-ally-credit">
+                              {illustration.credit}
+                            </figcaption>
+                          )}
+                        </figure>
+                      )}
+                      <p>
+                        <strong>Primary benefit:</strong> {ally.benefit}
+                      </p>
+                      <p>
+                        <strong>Chosen for you because:</strong> {ally.whyLine.replace('Chosen because of ', '').replace(/\.$/, '')}
+                      </p>
+                      {ally.traditionalNote && (
+                        <p>
+                          <strong>Traditional use:</strong> {ally.traditionalNote}
+                        </p>
+                      )}
+                      <p>
+                        <strong>Why it may help now:</strong> {ally.primaryBenefit}
+                      </p>
+                      {preparation && (
+                        <p>
+                          <strong>Preparation:</strong> {preparation}
+                        </p>
+                      )}
+                      <div className="quiz-ally-safety">
+                        <p>
+                          <strong>Safety notes:</strong>
+                        </p>
+                        <ul>
+                          {safetyLinesFor(ally.name).map((line) => (
+                            <li key={line}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
           <div className="quiz-download-row">
             <button
               type="button"
@@ -936,14 +963,27 @@ export default function Quiz() {
             <div className="quiz-lead">
               <h3>Want these in your inbox?</h3>
               <p>
+                We&rsquo;ll email you your Herbal Allies so you have a copy.
                 Share your email and we&apos;ll send your full results —
                 your patterns, your allies, and why each was chosen — and
-                save them under your name. Or{' '}
+                save them with the apothecary. Or{' '}
                 <Link href="/account">create a free profile</Link> to keep
                 them with your likes and searches.
               </p>
               <label>
-                First name
+                Email
+                <input
+                  type="email"
+                  required
+                  aria-required="true"
+                  value={lead.email}
+                  onChange={(e) => setLead({ ...lead, email: e.target.value })}
+                  maxLength={254}
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                First name (optional)
                 <input
                   type="text"
                   value={lead.name}
@@ -952,25 +992,16 @@ export default function Quiz() {
                   autoComplete="given-name"
                 />
               </label>
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={lead.email}
-                  onChange={(e) => setLead({ ...lead, email: e.target.value })}
-                  maxLength={254}
-                  autoComplete="email"
-                />
-              </label>
               <label className="quiz-consent">
                 <input
                   type="checkbox"
-                  checked={lead.consent}
-                  onChange={(e) => setLead({ ...lead, consent: e.target.checked })}
+                  checked={lead.newsletter}
+                  onChange={(e) => setLead({ ...lead, newsletter: e.target.checked })}
                 />
-                Yes — email my full results to me, save them with the
-                apothecary, and send occasional apothecary notes. I can
-                unsubscribe anytime. We never sell or share your information.
+                Also sign me up for the apothecary newsletter — occasional
+                herbal notes from Amber. Optional: your results email arrives
+                either way. Unsubscribe anytime; we never sell or share your
+                information.
               </label>
               {leadErrors.length > 0 && (
                 <ul className="quiz-errors" role="alert">
@@ -985,19 +1016,33 @@ export default function Quiz() {
                 onClick={submitLead}
                 disabled={leadStatus === 'sending'}
               >
-                {leadStatus === 'sending' ? 'Sending…' : 'Send My Full Results ✨'}
+                {leadStatus === 'sending' ? 'Sending…' : 'Email My Full Results ✨'}
               </button>
             </div>
           )}
 
           {leadStatus === 'done' && (
             <div className="quiz-lead">
-              <p className="quiz-lead-done">
-                ✨ Your full results are on their way to {lead.email} —
-                please check your inbox (and your spam folder, just in
-                case). They&apos;re also saved with the apothecary under
-                your name.
-              </p>
+              {emailStatus === 'sent' ? (
+                <p className="quiz-lead-done">
+                  ✨ Your full results are on their way to {lead.email} —
+                  please check your inbox (and your spam folder, just in
+                  case). They&apos;re also saved with the apothecary.
+                </p>
+              ) : emailStatus === 'preview' ? (
+                <p className="quiz-lead-done">
+                  ✦ Your results are saved with the apothecary. Email
+                  delivery isn&apos;t switched on yet, so no copy has been
+                  sent — your full results are right here on this page,
+                  and you can download the PDF above to keep them.
+                </p>
+              ) : (
+                <p className="quiz-lead-done">
+                  We couldn&apos;t send your email just now — we&apos;ve
+                  logged the problem. Your results are right here on this
+                  page, and you can try again in a moment.
+                </p>
+              )}
             </div>
           )}
 
