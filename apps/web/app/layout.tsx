@@ -59,7 +59,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // data-scroll-behavior="smooth" (Experience Package 1, 2026-11-08):
+    // Next.js forces instant scroll behavior during route transitions
+    // when this attribute is present, so new pages open at the TOP and
+    // back navigation restores the previous position, while the CSS in
+    // globals.css keeps in-page anchor clicks smooth. Without it, the
+    // global smooth rule animated the router's scroll-to-top and pages
+    // visibly opened halfway down.
+    <html lang="en" data-scroll-behavior="smooth">
       <head>
         {/* Google Fonts — spec §3: Cinzel Decorative (display), Cinzel,
             EB Garamond (body), Cormorant Garamond (accent). Single link. */}

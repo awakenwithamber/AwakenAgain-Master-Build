@@ -29,5 +29,8 @@ export const BRAND_IMAGES = {
 } as const;
 
 export const AUDIO = {
-  ambientApothecary: '/audio/ambient-apothecary.mp3',
+  // Option D (owner decision 2026-11-08): the normalized copy is the player
+  // default; the original master stays on disk, untouched, under its own key.
+  ambientApothecary: '/audio/ambient-apothecary-normalized.mp3',
+  ambientApothecaryOriginal: '/audio/ambient-apothecary.mp3',
 } as const;

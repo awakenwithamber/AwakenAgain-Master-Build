@@ -158,11 +158,47 @@
   font-weight: 600;
 }
 
+/* Package 1 (2026-11-08): the slider was 90px wide, so at the gentle
+   7% start the thumb sat ~6px from the edge and the first touch landed
+   at ~0 (music cut off). Widened to 160px (110px on mobile) so the
+   low end is precisely controllable. */
 .slider {
-  width: 90px;
+  width: 160px;
   max-width: 100%;
   accent-color: var(--brass, var(--aa-gold, #d4af37));
   cursor: pointer;
+}
+
+/* Explicit mute/unmute (Package 1, 2026-11-08) — same pill family as
+   the on/off toggle; the .muted state carries the gold fill so the
+   state reads at a glance. */
+.mute {
+  background: transparent;
+  border: 1px solid var(--brass, var(--aa-gold, #d4af37));
+  color: var(--parchment, var(--aa-cream, #f4e8d0));
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.22s ease, color 0.22s ease;
+}
+
+.mute.muted {
+  background: linear-gradient(135deg, #d4af37, #e6c766);
+  color: #150b26;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+/* Visible percentage readout (Package 1, 2026-11-08). */
+.volumeReadout {
+  color: var(--text-muted, var(--aa-cream-dim, #c8b79a));
+  font-size: 0.72rem;
+  min-width: 2.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Compact on small screens so the hamburger layout never breaks. */
@@ -181,8 +217,18 @@
     font-size: 0.7rem;
   }
 
+  .mute {
+    padding: 0.25rem 0.45rem;
+    font-size: 0.65rem;
+  }
+
+  .volumeReadout {
+    font-size: 0.65rem;
+    min-width: 2.3em;
+  }
+
   .slider {
-    width: 60px;
+    width: 110px;
     min-width: 0;
   }
 

@@ -16,6 +16,13 @@
  *   — still never audible autoplay.
  * - Volume IS persisted to localStorage['siteVolume'] (0–100 slider scale).
  * - Fade-in target: stored volume if present, capped at 12%; default 7%.
+ * - RESTORED volume is clamped to the same gentle cap (Experience
+ *   Package 1, 2026-11-08): a stale loud value saved by an old session
+ *   (or by the pre-fix uncapped slider) can never come back as the
+ *   slider's starting position — the visitor raises it deliberately,
+ *   in this session, or not at all.
+ * - Slider moves and mute/unmute RAMP the gain (never an instant jump);
+ *   sliding above 0 resumes playback under the same ramp.
  * - Tab hidden → pause. pagehide → pause + unload the audio source.
  */
 import { AUDIO } from '../media/image-paths';
@@ -32,6 +39,14 @@ export const MAX_VOLUME_PERCENT = 12;
 export const FADE_DURATION_MS = 4000;
 /** …in this many steps (matches the Netlify implementation). */
 export const FADE_STEPS = 33;
+/** Slider-driven volume changes ramp over this long — no instant jumps. */
+export const SLIDER_FADE_DURATION_MS = 600;
+/** …in this many steps. */
+export const SLIDER_FADE_STEPS = 12;
+/** Mute/unmute ramps are quicker — a near-immediate but soft duck/restore. */
+export const MUTE_FADE_DURATION_MS = 250;
+/** …in this many steps. */
+export const MUTE_FADE_STEPS = 5;
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -132,8 +147,11 @@ export function writeStoredVolume(
 }
 
 /**
- * Resolve the fade-in target for "Get the Full Experience":
- * stored preference honoured, capped at 12%; default 7%.
+ * Resolve the gentle volume for a restore or fade-in: the stored
+ * preference honoured, capped at 12%; default 7%. Used for the
+ * "Get the Full Experience" fade-in target AND for the slider's
+ * initial position, so a stale loud stored value is clamped before
+ * it can ever be displayed or heard (Package 1, 2026-11-08).
  */
 export function resolveTargetVolume(storedPercent: number | null): number {
   if (storedPercent === null || storedPercent === undefined) return DEFAULT_VOLUME_PERCENT;
@@ -152,6 +170,8 @@ export interface MusicStateSnapshot {
   playing: boolean;
   /** Current slider volume, 0–100. */
   volumePercent: number;
+  /** Muted via the explicit mute control (gain ducked to 0; playback continues). */
+  muted: boolean;
 }
 
 type SnapshotListener = (snapshot: MusicStateSnapshot) => void;
@@ -161,6 +181,7 @@ export class MusicEngine {
   private sourceLoaded = false;
   private fadeTimer: ReturnType<typeof setInterval> | null = null;
   private volumePercent: number;
+  private muted = false;
   private intentOn = false;
   private actuallyPlaying = false;
   private lifecycleBound = false;
@@ -171,9 +192,10 @@ export class MusicEngine {
   private snapshot: MusicStateSnapshot;
 
   constructor(private readonly deps: MusicEngineDeps) {
-    this.volumePercent = clampVolumePercent(
-      readStoredVolume(deps.storage) ?? DEFAULT_VOLUME_PERCENT,
-    );
+    // Restore CLAMP (Package 1, 2026-11-08): the slider boots at the
+    // gentle capped value — never at a stale loud stored preference.
+    // Playback itself still only ever starts from a gesture, faded.
+    this.volumePercent = resolveTargetVolume(readStoredVolume(deps.storage));
     // Restore the SESSION intent (audit GAP-3): after a full-page load the
     // visitor's earlier "music on" choice survives; playback itself only
     // resumes on their first gesture (see initLifecycle) — never autoplay.
@@ -199,6 +221,7 @@ export class MusicEngine {
       enabled: this.intentOn,
       playing: this.actuallyPlaying,
       volumePercent: this.volumePercent,
+      muted: this.muted,
     };
   }
 
@@ -237,12 +260,24 @@ export class MusicEngine {
     }
   }
 
-  private startFade(targetPercent: number): void {
+  /**
+   * Ramp the element gain from wherever it is now to the target over
+   * the given duration — the single mechanism behind every volume
+   * transition (gate fade-in, slider moves, mute/unmute), so the level
+   * NEVER jumps instantly (Package 1, 2026-11-08).
+   */
+  private rampVolumeTo(targetPercent: number, durationMs: number, steps: number): void {
     const audio = this.audio;
     if (!audio) return;
+    this.cancelFade();
+    const startGain = audio.volume;
     const gainTarget = percentToGain(targetPercent);
+    if (steps <= 1 || durationMs <= 0 || startGain === gainTarget) {
+      audio.volume = gainTarget;
+      return;
+    }
     let step = 0;
-    const stepMs = FADE_DURATION_MS / FADE_STEPS;
+    const stepMs = durationMs / steps;
     this.fadeTimer = setInterval(() => {
       step += 1;
       const el = this.audio;
@@ -250,13 +285,17 @@ export class MusicEngine {
         this.cancelFade();
         return;
       }
-      el.volume = Math.min((gainTarget * step) / FADE_STEPS, gainTarget);
-      if (step >= FADE_STEPS) {
+      el.volume = startGain + ((gainTarget - startGain) * step) / steps;
+      if (step >= steps) {
         el.volume = gainTarget;
         this.cancelFade();
         this.emit();
       }
     }, stepMs);
+  }
+
+  private startFade(targetPercent: number): void {
+    this.rampVolumeTo(targetPercent, FADE_DURATION_MS, FADE_STEPS);
   }
 
   /* --------------------------- public controls --------------------------- */
@@ -278,6 +317,8 @@ export class MusicEngine {
     // slider, the audible volume, and the stored preference never disagree.
     writeStoredVolume(this.deps.storage, target);
     this.intentOn = true;
+    // A fresh start is never muted — the fade-in must be audible.
+    this.muted = false;
     writeStoredIntent(this.deps.sessionStorage, 'on');
     audio.volume = 0;
     this.emit();
@@ -316,11 +357,16 @@ export class MusicEngine {
   /**
    * Volume slider (0–100). Sliding to 0 pauses; sliding above 0 resumes.
    * A slider move is a user gesture, so resuming playback is allowed.
+   * The gain RAMPS to the new level over SLIDER_FADE_DURATION_MS —
+   * it never jumps instantly (Package 1, 2026-11-08). A deliberate
+   * slider move also clears any mute: the visitor is taking direct
+   * control of the level.
    */
   setVolumeFromSlider(percent: number): void {
     const next = clampVolumePercent(percent);
     this.cancelFade();
     this.volumePercent = next;
+    this.muted = false;
     writeStoredVolume(this.deps.storage, next);
 
     if (next === 0) {
@@ -335,12 +381,20 @@ export class MusicEngine {
     if (!audio) return;
     this.intentOn = true;
     writeStoredIntent(this.deps.sessionStorage, 'on');
-    audio.volume = percentToGain(next);
+    const wasPlaying = this.actuallyPlaying;
     this.actuallyPlaying = true; // optimistic; corrected below if refused
     this.emit();
+    if (wasPlaying) {
+      // Already audible: start the ramp now rather than waiting on the
+      // (already-resolved) play() promise below.
+      this.rampVolumeTo(next, SLIDER_FADE_DURATION_MS, SLIDER_FADE_STEPS);
+    }
     void audio.play().then(
       () => {
         this.actuallyPlaying = true;
+        // Resume-from-pause path: ramp from the element's current
+        // (silent or stale) gain to the chosen level.
+        this.rampVolumeTo(next, SLIDER_FADE_DURATION_MS, SLIDER_FADE_STEPS);
         this.emit();
       },
       () => {
@@ -348,6 +402,39 @@ export class MusicEngine {
         this.emit();
       },
     );
+  }
+
+  /**
+   * Explicit mute (Package 1, 2026-11-08): duck the gain to 0 over
+   * MUTE_FADE_DURATION_MS while playback continues — standard mute
+   * semantics, distinct from the on/off toggle. The slider level
+   * itself is untouched, so unmute returns to exactly that level.
+   */
+  mute(): void {
+    if (this.muted) return;
+    this.muted = true;
+    if (this.audio && this.actuallyPlaying) {
+      this.rampVolumeTo(0, MUTE_FADE_DURATION_MS, MUTE_FADE_STEPS);
+    }
+    this.emit();
+  }
+
+  /** Undo mute(): ramp back to the current slider level. */
+  unmute(): void {
+    if (!this.muted) return;
+    this.muted = false;
+    if (this.audio && this.actuallyPlaying) {
+      this.rampVolumeTo(this.volumePercent, MUTE_FADE_DURATION_MS, MUTE_FADE_STEPS);
+    }
+    this.emit();
+  }
+
+  toggleMute(): void {
+    if (this.muted) {
+      this.unmute();
+    } else {
+      this.mute();
+    }
   }
 
   /* ----------------------------- lifecycle ----------------------------- */
