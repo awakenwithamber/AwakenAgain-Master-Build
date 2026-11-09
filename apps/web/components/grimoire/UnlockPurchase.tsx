@@ -7,8 +7,8 @@
  * Shows the unlock offer with its full terms (owner decision
  * 2026-10-21 §13(2), scope widened by owner decision 2026-11-02
  * WS4): $8.88 one-time, scope = the full composed Living Grimoire —
- * the complete 333-page edition together with the collected works
- * (1,389 pages in all) plus all future chapters/revisions of this
+ * The Grimoire of Remembered Light complete together with the
+ * collected works (1,051 pages in all) plus all future chapters of this
  * composed edition (separate future editions/add-ons not included),
  * no renewal, and a refund/chargeback revokes access.
  *
@@ -127,7 +127,7 @@ export function UnlockPurchase() {
         setState({
           step: 'active',
           message:
-            'Your permanent unlock is active — the full composed Living Grimoire (the complete 333-page edition together with the collected works) is open to this email.',
+            'Your permanent unlock is active — the full composed Living Grimoire (The Grimoire of Remembered Light complete, together with the collected works) is open to this email.',
         });
       } else if (data.state === 'pending') {
         setNotice(

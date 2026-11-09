@@ -19,6 +19,13 @@
  * RIGHTS HOLD: there is deliberately NO import for The Black Books
  * of Elverum — its content exists in no data file, so no payload
  * (free, entitled, or otherwise) can ever contain its text.
+ *
+ * REMOVED EDITIONS (owner decision 2026-11-08, "remove all
+ * copyrighted conflicts"): there are likewise NO imports for the
+ * Emerald Tablet of Hermes, the Book of Raziel, Albertus Magnus —
+ * Egyptian Secrets, or Grimorium Verum — those editions were
+ * removed from the compilation (see lib/grimoire/manifest.ts), so
+ * their text can never enter a payload either.
  */
 import {
   getEditionManifest,
@@ -28,10 +35,6 @@ import {
 import familyEditionData from '../../data/grimoire/family-edition.json';
 import sigilLessonData from '../../data/grimoire/sigil-lesson.json';
 import framingFullData from '../../data/grimoire/framing-full.json';
-import emeraldTabletData from '../../data/grimoire/emerald-tablet-of-hermes.json';
-import bookOfRazielData from '../../data/grimoire/book-of-raziel.json';
-import albertusMagnusData from '../../data/grimoire/albertus-magnus-egyptian-secrets.json';
-import grimoriumVerumData from '../../data/grimoire/grimorium-verum.json';
 import powWowsData from '../../data/grimoire/pow-wows-long-lost-friend.json';
 import sepherSephirothData from '../../data/grimoire/sepher-sephiroth.json';
 import ceremonialMagicData from '../../data/grimoire/book-of-ceremonial-magic-waite-1913.json';
@@ -69,10 +72,6 @@ interface BookDataFile {
 }
 
 const BOOK_DATA: Readonly<Record<string, BookDataFile>> = {
-  'emerald-tablet-of-hermes': emeraldTabletData as BookDataFile,
-  'book-of-raziel': bookOfRazielData as BookDataFile,
-  'albertus-magnus-egyptian-secrets': albertusMagnusData as BookDataFile,
-  'grimorium-verum': grimoriumVerumData as BookDataFile,
   'pow-wows-long-lost-friend': powWowsData as BookDataFile,
   'sepher-sephiroth': sepherSephirothData as BookDataFile,
   'book-of-ceremonial-magic-waite-1913': ceremonialMagicData as BookDataFile,

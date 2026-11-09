@@ -7,7 +7,7 @@
  *   edition". There is NO 117-page edition.
  * - The $8.88 one-time PERMANENT_UNLOCK covers the full composed
  *   edition (owner decision 2026-11-02, WS4): the complete current
- *   edition PLUS the collected works bound with it (1,389 pages in
+ *   edition PLUS the collected works bound with it (1,051 pages in
  *   all) and all future chapters/revisions of that composed
  *   edition. Separate future editions and add-on products are NOT
  *   included.

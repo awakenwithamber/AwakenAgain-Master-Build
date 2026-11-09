@@ -90,8 +90,9 @@ export async function POST(request: Request) {
       email,
       message:
         'This email already holds the permanent unlock — the full ' +
-        'composed Living Grimoire (the complete 333-page edition ' +
-        'together with the collected works) is open to you.',
+        'composed Living Grimoire (The Grimoire of Remembered ' +
+        'Light complete, together with the collected works) is open ' +
+        'to you.',
     });
   }
 

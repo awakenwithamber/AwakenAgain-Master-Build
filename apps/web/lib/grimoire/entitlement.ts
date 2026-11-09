@@ -19,12 +19,13 @@
  *     session (see app/api/grimoire-otp/route.ts + app/grimoire).
  *
  * FREE_PREVIEW is the first 16 composed pages of the site book
- * (cover/title, the ancestor's note pp. 2–3, the framing teaser, the
- * Overview, the generated TOC, the generated index of the full book,
- * and one sample page from each of the nine publishable collected
- * works — owner directive 2026-10-21, the assembly manifest's
- * Option B; supersedes the interim 13-page composition and the
- * pages 1–8 model); pages 17+ require one of the sources above.
+ * (front matter pp. 1–7, one sample page from each of the five
+ * publishable collected works pp. 8–12, the framing in full
+ * pp. 13–14, the about page p. 15, and the concern index p. 16 —
+ * owner directive 2026-10-21, the assembly manifest's Option B;
+ * composition after the 2026-11-08 removal of the four
+ * copyright-conflicted editions); pages 17+ require one of the
+ * sources above.
  *
  * SERVER-ONLY: reads server env + the ledgers. Never import from a
  * client component — GRIMOIRE_KEEPER_EMAILS values must never reach
@@ -39,8 +40,10 @@ import { isUnlockEntitled } from './unlock';
 import { composedPageCount, getEditionManifest } from './manifest';
 
 /** Composed book page count — derived from the manifest model
- *  (1,389 after the 2026-10-21 ingestion: real family edition +
- *  collected works; the held Elverum contributes nothing). */
+ *  (1,051 after the 2026-11-08 removal of the four
+ *  copyright-conflicted editions: real family edition + the five
+ *  retained collected works; the held Elverum contributes
+ *  nothing). */
 export const GRIMOIRE_TOTAL_PAGES = composedPageCount(getEditionManifest());
 /** Last free-preview page number (composed pages 1–16 are free). */
 export const FREE_PREVIEW_LAST_PAGE = 16;

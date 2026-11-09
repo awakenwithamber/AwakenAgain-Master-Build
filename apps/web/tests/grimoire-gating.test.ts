@@ -7,14 +7,20 @@
  * - A locked viewer's serialized payload contains pages 1–16 in full
  *   and ONLY locked placeholders (page number, kind, and a label that
  *   already appears in the free TOC/index) for pages 17+: no gated
- *   body text — not the framing FULL version, not family-edition
- *   text, not collected-work text, not gated facsimile paths.
+ *   body text — not family-edition text, not collected-work text,
+ *   not gated facsimile paths. (After the 2026-11-08 removal the
+ *   framing FULL version, about page and concern index fall INSIDE
+ *   pp. 1–16 — the composition is manifest-driven and the boundary
+ *   stayed at composed page 16 — so that text is free-preview
+ *   content now, present in both payloads.)
  * - An entitled viewer's payload contains the full gated text.
  * - The held Black Books of Elverum leaks NOWHERE: its text is
  *   absent from both payloads and from every shipped data file; the
  *   only Elverum strings anywhere in a payload are its title inside
  *   the rights-pending TOC/index entries.
- * - Albertus Magnus contributes facsimiles only — no text anywhere.
+ * - The four editions removed 2026-11-08 (owner decision:
+ *   copyright-conflicted) are absent from every payload, every
+ *   shipped data file, and the served asset tree.
  * - Keeper env config never reaches client code, and no component
  *   value-imports the server-only book-content module (import-
  *   boundary checks, following the repo's source-reading style).
@@ -45,9 +51,9 @@ describe('locked viewer payload', () => {
     const display = displayPagesFor(pages, false);
     expect(display.slice(0, 16).every((p) => p.kind !== 'locked')).toBe(true);
     const locked = display.filter((p) => p.kind === 'locked');
-    expect(locked).toHaveLength(1389 - 16);
+    expect(locked).toHaveLength(1051 - 16);
     expect(locked[0].pageNumber).toBe(17);
-    expect(locked[locked.length - 1].pageNumber).toBe(1389);
+    expect(locked[locked.length - 1].pageNumber).toBe(1051);
   });
 
   it('locked placeholders expose only page number, kind, and a free-surface label', () => {
@@ -79,15 +85,19 @@ describe('locked viewer payload', () => {
     }
   });
 
-  it('gated framing FULL text is absent from the locked payload', () => {
+  it('framing FULL text is free-preview content after the removal (pp. 13–14)', () => {
+    // The framing FULL version used to sit at pp. 17–18, gated.
+    // With four fewer sample pages the manifest-driven composition
+    // places it at pp. 13–14 — inside the owner's 16-page preview —
+    // so its text is present in BOTH payloads by design now.
     // JSON.stringify containment is escape-exact: the payload IS a
     // JSON document, so a shipped string appears in stringified form.
     const canary = JSON.stringify('hide it when riders come');
     const signature = JSON.stringify(
       'They tried to erase the real ones. They could not stop us from keeping them.',
     );
-    expect(lockedPayload).not.toContain(canary.slice(1, -1));
-    expect(lockedPayload).not.toContain(signature.slice(1, -1));
+    expect(lockedPayload).toContain(canary.slice(1, -1));
+    expect(lockedPayload).toContain(signature.slice(1, -1));
     expect(entitledPayload).toContain(canary.slice(1, -1));
   });
 
@@ -115,11 +125,12 @@ describe('locked viewer payload', () => {
   });
 
   it('gated facsimile paths are absent from the locked payload', () => {
-    const albertus = content.books['albertus-magnus-egyptian-secrets'];
+    const sepher = content.books['sepher-sephiroth'];
     // Display payloads carry the gated-route URL for the raw path
     // (2026-11-07 reader hardening); it is that issued URL which
-    // must be absent from the locked payload.
-    const gatedImage = grimoireAssetUrl(albertus[100].pageImage as string);
+    // must be absent from the locked payload. (A deep Sepher
+    // Sephiroth facsimile stands in for the removed Albertus one.)
+    const gatedImage = grimoireAssetUrl(sepher[100].pageImage as string);
     expect(gatedImage).toContain('/api/grimoire-assets/');
     expect(lockedPayload).not.toContain(gatedImage);
     expect(entitledPayload).toContain(gatedImage);
@@ -129,8 +140,8 @@ describe('locked viewer payload', () => {
     // The generated TOC (a free page object) + the Forbidden
     // Knowledge taste page, verbatim. (Front-matter prose constants
     // render from the component, not the page payload, by design.)
-    expect(lockedPayload).toContain('A taste of — The Emerald Tablet');
-    const sample = pages[15];
+    expect(lockedPayload).toContain('A taste of — Pow-Wows');
+    const sample = pages[11];
     if (sample.kind !== 'collection-sample') throw new Error('sample shape');
     expect(sample.bookId).toBe('book-of-forbidden-knowledge');
     expect(sample.paragraphs[0].length).toBeGreaterThan(40);
@@ -200,13 +211,50 @@ describe('Elverum rights hold — absent from every shipped payload', () => {
   });
 });
 
-describe('Albertus Magnus — facsimile only, no fabricated text', () => {
-  it('every ingested Albertus page has zero text paragraphs', () => {
-    const albertus = content.books['albertus-magnus-egyptian-secrets'];
-    expect(albertus).toHaveLength(216);
-    for (const p of albertus) {
-      expect(p.paragraphs).toEqual([]);
-      expect(p.pageImage).toBeTruthy();
+describe('Removed editions (2026-11-08) — absent from every shipped surface', () => {
+  const REMOVED_IDS = [
+    'emerald-tablet-of-hermes',
+    'book-of-raziel',
+    'albertus-magnus-egyptian-secrets',
+    'grimorium-verum',
+  ];
+  const REMOVED_TITLES = [
+    'The Emerald Tablet of Hermes',
+    'The Book of Raziel',
+    'Albertus Magnus — Egyptian Secrets',
+    'Grimorium Verum (The True Grimoire)',
+  ];
+
+  it('no payload contains a removed work’s text, title, or content id', () => {
+    for (const payload of [lockedPayload, entitledPayload]) {
+      for (const id of REMOVED_IDS) expect(payload).not.toContain(id);
+      for (const title of REMOVED_TITLES) {
+        expect(payload).not.toContain(title);
+      }
+    }
+    for (const id of REMOVED_IDS) {
+      expect(content.books[id]).toBeUndefined();
+    }
+  });
+
+  it('no shipped data file or asset folder carries a removed work', () => {
+    const dataDir = join(ROOT, 'data', 'grimoire');
+    const files = readdirSync(dataDir);
+    for (const id of REMOVED_IDS) {
+      expect(files).not.toContain(`${id}.json`);
+    }
+    const assetsDir = join(ROOT, 'public', 'grimoire');
+    const folders = readdirSync(assetsDir);
+    for (const id of REMOVED_IDS) expect(folders).not.toContain(id);
+  });
+
+  it('the server content module never imports removed-work data', () => {
+    const source = readFileSync(
+      join(ROOT, 'lib', 'grimoire', 'book-content.ts'),
+      'utf8',
+    );
+    for (const id of REMOVED_IDS) {
+      expect(source).not.toContain(id);
     }
   });
 });

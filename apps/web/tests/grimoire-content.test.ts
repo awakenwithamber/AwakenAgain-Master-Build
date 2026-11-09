@@ -4,13 +4,15 @@
  * grimoire first", "Add them all", free preview = 16 pages).
  *
  * Laws under test:
- * - Composed book = 1,389 pages: free preview pp. 1–16 (title,
- *   ancestor note ×2, framing teaser, overview, TOC, full-book
- *   index, one sample from EACH of the nine publishable collected
- *   works) → gated framing FULL (17–18) → about (19) → concern
- *   index (20) → the family edition COMPLETE (21–353 = its 333
- *   pages) → the original sigil lesson (354) → the collected works
- *   in full (355–1388) → colophon (1389).
+ * - Composed book = 1,051 pages (after the 2026-11-08 removal of
+ *   the four copyright-conflicted editions — owner decision
+ *   2026-11-08): free preview pp. 1–16 (title, ancestor note ×2,
+ *   framing teaser, overview, TOC, full-book index, one sample
+ *   from EACH of the five publishable collected works pp. 8–12,
+ *   framing FULL 13–14, about 15, concern index 16) → the family
+ *   edition COMPLETE (17–349 = its 333 pages) → the original sigil
+ *   lesson (350) → the collected works in full (351–1050) →
+ *   colophon (1051).
  * - Composition reconciles with the assembly model in
  *   lib/grimoire/manifest.ts (333 = parts sum; per-book counts;
  *   oldest-first order).
@@ -69,13 +71,13 @@ function kindAt(n: number): GrimoirePage['kind'] {
 }
 
 describe('grimoire composed book', () => {
-  it('composes 1,389 pages, reconciled with the manifest model', () => {
-    expect(composedPageCount(manifest)).toBe(1389);
-    expect(pages).toHaveLength(1389);
+  it('composes 1,051 pages, reconciled with the manifest model', () => {
+    expect(composedPageCount(manifest)).toBe(1051);
+    expect(pages).toHaveLength(1051);
     expect(pages.map((p) => p.pageNumber)).toEqual(
-      Array.from({ length: 1389 }, (_, i) => i + 1),
+      Array.from({ length: 1051 }, (_, i) => i + 1),
     );
-    expect(pages[1388].kind).toBe('colophon');
+    expect(pages[1050].kind).toBe('colophon');
   });
 
   it('free preview pp. 1–16: front matter + one sample per publishable book', () => {
@@ -88,10 +90,10 @@ describe('grimoire composed book', () => {
       'toc',
       'book-index',
     ]);
-    const samples = pages.slice(7, 16);
+    const samples = pages.slice(7, 12);
     expect(samples.every((p) => p.kind === 'collection-sample')).toBe(true);
     const publishable = publishableBooks(manifest);
-    expect(publishable).toHaveLength(9);
+    expect(publishable).toHaveLength(5);
     expect(
       samples.map((p) => (p.kind === 'collection-sample' ? p.bookId : '')),
     ).toEqual(publishable.map((b) => b.id));
@@ -106,21 +108,21 @@ describe('grimoire composed book', () => {
     }
   });
 
-  it('gated body: framing full, about, concern index, family, lesson, books', () => {
-    expect(kindAt(17)).toBe('framing-full');
-    expect(kindAt(18)).toBe('framing-full');
-    expect(kindAt(19)).toBe('about');
-    expect(kindAt(20)).toBe('index');
-    expect(kindAt(21)).toBe('edition-page');
-    expect(kindAt(353)).toBe('edition-page');
-    expect(kindAt(354)).toBe('original-lesson');
-    expect(kindAt(355)).toBe('collection-page');
-    expect(kindAt(1388)).toBe('collection-page');
+  it('preview tail + gated body: framing full, about, index, family, lesson, books', () => {
+    expect(kindAt(13)).toBe('framing-full');
+    expect(kindAt(14)).toBe('framing-full');
+    expect(kindAt(15)).toBe('about');
+    expect(kindAt(16)).toBe('index');
+    expect(kindAt(17)).toBe('edition-page');
+    expect(kindAt(349)).toBe('edition-page');
+    expect(kindAt(350)).toBe('original-lesson');
+    expect(kindAt(351)).toBe('collection-page');
+    expect(kindAt(1050)).toBe('collection-page');
   });
 
-  it('framing FULL version is verbatim owner copy on pp. 17–18', () => {
-    const a = pages[16];
-    const b = pages[17];
+  it('framing FULL version is verbatim owner copy on pp. 13–14', () => {
+    const a = pages[12];
+    const b = pages[13];
     if (a.kind !== 'framing-full' || b.kind !== 'framing-full') {
       throw new Error('framing-full pages missing');
     }
@@ -134,11 +136,11 @@ describe('grimoire composed book', () => {
     );
   });
 
-  it('the family edition is complete: composed 21–353 = edition pages 1–333', () => {
+  it('the family edition is complete: composed 17–349 = edition pages 1–333', () => {
     const family = pages.filter((p) => p.kind === 'edition-page');
     expect(family).toHaveLength(333);
     expect(family.map((p) => p.pageNumber)).toEqual(
-      Array.from({ length: 333 }, (_, i) => i + 21),
+      Array.from({ length: 333 }, (_, i) => i + 17),
     );
     for (const [i, p] of family.entries()) {
       if (p.kind !== 'edition-page') throw new Error('shape');
@@ -160,8 +162,8 @@ describe('grimoire composed book', () => {
     ).toBe(333);
   });
 
-  it('the sigil lesson is the original page, at composed p. 354', () => {
-    const lesson = pages[353];
+  it('the sigil lesson is the original page, at composed p. 350', () => {
+    const lesson = pages[349];
     if (lesson.kind !== 'original-lesson') throw new Error('lesson missing');
     expect(lesson.heading).toBe('Sigil-Making');
     expect(lesson.paragraphs).toEqual(content.sigilLesson.paragraphs);
@@ -171,7 +173,7 @@ describe('grimoire composed book', () => {
   });
 
   it('collected works appear in full, oldest-first, with manifest counts', () => {
-    let cursor = 355;
+    let cursor = 351;
     for (const meta of publishableBooks(manifest)) {
       const slice = pages.slice(cursor - 1, cursor - 1 + meta.pageCount);
       expect(slice).toHaveLength(meta.pageCount);
@@ -187,20 +189,52 @@ describe('grimoire composed book', () => {
       expect(first.attribution).toBe(meta.attribution);
       cursor += meta.pageCount;
     }
-    expect(cursor).toBe(1389); // last book ends at 1388; colophon follows
+    expect(cursor).toBe(1051); // last book ends at 1050; colophon follows
   });
 
-  it('Albertus Magnus is facsimile-only: page images, no text paragraphs', () => {
-    const albertus = pages.filter(
-      (p) => p.kind === 'collection-page' && p.bookId.startsWith('albertus'),
-    );
-    expect(albertus).toHaveLength(216);
-    for (const p of albertus) {
-      if (p.kind !== 'collection-page') throw new Error('shape');
-      expect(p.paragraphs).toEqual([]);
-      // Facsimile paths are issued ONLY through the gated asset
-      // route (2026-11-07 reader hardening) — never a public path.
-      expect(p.pageImage).toMatch(/^\/api\/grimoire-assets\/albertus[^/]+\/page-\d+\.jpg$/);
+  it('the four removed editions contribute NO pages, samples, or listings', () => {
+    // Owner decision 2026-11-08: the copyright-conflicted editions
+    // (Grimorium Verum 1999 transcription, Book of Raziel, Emerald
+    // Tablet, Albertus Magnus) are REMOVED from the compilation.
+    const removedIds = [
+      'emerald-tablet-of-hermes',
+      'book-of-raziel',
+      'albertus-magnus-egyptian-secrets',
+      'grimorium-verum',
+    ];
+    for (const id of removedIds) {
+      expect(
+        pages.some(
+          (p) =>
+            (p.kind === 'collection-sample' ||
+              p.kind === 'collection-page') &&
+            p.bookId === id,
+        ),
+      ).toBe(false);
+      expect(content.books[id]).toBeUndefined();
+      expect(manifest.collectionBooks.some((b) => b.id === id)).toBe(false);
+    }
+    // Their titles appear in NO generated listing (TOC / book index).
+    // (Bare "Grimorium Verum" is deliberately NOT asserted: Waite's
+    // retained index line names it as a topic inside Waite's survey
+    // contents — that is Waite's own text, not a listing.)
+    const removedTitles = [
+      'The Emerald Tablet of Hermes',
+      'The Book of Raziel',
+      'Albertus Magnus — Egyptian Secrets',
+      'Grimorium Verum (The True Grimoire)',
+    ];
+    const toc = pages.find((p) => p.kind === 'toc');
+    const bookIndex = pages.find((p) => p.kind === 'book-index');
+    if (toc?.kind !== 'toc' || bookIndex?.kind !== 'book-index') {
+      throw new Error('front matter pages missing');
+    }
+    for (const surface of [toc.entries, bookIndex.entries]) {
+      for (const e of surface) {
+        for (const title of removedTitles) {
+          expect(e.label).not.toContain(title);
+        }
+      }
     }
   });
 
@@ -267,25 +301,27 @@ describe('grimoire composed book', () => {
           p.bookId.includes('elverum'),
       ),
     ).toBe(false);
-    expect(manifest.collectionBooks).toHaveLength(10);
-    expect(manifest.collectionBooks[9].held).toBe(true);
+    expect(manifest.collectionBooks).toHaveLength(6);
+    expect(
+      manifest.collectionBooks.find((b) => b.id.includes('elverum'))?.held,
+    ).toBe(true);
   });
 
   it('composition is manifest-driven: a reduced manifest composes a smaller book', () => {
-    const emerald = manifest.collectionBooks.find((b) =>
-      b.id.startsWith('emerald'),
+    const powwows = manifest.collectionBooks.find((b) =>
+      b.id.startsWith('pow-wows'),
     );
-    if (!emerald) throw new Error('emerald meta missing');
-    const reduced: EditionManifest = { ...manifest, collectionBooks: [emerald] };
+    if (!powwows) throw new Error('pow-wows meta missing');
+    const reduced: EditionManifest = { ...manifest, collectionBooks: [powwows] };
     const reducedContent = {
       familyPages: content.familyPages,
       sigilLesson: content.sigilLesson,
       framingFullPages: content.framingFullPages,
-      books: { [emerald.id]: content.books[emerald.id] },
+      books: { [powwows.id]: content.books[powwows.id] },
     };
     const small = buildGrimoirePages(reduced, reducedContent);
-    // 7 front + 1 sample + 2 framing + 1 about + 1 index + 333 + 1 + 17 + 1
-    expect(small).toHaveLength(364);
+    // 7 front + 1 sample + 2 framing + 1 about + 1 index + 333 + 1 + 56 + 1
+    expect(small).toHaveLength(403);
     expect(small[7].kind).toBe('collection-sample');
     expect(small[small.length - 1].kind).toBe('colophon');
   });
@@ -294,7 +330,7 @@ describe('grimoire composed book', () => {
     const free = displayPagesFor(pages, false);
     expect(free.slice(0, 16).every((p) => p.kind !== 'locked')).toBe(true);
     expect(free[16].kind).toBe('locked');
-    expect(free.filter((p) => p.kind === 'locked')).toHaveLength(1389 - 16);
+    expect(free.filter((p) => p.kind === 'locked')).toHaveLength(1051 - 16);
   });
 });
 
@@ -318,10 +354,10 @@ describe('grimoire herb data (concern index + illustrations)', () => {
     }
   });
 
-  it('the concern index jumps to the Herbal Allies opening (composed p. 92)', () => {
+  it('the concern index jumps to the Herbal Allies opening (composed p. 88)', () => {
     const index = pages.find((p) => p.kind === 'index');
     if (index?.kind !== 'index') throw new Error('index page missing');
-    expect(index.targetPage).toBe(92);
+    expect(index.targetPage).toBe(88);
     const target = pages[index.targetPage - 1];
     if (target.kind !== 'edition-page') throw new Error('target shape');
     expect(target.part).toBe('III');

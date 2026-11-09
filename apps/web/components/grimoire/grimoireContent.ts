@@ -5,16 +5,22 @@
  * 2026-10-21: "Make the full grimoire first", "Add them all", free
  * preview = 16 pages / Option B):
  *
- *   pp. 1–16   FREE PREVIEW — cover/title · the ancestor's note (the
- *              quoted note, then the keeper's prose) · the framing
- *              TEASER · the book Overview · the generated table of
- *              contents · the generated index of the full book · one
- *              sample page from EACH of the nine publishable
- *              collected works (the held Elverum contributes none).
- *   pp. 17+    GATED — the framing FULL version · reading guidance ·
- *              the concern index · the family edition COMPLETE (333
- *              pages, real extracted text) · the original sigil
- *              lesson · the collected works IN FULL · colophon.
+ *   pp. 1–16   FREE PREVIEW — front matter (cover/title · the
+ *              ancestor's note, the quoted note then the keeper's
+ *              prose · the framing TEASER · the book Overview · the
+ *              generated table of contents · the generated index of
+ *              the full book) · one sample page from EACH of the five
+ *              publishable collected works (pp. 8–12; the held
+ *              Elverum contributes none) · the framing FULL version
+ *              (pp. 13–14) · the about page (p. 15) · the concern
+ *              index (p. 16).
+ *   pp. 17+    GATED — the family edition COMPLETE (333 pages, real
+ *              extracted text, pp. 17–349) · the original sigil
+ *              lesson (p. 350) · the collected works IN FULL
+ *              (pp. 351–1050) · colophon (p. 1051). 1,051 composed
+ *              pages in all, after the 2026-11-08 removal of the
+ *              four copyright-conflicted editions (owner decision
+ *              2026-11-08).
  *
  * Book text comes ONLY from lib/grimoire/book-content.ts (server
  * side; generated from the owner's assembly package — real extracted
