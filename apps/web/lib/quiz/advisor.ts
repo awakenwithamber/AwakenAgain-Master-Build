@@ -32,6 +32,25 @@
  * "why these allies" narrative added 2026-10-22 is Amber's own
  * spiritual framing, written as her perspective ("in Amber's work…"),
  * never as medical causation.
+ *
+ * RESULTS FIRST (owner decision 2026-11-08, supersedes the 2026-11-07
+ * email-first spec): the Synthesis renders the moment the quiz
+ * completes — no email wall anywhere in the flow. This revision adds:
+ * - four NEW patterns (flagged NEW below) for the goals that used to
+ *   fall back to a generic pattern — beauty, hormonal balance, focus &
+ *   clarity, general wellness — written additively in the legacy
+ *   voice, under the same compliance law;
+ * - Body / Mind / Soul dimensions on every pattern and ally, so the
+ *   results, the results email, and the PDF can organize allies under
+ *   those headings;
+ * - ally gathering with a floor of 5 and a cap of 8: a second pattern
+ *   expands the list only when the visitor actually chose one of the
+ *   goals it answers (never filler);
+ * - the engine now honors each pattern's own `minMatches` gate (the
+ *   legacy data always carried it; the 2026-10-22 port did not apply
+ *   it), which is what routes a lone cognitive goal to the cognitive
+ *   pattern instead of Stress Depletion.
+ * The five legacy patterns' copy is untouched — verbatim, as restored.
  */
 import { getHerb } from '../catalog/herbs';
 import { getProductByHandle } from '../catalog/products';
@@ -218,13 +237,75 @@ export const ADVISOR_PRODUCT_RECOMMENDATIONS: Readonly<Record<string, readonly s
 };
 
 /* ------------------------------------------------------------------ */
-/* Patterns (legacy remedy-flow.js PATTERNS — copy verbatim)           */
+/* Body / Mind / Soul dimensions (NEW 2026-11-08, Results First)       */
+/*                                                                     */
+/* Every pattern carries a primary dimension; an ally may carry its    */
+/* own when its gift clearly belongs to another dimension than its     */
+/* pattern's. The on-screen results, the results email, and the PDF    */
+/* group allies under these three headings, in this fixed order. The   */
+/* section sub-lines are NEW copy, written to sit alongside the        */
+/* Body/Mind/Soul framing the site already uses in the custom-formula  */
+/* form guide (lib/custom-formula/forms-guide.ts).                     */
+/* ------------------------------------------------------------------ */
+
+export type AdvisorDimension = 'body' | 'mind' | 'soul';
+
+export interface AdvisorDimensionSection {
+  id: AdvisorDimension;
+  heading: string;
+  sub: string;
+}
+
+export const ADVISOR_DIMENSION_SECTIONS: readonly AdvisorDimensionSection[] = [
+  {
+    id: 'body',
+    heading: 'Body',
+    sub: 'Allies that tend the physical — skin, digestion, tension, and rest you can feel.',
+  },
+  {
+    id: 'mind',
+    heading: 'Mind',
+    sub: 'Allies for clarity, focus, and a nervous system that can settle.',
+  },
+  {
+    id: 'soul',
+    heading: 'Soul',
+    sub: 'Allies that nourish the inner life — mood, resilience, and the ritual of care itself.',
+  },
+];
+
+export function advisorDimensionSection(
+  id: AdvisorDimension,
+): AdvisorDimensionSection {
+  return ADVISOR_DIMENSION_SECTIONS.find((s) => s.id === id) ??
+    ADVISOR_DIMENSION_SECTIONS[0];
+}
+
+/** Group dimension-tagged items under Body / Mind / Soul, in order,
+ *  omitting empty sections. Item order is preserved within a group. */
+export function groupByDimension<T extends { dimension: AdvisorDimension }>(
+  items: readonly T[],
+): { section: AdvisorDimensionSection; items: T[] }[] {
+  const groups: { section: AdvisorDimensionSection; items: T[] }[] = [];
+  for (const section of ADVISOR_DIMENSION_SECTIONS) {
+    const inSection = items.filter((i) => i.dimension === section.id);
+    if (inSection.length > 0) groups.push({ section, items: inSection });
+  }
+  return groups;
+}
+
+/* ------------------------------------------------------------------ */
+/* Patterns (legacy remedy-flow.js PATTERNS — copy verbatim; the four  */
+/* patterns marked NEW 2026-11-08 are additive, written in the same    */
+/* voice under the same compliance law)                                */
 /* ------------------------------------------------------------------ */
 
 export interface AdvisorPatternAlly {
   id: string;
   benefit: string;
   whySource: string[];
+  /** Body/Mind/Soul override; absent → the pattern's dimension. */
+  dimension?: AdvisorDimension;
 }
 
 export interface AdvisorPattern {
@@ -233,6 +314,8 @@ export interface AdvisorPattern {
   summary: string;
   rootSupport: string;
   preferredForm: string;
+  /** Primary Body/Mind/Soul dimension of this pattern. */
+  dimension: AdvisorDimension;
   allies: AdvisorPatternAlly[];
   triggers: { symptoms: string[]; minMatches: number; boosters: string[] };
 }
@@ -244,12 +327,13 @@ export const ADVISOR_PATTERNS: Readonly<Record<string, AdvisorPattern>> = {
     summary: 'Your system is running hot. The signals we hear — difficulty settling, a busy mind, tension that lingers — point to a nervous system asking for deeper softening and sustained support.',
     rootSupport: 'Nervines to soften the edges, gentle adaptogens to restore tone, and evening rituals that invite the body back into parasympathetic rest.',
     preferredForm: 'loose-tea',
+    dimension: 'mind',
     allies: [
       { id: 'passionflower', benefit: 'Softens a looping, worried mind', whySource: ['stress', 'sleep', 'racing-mind'] },
       { id: 'lemon-balm', benefit: 'Lifts mood while calming the nerves', whySource: ['stress', 'mood', 'emotional'] },
-      { id: 'lavender', benefit: 'Invites the body into rest and ease', whySource: ['sleep', 'tension'] },
-      { id: 'ashwagandha', benefit: 'Gently rebuilds stress reserves over time', whySource: ['stress', 'burnout', 'duration-long'] },
-      { id: 'skullcap', benefit: 'Eases nervous tension held in the body', whySource: ['tension', 'anxiety'] },
+      { id: 'lavender', benefit: 'Invites the body into rest and ease', whySource: ['sleep', 'tension'], dimension: 'soul' },
+      { id: 'ashwagandha', benefit: 'Gently rebuilds stress reserves over time', whySource: ['stress', 'burnout', 'duration-long'], dimension: 'body' },
+      { id: 'skullcap', benefit: 'Eases nervous tension held in the body', whySource: ['tension', 'anxiety'], dimension: 'body' },
     ],
     triggers: { symptoms: ['sleep', 'stress'], minMatches: 1, boosters: ['racing-mind', 'light-sleep', 'tension'] },
   },
@@ -259,11 +343,12 @@ export const ADVISOR_PATTERNS: Readonly<Record<string, AdvisorPattern>> = {
     summary: 'The pattern here is not simply tiredness — it is depletion from carrying too much for too long. Your reserves are asking to be refilled rather than pushed.',
     rootSupport: 'Restorative adaptogens to rebuild stamina, mineral-rich botanicals to replenish, and rhythms that honor recovery as much as output.',
     preferredForm: 'capsule',
+    dimension: 'body',
     allies: [
       { id: 'ashwagandha', benefit: 'Rebuilds stamina after prolonged stress', whySource: ['stress', 'burnout', 'energy', 'duration-long'] },
-      { id: 'rhodiola', benefit: 'Supports mental endurance and mood', whySource: ['energy', 'cognitive', 'mental-fog'] },
+      { id: 'rhodiola', benefit: 'Supports mental endurance and mood', whySource: ['energy', 'cognitive', 'mental-fog'], dimension: 'mind' },
       { id: 'eleuthero', benefit: 'Steadies the body through demanding seasons', whySource: ['energy', 'duration-long'] },
-      { id: 'holy-basil', benefit: 'Nourishes resilience under pressure', whySource: ['stress', 'mood'] },
+      { id: 'holy-basil', benefit: 'Nourishes resilience under pressure', whySource: ['stress', 'mood'], dimension: 'soul' },
       { id: 'nettle', benefit: 'Replenishes depleted minerals gently', whySource: ['energy', 'burnout'] },
     ],
     triggers: { symptoms: ['energy', 'stress', 'cognitive'], minMatches: 2, boosters: ['burnout', 'afternoon-crash', 'duration-long'] },
@@ -274,11 +359,12 @@ export const ADVISOR_PATTERNS: Readonly<Record<string, AdvisorPattern>> = {
     summary: 'Your digestive rhythm sounds tired — heavy after meals, slow to move, sensitive to stress. The body is asking for warming, bittering support to reawaken its natural flow.',
     rootSupport: 'Digestive bitters and carminatives to restart motility, warming herbs to support the digestive fire, and mealtime rituals that honor the pace of digestion.',
     preferredForm: 'loose-tea',
+    dimension: 'body',
     allies: [
       { id: 'ginger', benefit: 'Wakes up a sluggish digestive fire', whySource: ['digestion', 'bloating', 'after-eating'] },
       { id: 'fennel', benefit: 'Eases bloating and bringing flow back', whySource: ['digestion', 'bloating'] },
       { id: 'peppermint', benefit: 'Soothes tension in the gut', whySource: ['digestion', 'stress'] },
-      { id: 'chamomile', benefit: 'Calms the gut-mind connection', whySource: ['digestion', 'stress', 'emotional'] },
+      { id: 'chamomile', benefit: 'Calms the gut-mind connection', whySource: ['digestion', 'stress', 'emotional'], dimension: 'mind' },
       { id: 'dandelion', benefit: "Supports the liver's rhythm of renewal", whySource: ['digestion', 'stagnation'] },
     ],
     triggers: { symptoms: ['digestion'], minMatches: 1, boosters: ['bloating', 'after-eating', 'slow-digestion'] },
@@ -289,12 +375,13 @@ export const ADVISOR_PATTERNS: Readonly<Record<string, AdvisorPattern>> = {
     summary: 'The body is stretching its defenses — seasonal shifts, recovery, or cumulative stress is asking more of your immune system than it can comfortably give right now.',
     rootSupport: 'Deep immune tonics to rebuild reserves, daily resilience herbs to hold the line, and restorative practices that let recovery happen.',
     preferredForm: 'capsule',
+    dimension: 'body',
     allies: [
       { id: 'elderberry', benefit: 'Classic ally for seasonal resilience', whySource: ['immune', 'seasonal'] },
       { id: 'astragalus', benefit: 'Builds deep, long-term immune reserves', whySource: ['immune', 'duration-long'] },
-      { id: 'reishi', benefit: 'Supports immune intelligence and restoration', whySource: ['immune', 'stress'] },
+      { id: 'reishi', benefit: 'Supports immune intelligence and restoration', whySource: ['immune', 'stress'], dimension: 'soul' },
       { id: 'echinacea', benefit: 'Activates first-line defenses when needed', whySource: ['immune', 'acute'] },
-      { id: 'holy-basil', benefit: 'Nourishes resilience across body and mind', whySource: ['immune', 'stress'] },
+      { id: 'holy-basil', benefit: 'Nourishes resilience across body and mind', whySource: ['immune', 'stress'], dimension: 'soul' },
     ],
     triggers: { symptoms: ['immune'], minMatches: 1, boosters: ['seasonal', 'post-illness', 'low-reserves'] },
   },
@@ -304,14 +391,87 @@ export const ADVISOR_PATTERNS: Readonly<Record<string, AdvisorPattern>> = {
     summary: 'Signals of tightness, held tension, and slowed flow suggest stagnation — energy, circulation, or lymph asking to move. The body wants to return to motion.',
     rootSupport: 'Circulatory and moving herbs, warming topicals for tension, and practices that invite gentle movement back into the system.',
     preferredForm: 'balm',
+    dimension: 'body',
     allies: [
       { id: 'turmeric', benefit: 'Supports the body through inflammation cycles', whySource: ['pain', 'chronic'] },
       { id: 'ginger', benefit: 'Moves warmth into stagnant places', whySource: ['pain', 'stagnation', 'digestion'] },
       { id: 'arnica', benefit: 'Traditional ally for held tension and soreness', whySource: ['pain', 'muscle'] },
-      { id: 'rosemary', benefit: 'Awakens circulation and clears the head', whySource: ['pain', 'cognitive', 'beauty'] },
+      { id: 'rosemary', benefit: 'Awakens circulation and clears the head', whySource: ['pain', 'cognitive', 'beauty'], dimension: 'mind' },
       { id: 'cayenne', benefit: 'Draws warmth to cold, stiff places', whySource: ['pain', 'cold'] },
     ],
     triggers: { symptoms: ['pain'], minMatches: 1, boosters: ['chronic', 'tension', 'cold'] },
+  },
+  /* NEW 2026-11-08 — the four patterns below are ADDITIVE (Results
+   * First): the legacy engine had no pattern for the beauty, hormones,
+   * cognitive, or wellness goals, so those runs fell back to a generic
+   * pattern. Copy is written in the legacy patterns' voice and
+   * structure, allies are drawn from the goals' own legacy herb pools
+   * (ADVISOR_HERB_RECOMMENDATIONS), and the compliance law holds:
+   * traditional-use framing only, nothing presented as treating,
+   * curing, or preventing anything. */
+  'quiet-radiance': {
+    id: 'quiet-radiance',
+    name: 'Quiet Radiance',
+    summary: 'Your skin is asking to be nourished from the inside out. In the herbal tradition, radiance is rarely painted on — it grows from minerals, steady nourishment, and gentle daily care, tended by plants that have looked after skin for centuries.',
+    rootSupport: 'Mineral-rich tonics to feed skin, hair, and nails, traditional skin allies for a calm and cared-for complexion, and small beauty rituals that make care a pleasure rather than a chore.',
+    preferredForm: 'serum',
+    dimension: 'soul',
+    allies: [
+      { id: 'calendula', benefit: 'A gentle traditional ally for calm, cared-for skin', whySource: ['beauty'], dimension: 'body' },
+      { id: 'rose-hip', benefit: 'Prized by herbalists for nourished, bright-looking skin', whySource: ['beauty'] },
+      { id: 'burdock', benefit: 'Traditionally used to support clear skin from within', whySource: ['beauty'], dimension: 'body' },
+      { id: 'nettle', benefit: 'Mineral-rich leaves that feed skin, hair, and nails', whySource: ['beauty', 'energy'], dimension: 'body' },
+      { id: 'horsetail', benefit: 'Traditionally gathered for strong hair, skin, and nails', whySource: ['beauty'], dimension: 'body' },
+    ],
+    triggers: { symptoms: ['beauty'], minMatches: 1, boosters: [] },
+  },
+  'hormonal-flux': {
+    id: 'hormonal-flux',
+    name: 'Hormonal Flux',
+    summary: 'The body moves in cycles, and some seasons of the cycle ask for more support than others. The signals we hear — shifting mood, changing energy, a rhythm that feels unsettled — point to your hormones asking for gentle, steady companionship rather than force.',
+    rootSupport: 'Traditional cycle allies to nourish balance across the month, adaptogens to steady mood and energy, and rhythms that honor the body\'s own timing.',
+    preferredForm: 'capsule',
+    dimension: 'body',
+    allies: [
+      { id: 'vitex', benefit: 'Traditionally used to support a balanced monthly cycle', whySource: ['hormones'] },
+      { id: 'shatavari', benefit: 'A beloved Ayurvedic ally for feminine nourishment and ease', whySource: ['hormones'], dimension: 'soul' },
+      { id: 'maca', benefit: 'An Andean root traditionally used for energy, mood, and harmony through hormonal shifts', whySource: ['hormones', 'energy'] },
+      { id: 'red-clover', benefit: 'A gentle blossom traditionally used through life\'s shifting seasons', whySource: ['hormones'] },
+      { id: 'black-cohosh', benefit: 'A traditional ally for comfort through the midlife transition', whySource: ['hormones'] },
+    ],
+    triggers: { symptoms: ['hormones'], minMatches: 1, boosters: ['emotional', 'duration-long'] },
+  },
+  'mental-fog': {
+    id: 'mental-fog',
+    name: 'Mental Fog',
+    summary: 'The mind feels wrapped in gauze — thoughts arrive slowly, focus slips away mid-sentence, and clarity sits just out of reach. It is one of the oldest requests brought to the apothecary, and the tradition answers with herbs long kept by students, scholars, and poets.',
+    rootSupport: 'Traditional clarity allies to nourish focus and memory, gentle adaptogens to steady mental energy, and small rituals of attention that help the mind settle and engage.',
+    preferredForm: 'capsule',
+    dimension: 'mind',
+    allies: [
+      { id: 'lion-mane', benefit: 'A distinctive mushroom herbalists reach for when clarity is wanted', whySource: ['cognitive', 'mental-fog'] },
+      { id: 'bacopa', benefit: 'An Ayurvedic classic traditionally used by students and scholars', whySource: ['cognitive'] },
+      { id: 'ginkgo', benefit: 'An ancient leaf traditionally used to support a clear, engaged mind', whySource: ['cognitive'] },
+      { id: 'rosemary', benefit: 'The remembrance herb — traditionally used when focus feels scattered', whySource: ['cognitive', 'beauty'] },
+      { id: 'gotu-kola', benefit: 'Traditionally used for a calm, centered, and clear mind', whySource: ['cognitive'] },
+    ],
+    triggers: { symptoms: ['cognitive'], minMatches: 1, boosters: ['mental-fog', 'racing-mind'] },
+  },
+  'foundational-balance': {
+    id: 'foundational-balance',
+    name: 'Foundational Balance',
+    summary: 'Nothing here is calling out in alarm — and that is its own kind of wisdom. The body is simply asking for steady, foundational nourishment: the daily tonics and quiet rhythms that keep balance from becoming a project and resilience a habit.',
+    rootSupport: 'Deep daily tonics to nourish the whole system, mineral-rich greens to replenish what ordinary days spend, and simple rhythms that make wellness the background of an ordinary day.',
+    preferredForm: 'loose-tea',
+    dimension: 'soul',
+    allies: [
+      { id: 'reishi', benefit: 'The mushroom of quiet resilience — a daily tonic in the Eastern tradition', whySource: ['wellness', 'immune'] },
+      { id: 'astragalus', benefit: 'Builds deep, steady reserves for everyday resilience', whySource: ['wellness', 'immune'], dimension: 'body' },
+      { id: 'moringa', benefit: 'A green, mineral-rich leaf that nourishes the everyday body', whySource: ['wellness', 'energy'], dimension: 'body' },
+      { id: 'nettle', benefit: 'Replenishes minerals gently, one cup at a time', whySource: ['wellness', 'energy'], dimension: 'body' },
+      { id: 'schisandra', benefit: 'A five-flavor berry traditionally used for balanced, all-day steadiness', whySource: ['wellness', 'cognitive'], dimension: 'mind' },
+    ],
+    triggers: { symptoms: ['wellness'], minMatches: 1, boosters: ['duration-long'] },
   },
 };
 
@@ -326,6 +486,9 @@ export const ADVISOR_SIGNAL_PHRASES: Readonly<Record<string, string>> = {
   'cognitive': "the mental clarity you're after",
   'beauty': 'your focus on skin and radiance',
   'hormones': "the hormonal balance you're looking for",
+  // NEW 2026-11-08: the legacy phrase map never carried the wellness
+  // goal (its runs fell back to the raw token). Additive, same voice.
+  'wellness': 'your wish for steady, everyday balance',
   'racing-mind': "a mind that won't settle",
   'light-sleep': 'light, easily-disturbed sleep',
   'tension': 'held physical tension',
@@ -380,6 +543,27 @@ export const ADVISOR_LIFESTYLE_RITUALS: Readonly<Record<string, readonly { title
     { title: 'Five Minutes of Movement', desc: 'Any movement, every hour. Stagnation yields first to consistency, not intensity.' },
     { title: 'Contrast Shower', desc: 'End your shower with 30 seconds cool. Circulation responds beautifully to gentle contrast.' },
     { title: 'Deep Hip Stretch', desc: 'A few minutes in a supported squat or pigeon pose invites stagnant energy back into motion.' },
+  ],
+  /* NEW 2026-11-08 — rituals for the four new patterns, same voice. */
+  'quiet-radiance': [
+    { title: 'The Morning Mirror Moment', desc: 'One unhurried minute with your own reflection before the day begins — care lands differently when it is given with attention.' },
+    { title: 'Minerals Before Makeup', desc: 'Something green and mineral-rich before anything cosmetic. Radiance is an inside job first.' },
+    { title: 'Hands-On Care', desc: 'Massage your serum or balm in slowly, with intention. Touch is half the ritual.' },
+  ],
+  'hormonal-flux': [
+    { title: 'Track the Rhythm', desc: 'A few notes each day — energy, mood, sleep — turn a confusing cycle into a pattern you can befriend.' },
+    { title: 'Warmth at the Center', desc: 'A warm drink, or a heated wrap resting at the belly in the evening, invites the whole system to soften.' },
+    { title: 'Honor the Low Days', desc: 'Cycles have seasons. Let the quieter days be quieter — support begins with listening.' },
+  ],
+  'mental-fog': [
+    { title: 'One Thing at a Time', desc: 'Fog thickens under multitasking. Give the next hour a single, named purpose.' },
+    { title: 'Move to Think', desc: 'A ten-minute walk before deep work — the mind clears in motion more reliably than at a desk.' },
+    { title: 'The Evening Download', desc: "Write tomorrow's loose ends down before bed, and give the mind permission to set them down too." },
+  ],
+  'foundational-balance': [
+    { title: 'The Daily Cup', desc: 'One nourishing cup at the same time each day — consistency is the whole secret of tonics.' },
+    { title: 'A Minute Outdoors', desc: 'Light, air, and a horizon line, every day. The oldest wellness practice there is.' },
+    { title: 'Small and Steady', desc: 'Choose the smallest version of the habit and keep it. Balance is built from kept promises.' },
   ],
 };
 
@@ -512,21 +696,35 @@ export interface ScoredPattern {
   score: number;
 }
 
-/** Legacy synthesizePatterns — ported faithfully (top 2, floor of 3). */
+/**
+ * Legacy synthesizePatterns (top 2, score floor of 3) — with one
+ * deliberate completion, 2026-11-08: each pattern's own `minMatches`
+ * gate is now HONORED. The legacy data always carried it (Stress
+ * Depletion declares minMatches 2), but the 2026-10-22 port never
+ * applied it, so a single shared goal could surface Stress Depletion
+ * on one match. Honoring it is what routes a lone cognitive goal to
+ * the (new) cognitive pattern instead of Stress Depletion; the legacy
+ * fallback below still guarantees a pattern for any goal set.
+ */
 export function synthesizePatterns(symptoms: string[], signals: string[]): ScoredPattern[] {
   const signalSet = new Set(signals);
   const scored = Object.values(ADVISOR_PATTERNS)
     .map((pattern) => {
       let score = 0;
+      let symptomMatches = 0;
       for (const sym of pattern.triggers.symptoms) {
-        if (symptoms.includes(sym)) score += 3;
+        if (symptoms.includes(sym)) {
+          score += 3;
+          symptomMatches += 1;
+        }
       }
       for (const b of pattern.triggers.boosters) {
         if (signalSet.has(b)) score += 2;
       }
-      return { pattern, score };
+      return { pattern, score, symptomMatches };
     })
-    .filter((s) => s.score >= 3);
+    .filter((s) => s.score >= 3 && s.symptomMatches >= s.pattern.triggers.minMatches)
+    .map(({ pattern, score }) => ({ pattern, score }));
   scored.sort((x, y) => y.score - x.score);
   if (scored.length === 0) {
     if (symptoms.includes('stress') || symptoms.includes('sleep')) {
@@ -561,9 +759,25 @@ export interface AdvisorAlly {
   primaryBenefit: string;
   patternName: string;
   matchedSignals: string[];
+  /** Body/Mind/Soul dimension (the ally's override, else its pattern's). */
+  dimension: AdvisorDimension;
 }
 
-/** Legacy gatherAllies (cap 6, deduped) with catalog detail resolved. */
+/** Results First (2026-11-08): a completed quiz always shows at least
+ *  five botanicals, and at most eight. */
+export const ADVISOR_ALLY_FLOOR = 5;
+export const ADVISOR_ALLY_CAP = 8;
+
+/**
+ * Legacy gatherAllies (deduped) with catalog detail resolved — with
+ * the Results First gathering rule (2026-11-08): the primary pattern
+ * always contributes its full ally set (every pattern carries exactly
+ * five, so the floor of 5 always holds). A second pattern expands the
+ * list toward the cap of 8 ONLY when it is genuinely relevant — the
+ * visitor actually chose at least one of the goals that pattern
+ * answers. A pattern that scored on booster signals alone never pads
+ * the list with filler.
+ */
 export function gatherAllies(
   patterns: ScoredPattern[],
   symptoms: string[],
@@ -572,8 +786,15 @@ export function gatherAllies(
   const signalSet = new Set([...signals, ...symptoms]);
   const seen = new Set<string>();
   const allies: AdvisorAlly[] = [];
-  for (const entry of patterns) {
+  patterns.forEach((entry, idx) => {
+    if (idx > 0) {
+      const genuinelyRelevant = entry.pattern.triggers.symptoms.some((s) =>
+        symptoms.includes(s),
+      );
+      if (!genuinelyRelevant) return;
+    }
     for (const a of entry.pattern.allies) {
+      if (allies.length >= ADVISOR_ALLY_CAP) return;
       if (seen.has(a.id)) continue;
       seen.add(a.id);
       const matched = a.whySource.filter((src) => signalSet.has(src));
@@ -594,10 +815,48 @@ export function gatherAllies(
         primaryBenefit: herb?.traditionalBenefits[0] ?? a.benefit,
         patternName: entry.pattern.name,
         matchedSignals: matched,
+        dimension: a.dimension ?? entry.pattern.dimension,
       });
     }
+  });
+  return allies;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dimension lookups (for snapshots stored before dimensions existed)  */
+/* ------------------------------------------------------------------ */
+
+const ALLY_DIMENSION_BY_ID = new Map<string, AdvisorDimension>();
+const ALLY_DIMENSION_BY_NAME = new Map<string, AdvisorDimension>();
+const PATTERN_DIMENSION_BY_NAME = new Map<string, AdvisorDimension>();
+for (const pattern of Object.values(ADVISOR_PATTERNS)) {
+  PATTERN_DIMENSION_BY_NAME.set(pattern.name, pattern.dimension);
+  for (const ally of pattern.allies) {
+    const dimension = ally.dimension ?? pattern.dimension;
+    const catalogId = ADVISOR_HERB_ID_ALIASES[ally.id] ?? ally.id;
+    if (!ALLY_DIMENSION_BY_ID.has(catalogId)) {
+      ALLY_DIMENSION_BY_ID.set(catalogId, dimension);
+    }
+    const herb = getHerb(catalogId);
+    if (herb && !ALLY_DIMENSION_BY_NAME.has(herb.name.toLowerCase())) {
+      ALLY_DIMENSION_BY_NAME.set(herb.name.toLowerCase(), dimension);
+    }
   }
-  return allies.slice(0, 6);
+}
+
+/** Dimension for a catalog herb id, or null when no pattern carries it. */
+export function advisorAllyDimension(id: string): AdvisorDimension | null {
+  return ALLY_DIMENSION_BY_ID.get(ADVISOR_HERB_ID_ALIASES[id] ?? id) ?? null;
+}
+
+/** Dimension for an ally display name (the classic engine's shape). */
+export function advisorAllyDimensionByName(name: string): AdvisorDimension | null {
+  return ALLY_DIMENSION_BY_NAME.get(name.trim().toLowerCase()) ?? null;
+}
+
+/** Dimension for a pattern display name (stored snapshots carry names). */
+export function advisorPatternDimension(name: string): AdvisorDimension | null {
+  return PATTERN_DIMENSION_BY_NAME.get(name) ?? null;
 }
 
 /** Legacy getLifestyleRituals (cap 3, deduped by title). */
@@ -778,7 +1037,14 @@ export function advisorLegacyIds(synthesis: AdvisorSynthesis): {
 export interface AdvisorResultSnapshot {
   answers: AdvisorAnswers;
   primaryPattern: string;
-  patterns: { name: string; summary: string; rootSupport: string }[];
+  patterns: {
+    name: string;
+    summary: string;
+    rootSupport: string;
+    /** Optional: snapshots stored before 2026-11-08 carry no dimension;
+     *  renderers resolve it from the pattern name when absent. */
+    dimension?: AdvisorDimension;
+  }[];
   allies: {
     id: string;
     name: string;
@@ -787,6 +1053,8 @@ export interface AdvisorResultSnapshot {
     whyLine: string;
     traditionalNote: string;
     primaryBenefit: string;
+    /** Optional for the same backward-compatibility reason as above. */
+    dimension?: AdvisorDimension;
   }[];
   rituals: { title: string; desc: string }[];
   formKey: string;
@@ -810,6 +1078,7 @@ export function toAdvisorResultSnapshot(s: AdvisorSynthesis): AdvisorResultSnaps
       name: p.pattern.name,
       summary: p.pattern.summary,
       rootSupport: p.pattern.rootSupport,
+      dimension: p.pattern.dimension,
     })),
     allies: s.allies.map((a) => ({
       id: a.id,
@@ -819,6 +1088,7 @@ export function toAdvisorResultSnapshot(s: AdvisorSynthesis): AdvisorResultSnaps
       whyLine: a.whyLine,
       traditionalNote: a.traditionalNote,
       primaryBenefit: a.primaryBenefit,
+      dimension: a.dimension,
     })),
     rituals: s.rituals.map((r) => ({ ...r })),
     formKey: s.formKey,

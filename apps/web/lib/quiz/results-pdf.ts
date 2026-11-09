@@ -14,12 +14,15 @@
  * WinAnsi — the brand's ✦ ornament is dropped in print, bullets and
  * dashes map to their WinAnsi codes.
  */
-import type { AdvisorResultSnapshot } from './advisor';
+import type { AdvisorDimension, AdvisorResultSnapshot } from './advisor';
 import {
   ADVISOR_SPECIALTIES_LINE,
   ADVISOR_WHY_ALLIES_HEADING,
   ADVISOR_WHY_ALLIES_PARAGRAPHS,
+  advisorAllyDimension,
+  groupByDimension,
 } from './advisor';
+import { preparationFor, safetyLinesFor } from './herb-enrichment';
 
 /* ------------------------------------------------------------------ */
 /* Helvetica AFM widths (units of 1/1000 em), ASCII 32–126             */
@@ -207,15 +210,31 @@ export function buildQuizResultsPdf(input: QuizPdfInput): Uint8Array {
     }
   }
 
-  /* Allies */
+  /* Allies — grouped under Body / Mind / Soul (Results First,
+   * 2026-11-08), each with its documented safety notes (never omitted)
+   * and its preparation line where the site documents one. Snapshot
+   * allies stored before dimensions existed resolve theirs by id. */
   heading('Your Personal Herbal Allies');
-  for (const ally of s.allies) {
-    ensure(64);
-    para(`${ally.name}${ally.latin ? ` (${ally.latin})` : ''}`, { font: 'bold', size: 12, gap: 2 });
-    para(`Primary benefit: ${ally.benefit}`, { size: 11, gap: 1 });
-    para(ally.whyLine, { size: 11, gap: 1 });
-    if (ally.traditionalNote) para(`Traditional use: ${ally.traditionalNote}`, { size: 11, gap: 1 });
-    para(`Why it may help now: ${ally.primaryBenefit}`, { size: 11, gap: 10 });
+  const dimensioned = s.allies.map((ally) => ({
+    ally,
+    dimension: (ally.dimension ??
+      advisorAllyDimension(ally.id) ??
+      'body') as AdvisorDimension,
+  }));
+  for (const { section, items } of groupByDimension(dimensioned)) {
+    para(section.heading, { font: 'bold', size: 13, color: GOLD, gap: 2 });
+    para(section.sub, { size: 10, color: MUTED, gap: 8 });
+    for (const { ally } of items) {
+      ensure(64);
+      para(`${ally.name}${ally.latin ? ` (${ally.latin})` : ''}`, { font: 'bold', size: 12, gap: 2 });
+      para(`Primary benefit: ${ally.benefit}`, { size: 11, gap: 1 });
+      para(ally.whyLine, { size: 11, gap: 1 });
+      if (ally.traditionalNote) para(`Traditional use: ${ally.traditionalNote}`, { size: 11, gap: 1 });
+      para(`Why it may help now: ${ally.primaryBenefit}`, { size: 11, gap: 1 });
+      const preparation = preparationFor(ally.name);
+      if (preparation) para(`Preparation: ${preparation}`, { size: 11, gap: 1 });
+      para(`Safety notes: ${safetyLinesFor(ally.name).join(' ')}`, { size: 11, gap: 10 });
+    }
   }
 
   /* Why these allies — Amber's narrative */
