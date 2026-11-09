@@ -322,6 +322,19 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
  *   Stripe checkout. Card acceptance through Bluevine is NOT live
  *   until that link exists and is verified; while the config is unset
  *   the method is rejected here and no card wording renders anywhere.
+ * - 'authorizenet_card_hosted' — 'Pay by card' through Authorize.net
+ *   (card checkout build 2026-11-09, SHOP ORDERS ONLY): the order is
+ *   placed here UNPAID (audit state awaiting_payment), a hosted-form
+ *   token is minted server-side from this record, the customer pays
+ *   on Authorize.net's hosted page (card details never touch this
+ *   site), and only the signature-verified webhook marks it paid.
+ *   GATED OFF BY DEFAULT: accepted for a new order ONLY when the
+ *   Authorize.net card rail reports available (CARD_PAYMENTS_ENABLED
+ *   exactly 'true' AND the API credentials present — the flag law in
+ *   lib/payments/authorizenet, checked here without importing that
+ *   server module into this shared one: see
+ *   authorizenetCardAvailableFromEnv). While the gate is closed the
+ *   parser rejects the method and no card wording renders.
  * - 'stripe_card_embedded' — DORMANT (parked 2026-10-24, NOT deleted):
  *   no longer offered in the checkout UI, and since the 2026-11-02
  *   combined merge it is REJECTED for new orders by this parser
@@ -345,7 +358,8 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
 export type PaymentMethod =
   | 'cash_app_or_venmo'
   | 'bluevine_invoice'
-  | 'bluevine_card_link';
+  | 'bluevine_card_link'
+  | 'authorizenet_card_hosted';
 
 /**
  * Payment methods as they can appear on a STORED order record. New
@@ -375,6 +389,7 @@ export const PAYMENT_METHODS: readonly PaymentMethod[] = [
   'bluevine_invoice',
   'cash_app_or_venmo',
   'bluevine_card_link',
+  'authorizenet_card_hosted',
 ];
 
 /**
@@ -407,6 +422,23 @@ export function bluevineCardConfigured(): boolean {
   return bluevinePaymentLinkUrl() !== null;
 }
 
+/**
+ * The Authorize.net card gate, evaluated from the environment only
+ * (this module is imported by client components, so it must not pull
+ * in the server-only gateway module; lib/payments/authorizenet holds
+ * the same law for server surfaces). Exactly 'true' + API Login ID +
+ * Transaction Key — anything else keeps the card method dark.
+ */
+export function authorizenetCardAvailableFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return (
+    env.CARD_PAYMENTS_ENABLED?.trim() === 'true' &&
+    Boolean(env.AUTHORIZENET_API_LOGIN_ID?.trim()) &&
+    Boolean(env.AUTHORIZENET_TRANSACTION_KEY?.trim())
+  );
+}
+
 /** Validate the optional payment_method field; absent means the default. */
 export function parsePaymentMethod(raw: unknown): PaymentMethod {
   if (raw === undefined || raw === null) return DEFAULT_PAYMENT_METHOD;
@@ -421,6 +453,14 @@ export function parsePaymentMethod(raw: unknown): PaymentMethod {
     // readable on STORED records but must never route a NEW order.
     throw new Error(
       'That payment method is no longer accepted for new orders. Choose the Bluevine invoice, or Cash App or Venmo.',
+    );
+  }
+  if (raw === 'authorizenet_card_hosted') {
+    if (authorizenetCardAvailableFromEnv()) return raw;
+    throw new Error(
+      'Unknown payment method: authorizenet_card_hosted. Card payment ' +
+        'is not available right now — choose the Bluevine invoice, or ' +
+        'Cash App or Venmo.',
     );
   }
   if (raw === 'bluevine_card_link') {
@@ -980,7 +1020,8 @@ export function validateAndBuildOrder(
   // lib/tax, ported from that staged build; 2026-11-01 — "Make it
   // calculate tax and shipping and make it work"):
   // - Applies to the LIVE rails only ('bluevine_invoice',
-  //   'bluevine_card_link', and 'cash_app_or_venmo'), computed from the submitted delivery
+  //   'bluevine_card_link', 'authorizenet_card_hosted', and
+  //   'cash_app_or_venmo'), computed from the submitted delivery
   //   address, on the DISCOUNTED merchandise subtotal; separately
   //   stated shipping is never in the tax base (Utah Pub 25 — see
   //   lib/tax). For these rails the tax is INCLUDED in total_cents:
