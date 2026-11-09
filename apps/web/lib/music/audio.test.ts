@@ -19,6 +19,8 @@ import {
   FADE_STEPS,
   INTENT_STORAGE_KEY,
   MAX_VOLUME_PERCENT,
+  MUTE_FADE_DURATION_MS,
+  SLIDER_FADE_DURATION_MS,
   VOLUME_STORAGE_KEY,
   MusicEngine,
   clampVolumePercent,
@@ -159,7 +161,7 @@ describe('music contract constants', () => {
   });
 
   it('references the shared AUDIO contract path', () => {
-    expect(AUDIO_CONTRACT.ambientApothecary).toBe('/audio/ambient-apothecary.mp3');
+    expect(AUDIO_CONTRACT.ambientApothecary).toBe('/audio/ambient-apothecary-normalized.mp3');
   });
 });
 
@@ -224,14 +226,25 @@ describe('MusicEngine', () => {
       enabled: false,
       playing: false,
       volumePercent: 7,
+      muted: false,
     });
   });
 
-  it('initialises the slider from the stored volume', () => {
-    const { deps, storage } = makeHarness();
-    storage.setItem(VOLUME_STORAGE_KEY, '42');
-    const engine = new MusicEngine(deps);
-    expect(engine.getSnapshot().volumePercent).toBe(42);
+  it('initialises the slider from the stored volume, clamped to the gentle cap (Package 1)', () => {
+    // A stale loud stored value must never come back as the slider's
+    // starting position (owner defect report: "music starts too loud").
+    const loud = makeHarness();
+    loud.storage.setItem(VOLUME_STORAGE_KEY, '42');
+    expect(new MusicEngine(loud.deps).getSnapshot().volumePercent).toBe(12);
+
+    const maxed = makeHarness();
+    maxed.storage.setItem(VOLUME_STORAGE_KEY, '100');
+    expect(new MusicEngine(maxed.deps).getSnapshot().volumePercent).toBe(12);
+
+    // A stored value under the cap is honoured exactly.
+    const gentle = makeHarness();
+    gentle.storage.setItem(VOLUME_STORAGE_KEY, '9');
+    expect(new MusicEngine(gentle.deps).getSnapshot().volumePercent).toBe(9);
   });
 
   it('enable() plays the contract audio file and fades 0 → 7% over ~4s in 33 steps', async () => {
@@ -240,7 +253,7 @@ describe('MusicEngine', () => {
 
     await engine.enable();
     expect(audio.playCalls).toBe(1);
-    expect(audio.src).toBe('/audio/ambient-apothecary.mp3');
+    expect(audio.src).toBe('/audio/ambient-apothecary-normalized.mp3');
     expect(audio.loop).toBe(true);
     expect(audio.preload).toBe('auto');
     expect(audio.volume).toBe(0); // fade starts at silence
@@ -264,6 +277,7 @@ describe('MusicEngine', () => {
       enabled: true,
       playing: true,
       volumePercent: 7,
+      muted: false,
     });
     expect(storage.getItem(VOLUME_STORAGE_KEY)).toBe('7');
   });
@@ -323,6 +337,7 @@ describe('MusicEngine', () => {
       enabled: false,
       playing: false,
       volumePercent: 7,
+      muted: false,
     });
     // Only the volume key exists in localStorage — the music choice is
     // never written there (session intent lives in sessionStorage only,
@@ -435,13 +450,109 @@ describe('MusicEngine', () => {
     engine.setVolumeFromSlider(30);
     await flushMicrotasks();
     expect(audio.playCalls).toBe(2);
+    // Package 1: the gain RAMPS to the new level — it must not have
+    // jumped straight to 0.3 in the same tick.
+    expect(audio.volume).not.toBeCloseTo(0.3, 5);
+    vi.advanceTimersByTime(SLIDER_FADE_DURATION_MS);
+    await flushMicrotasks();
     expect(audio.volume).toBeCloseTo(0.3, 5);
     expect(engine.getSnapshot()).toEqual({
       enabled: true,
       playing: true,
       volumePercent: 30,
+      muted: false,
     });
     expect(storage.getItem(VOLUME_STORAGE_KEY)).toBe('30');
+  });
+
+  it('slider changes ramp gradually while already playing — no instant jump (Package 1)', async () => {
+    const { deps, audio } = makeHarness();
+    const engine = new MusicEngine(deps);
+    await engine.enable();
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(audio.volume).toBeCloseTo(0.07, 5);
+
+    const setsBefore = audio.volumeSets.length;
+    engine.setVolumeFromSlider(60);
+    await flushMicrotasks();
+    // Half-way through the ramp the gain is strictly between the old
+    // and new levels, and every step is monotonic.
+    vi.advanceTimersByTime(SLIDER_FADE_DURATION_MS / 2);
+    const mid = audio.volume;
+    expect(mid).toBeGreaterThan(0.07);
+    expect(mid).toBeLessThan(0.6);
+    vi.advanceTimersByTime(SLIDER_FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(audio.volume).toBeCloseTo(0.6, 5);
+    const rampSets = audio.volumeSets.slice(setsBefore);
+    expect(rampSets.length).toBeGreaterThan(2);
+    for (let i = 1; i < rampSets.length; i += 1) {
+      // Monotonic within float tolerance: the ramp restarts once from
+      // the play() promise, and the final exact-target set can sit one
+      // ulp below the last interpolated step.
+      expect(rampSets[i] as number).toBeGreaterThanOrEqual(
+        (rampSets[i - 1] as number) - 1e-9,
+      );
+    }
+  });
+
+  it('mute ducks the gain to 0 and unmute restores it — level and storage untouched (Package 1)', async () => {
+    const { deps, audio, storage } = makeHarness();
+    const engine = new MusicEngine(deps);
+    await engine.enable();
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+
+    engine.mute();
+    expect(engine.getSnapshot().muted).toBe(true);
+    expect(engine.getSnapshot().playing).toBe(true); // playback continues, silenced
+    expect(engine.getSnapshot().volumePercent).toBe(7); // slider level untouched
+    vi.advanceTimersByTime(MUTE_FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(audio.volume).toBeCloseTo(0, 5);
+    expect(storage.getItem(VOLUME_STORAGE_KEY)).toBe('7'); // nothing persisted
+
+    engine.unmute();
+    expect(engine.getSnapshot().muted).toBe(false);
+    vi.advanceTimersByTime(MUTE_FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(audio.volume).toBeCloseTo(0.07, 5);
+  });
+
+  it('a slider move clears mute and ramps to the chosen level (Package 1)', async () => {
+    const { deps, audio } = makeHarness();
+    const engine = new MusicEngine(deps);
+    await engine.enable();
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+    engine.mute();
+    vi.advanceTimersByTime(MUTE_FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(audio.volume).toBeCloseTo(0, 5);
+
+    engine.setVolumeFromSlider(25);
+    await flushMicrotasks();
+    expect(engine.getSnapshot().muted).toBe(false);
+    vi.advanceTimersByTime(SLIDER_FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(audio.volume).toBeCloseTo(0.25, 5);
+  });
+
+  it('enable() after muting starts unmuted and fades in audibly (Package 1)', async () => {
+    const { deps, audio } = makeHarness();
+    const engine = new MusicEngine(deps);
+    await engine.enable();
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+    engine.mute();
+    engine.disable();
+
+    await engine.enable();
+    expect(engine.getSnapshot().muted).toBe(false);
+    vi.advanceTimersByTime(FADE_DURATION_MS);
+    await flushMicrotasks();
+    expect(audio.volume).toBeCloseTo(0.07, 5);
   });
 
   it('visibilitychange hidden pauses; visible resumes only when wanted', async () => {
@@ -493,7 +604,7 @@ describe('MusicEngine', () => {
     expect(engine.getSnapshot().playing).toBe(false);
 
     await engine.enable();
-    expect(audio.src).toBe('/audio/ambient-apothecary.mp3');
+    expect(audio.src).toBe('/audio/ambient-apothecary-normalized.mp3');
     expect(audio.playCalls).toBe(2);
   });
 
@@ -515,7 +626,7 @@ describe('MusicEngine', () => {
     doc.hidden = false;
     doc.fire('visibilitychange');
     await flushMicrotasks();
-    expect(audio.src).toBe('/audio/ambient-apothecary.mp3'); // source reloaded
+    expect(audio.src).toBe('/audio/ambient-apothecary-normalized.mp3'); // source reloaded
     expect(engine.getSnapshot().playing).toBe(true);
     expect(win.listenerCount('pointerdown')).toBe(0); // gesture resume disarmed
   });

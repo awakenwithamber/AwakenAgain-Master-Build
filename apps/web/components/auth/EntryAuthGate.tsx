@@ -74,7 +74,9 @@ export function EntryAuthGate() {
   }, []);
 
   useEffect(() => {
-    if (visible && !leaving) primaryRef.current?.focus();
+    // preventScroll: focusing inside this fixed overlay must not
+    // scroll the document underneath on mobile (Package 1, 2026-11-08).
+    if (visible && !leaving) primaryRef.current?.focus({ preventScroll: true });
   }, [visible, leaving]);
 
   // Escape = guest; Tab cycles inside the dialog.

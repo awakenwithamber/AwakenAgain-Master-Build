@@ -96,9 +96,11 @@ export function MusicGate() {
     dismiss();
   }, [dismiss]);
 
-  // Focus the primary action when the gate opens.
+  // Focus the primary action when the gate opens. preventScroll: the
+  // overlay is position:fixed, but on mobile browsers a bare focus()
+  // can scroll the document underneath (Package 1, 2026-11-08).
   useEffect(() => {
-    if (visible && !leaving) primaryRef.current?.focus();
+    if (visible && !leaving) primaryRef.current?.focus({ preventScroll: true });
   }, [visible, leaving]);
 
   // Escape dismisses (= "Browse without Music"); Tab cycles inside the dialog.

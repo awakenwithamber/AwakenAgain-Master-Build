@@ -51,9 +51,20 @@
 }
 
 html {
-  scroll-behavior: smooth;
   font-size: 113%;
   background: #150b26;
+}
+
+/* Smooth scrolling for in-page anchors ONLY (Experience Package 1,
+   2026-11-08). Scoped to the data-scroll-behavior="smooth" attribute
+   that app/layout.tsx sets on <html>: Next.js temporarily overrides
+   this to instant behavior during route transitions, so navigations
+   land at the top of the new page (and back restores position) while
+   anchor clicks keep the smooth glide. Do NOT move scroll-behavior
+   back onto the plain html rule — that re-breaks page-top positioning
+   on every navigation. */
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -1127,9 +1138,14 @@ html {
   }
 }
 
-/* Respect users who prefer reduced motion. */
+/* Respect users who prefer reduced motion. The scroll-behavior override
+   must ALSO target the attribute selector: Package 1 scoped the smooth
+   rule to html[data-scroll-behavior="smooth"], whose specificity beats a
+   bare `html` rule even inside this media query — without the attribute
+   selector here, reduced-motion users would keep smooth scrolling. */
 @media (prefers-reduced-motion: reduce) {
-  html {
+  html,
+  html[data-scroll-behavior="smooth"] {
     scroll-behavior: auto;
   }
 
