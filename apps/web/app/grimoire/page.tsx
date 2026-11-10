@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   title:
     'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge — 1,051 pages of preserved works',
   description:
-    "Open The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge: a preservation of the collective works of generations — spells, rituals, recipes, and lost knowledge, 1,051 pages in all, each book found by Amber in its own way and digitized with care. The first seventeen pages are a free preview; the full compilation opens to subscribers and permanent-unlock holders.",
+    "Open The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge: a preservation of the collective works of generations — spells, rituals, recipes, and lost knowledge, 1,051 pages in all, each book found by Amber in its own way and digitized with care. The first seventeen pages are free to read; awaken a subscription and the entire book — all 1,051 pages — opens to you.",
 };
 
 // Session + entitlement state is per-request — never static.
@@ -83,11 +83,11 @@ export default async function GrimoirePage() {
         <section aria-label="Member access">
           <GrimoireGate gateTitle="The Living Grimoire" />
           <p>
-            No membership yet? The first seventeen pages above are free. See the{' '}
-            <a href="/grimoire/subscribe">
-              $8.88 permanent unlock and $7.77/month subscription options
-            </a>{' '}
-            for the full Living Grimoire.
+            No membership yet? The first seventeen pages above are free to
+            read. Awaken a{' '}
+            <a href="/grimoire/subscribe">$7.77/month membership</a> and
+            the entire Living Grimoire opens to you — all 1,051 pages,
+            for as long as your membership lives.
           </p>
         </section>
       )}

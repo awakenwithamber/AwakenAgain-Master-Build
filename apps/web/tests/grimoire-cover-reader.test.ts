@@ -76,6 +76,55 @@ const SUBSCRIBE = read('app/grimoire/subscribe/page.tsx');
 const NEW_TITLE =
   'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge';
 
+describe('grimoire 333 fix — free pages + subscription framing (2026-11-09)', () => {
+  it('the reader locked page carries no $8.88 / permanent-unlock sales pitch', () => {
+    expect(BOOK).not.toContain('Unlock it once for $8.88');
+    expect(BOOK).not.toContain('$8.88');
+    expect(BOOK).not.toContain('See the unlock &amp; subscription options');
+  });
+
+  it('the /grimoire page carries no $8.88 permanent-unlock pitch', () => {
+    expect(PAGE).not.toContain('$8.88 permanent unlock');
+    expect(PAGE).not.toContain('$8.88');
+  });
+
+  it('the reader locked page states 17 free pages and the whole 1,051-page book by subscription', () => {
+    expect(BOOK).toContain('Here the free pages end');
+    expect(BOOK).toContain('first 17');
+    expect(BOOK).toContain('open to every seeker, free');
+    expect(BOOK).toContain('Awaken your $7.77/month subscription');
+    expect(BOOK).toContain('all 1,051 pages of spells, rituals, and');
+    expect(BOOK).toContain('for as long as your membership');
+  });
+
+  it('the /grimoire gate paragraph + metadata state 17 free and all 1,051 pages by subscription', () => {
+    expect(PAGE).toContain('The first seventeen pages above are free to');
+    expect(PAGE).toContain('the entire Living Grimoire opens to you — all 1,051 pages,');
+    expect(PAGE).toContain('$7.77/month membership');
+    expect(PAGE).toContain(
+      'The first seventeen pages are free to read; awaken a subscription and the entire book — all 1,051 pages — opens to you.',
+    );
+  });
+
+  it('the gate component states 17 free and all 1,051 pages by subscription only', () => {
+    // Collapse whitespace: JSX line wraps split the sentence across
+    // source lines, and the pin asserts the sentence, not the wrap.
+    const gate = read('components/grimoire/GrimoireGate.tsx').replace(/\s+/g, ' ');
+    expect(gate).toContain('The first 17 pages are free to read.');
+    expect(gate).toContain('From page 18, the book opens to');
+    expect(gate).toContain('awaken a subscription and all 1,051 pages are yours to');
+    // Owner ruling 2026-11-09: no paying permanent-unlock holders exist —
+    // no holder-preservation wording on these surfaces.
+    expect(gate).not.toContain('Permanent-unlock holders');
+    expect(gate).not.toContain('permanent-unlock');
+  });
+
+  it('no holder-preservation wording on the locked page or /grimoire metadata', () => {
+    expect(BOOK).not.toContain('permanent-unlock holders');
+    expect(PAGE).not.toContain('permanent-unlock holders');
+  });
+});
+
 describe('grimoire cover overhaul — title surfaces', () => {
   it('the edition name carries the new title', () => {
     expect(GRIMOIRE_EDITION_NAME).toBe(NEW_TITLE);

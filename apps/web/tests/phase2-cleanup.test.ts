@@ -162,7 +162,9 @@ describe('GrimoireGate copy (WS2e)', () => {
   it('states the true rule: first 17 pages free, page 18 onward locked', () => {
     const src = read('components/grimoire/GrimoireGate.tsx');
     expect(src).toContain('first 17 pages are free');
-    expect(src).toContain('Page 18 onward');
+    expect(src).toContain('From page 18, the book opens to');
+    expect(src).toContain('awaken a subscription and all 1,051 pages are yours');
+    expect(src).not.toContain('Permanent-unlock holders');
     expect(src).not.toContain('Pages 14 and onward');
   });
 });
