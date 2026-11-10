@@ -44,8 +44,14 @@
  *   .subscription.deleted → ends at paid-through, and subscription
  *   checkout completions are handled by lib/subscriptions/
  *   stripe-lifecycle.ts — append-only, monotonic by event `created`.
- *   PERMANENT_UNLOCK (Stage 2) is a separate ledger and is never
- *   touched by subscription lapse/cancellation.
+ *
+ * $8.88 ABOLITION (owner decision 2026-11-09): the Stage 2 Grimoire
+ * unlock grant/revoke arms that used to live in this webhook were
+ * removed — the dormant Stripe unlock checkout route and its
+ * session classifier are deleted, and no Stripe event can grant or
+ * revoke a PERMANENT_UNLOCK anymore. The unlock ledger itself is a
+ * preserved legacy record store; revocation for a past sale remains
+ * available through the owner admin route.
  * - LIVEMODE (G-9, log-only): the event's livemode is recorded on
  *   its event-ledger entry; a mismatch with the configured key's
  *   mode is logged, never rejected.
@@ -81,15 +87,6 @@ import {
   type StripePaymentRecord,
 } from '../../../../lib/payments/stripe';
 import { createOrderStore } from '../../../../lib/orders/store';
-import {
-  findUnlockByTransactionRef,
-  grantUnlock,
-  revokeUnlockByTransactionRef,
-} from '../../../../lib/grimoire/unlock';
-import {
-  EXPECTED_UNLOCK_AMOUNT_CENTS,
-  isUnlockSessionMetadata,
-} from '../../../../lib/grimoire/unlock-checkout';
 import { createLogger } from '../../../../lib/observability/logger';
 import {
   applyInvoicePaid,
@@ -124,12 +121,6 @@ interface AppliedEvent {
   statusTransition: 'refunded' | 'disputed' | null;
   /** Ledger outcome label for the event-id record. */
   outcome: string;
-  /** Grimoire unlock granted by this delivery (Stage 2), when any. */
-  unlockGranted?: boolean;
-  /** Grimoire unlock revoked by this delivery (Stage 2), when any. */
-  unlockRevoked?: boolean;
-  /** Email the unlock was granted to, when any. */
-  unlockEmail?: string | null;
   /** Member email a subscription lifecycle event resolved, when any. */
   subscriptionEmail?: string | null;
   /** Subscription status after a lifecycle transition, when any. */
@@ -220,71 +211,6 @@ async function applyCompletedSession(
 }
 
 /**
- * The Grimoire unlock path (Stage 2) — a checkout.session.completed
- * carrying unlock metadata is NOT a product order: it never touches
- * the order store or the order paid ledger (Stage 1's strict order
- * rule is untouched). It grants the PERMANENT_UNLOCK entitlement
- * (lib/grimoire/unlock.ts) — and ONLY here, from a signature-verified
- * event whose amount equals the $8.88 unlock price and whose payment
- * is actually paid. Grant is idempotent by transaction.
- */
-async function applyUnlockCompletedSession(
-  event: StripeEventLike,
-): Promise<AppliedEvent | null> {
-  const object = event.data.object;
-  const metadata = (object.metadata ?? {}) as Record<string, unknown>;
-  if (!isUnlockSessionMetadata(metadata)) return null;
-
-  const paymentStatus = asString(object.payment_status);
-  if (paymentStatus && paymentStatus !== 'paid') {
-    return {
-      orderId: null,
-      markedPaid: false,
-      alreadyPaid: false,
-      statusTransition: null,
-      outcome: 'acknowledged',
-    };
-  }
-  const amount = asNumber(object.amount_total);
-  if (amount !== EXPECTED_UNLOCK_AMOUNT_CENTS) {
-    throw new Error(
-      `Stripe unlock session ${asString(object.id) ?? ''} amount ${amount} ` +
-        `does not match the $8.88 unlock price (${EXPECTED_UNLOCK_AMOUNT_CENTS}).`,
-    );
-  }
-  const email =
-    asString(metadata.email) ??
-    asString(object.customer_email) ??
-    asString(
-      (object.customer_details as Record<string, unknown> | null)?.email,
-    );
-  if (!email) {
-    throw new Error(
-      'Stripe unlock session carries no buyer email — cannot grant the unlock.',
-    );
-  }
-  const before = await findUnlockByTransactionRef(
-    asString(object.payment_intent) ?? asString(object.id),
-  );
-  const alreadyGranted = before !== null && before.state === 'active';
-  await grantUnlock({
-    email,
-    stripe_session_id: asString(object.id),
-    payment_intent_id: asString(object.payment_intent),
-    charge_id: asString(object.latest_charge) ?? asString(object.charge),
-  });
-  return {
-    orderId: null,
-    markedPaid: false,
-    alreadyPaid: false,
-    statusTransition: null,
-    outcome: alreadyGranted ? 'unlock_already_granted' : 'unlock_granted',
-    unlockGranted: true,
-    unlockEmail: email,
-  };
-}
-
-/**
  * Resolve the order a charge / dispute event belongs to, through the
  * linkage recorded at payment time: the event's payment_intent (or
  * the dispute's charge's payment intent) first, then any recorded
@@ -329,39 +255,8 @@ async function applyChargeStatusEvent(
   status: 'refunded' | 'disputed',
 ): Promise<AppliedEvent> {
   const object = event.data.object;
-  // Grimoire unlock revocation (Stage 2): a charge linked to an
-  // unlock transaction revokes the unlock — refund → 'refund',
-  // dispute (chargeback) → 'chargeback' — IN ADDITION TO any order
-  // transition below. Unlock sessions are not product orders, so the
-  // two linkages are independent and both are checked.
-  const unlockPaymentIntent = asString(object.payment_intent);
-  const unlockChargeId = asString(object.charge) ?? asString(object.id);
-  let unlockRevoked = false;
-  for (const ref of [unlockPaymentIntent, unlockChargeId]) {
-    if (!ref) continue;
-    const revoked = await revokeUnlockByTransactionRef(
-      ref,
-      status === 'refunded' ? 'refund' : 'chargeback',
-    );
-    if (revoked && revoked.state === 'revoked') {
-      unlockRevoked = true;
-      break;
-    }
-  }
-
   const linked = await resolveLinkedPayment(object);
   if (!linked) {
-    if (unlockRevoked) {
-      return {
-        orderId: null,
-        markedPaid: false,
-        alreadyPaid: false,
-        statusTransition: null,
-        outcome:
-          status === 'refunded' ? 'unlock_revoked_refund' : 'unlock_revoked_chargeback',
-        unlockRevoked: true,
-      };
-    }
     log.warn(
       'no recorded payment matches the charge/payment_intent linkage — acknowledged without changing any order',
       { event_id: event.id ?? null, event_type: event.type },
@@ -389,7 +284,6 @@ async function applyChargeStatusEvent(
     alreadyPaid: false,
     statusTransition: status,
     outcome: status === 'refunded' ? 'status_refunded' : 'status_disputed',
-    unlockRevoked,
   };
 }
 
@@ -400,10 +294,6 @@ async function applyChargeStatusEvent(
  */
 async function applyEvent(event: StripeEventLike): Promise<AppliedEvent> {
   if (event.type === 'checkout.session.completed') {
-    // Unlock sessions route by metadata into the unlock grant path —
-    // they are not product orders (Stage 2).
-    const unlockApplied = await applyUnlockCompletedSession(event);
-    if (unlockApplied) return unlockApplied;
     // Subscription sessions route into the subscription lifecycle —
     // they are not product orders either (Stage 3).
     const subscriptionApplied =
@@ -563,15 +453,12 @@ export async function POST(request: Request) {
       already_paid: applied.alreadyPaid,
       order_id: applied.orderId,
       status_transition: applied.statusTransition,
-      unlock_granted: applied.unlockGranted ?? false,
-      unlock_revoked: applied.unlockRevoked ?? false,
-      unlock_email: applied.unlockEmail ?? null,
       subscription_email: applied.subscriptionEmail ?? null,
       subscription_status: applied.subscriptionStatus ?? null,
     });
   } catch (err) {
     // Owner-visibility floor (Stage 5): EVERY processing failure —
-    // amount mismatch, missing tax breakdown, unlock amount mismatch,
+    // amount mismatch, missing tax breakdown,
     // lifecycle-handler failure, or any other handler error — emits
     // one structured error log carrying the event id + type. (Failed
     // deliveries are still NOT event-ledger recorded, per Stage 1, so

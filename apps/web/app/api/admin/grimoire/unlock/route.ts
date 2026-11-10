@@ -1,21 +1,22 @@
 /**
  * Owner Grimoire unlock administration — POST /api/admin/grimoire/unlock
- * (Phase 2, Workstream 3). The "extend the existing admin entitlement
- * path" endpoint for the manual unlock rail: the same owner-secret
- * bridge auth as the order payment/tracking routes.
+ * (Phase 2, Workstream 3; grant arm closed 2026-11-09).
+ *
+ * $8.88 ABOLITION (owner decision 2026-11-09): the permanent unlock
+ * is no longer sold, and this route no longer grants unlocks —
+ * { action: 'grant' } is refused with HTTP 410 and records NOTHING.
+ * Full Living Grimoire access now comes with the $7.77/month
+ * subscription while it is active. Existing unlock records are a
+ * preserved legacy ledger: the read path and the entitlement
+ * resolver are untouched, and revocation stays available here for
+ * refunds and chargebacks on past sales.
  *
  * Actions:
- * - { action: 'grant', request_id | email, reference? } — after the
- *   owner verifies the $8.88 payment arrived: appends the entitlement
- *   (lib/grimoire/unlock.ts, source 'owner_manual', transaction_ref =
- *   the verified payment reference, else the request ID), transitions
- *   the request to 'granted', and emails the customer that their
- *   unlock is active. Granting is idempotent.
+ * - { action: 'grant', ... } — CLOSED. Refused (410); no grant is
+ *   appended, no request is transitioned, no email is sent.
  * - { action: 'revoke', request_id | email, reason: 'refund' |
  *   'chargeback' } — canon (owner decision 2026-10-21 §13(2)): a
- *   refund or chargeback REVOKES the unlock; permanent rights
- *   otherwise survive, including subscription cancellation (which
- *   never touches this ledger at all).
+ *   refund or chargeback REVOKES the unlock.
  *
  * Auth contract, identical to the other admin routes:
  * OWNER_ADMIN_SECRET unset → 404; wrong/absent secret → 401; the
@@ -30,20 +31,10 @@ import { enforceRateLimit } from '../../../../../lib/security/rate-limit';
 import { ownerAuthorized } from '../../../../../lib/admin/owner-auth';
 import { normalizeSubscriptionEmail } from '../../../../../lib/subscriptions/entitlement';
 import {
-  findLatestUnlock,
-  grantUnlock,
   revokeLatestUnlockForEmail,
   type UnlockRevokeReason,
 } from '../../../../../lib/grimoire/unlock';
-import {
-  findPendingUnlockRequest,
-  findUnlockRequest,
-  transitionUnlockRequest,
-} from '../../../../../lib/grimoire/unlock-requests';
-import {
-  fireAndForgetEmail,
-  queueUnlockActiveEmail,
-} from '../../../../../lib/jobs/order-notifications';
+import { findUnlockRequest } from '../../../../../lib/grimoire/unlock-requests';
 
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
@@ -76,14 +67,29 @@ export async function POST(request: Request) {
     return fail(['Action must be "grant" or "revoke".']);
   }
 
-  // Resolve the target: a request_id (preferred — it carries the
-  // email and is the payment reference) or a bare email.
+  if (action === 'grant') {
+    return fail(
+      [
+        'Unlock grants are closed: the permanent unlock is no longer ' +
+          'sold (owner decision 2026-11-09), so no new unlock can be ' +
+          'granted here and nothing was recorded. Full Grimoire ' +
+          'access now comes with the $7.77/month subscription while ' +
+          'it is active. Existing unlock records are unchanged, and ' +
+          'revoke remains available for refunds and chargebacks on ' +
+          'past sales.',
+      ],
+      410,
+    );
+  }
+
+  // action === 'revoke'. Resolve the target: a request_id (it
+  // carries the email) or a bare email.
   const requestIdInput = sanitizePlainText(body.request_id, 64);
   const emailInput = normalizeSubscriptionEmail(
     sanitizePlainText(body.email, 254),
   );
   let email = emailInput;
-  let requestRecord = requestIdInput
+  const requestRecord = requestIdInput
     ? await findUnlockRequest(requestIdInput)
     : null;
   if (requestIdInput && !requestRecord) {
@@ -93,59 +99,9 @@ export async function POST(request: Request) {
     email = requestRecord.email;
   }
   if (!email) {
-    // Last resort for grant-by-email: the newest pending request.
     return fail(['Provide a request_id or the customer email.']);
   }
-  if (!requestRecord && action === 'grant') {
-    requestRecord = await findPendingUnlockRequest(email);
-  }
 
-  if (action === 'grant') {
-    const reference =
-      sanitizePlainText(body.reference, 120) ||
-      requestRecord?.request_id ||
-      null;
-    if (!reference) {
-      return fail([
-        'A payment reference (or request_id) is required to grant an unlock.',
-      ]);
-    }
-    // Idempotency is read from the ledger BEFORE granting: an active
-    // grant for this exact reference means this call is a re-record —
-    // grantUnlock will no-op, and no second confirmation email goes.
-    const before = await findLatestUnlock(email);
-    const already =
-      before !== null &&
-      before.state === 'active' &&
-      before.transaction_ref === reference;
-    const record = await grantUnlock({
-      email,
-      transaction_ref: reference,
-      source: 'owner_manual',
-    });
-    if (requestRecord) {
-      await transitionUnlockRequest(requestRecord.request_id, 'granted', reference);
-    }
-    if (!already) {
-      fireAndForgetEmail(
-        queueUnlockActiveEmail(
-          email,
-          requestRecord?.request_id ?? reference,
-        ),
-        { request_id: requestRecord?.request_id ?? reference, template: 'grimoire_unlock_active' },
-      );
-    }
-    return NextResponse.json({
-      ok: true,
-      action: 'grant',
-      email,
-      state: record.state,
-      transaction_ref: record.transaction_ref,
-      already_recorded: already,
-    });
-  }
-
-  // action === 'revoke'
   const reason: UnlockRevokeReason =
     body.reason === 'chargeback' ? 'chargeback' : 'refund';
   const revoked = await revokeLatestUnlockForEmail(email, reason);

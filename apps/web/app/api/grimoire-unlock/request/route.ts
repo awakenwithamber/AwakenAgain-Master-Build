@@ -1,138 +1,48 @@
 /**
- * POST /api/grimoire-unlock/request — ask for the $8.88 PERMANENT_UNLOCK
- * on the manual payment rail (Phase 2, Workstream 3; decision packet
- * 2026-10-24).
+ * /api/grimoire-unlock/request — CLOSED (owner decision 2026-11-09:
+ * the $8.88 permanent unlock was eliminated as a purchase option;
+ * full Living Grimoire access comes with the $7.77/month
+ * subscription while it is active).
  *
- * Creates a PENDING unlock request (lib/grimoire/unlock-requests) and
- * answers with the payment instructions for exactly $8.88: an emailed
- * Bookipi invoice (Amber sends it; the owner is notified of the
- * request by email), or Venmo / Cash App with the REQUEST ID as the
- * payment reference. The request grants NOTHING — access exists only
- * after the owner verifies the payment and grants it (POST
- * /api/admin/grimoire/unlock); the customer then gets the "unlock is
- * active" email.
+ * This route used to record pending unlock requests on the manual
+ * payment rail. It now refuses every request with HTTP 410 and
+ * records NOTHING — no request is written to the unlock-request
+ * ledger (lib/grimoire/unlock-requests), no owner notification is
+ * sent, and no entitlement can begin here. The closure gate in the
+ * redesign audit (§G.4: disposition pending requests before closing
+ * intake) was resolved by the owner's 2026-11-09 ruling that nobody
+ * has paid the $8.88 — there are no paid or granted unlocks to honor
+ * or refund, and an unpaid request was never a purchase.
  *
- * Idempotent-ish by design: an email with an active unlock hears so;
- * an email with a pending request gets that same request back (with
- * fresh instructions), never a duplicate.
+ * Existing unlock RECORDS are untouched: the entitlement resolver
+ * (lib/grimoire/entitlement.ts) and the unlock ledger read path
+ * (lib/grimoire/unlock.ts) are preserved exactly, and the read-only
+ * status route (../status) still answers for any email.
  */
 import { NextResponse } from 'next/server';
-import { isRecord, sanitizeEmail } from '../../../../lib/security/validation';
 import { enforceRateLimit } from '../../../../lib/security/rate-limit';
-import {
-  CASH_APP_HANDLE,
-  VENMO_HANDLE,
-} from '../../../../lib/checkout/order';
-import { GRIMOIRE_UNLOCK_PRICE_CENTS } from '../../../../lib/grimoire/edition';
-import { isUnlockEntitled } from '../../../../lib/grimoire/unlock';
-import {
-  createUnlockRequest,
-  findPendingUnlockRequest,
-  type UnlockPaymentMethod,
-  type UnlockRequestRecord,
-} from '../../../../lib/grimoire/unlock-requests';
-import {
-  fireAndForgetEmail,
-  queueUnlockRequestedNotification,
-} from '../../../../lib/jobs/order-notifications';
 
-function fail(errors: string[], status = 422) {
-  return NextResponse.json({ ok: false, errors }, { status });
-}
+const CLOSED_MESSAGE =
+  'The permanent unlock is no longer offered, so unlock requests ' +
+  'are closed and nothing was recorded. Full Living Grimoire access ' +
+  'now comes with the $7.77/month subscription while it is active — ' +
+  'see the membership options on this page. If you already sent a ' +
+  'payment for an unlock, contact Amber at Amber@awakenagain.com ' +
+  'and she will make it right.';
 
-function instructionsFor(record: UnlockRequestRecord) {
-  return {
-    request_id: record.request_id,
-    amount_cents: GRIMOIRE_UNLOCK_PRICE_CENTS,
-    amount: '$8.88',
-    payment_method: record.payment_method,
-    cash_app: CASH_APP_HANDLE,
-    venmo: VENMO_HANDLE,
-    reference: record.request_id,
-    note:
-      record.payment_method === 'bookipi_invoice'
-        ? 'Your invoice will be emailed to you — pay it by ACH bank ' +
-          'transfer to Bluevine, or with Venmo or Cash App, using your ' +
-          'request ID as the payment reference. Your unlock activates ' +
-          'as soon as Amber confirms your payment.'
-        : 'Send $8.88 with Venmo or Cash App, using your request ID as ' +
-          'the payment note/reference. Your unlock activates as soon ' +
-          'as Amber confirms your payment.',
-  };
+function closed(request: Request) {
+  const limited = enforceRateLimit(request, 'checkout');
+  if (limited) return limited;
+  return NextResponse.json(
+    { ok: false, state: 'closed', errors: [CLOSED_MESSAGE] },
+    { status: 410 },
+  );
 }
 
 export async function POST(request: Request) {
-  const limited = enforceRateLimit(request, 'checkout');
-  if (limited) return limited;
+  return closed(request);
+}
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return fail(['Request body must be valid JSON.'], 400);
-  }
-  if (!isRecord(body)) {
-    return fail(['Request body must be a JSON object.']);
-  }
-  const email = sanitizeEmail(body.email);
-  if (!email) {
-    return fail(['Please provide a valid email address.']);
-  }
-  const paymentMethod: UnlockPaymentMethod =
-    body.payment_method === 'cash_app_or_venmo'
-      ? 'cash_app_or_venmo'
-      : 'bookipi_invoice';
-
-  if (await isUnlockEntitled(email)) {
-    return NextResponse.json({
-      ok: true,
-      state: 'already_unlocked',
-      email,
-      message:
-        'This email already holds the permanent unlock — the full ' +
-        'composed Living Grimoire (The Grimoire of Ancient ' +
-        'Teachings complete, together with the collected works) is open ' +
-        'to you.',
-    });
-  }
-
-  const pending = await findPendingUnlockRequest(email);
-  if (pending) {
-    return NextResponse.json({
-      ok: true,
-      state: 'pending',
-      email,
-      payment: instructionsFor(pending),
-      message:
-        'Your unlock request is already recorded and waiting for ' +
-        'payment — here are the instructions again.',
-    });
-  }
-
-  const record = await createUnlockRequest({
-    email,
-    payment_method: paymentMethod,
-  });
-
-  // Owner notification — same fire-and-forget rule as order emails:
-  // Amber hears about the request (so she can send the invoice)
-  // without the customer's request ever depending on email delivery.
-  fireAndForgetEmail(queueUnlockRequestedNotification(record), {
-    request_id: record.request_id,
-    template: 'grimoire_unlock_requested',
-  });
-
-  return NextResponse.json(
-    {
-      ok: true,
-      state: 'pending',
-      email,
-      payment: instructionsFor(record),
-      message:
-        'Your unlock request is recorded. Pay $8.88 as shown, and your ' +
-        'permanent unlock activates as soon as Amber confirms the ' +
-        'payment — you\u2019ll get an email the moment it\u2019s active.',
-    },
-    { status: 201 },
-  );
+export async function GET(request: Request) {
+  return closed(request);
 }
