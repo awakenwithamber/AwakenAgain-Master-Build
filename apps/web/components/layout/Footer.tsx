@@ -243,8 +243,6 @@ export default function Footer() {
             <a href={`mailto:${BRAND_EMAIL}`}>{BRAND_EMAIL}</a>
             <br />
             <a href={BRAND_PHONE_TEL}>{BRAND_PHONE_DISPLAY}</a>
-            <br />
-            <a href="tel:+18014148984">(801) 414-8984</a>
           </p>
         </div>
         <div className="footer-col footer-newsletter" id="newsletter-signup">
