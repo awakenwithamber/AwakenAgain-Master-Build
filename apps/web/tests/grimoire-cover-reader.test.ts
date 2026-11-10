@@ -42,12 +42,26 @@
  *   the animation rules it overrides at equal specificity, or it
  *   silently loses.
  *
+ * IMMERSIVE READER (owner directive 2026-11-09 17:06 MST) — this
+ * supersedes the correction's direct entry, on the owner's word
+ * after she saw and approved the animation itself: the cover tap
+ * now plays that animation as the book's doorway and hands off —
+ * event-driven only — into the same reader. The correction's
+ * lessons are re-pinned, not repealed: no timer stages the entry,
+ * a skip is visible from the first frame, every failure opens the
+ * book, reduced motion bypasses the film. Page turns now also flip
+ * the front pages and Contents jumps, and navigation during a turn
+ * coalesces instead of being swallowed. Typography: Tangerine
+ * (self-hosted) display, EB Garamond reading text. The pins below
+ * that changed for this are named as changed, with the behaviour
+ * they protect unchanged.
+ *
  * Structural protections (unchanged on purpose): the edition ID stays
  * 'living-grimoire-333' (the entitlement key on existing records) and
  * the unlock scope keeps the wording shipped 2026-11-09.
  */
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   GRIMOIRE_EDITION_ID,
@@ -75,55 +89,6 @@ const SUBSCRIBE = read('app/grimoire/subscribe/page.tsx');
 
 const NEW_TITLE =
   'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge';
-
-describe('grimoire 333 fix — free pages + subscription framing (2026-11-09)', () => {
-  it('the reader locked page carries no $8.88 / permanent-unlock sales pitch', () => {
-    expect(BOOK).not.toContain('Unlock it once for $8.88');
-    expect(BOOK).not.toContain('$8.88');
-    expect(BOOK).not.toContain('See the unlock &amp; subscription options');
-  });
-
-  it('the /grimoire page carries no $8.88 permanent-unlock pitch', () => {
-    expect(PAGE).not.toContain('$8.88 permanent unlock');
-    expect(PAGE).not.toContain('$8.88');
-  });
-
-  it('the reader locked page states 17 free pages and the whole 1,051-page book by subscription', () => {
-    expect(BOOK).toContain('Here the free pages end');
-    expect(BOOK).toContain('first 17');
-    expect(BOOK).toContain('open to every seeker, free');
-    expect(BOOK).toContain('Awaken your $7.77/month subscription');
-    expect(BOOK).toContain('all 1,051 pages of spells, rituals, and');
-    expect(BOOK).toContain('for as long as your membership');
-  });
-
-  it('the /grimoire gate paragraph + metadata state 17 free and all 1,051 pages by subscription', () => {
-    expect(PAGE).toContain('The first seventeen pages above are free to');
-    expect(PAGE).toContain('the entire Living Grimoire opens to you — all 1,051 pages,');
-    expect(PAGE).toContain('$7.77/month membership');
-    expect(PAGE).toContain(
-      'The first seventeen pages are free to read; awaken a subscription and the entire book — all 1,051 pages — opens to you.',
-    );
-  });
-
-  it('the gate component states 17 free and all 1,051 pages by subscription only', () => {
-    // Collapse whitespace: JSX line wraps split the sentence across
-    // source lines, and the pin asserts the sentence, not the wrap.
-    const gate = read('components/grimoire/GrimoireGate.tsx').replace(/\s+/g, ' ');
-    expect(gate).toContain('The first 17 pages are free to read.');
-    expect(gate).toContain('From page 18, the book opens to');
-    expect(gate).toContain('awaken a subscription and all 1,051 pages are yours to');
-    // Owner ruling 2026-11-09: no paying permanent-unlock holders exist —
-    // no holder-preservation wording on these surfaces.
-    expect(gate).not.toContain('Permanent-unlock holders');
-    expect(gate).not.toContain('permanent-unlock');
-  });
-
-  it('no holder-preservation wording on the locked page or /grimoire metadata', () => {
-    expect(BOOK).not.toContain('permanent-unlock holders');
-    expect(PAGE).not.toContain('permanent-unlock holders');
-  });
-});
 
 describe('grimoire cover overhaul — title surfaces', () => {
   it('the edition name carries the new title', () => {
@@ -188,19 +153,25 @@ describe('grimoire cover overhaul — pure-image cover, no repetition', () => {
   });
 });
 
-describe('grimoire reader fix — direct entry, no scene, no zoom', () => {
-  it('the cover state is simply closed | open — the entry states are gone', () => {
-    expect(BOOK).toContain("useState<'closed' | 'open'>");
+describe('grimoire reader entry — the doorway film, no staged sequence', () => {
+  it('the cover states are closed | doorway | open — the old staged-entry states stay gone', () => {
+    /* CHANGED 2026-11-09 (immersive reader): the union gained
+       'doorway' on the owner's new directive; the protection —
+       no staged scene states — is unchanged. */
+    expect(BOOK).toContain("useState<'closed' | 'doorway' | 'open'>");
     expect(BOOK).not.toContain("'zooming'");
     expect(BOOK).not.toContain('ENTRY_SCENE_MS');
     expect(BOOK).not.toContain('ENTRY_ZOOM_MS');
   });
 
-  it('openBook opens the book directly — no timers stage the entry', () => {
+  it('openBook carries both entries — direct under reduced motion, the doorway otherwise — no timers stage either', () => {
+    /* RETITLED 2026-11-09 (immersive reader): openBook no longer
+       only opens directly; the no-timers protection is unchanged. */
     const openIdx = BOOK.indexOf('const openBook');
     const openEnd = BOOK.indexOf('}, [coverState]);', openIdx);
     const openBlock = BOOK.slice(openIdx, openEnd);
     expect(openBlock).toContain("setCoverState('open')");
+    expect(openBlock).toContain("setCoverState('doorway')");
     expect(openBlock).not.toContain('setTimeout');
     expect(openBlock).not.toContain('scene');
   });
@@ -237,14 +208,19 @@ describe('grimoire reader fix — front pages: Introduction → Contents → pag
   });
 
   it('turning back walks the same order in reverse', () => {
-    /* Contents → Introduction, and composed page 1 → Contents. */
+    /* Contents → Introduction, and composed page 1 → Contents.
+       CHANGED 2026-11-09 (immersive reader): the steps route
+       through startFrontTurn so the leaves turn; the order walked
+       — and the setFrontPage landings inside startFrontTurn — are
+       unchanged. */
     expect(BOOK).toContain("setFrontPage('intro')");
-    const prevIdx = BOOK.indexOf('const prev');
+    expect(BOOK).toContain("setFrontPage('contents')");
+    const prevIdx = BOOK.indexOf('const prev = useCallback');
     const prevBlock = BOOK.slice(prevIdx, prevIdx + 1400);
     expect(prevBlock).toContain("frontPage === 'contents'");
-    expect(prevBlock).toContain("setFrontPage('intro')");
+    expect(prevBlock).toContain("from: 'contents', to: 'intro'");
     expect(prevBlock).toContain('page <= 0');
-    expect(prevBlock).toContain("setFrontPage('contents')");
+    expect(prevBlock).toContain("from: 'book', to: 'contents'");
   });
 
   it('the introduction page carries the owner text verbatim', () => {
@@ -395,5 +371,92 @@ describe('grimoire cover overhaul — structural protections', () => {
       'The Grimoire of Ancient Teachings complete, together',
     );
     expect(GRIMOIRE_UNLOCK_SCOPE).toContain('(1,051 pages)');
+  });
+});
+
+describe('grimoire immersive reader — doorway, turns, typography (2026-11-09)', () => {
+  it('the doorway plays the approved opening film in the cover panel', () => {
+    expect(BOOK).toContain('/video/grimoire-opening.mp4');
+    expect(BOOK).toContain('poster="/images/living-grimoire-cover.webp"');
+    expect(BOOK).toContain('playsInline');
+    expect(BOOK).toContain('muted');
+    expect(existsSync(join(ROOT, 'public/video/grimoire-opening.mp4'))).toBe(
+      true,
+    );
+  });
+
+  it('the film asset is web-optimized — a bounded derivative of the 7.6MB master', () => {
+    const size = statSync(join(ROOT, 'public/video/grimoire-opening.mp4')).size;
+    expect(size).toBeGreaterThan(0);
+    expect(size).toBeLessThan(3_000_000);
+  });
+
+  it('every doorway exit is an event — ended, skip, or error — and all open the book', () => {
+    expect(BOOK).toContain('onEnded={finishDoorway}');
+    expect(BOOK).toContain('onError={finishDoorway}');
+    /* The skip is present from the first frame, twice over: in the
+       panel and below the book. */
+    expect(BOOK).toContain('Open the book ✦');
+    expect(BOOK).toContain('Skip — open the book');
+    const finIdx = BOOK.indexOf('const finishDoorway');
+    const finBlock = BOOK.slice(finIdx, BOOK.indexOf('}, [goTo]);', finIdx));
+    expect(finBlock).toContain("setCoverState('open')");
+    expect(finBlock).not.toContain('setTimeout');
+  });
+
+  it('reduced motion bypasses the film entirely — the direct open survives', () => {
+    const openIdx = BOOK.indexOf('const openBook');
+    const openBlock = BOOK.slice(
+      openIdx,
+      BOOK.indexOf('}, [coverState]);', openIdx),
+    );
+    expect(openBlock).toContain('guardRef.current.reducedMotion');
+    expect(openBlock).toContain("setCoverState('doorway')");
+  });
+
+  it('navigation during a composed turn coalesces to the newest target', () => {
+    expect(BOOK).toContain('pendingTurnRef');
+    const goIdx = BOOK.indexOf('const goTo');
+    const goBlock = BOOK.slice(goIdx, BOOK.indexOf('[isDesktop, pages]', goIdx));
+    expect(goBlock).toContain(
+      'pendingTurnRef.current = t === g.turn.to ? null : t',
+    );
+    /* The arrows and corner zones no longer disable mid-turn. */
+    expect(BOOK).not.toContain('disabled={!bookOpen || atEnd || !!turn}');
+    expect(BOOK).not.toContain('disabled={!bookOpen || atIntro || !!turn}');
+    expect(BOOK).not.toContain('disabled={atIntro || !!turn}');
+    expect(BOOK).not.toContain('disabled={atEnd || !!turn}');
+  });
+
+  it('front pages and Contents jumps turn their leaves too', () => {
+    expect(BOOK).toContain('interface FrontTurnState');
+    expect(BOOK).toContain('startFrontTurn');
+    expect(BOOK).toContain('pendingFrontRef');
+    expect(BOOK).toContain('frontDisplay');
+  });
+
+  it('the turning sheet carries the soft shadow sweep, stilled under reduced motion', () => {
+    expect(CSS).toContain('@keyframes sheetShade');
+    expect(CSS).toContain('.face::after');
+    const reduceIdx = CSS.indexOf('@media (prefers-reduced-motion: reduce)');
+    const block = CSS.slice(reduceIdx);
+    expect(block).toContain('.face::after');
+    expect(block).toContain('.doorway');
+  });
+
+  it('typography: Tangerine self-hosted for display, EB Garamond for reading text', () => {
+    expect(CSS).toContain('@font-face');
+    expect(CSS).toContain("font-family: 'Tangerine'");
+    expect(CSS).toContain("url('/fonts/tangerine-700.woff2')");
+    expect(existsSync(join(ROOT, 'public/fonts/tangerine-700.woff2'))).toBe(
+      true,
+    );
+    const bodyIdx = CSS.indexOf('\n.handBody {');
+    const bodyBlock = CSS.slice(bodyIdx, CSS.indexOf('}', bodyIdx));
+    expect(bodyBlock).toContain("'EB Garamond'");
+    /* The font CDN link and the old hand are gone from the reader. */
+    expect(BOOK).not.toContain('fonts.googleapis.com');
+    expect(BOOK).not.toContain('Caveat');
+    expect(CSS).not.toContain('Caveat');
   });
 });

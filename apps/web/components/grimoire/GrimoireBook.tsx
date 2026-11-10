@@ -4,8 +4,9 @@
  * WORKSTREAM D — <GrimoireBook>.
  *
  * A leather-bound, handmade-book rendering of the Living Grimoire:
- * parchment pages, handwritten-style text (Caveat), 3D page-turn
- * animation (~600ms), edge tap zones + arrows + keyboard + swipe.
+ * parchment pages, calligraphic display text (Tangerine, self-hosted)
+ * with EB Garamond reading text, 3D page-turn animation (~600ms),
+ * edge tap zones + arrows + keyboard + swipe.
  *
  * Desktop (≥900px): two-page spread, turns advance 2 pages.
  * Mobile: single page, turns advance 1 page.
@@ -41,6 +42,24 @@
  * arrows under the book, swipe, keys, bottom-corner tap zones — and
  * one quiet line of instruction under the arrows. No tutorial
  * overlays.
+ *
+ * IMMERSIVE READER (2026-11-09, owner directive 17:06 MST — this
+ * supersedes the reader fix's direct entry): tapping the cover now
+ * plays the owner's approved opening animation (the Grimoire on
+ * royal purple velvet, its cover lifting, the view drawing into the
+ * pages) as the book's DOORWAY, then hands off — event-driven only
+ * (the film's end, a skip, or a failure) — into this same reader on
+ * the Introduction. The failed sequence's lessons are binding: no
+ * timer stages the entry, controls are never dead (a skip is
+ * visible from the first frame, and tapping the film skips), every
+ * failure opens the book (fail-open), and reduced motion bypasses
+ * the film entirely. Page turns now also flip the front pages and
+ * Contents jumps, and a turn never swallows input — navigation
+ * during a turn coalesces to the newest target. Typography:
+ * Tangerine for the book's display hand, EB Garamond for
+ * extended-reading body text — chosen from rendered comparisons
+ * (see the stage report); the arrangement is the owner's to
+ * confirm or flip.
  */
 import {
   createContext,
@@ -97,6 +116,27 @@ interface TurnState {
   from: number;
   to: number;
 }
+
+/** A front page of the book, or the composed book itself. */
+type FrontView = 'intro' | 'contents' | 'book';
+
+/**
+ * A page turn that involves the front pages (immersive reader,
+ * 2026-11-09): Introduction ↔ Contents, Contents → a composed page
+ * (Contents jumps included), or composed page 1 → Contents. The
+ * destination state lands at once — exactly as with composed turns —
+ * and the sheet carries the eye across.
+ */
+interface FrontTurnState {
+  dir: 'fwd' | 'back';
+  from: FrontView;
+  to: FrontView;
+  /** Composed page index the flip lands on when `to` is the book. */
+  landPage: number;
+}
+
+/** A navigation intent named while a front turn is flying. */
+type FrontIntent = 'next' | 'prev' | { jump: number };
 
 /* ------------------------------------------------------------------ */
 /* Page renderers                                                      */
@@ -816,21 +856,18 @@ function LockedPageView({
         <h2 className={styles.handHeading}>A Kept Page</h2>
       )}
       <p className={`${styles.handBody} ${styles.dropcap}`}>
-        Here the free pages end — but the book goes on. The first 17
-        pages are open to every seeker, free; this page is kept for
-        members of the Living Grimoire, and subscribers who have
-        verified their email see it in full.
+        This page is kept for members of the Living Grimoire.
+        Subscribers and permanent-unlock holders who have verified
+        their email see it in full; everyone else sees the first seventeen
+        pages freely.
       </p>
       <p className={styles.handBody}>
-        Awaken your $7.77/month subscription and the entire Living
-        Grimoire opens to you: all 1,051 pages of spells, rituals, and
-        lost knowledge, yours to read for as long as your membership
-        lives. And if you already have access, verify your email below
-        the book to open it.
+        Unlock it once for $8.88, or subscribe for $7.77/month — and if you
+        already have access, verify your email below the book to open it.
       </p>
       <p style={{ marginTop: '1em' }}>
         <Link href="/grimoire/subscribe" className={styles.entryLink}>
-          Awaken your subscription →
+          See the unlock &amp; subscription options →
         </Link>
       </p>
     </PageShell>
@@ -913,7 +950,17 @@ export interface GrimoireBookProps {
 }
 
 export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
-  const [coverState, setCoverState] = useState<'closed' | 'open'>('closed');
+  /*
+   * Entry states (immersive reader, 2026-11-09): 'closed' shows the
+   * cover; 'doorway' plays the opening animation over the book;
+   * 'open' is the reader itself. The doorway is exited only by
+   * events — the film ending, a skip, or a failure (finishDoorway).
+   */
+  const [coverState, setCoverState] = useState<'closed' | 'doorway' | 'open'>('closed');
+  /** The doorway film layer cross-dissolving away after the handoff. */
+  const [doorwayLeaving, setDoorwayLeaving] = useState(false);
+  /** The film can paint (its poster shows until then). */
+  const [videoReady, setVideoReady] = useState(false);
   /*
    * The front pages (2026-11-09): an opened book lands on the
    * Introduction, turns forward to the Contents, then into the
@@ -929,6 +976,7 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [page, setPage] = useState(0);
   const [turn, setTurn] = useState<TurnState | null>(null);
+  const [frontTurn, setFrontTurn] = useState<FrontTurnState | null>(null);
   const [query, setQuery] = useState('');
   const [announce, setAnnounce] = useState('');
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -940,9 +988,30 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     scrollTopAtStart: number;
   } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const frontTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  /*
+   * Navigation named while a turn is flying (immersive reader,
+   * 2026-11-09): a turn must never swallow input, so the newest
+   * target is kept here and the flying turn chains on to it.
+   */
+  const pendingTurnRef = useRef<number | null>(null);
+  /** The same, for turns involving the front pages. */
+  const pendingFrontRef = useRef<FrontIntent | null>(null);
+  /** A jump queued behind the doorway (the ribbon's index jump). */
+  const pendingAfterOpenRef = useRef<'index' | null>(null);
+  /* Latest navigation callbacks, for the front-turn timer to run a
+     queued intent after the sheet lands. */
+  const nextRef = useRef<() => void>(() => {});
+  const prevRef = useRef<() => void>(() => {});
+  const jumpRef = useRef<(target: number) => void>(() => {});
   const scrollMemoryRef = useRef<Map<number, number>>(new Map());
 
   const turnMs = reducedMotion ? TURN_MS_REDUCED : TURN_MS;
+  /* Mirrors for callbacks that must read live values without
+     re-subscribing (the entry callback's shape is pinned by tests). */
+  const turnMsRef = useRef(turnMs);
+  turnMsRef.current = turnMs;
 
   const maxPage = pages.length - 1;
   const bookOpen = coverState === 'open';
@@ -958,14 +1027,34 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
      act on a stale closure. */
   const guardRef = useRef({
     turn: null as TurnState | null,
+    frontTurn: null as FrontTurnState | null,
     bookOpen: false,
+    coverState: 'closed' as 'closed' | 'doorway' | 'open',
     page: 0,
     frontPage: 'intro' as 'intro' | 'contents' | null,
+    isDesktop: false,
+    reducedMotion: false,
   });
   guardRef.current.turn = turn;
+  guardRef.current.frontTurn = frontTurn;
   guardRef.current.bookOpen = bookOpen;
+  guardRef.current.coverState = coverState;
   guardRef.current.page = page;
   guardRef.current.frontPage = frontPage;
+  guardRef.current.isDesktop = isDesktop;
+  guardRef.current.reducedMotion = reducedMotion;
+
+  /*
+   * Which front view the spread shows. During a front turn the FROM
+   * view stays under the sheet — the destination view appears as
+   * the sheet lands, exactly as composed turns keep the from-spread
+   * under their sheet.
+   */
+  const frontDisplay: FrontView = frontTurn
+    ? frontTurn.from
+    : frontPage === null
+      ? 'book'
+      : frontPage;
 
   /* Viewport tracking — desktop gets a two-page spread. */
   useEffect(() => {
@@ -983,6 +1072,7 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   useEffect(() => {
     return () => {
       if (timer.current) clearTimeout(timer.current);
+      if (frontTimer.current) clearTimeout(frontTimer.current);
     };
   }, []);
 
@@ -996,75 +1086,175 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     return () => mq.removeEventListener('change', apply);
   }, []);
 
+  /*
+   * Begin a composed-page turn. When the sheet lands, a target named
+   * mid-turn (pendingTurnRef) chains straight into the next turn —
+   * input during a turn is never swallowed (immersive reader,
+   * 2026-11-09). Reads only refs, state setters, and the stable
+   * pages payload, so any render's copy of this function is safe
+   * for the memoized callbacks below to call.
+   */
+  const beginTurn = (from: number, to: number) => {
+    setTurn({ dir: to > from ? 'fwd' : 'back', from, to });
+    setPage(to);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const pending = pendingTurnRef.current;
+      pendingTurnRef.current = null;
+      if (pending !== null && pending !== to) {
+        beginTurn(to, pending);
+        return;
+      }
+      setTurn(null);
+      setAnnounce(
+        `Page ${to + 1} of ${pages.length} — ${displayPageTitle(pages[to])}`,
+      );
+    }, turnMsRef.current);
+  };
+
   const goTo = useCallback(
     (target: number) => {
       const g = guardRef.current;
-      if (g.turn || !g.bookOpen) return;
+      if (!g.bookOpen) return;
       // Desktop targets are spread bases, never a right-hand page itself:
       // targeting the final page index directly made the turn sheet read
       // pages[pages.length] (undefined) and throw. See grimoirePagination.
       const t = clampNavigationTarget(target, pages.length, isDesktop);
+      if (g.frontTurn) {
+        /* A front-page turn is flying: queue the jump behind it. */
+        pendingFrontRef.current = { jump: t };
+        return;
+      }
+      if (g.turn) {
+        /* A turn is flying: coalesce to the newest target — the
+           flying turn chains on to it when it lands. Naming the
+           in-flight destination again simply settles there. */
+        pendingTurnRef.current = t === g.turn.to ? null : t;
+        return;
+      }
       if (t === g.page) {
         /* Already on that page — but if a front page is showing, the
            navigation still means "take me into the book, here". */
         if (g.frontPage !== null) setFrontPage(null);
         return;
       }
-      const dir: TurnState['dir'] = t > g.page ? 'fwd' : 'back';
-      setTurn({ dir, from: g.page, to: t });
       /* Any composed-page navigation leaves the front pages behind. */
       setFrontPage(null);
-      setPage(t);
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        setTurn(null);
-        setAnnounce(`Page ${t + 1} of ${pages.length} — ${displayPageTitle(pages[t])}`);
-      }, turnMs);
+      beginTurn(g.page, t);
     },
-    [isDesktop, maxPage, pages, turnMs],
+    [isDesktop, pages],
   );
 
   const step = isDesktop ? 2 : 1;
 
   /*
-   * Moving through the front pages: Introduction → Contents → the
-   * composed book's first page. Plain state changes — no staged
-   * animation between front pages (owner directive 2026-11-09).
+   * Turn a leaf that involves the front pages (immersive reader,
+   * 2026-11-09). The destination state lands at once — exactly as
+   * with composed turns — and the sheet carries the eye across.
+   * Whether a sheet renders at all is geometry: on mobile the
+   * single page always flips; on desktop the front pages share a
+   * spread whose right leaf is the flyleaf, so front-to-front turns
+   * keep the front pages' own gentle fade, while turns to or from
+   * the composed book flip a leaf of the spread. A navigation named
+   * mid-turn is queued (pendingFrontRef) and runs as the sheet
+   * lands — input is never swallowed here either.
    */
-  const advanceFront = useCallback(() => {
-    if (!bookOpen) return;
-    if (frontPage === 'intro') {
+  const startFrontTurn = (ft: FrontTurnState) => {
+    if (ft.to === 'book') {
+      setFrontPage(null);
+      setPage(ft.landPage);
+    } else if (ft.to === 'contents') {
       setFrontPage('contents');
-      setAnnounce('Contents — tap a section to jump to it.');
+    } else {
+      setFrontPage('intro');
+    }
+    const sheetRenders =
+      !guardRef.current.isDesktop || ft.from === 'book' || ft.to === 'book';
+    if (!sheetRenders) {
+      if (ft.to === 'contents') {
+        setAnnounce('Contents — tap a section to jump to it.');
+      } else if (ft.to === 'intro') {
+        setAnnounce('Introduction — turn the page to begin.');
+      }
       return;
     }
-    if (frontPage === 'contents') {
-      setFrontPage(null);
-      setAnnounce(
-        `Page 1 of ${pages.length} — ${displayPageTitle(pages[0])}`,
-      );
-    }
-  }, [bookOpen, frontPage, pages]);
+    setFrontTurn(ft);
+    if (frontTimer.current) clearTimeout(frontTimer.current);
+    frontTimer.current = setTimeout(() => {
+      setFrontTurn(null);
+      if (ft.to === 'book') {
+        setAnnounce(
+          `Page ${ft.landPage + 1} of ${pages.length} — ${displayPageTitle(pages[ft.landPage])}`,
+        );
+      } else if (ft.to === 'contents') {
+        setAnnounce('Contents — tap a section to jump to it.');
+      } else {
+        setAnnounce('Introduction — turn the page to begin.');
+      }
+      const pending = pendingFrontRef.current;
+      pendingFrontRef.current = null;
+      if (pending === 'next') nextRef.current();
+      else if (pending === 'prev') prevRef.current();
+      else if (pending) jumpRef.current(pending.jump);
+    }, turnMsRef.current);
+  };
 
   /*
-   * A Contents entry tap: jump straight to that section's first
-   * composed page. Instant, like the front-page turns — the flip
-   * sheet belongs to page-by-page reading inside the composed book.
+   * Moving through the front pages: Introduction → Contents → the
+   * composed book's first page — each step now turns its leaf
+   * (immersive reader, 2026-11-09).
+   */
+  const advanceFront = useCallback(() => {
+    const g = guardRef.current;
+    if (g.coverState !== 'open') return;
+    if (g.frontTurn) {
+      pendingFrontRef.current = 'next';
+      return;
+    }
+    if (g.frontPage === 'intro') {
+      startFrontTurn({ dir: 'fwd', from: 'intro', to: 'contents', landPage: 0 });
+      return;
+    }
+    if (g.frontPage === 'contents') {
+      startFrontTurn({
+        dir: 'fwd',
+        from: 'contents',
+        to: 'book',
+        landPage: clampNavigationTarget(g.page, pages.length, isDesktop),
+      });
+    }
+  }, [isDesktop, pages]);
+
+  /*
+   * A Contents entry tap: turn straight to that section's first
+   * composed page. The leaf turns in the direction of the jump —
+   * the flip belongs to this navigation too (immersive reader,
+   * 2026-11-09), not only to page-by-page reading.
    */
   const jumpFromContents = useCallback(
     (target: number) => {
-      if (!bookOpen) return;
+      const g = guardRef.current;
+      if (g.coverState !== 'open') return;
+      if (g.frontTurn) {
+        pendingFrontRef.current = { jump: target };
+        return;
+      }
       const t = clampNavigationTarget(target, pages.length, isDesktop);
-      setFrontPage(null);
-      setPage(t);
-      setAnnounce(
-        `Page ${t + 1} of ${pages.length} — ${displayPageTitle(pages[t])}`,
-      );
+      startFrontTurn({
+        dir: 'fwd',
+        from: g.frontPage ?? 'contents',
+        to: 'book',
+        landPage: t,
+      });
     },
-    [bookOpen, isDesktop, pages],
+    [isDesktop, pages],
   );
 
   const next = useCallback(() => {
+    if (guardRef.current.frontTurn) {
+      pendingFrontRef.current = 'next';
+      return;
+    }
     if (frontPage !== null) {
       advanceFront();
       return;
@@ -1073,50 +1263,132 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   }, [advanceFront, frontPage, goTo, page, step]);
 
   const prev = useCallback(() => {
-    if (!bookOpen || turn) return;
+    if (!bookOpen) return;
+    const g = guardRef.current;
+    if (g.frontTurn) {
+      pendingFrontRef.current = 'prev';
+      return;
+    }
+    if (g.turn) {
+      /* A composed turn is flying: coalesce like any other input. */
+      goTo(page - step);
+      return;
+    }
     if (frontPage === 'contents') {
-      /* Back from the Contents page returns to the Introduction. */
-      setFrontPage('intro');
-      setAnnounce('Introduction — turn the page to begin.');
+      /* Back from the Contents page returns to the Introduction —
+         its leaf turns back, as any page's would. */
+      startFrontTurn({ dir: 'back', from: 'contents', to: 'intro', landPage: 0 });
       return;
     }
     if (frontPage === 'intro') return;
     if (page <= 0) {
       /* Turning back from the first composed page returns to the
          Contents page, as turning back in a real book would. */
-      setFrontPage('contents');
-      setAnnounce('Contents — tap a section to jump to it.');
+      startFrontTurn({ dir: 'back', from: 'book', to: 'contents', landPage: 0 });
       return;
     }
     goTo(page - step);
-  }, [bookOpen, frontPage, goTo, page, step, turn]);
+  }, [bookOpen, frontPage, goTo, page, step]);
+
+  /* Keep the callback mirrors current for the front-turn timer. */
+  nextRef.current = next;
+  prevRef.current = prev;
+  jumpRef.current = jumpFromContents;
 
   /*
-   * Entry (owner correction 2026-11-09): the book simply opens —
-   * directly and immediately onto the Introduction. The earlier
-   * table-scene/zoom sequence is removed entirely; there is nothing
-   * to wait for and nothing that can stall on a phone.
+   * Entry (owner directive 2026-11-09 17:06 MST): the cover tap
+   * plays the approved opening animation as the book's doorway —
+   * the film draws the visitor in, and its end hands off into the
+   * open book (finishDoorway). Under reduced motion the film is
+   * bypassed entirely and the book simply opens, at once, onto the
+   * Introduction — the reader fix's direct entry, preserved for
+   * exactly the readers it protects.
    */
   const openBook = useCallback(() => {
     if (coverState !== 'closed') return;
-    setCoverState('open');
-    setAnnounce('The grimoire is open. Introduction — turn the page to begin.');
+    if (guardRef.current.reducedMotion) {
+      guardRef.current.bookOpen = true;
+      setCoverState('open');
+      setAnnounce('The grimoire is open. Introduction — turn the page to begin.');
+      return;
+    }
+    setVideoReady(false);
+    setCoverState('doorway');
+    setAnnounce('The grimoire is opening…');
   }, [coverState]);
 
+  /*
+   * The doorway handoff — EVENT-DRIVEN only. The film's end, a tap
+   * on the film, the skip control, and any load or play failure all
+   * land here, and every path opens the book onto the Introduction:
+   * the doorway can enhance the entrance but can never bar it
+   * (fail-open). The film layer then cross-dissolves away; its own
+   * transitionend unmounts it. No timer stages any of this.
+   */
+  const finishDoorway = useCallback(() => {
+    if (guardRef.current.coverState !== 'doorway') return;
+    guardRef.current.bookOpen = true;
+    setCoverState('open');
+    setDoorwayLeaving(true);
+    setAnnounce('The grimoire is open. Introduction — turn the page to begin.');
+    const intent = pendingAfterOpenRef.current;
+    pendingAfterOpenRef.current = null;
+    if (intent === 'index') goTo(2);
+  }, [goTo]);
+
+  /* If the film cannot even start, the book opens — fail-open. */
+  useEffect(() => {
+    if (coverState !== 'doorway') return;
+    const v = videoRef.current;
+    if (!v) return;
+    const p = v.play();
+    if (p) p.catch(() => finishDoorway());
+  }, [coverState, finishDoorway]);
+
   const goToIndex = useCallback(() => {
-    if (!guardRef.current.bookOpen) {
-      openBook();
-      // The book now opens instantly; the short delay only lets the
-      // open state land before goTo reads live guard state.
-      window.setTimeout(() => goTo(2), 100);
-    } else {
-      goTo(2);
+    const g = guardRef.current;
+    if (g.coverState !== 'open') {
+      /* The index waits behind the doorway: queue the jump, and
+         opening the book delivers it (the film's end, a skip, or —
+         under reduced motion — the direct open below). */
+      pendingAfterOpenRef.current = 'index';
+      if (g.coverState === 'closed') {
+        openBook();
+        if (guardRef.current.reducedMotion) {
+          pendingAfterOpenRef.current = null;
+          goTo(2);
+        }
+      }
+      return;
     }
-  }, [goTo, openBook]);
+    if (g.frontTurn) {
+      pendingFrontRef.current = { jump: 2 };
+      return;
+    }
+    if (g.frontPage !== null) {
+      jumpFromContents(2);
+      return;
+    }
+    goTo(2);
+  }, [goTo, jumpFromContents, openBook]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     // Let focused buttons/links handle their own keys (avoids double-open).
     if ((e.target as HTMLElement).closest('button, a, input')) return;
+    if (coverState === 'doorway') {
+      /* The doorway answers the keyboard too — any forward key or
+         Escape skips straight into the book. */
+      if (
+        e.key === 'Enter' ||
+        e.key === ' ' ||
+        e.key === 'Escape' ||
+        e.key === 'ArrowRight'
+      ) {
+        e.preventDefault();
+        finishDoorway();
+      }
+      return;
+    }
     if (!bookOpen) {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -1166,7 +1438,9 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   const onTouchEnd = (e: React.TouchEvent) => {
     const start = touchRef.current;
     touchRef.current = null;
-    if (!start || !bookOpen || turn) return;
+    /* A swipe during a turn is an intent, not an interruption: it
+       reaches next()/prev(), which coalesce it (2026-11-09). */
+    if (!start || !bookOpen) return;
     const t = e.changedTouches[0];
     if (!t) return;
     const contentScrolled =
@@ -1225,7 +1499,7 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
   const onPointerUp = (e: React.PointerEvent) => {
     const start = pointerRef.current;
     pointerRef.current = null;
-    if (!start || e.pointerType === 'touch' || !bookOpen || turn) return;
+    if (!start || e.pointerType === 'touch' || !bookOpen) return;
     const contentScrolled =
       start.scrollEl !== null &&
       start.scrollEl.scrollTop !== start.scrollTopAtStart;
@@ -1290,6 +1564,95 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
     );
   }
 
+  /*
+   * Sheet for a turn involving the front pages. Its faces are whole
+   * views, not composed pages. Geometry follows the composed sheet:
+   * on mobile the single page flips whole; on desktop a turn into
+   * the book flips the spread's right leaf — the flyleaf going in
+   * (its face front), revealing the landing spread's right page —
+   * and a turn back out flips the left leaf, page 1 giving way to
+   * the front page it returns to. (Front-to-front turns on desktop
+   * render no sheet: their spread's leaves do not change, and the
+   * front pages keep their own fade — see startFrontTurn.)
+   */
+  let frontSheet: React.ReactNode = null;
+  if (frontTurn && bookOpen) {
+    const { dir, from, to, landPage } = frontTurn;
+    const frontViewNode = (v: 'intro' | 'contents', side: 'left' | 'right') =>
+      v === 'intro' ? (
+        <IntroPageView side={side} onBegin={() => {}} />
+      ) : (
+        <ContentsPageView
+          side={side}
+          entries={contentsEntries}
+          onJump={() => {}}
+        />
+      );
+    const bookViewNode = (idx: number, side: 'left' | 'right') => (
+      <PageView
+        page={pages[idx]}
+        side={side}
+        query={query}
+        setQuery={setQuery}
+        onJump={goTo}
+      />
+    );
+    if (!isDesktop) {
+      const faceSide = dir === 'fwd' ? 'right' : 'left';
+      frontSheet = (
+        <div
+          className={`${styles.sheet} ${styles.sheetFull} ${dir === 'back' ? styles.sheetFullBack : ''} ${dir === 'fwd' ? styles.sheetFwd : styles.sheetBack}`}
+          aria-hidden="true"
+        >
+          <div className={`${styles.face} ${styles.faceFront}`}>
+            {from === 'book'
+              ? bookViewNode(page, faceSide as 'left' | 'right')
+              : frontViewNode(from as 'intro' | 'contents', faceSide as 'left' | 'right')}
+          </div>
+          <div className={`${styles.face} ${styles.faceBack}`}>
+            {to === 'book'
+              ? bookViewNode(landPage, faceSide as 'left' | 'right')
+              : frontViewNode(to as 'intro' | 'contents', faceSide as 'left' | 'right')}
+          </div>
+        </div>
+      );
+    } else if (to === 'book') {
+      frontSheet = (
+        <div
+          className={`${styles.sheet} ${styles.sheetRight} ${styles.sheetFwd}`}
+          aria-hidden="true"
+        >
+          <div className={`${styles.face} ${styles.faceFront}`}>
+            <div className={styles.pageSlot}>
+              <div className={`${styles.page} ${styles.pageRight}`}>
+                <p className={styles.flyleafMark} aria-hidden="true">
+                  ✦
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className={`${styles.face} ${styles.faceBack}`}>
+            {bookViewNode(Math.min(landPage + 1, pages.length - 1), 'right')}
+          </div>
+        </div>
+      );
+    } else if (from === 'book') {
+      frontSheet = (
+        <div
+          className={`${styles.sheet} ${styles.sheetLeft} ${styles.sheetBack}`}
+          aria-hidden="true"
+        >
+          <div className={`${styles.face} ${styles.faceFront}`}>
+            {bookViewNode(0, 'left')}
+          </div>
+          <div className={`${styles.face} ${styles.faceBack}`}>
+            {frontViewNode(to as 'intro' | 'contents', 'left')}
+          </div>
+        </div>
+      );
+    }
+  }
+
   // On desktop the book ends at the final SPREAD (base of the last page),
   // not at the last page index — the old comparison left Next enabled on
   // the final spread and invited the crashing extra turn.
@@ -1305,17 +1668,11 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
-      {/* Handwriting font — hoisted to <head> by React 19. layout.tsx untouched. */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap"
-        rel="stylesheet"
-      />
+      {/* Typography (immersive reader, 2026-11-09): the display hand
+          is Tangerine, SELF-HOSTED via @font-face in
+          grimoire.module.css; reading text is EB Garamond, loaded
+          site-wide by layout.tsx. No font CDN link lives here any
+          more. layout.tsx untouched. */}
 
       <p className={styles.eyebrow}>✦ A living archive of botanical wisdom ✦</p>
       <div className={styles.ribbonRow}>
@@ -1347,13 +1704,57 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
             </div>
           )}
 
+          {/* The doorway (owner directive 2026-11-09 17:06 MST): the
+              approved opening animation plays in the cover's own
+              panel — the cover art is its poster and backdrop, so the
+              first frame is the book itself while the film loads. The
+              film is muted and decorative (aria-hidden); the skip is
+              a real button, visible from the first frame, and tapping
+              the film skips too. Every exit — end, skip, error —
+              lands in finishDoorway, which opens the book. */}
+          {(coverState === 'doorway' || doorwayLeaving) && (
+            <div
+              className={`${styles.doorway} ${doorwayLeaving ? styles.doorwayLeaving : ''}`}
+              onClick={finishDoorway}
+              onTransitionEnd={(e) => {
+                if (e.propertyName === 'opacity') setDoorwayLeaving(false);
+              }}
+            >
+              <video
+                ref={videoRef}
+                className={`${styles.doorwayVideo} ${videoReady ? styles.doorwayVideoReady : ''}`}
+                src="/video/grimoire-opening.mp4"
+                poster="/images/living-grimoire-cover.webp"
+                autoPlay
+                muted
+                playsInline
+                aria-hidden="true"
+                onCanPlay={() => setVideoReady(true)}
+                onEnded={finishDoorway}
+                onError={finishDoorway}
+              />
+              {!doorwayLeaving && (
+                <button
+                  type="button"
+                  className={styles.doorwaySkip}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    finishDoorway();
+                  }}
+                >
+                  Open the book ✦
+                </button>
+              )}
+            </div>
+          )}
+
           <div
-            className={`${styles.spread} ${coverState === 'closed' ? styles.spreadClosed : ''}`}
+            className={`${styles.spread} ${coverState !== 'open' ? styles.spreadClosed : ''}`}
             aria-hidden={!bookOpen}
           >
-            {frontPage !== null ? (
+            {frontDisplay !== 'book' ? (
               <>
-                {frontPage === 'intro' ? (
+                {frontDisplay === 'intro' ? (
                   <IntroPageView side="left" onBegin={advanceFront} />
                 ) : (
                   <ContentsPageView
@@ -1393,13 +1794,17 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
               </>
             )}
             {sheet}
+            {frontSheet}
             {bookOpen && (
               <>
+                {/* The corner zones stay live during a turn — a tap
+                    mid-turn is an intent, and navigation coalesces
+                    it (immersive reader, 2026-11-09). */}
                 <button
                   type="button"
                   className={`${styles.edgeZone} ${styles.edgeZoneLeft}`}
                   onClick={prev}
-                  disabled={atIntro || !!turn}
+                  disabled={atIntro}
                   aria-label="Previous page — turn from the bottom-left page corner"
                   tabIndex={-1}
                 />
@@ -1407,7 +1812,7 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
                   type="button"
                   className={`${styles.edgeZone} ${styles.edgeZoneRight}`}
                   onClick={next}
-                  disabled={atEnd || !!turn}
+                  disabled={atEnd}
                   aria-label="Next page — turn from the bottom-right page corner"
                   tabIndex={-1}
                 />
@@ -1438,12 +1843,26 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
         </div>
       )}
 
+      {/* While the doorway film plays, the same place below the book
+          carries its skip — a second, unmissable way in. */}
+      {coverState === 'doorway' && (
+        <div className={styles.coverActions}>
+          <button
+            type="button"
+            className={styles.openBtn}
+            onClick={finishDoorway}
+          >
+            Skip — open the book
+          </button>
+        </div>
+      )}
+
       <div className={styles.navRow}>
         <button
           type="button"
           className={styles.navBtn}
           onClick={prev}
-          disabled={!bookOpen || atIntro || !!turn}
+          disabled={!bookOpen || atIntro}
           aria-label="Turn to the previous page"
         >
           ‹
@@ -1455,13 +1874,15 @@ export function GrimoireBook({ pages, viewerEmail = null }: GrimoireBookProps) {
               : atContents
                 ? 'Contents'
                 : `Page ${displayPage + 1} of ${pages.length}`
-            : 'The book is closed'}
+            : coverState === 'doorway'
+              ? 'Opening the grimoire…'
+              : 'The book is closed'}
         </p>
         <button
           type="button"
           className={styles.navBtn}
           onClick={next}
-          disabled={!bookOpen || atEnd || !!turn}
+          disabled={!bookOpen || atEnd}
           aria-label="Turn to the next page"
         >
           ›

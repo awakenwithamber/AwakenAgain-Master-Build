@@ -4,7 +4,23 @@
  * Leather-bound book, handcrafted parchment pages, 3D page-turn animation.
  * The book interior deliberately does NOT use the purple site theme — it is
  * deep browns (#3a2415 / #5a3a22) and parchment (#f4e8d0 / #e5d5b5).
+ *
+ * Typography (immersive reader, 2026-11-09): the book's display hand
+ * is Tangerine — an elegant, literary calligraphic face, SELF-HOSTED
+ * below (OFL; no font CDN) — and its extended-reading text is EB
+ * Garamond (loaded site-wide by app/layout.tsx). The pairing was
+ * chosen from rendered comparisons of the reader's own pages; the
+ * all-script arrangement remains a one-line flip (see .handBody).
  */
+
+/* Tangerine (Google Fonts, OFL) — the grimoire's display hand. */
+@font-face {
+  font-family: 'Tangerine';
+  src: url('/fonts/tangerine-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 .srOnly {
   position: absolute;
@@ -53,9 +69,9 @@
 }
 
 .ribbonBtn {
-  font-family: 'Caveat', 'Segoe Script', cursive;
-  font-size: 21px;
-  font-weight: 600;
+  font-family: 'Tangerine', 'Segoe Script', cursive;
+  font-size: 27px;
+  font-weight: 700;
   color: #3a2415;
   background: linear-gradient(180deg, #e9d3a3 0%, #d9b878 60%, #cfa964 100%);
   border: 1px solid #8a6a35;
@@ -229,41 +245,55 @@
 /* ------------------------------------------------------------------ */
 
 .hand {
-  font-family: 'Caveat', 'Segoe Script', 'Comic Sans MS', cursive;
+  font-family: 'Tangerine', 'Segoe Script', cursive;
   color: #2a1a10;
 }
 
 .handTitle {
   composes: hand;
-  font-size: clamp(38px, 6vw, 58px);
+  /* Tangerine's letterforms run small for their point size — the
+     display sizes are ~1.4× the old hand's for the same presence. */
+  font-size: clamp(54px, 8vw, 80px);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.05;
   text-align: center;
   margin: 0.4em 0 0.2em;
 }
 
 .handHeading {
   composes: hand;
-  font-size: 30px;
+  font-size: 42px;
   font-weight: 700;
+  line-height: 1.15;
   margin: 1em 0 0.3em;
   border-bottom: 1px solid rgba(120, 80, 30, 0.35);
   padding-bottom: 2px;
 }
 
+/*
+ * Reading text (immersive reader, 2026-11-09): EB Garamond at a
+ * generous size and leading — the arrangement the rendered
+ * comparisons showed genuinely comfortable for extended reading on
+ * desktop and phone alike, with Tangerine carrying the titles,
+ * headings, and quotes. To give the book a fully handwritten body
+ * instead, this family/size is the one-line flip the stage report
+ * names for the owner.
+ */
 .handBody {
-  composes: hand;
-  font-size: 21px;
+  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  font-size: 20.5px;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.65;
+  color: #2a1a10;
   margin: 0.4em 0;
 }
 
 .handList {
-  composes: hand;
+  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
   font-size: 20px;
   font-weight: 500;
-  line-height: 1.55;
+  line-height: 1.6;
+  color: #2a1a10;
   margin: 0.3em 0 0.6em;
   padding-left: 1.1em;
 }
@@ -279,8 +309,11 @@
 
 .quote {
   composes: hand;
-  font-size: 24px;
-  font-style: italic;
+  font-size: 34px;
+  /* Tangerine has no italic cut; its own slope is the elegance —
+     never synthesize an oblique over it. */
+  font-style: normal;
+  line-height: 1.3;
   text-align: center;
   color: #4a2c14;
   margin: 1.2em auto;
@@ -289,7 +322,7 @@
 
 .attribution {
   composes: hand;
-  font-size: 20px;
+  font-size: 26px;
   text-align: center;
   color: #6a4520;
   margin-top: -0.6em;
@@ -345,7 +378,7 @@
 }
 
 .herbName {
-  font-size: clamp(40px, 6.4vw, 60px);
+  font-size: clamp(56px, 8.6vw, 84px);
   font-weight: 700;
   text-align: center;
   margin: 0.15em 0 0;
@@ -417,8 +450,8 @@
 
 .indexSearch {
   width: 100%;
-  font-family: 'Caveat', cursive;
-  font-size: 21px;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 20px;
   color: #2a1a10;
   background: rgba(255, 252, 244, 0.55);
   border: 1px solid rgba(120, 80, 30, 0.45);
@@ -442,7 +475,7 @@
 
 .concernName {
   composes: hand;
-  font-size: 24px;
+  font-size: 34px;
   font-weight: 700;
   margin: 0 0 0.2em;
 }
@@ -474,8 +507,11 @@
 }
 
 .noMatch {
-  composes: hand;
-  font-size: 21px;
+  /* A reading sentence, not a display line — the reading face. */
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.6;
   color: #6a4520;
 }
 
@@ -520,12 +556,82 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Entry (2026-11-09, owner correction): the book opens directly —    */
-/* the table-scene beat and the zoom that shipped earlier the same    */
-/* day are removed entirely ("the animating of the book does not      */
-/* seem to work"). No entry animation styles remain; the table-scene  */
-/* image file stays in the repo, simply unreferenced.                 */
+/* Entry — the doorway (owner directive 2026-11-09 17:06 MST,        */
+/* superseding the same-day correction's direct entry): the approved */
+/* opening animation plays in the cover's own panel, over the cover  */
+/* art itself (its poster and backdrop — the first frame is the      */
+/* book). The handoff is event-driven in the component; here there   */
+/* is only an opacity cross-dissolve as the film layer leaves — no   */
+/* timed keyframe sequence exists to desync. Reduced motion never    */
+/* mounts the film at all (component-level bypass).                  */
 /* ------------------------------------------------------------------ */
+
+.doorway {
+  position: absolute;
+  top: clamp(10px, 2vw, 18px);
+  bottom: clamp(10px, 2vw, 18px);
+  left: 50%;
+  aspect-ratio: 1040 / 2272;
+  max-width: calc(100% - 2 * clamp(10px, 2vw, 18px));
+  transform: translateX(-50%);
+  z-index: 30;
+  background: #150a24 url('/images/living-grimoire-cover.webp') center / contain
+    no-repeat;
+  border-radius: 6px;
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.6),
+    inset 0 0 60px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  overflow: hidden;
+  transition: opacity 0.45s ease;
+}
+
+.doorwayVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.doorwayVideoReady {
+  opacity: 1;
+}
+
+/* The film layer leaving: it fades; its transitionend unmounts it. */
+.doorwayLeaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.doorwaySkip {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-family: Georgia, serif;
+  font-size: 16.5px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: #2a1a10;
+  background: linear-gradient(180deg, #e9d3a3 0%, #cfa964 100%);
+  border: 1px solid #8a6a35;
+  border-radius: 999px;
+  padding: 10px 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+}
+
+.doorwaySkip:hover {
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.doorwaySkip:focus-visible {
+  outline: 3px solid #f4e8d0;
+  outline-offset: 3px;
+}
 
 /* The "✦ Click to enter ✦" prompt: a gentle gold pulse. */
 .enterBtn {
@@ -567,9 +673,9 @@
 }
 
 .introAdvance {
-  font-family: 'Caveat', cursive;
-  font-size: 23px;
-  font-weight: 600;
+  font-family: 'Tangerine', 'Segoe Script', cursive;
+  font-size: 30px;
+  font-weight: 700;
   color: #7a4a1e;
   background: none;
   border: none;
@@ -619,9 +725,10 @@
 }
 
 .coverTagline {
-  font-family: 'Caveat', cursive;
-  font-size: 25px;
-  font-style: italic;
+  font-family: 'Tangerine', 'Segoe Script', cursive;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.2;
   color: #e6c98f;
   text-align: center;
   margin: 0;
@@ -667,9 +774,10 @@
   padding: 7px 4px;
   border: 0;
   border-bottom: 1px dotted rgba(122, 74, 30, 0.4);
-  font-family: 'Caveat', cursive;
-  font-size: 21px;
-  line-height: 1.25;
+  font-family: 'Tangerine', 'Segoe Script', cursive;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.3;
   color: #3a2415;
   text-align: left;
 }
@@ -810,6 +918,36 @@
   transform: rotateY(180deg);
 }
 
+/*
+ * The soft shadow sweep (immersive reader, 2026-11-09): as the leaf
+ * turns, a band of shade travels across its faces — the light
+ * catching a real page mid-turn. It runs on the turn's own 0.6s,
+ * purely decorative, and is stilled under reduced motion below.
+ */
+.face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 25%,
+    rgba(43, 24, 6, 0.26) 50%,
+    transparent 75%
+  );
+  background-size: 260% 100%;
+  animation: sheetShade 0.6s ease-in-out forwards;
+}
+
+@keyframes sheetShade {
+  from {
+    background-position: 115% 0;
+  }
+  to {
+    background-position: -115% 0;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Navigation                                                          */
 /* ------------------------------------------------------------------ */
@@ -870,10 +1008,14 @@
  */
 .navHint {
   text-align: center;
-  font-family: Georgia, serif;
-  font-size: 14px;
-  letter-spacing: 0.05em;
-  color: rgba(201, 160, 95, 0.85);
+  /* The instruction line speaks in the book's own hand now —
+     Tangerine at a display size, where its letterforms stay
+     plainly readable for a single short line. */
+  font-family: 'Tangerine', 'Segoe Script', cursive;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(230, 201, 143, 0.95);
   margin: 10px 0 0;
 }
 
@@ -955,9 +1097,9 @@
    * the same single-class specificity, so it WINS under reduced
    * motion: page turns collapse to 0.01s ≈ instant, matching the JS
    * TURN_MS_REDUCED lockout, and the entry prompt and the front
-   * pages' fade-in are fully static. (Entry itself is instant for
-   * everyone since the 2026-11-09 reader fix — there is no entry
-   * animation left to bypass.)
+   * pages' fade-in are fully static. (The doorway film is bypassed
+   * in the component under reduced motion, so it never mounts; its
+   * fades are stilled here too, belt and braces.)
    */
   .sheetFwd,
   .sheetBack {
@@ -967,6 +1109,15 @@
   .enterBtn,
   .introPage {
     animation: none;
+  }
+
+  .face::after {
+    animation: none;
+  }
+
+  .doorway,
+  .doorwayVideo {
+    transition: none;
   }
 }
 
