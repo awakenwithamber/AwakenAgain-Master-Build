@@ -55,16 +55,18 @@ describe('returns page — approved terms only', () => {
     expect(RETURNS_PAGE).toContain('ship in 3–5 business days');
   });
 
-  it('cross-references subscriptions and the $8.88 unlock truthfully', () => {
+  it('cross-references subscriptions and Grimoire access truthfully', () => {
     expect(RETURNS_PAGE).toContain('cancelled anytime');
     expect(RETURNS_PAGE).toContain('account page');
     expect(RETURNS_PAGE).toContain('Customer Portal');
     expect(RETURNS_PAGE).toContain('continues through the end');
     expect(RETURNS_PAGE).toContain('of the paid period');
-    expect(RETURNS_PAGE).toContain('$8.88 permanent unlock is not a subscription');
-    expect(RETURNS_PAGE).toContain('Cancelling a subscription never affects it');
-    expect(RETURNS_PAGE).toContain('refunded');
-    expect(RETURNS_PAGE).toContain('unlock is revoked');
+    // $8.88 ABOLITION (2026-11-09): the unlock paragraph now states
+    // the subscription-only model, price-free.
+    expect(RETURNS_PAGE).not.toContain('$8.88');
+    expect(RETURNS_PAGE).toContain('no longer offered');
+    expect(RETURNS_PAGE).toContain('the book locks again');
+    expect(RETURNS_PAGE).toContain('first 17');
   });
 
   it('invents NO restocking fees, return-shipping charges, or refund timelines', () => {

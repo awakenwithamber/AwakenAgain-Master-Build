@@ -80,13 +80,15 @@ describe('Stripe-free customer copy (WS2a)', () => {
     expect(privacyText).toContain('not offered today');
   });
 
-  it('the subscribe page describes the manual flow (invoice / Venmo / Cash App) for both rails', () => {
+  it('the subscribe page describes the manual flow (invoice / Venmo / Cash App) for the subscription rail', () => {
     const subscribe = stripComments(read('app/grimoire/subscribe/page.tsx'));
-    const unlock = stripComments(read('components/grimoire/UnlockPurchase.tsx'));
     const form = stripComments(read('components/grimoire/SubscribeForm.tsx'));
-    expect(unlock).toContain('Venmo');
-    expect(unlock).toContain('Cash App');
-    expect(unlock.toLowerCase()).not.toContain('not yet purchasable');
+    // $8.88 ABOLITION (2026-11-09): the unlock panel that carried the
+    // second rail's copy is deleted; the subscription rail's manual
+    // flow description stands on the page itself.
+    expect(subscribe).toContain('Venmo');
+    expect(subscribe).toContain('Cash App');
+    expect(subscribe).not.toContain('$8.88');
     expect(form).toContain('Amber confirms');
     expect(subscribe).toContain('Amber confirms');
   });

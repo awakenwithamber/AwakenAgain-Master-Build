@@ -5,8 +5,10 @@
  * log (via lib/observability/logger, captured here at its console sink)
  * carrying the event id + type where an event exists:
  * - signature failure (invalid + missing signature),
- * - amount mismatch (the strict paid gate throws),
- * - handler error (unlock amount mismatch throws inside its handler).
+ * - amount mismatch (the strict paid gate throws).
+ * Since the $8.88 ABOLITION (2026-11-09) the webhook has no unlock
+ * arm at all: an unlock-metadata session is pinned below to grant
+ * NOTHING (acknowledged as a non-order session, no error log).
  * A successful delivery emits NO error log. Responses and ledger
  * behavior are unchanged from Stages 1–3 (failed deliveries are still
  * not event-ledger recorded).
@@ -48,6 +50,7 @@ vi.mock('../lib/payments/stripe', async (importOriginal) => {
 
 import { POST } from '../app/api/stripe/webhook/route';
 import { findStripeWebhookEvent } from '../lib/payments/stripe';
+import { isUnlockEntitled } from '../lib/grimoire/unlock';
 import { validateAndBuildOrder } from '../lib/checkout/order';
 
 const DIR = mkdtempSync(join(tmpdir(), 'stage5-webhook-logging-'));
@@ -223,30 +226,37 @@ describe('Stage 5 webhook failure logging', () => {
     expect(await findStripeWebhookEvent('evt_bad_amount')).toBeNull();
   });
 
-  it('handler error (unlock amount mismatch) → 400 + error log with event id + type', async () => {
-    errorLogs = [];
-    const event = {
-      id: 'evt_unlock_bad_amount',
-      type: 'checkout.session.completed',
-      data: {
-        object: {
-          id: 'cs_unlock_bad',
-          payment_status: 'paid',
-          amount_total: 999, // unlock price is 888
-          currency: 'usd',
-          payment_intent: 'pi_unlock_bad',
-          metadata: { purpose: 'grimoire_permanent_unlock', email: 'buyer@example.com' },
+  it('an unlock-metadata session grants NOTHING anymore ($8.88 abolition, 2026-11-09)', async () => {
+    // The Stage 2 unlock grant arm was removed with the abolition:
+    // a signature-verified checkout.session.completed carrying the
+    // old unlock metadata is now just a session with no matching
+    // order — acknowledged, no unlock record, no error log.
+    const savedUnlocksPath = process.env.GRIMOIRE_UNLOCKS_LEDGER_PATH;
+    process.env.GRIMOIRE_UNLOCKS_LEDGER_PATH = join(DIR, 'unlocks.jsonl');
+    try {
+      errorLogs = [];
+      const event = {
+        id: 'evt_unlock_legacy',
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            id: 'cs_unlock_legacy',
+            payment_status: 'paid',
+            amount_total: 888,
+            currency: 'usd',
+            payment_intent: 'pi_unlock_legacy',
+            metadata: { purpose: 'grimoire_permanent_unlock', email: 'buyer@example.com' },
+          },
         },
-      },
-    };
-    const { status } = await postWebhook(event);
-    expect(status).toBe(400);
-    expect(errorLogs).toHaveLength(1);
-    expect(errorLogs[0].context?.event_id).toBe('evt_unlock_bad_amount');
-    expect(errorLogs[0].context?.event_type).toBe('checkout.session.completed');
-    const serialized = JSON.stringify(errorLogs[0]);
-    expect(serialized).not.toContain('buyer@example.com');
-    expect(serialized).not.toContain('whsec_fake');
+      };
+      const { status } = await postWebhook(event);
+      expect(status).toBe(200);
+      expect(errorLogs).toHaveLength(0);
+      expect(await isUnlockEntitled('buyer@example.com')).toBe(false);
+    } finally {
+      if (savedUnlocksPath === undefined) delete process.env.GRIMOIRE_UNLOCKS_LEDGER_PATH;
+      else process.env.GRIMOIRE_UNLOCKS_LEDGER_PATH = savedUnlocksPath;
+    }
   });
 
   it('a successful delivery emits no error log', async () => {
