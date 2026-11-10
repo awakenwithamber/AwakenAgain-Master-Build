@@ -15,6 +15,7 @@
  */
 import { BLENDABLE_OILS, MAX_BLEND_OILS } from '../../lib/catalog/oils';
 import { SIGNATURE_SCENTS } from '../../lib/catalog/scents';
+import { getAsset } from '../../lib/media/image-manifest';
 import { track } from '../../lib/analytics/posthog';
 import { ANALYTICS_EVENT_NAMES } from '../../lib/analytics/events';
 import type { SeasonalFeature } from '../../types';
@@ -54,6 +55,12 @@ export function ScentStep({
   compact = false,
 }: ScentStepProps) {
   const readout = blendReadout(blendOils);
+  // Feature imagery comes from the registry, never a bare path: render
+  // only when the seasonal entry's image slot resolves to a real
+  // (non-MISSING) asset. Entries without one keep the text-only card.
+  const seasonalImage = seasonal?.image_slot_id ? getAsset(seasonal.image_slot_id) : undefined;
+  const showSeasonalImage =
+    seasonalImage && seasonalImage.provenance !== 'MISSING_ASSET' ? seasonalImage : undefined;
 
   const handleToggleOil = (id: string) => {
     const wasSelected = blendOils.includes(id);
@@ -85,6 +92,13 @@ export function ScentStep({
             onSignatureSelect(seasonal.recipe_id as string);
           }}
         >
+          {showSeasonalImage ? (
+            <img
+              className={styles.seasonalImage}
+              src={showSeasonalImage.path}
+              alt={showSeasonalImage.depicts}
+            />
+          ) : null}
           <span className={styles.seasonalBadge}>{seasonal.tagline}</span>
           <span className={styles.seasonalName}>{seasonal.name}</span>
           <span className={styles.seasonalCopy}>{seasonal.copy}</span>

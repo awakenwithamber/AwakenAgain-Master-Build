@@ -10,7 +10,11 @@
  * Pecan Pie on 2026-11-09, binding approved the same day; Jan 2027
  * remains proposed.
  */
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { getAsset } from '../media/image-manifest';
 import {
   FALL_ALCHEMY_COLLECTION_GUIDE,
   SEASONAL_SCENTS,
@@ -117,6 +121,36 @@ describe('confirmed seasonal features', () => {
       expect(s.recipe_id).toBeDefined();
       expect(RECIPE_IDS.has(s.recipe_id as string)).toBe(true);
     }
+  });
+});
+
+describe('seasonal feature imagery (registry-wired, owner photo 2026-11-09)', () => {
+  it("November's entry resolves a real registered REAL_PRODUCT_PHOTO image, deployed on disk", () => {
+    const served = getSeasonalFeature(11, 2026)!;
+    expect(served.image_slot_id).toBe('slot_seasonal_pecan_pie_nov_2026');
+    const asset = getAsset(served.image_slot_id!);
+    expect(asset).toBeDefined();
+    expect(asset!.provenance).toBe('REAL_PRODUCT_PHOTO');
+    expect(asset!.path).toBe('/images/seasonal/pecan-pie-nov-2026.webp');
+    expect(asset!.deployed).toBe(true);
+    // The registered file must actually exist in public/ — a registry
+    // entry pointing at a missing file is the failure this law exists
+    // to catch (the text release must never land before the image).
+    const here = dirname(fileURLToPath(import.meta.url));
+    expect(existsSync(join(here, '../../public/images/seasonal/pecan-pie-nov-2026.webp'))).toBe(true);
+  });
+
+  it('the November image IS documentary product photography (owner-confirmed real photo of her soap, 2026-11-09)', () => {
+    const asset = getAsset('slot_seasonal_pecan_pie_nov_2026')!;
+    expect(asset.provenance).toBe('REAL_PRODUCT_PHOTO');
+    expect(asset.notDocumentaryPhoto).toBe(false);
+  });
+
+  it('October, December, and the superseded record carry no image slot (behavior unchanged)', () => {
+    expect(getSeasonalFeature(10, 2026)!.image_slot_id).toBeUndefined();
+    expect(getSeasonalFeature(12, 2026)!.image_slot_id).toBeUndefined();
+    const cedar = SEASONAL_SCENTS.find((s) => s.id === 'cedar-hearth-nov-2026')!;
+    expect(cedar.image_slot_id).toBeUndefined();
   });
 });
 

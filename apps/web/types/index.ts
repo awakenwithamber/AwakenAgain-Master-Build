@@ -359,6 +359,15 @@ export interface SeasonalFeature {
    * the two paths must never be confused.
    */
   recipe_id?: string;
+  /**
+   * Image manifest slot id for this feature's visual (an entry id in
+   * lib/media/image-manifest.ts, e.g. 'slot_seasonal_pecan_pie_nov_2026').
+   * Surfaces render the image only when the registry holds a real
+   * (non-MISSING_ASSET) asset under this id. Absent = no feature image
+   * (the October/December 2026 entries carry none — October's slot is an
+   * honest MISSING_ASSET placeholder).
+   */
+  image_slot_id?: string;
   oils: string[];
   palette: string[];
   copy: string;

@@ -458,6 +458,14 @@
   font-family: inherit;
 }
 
+.seasonalImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
 .seasonalBadge {
   display: inline-block;
   background: #c9a24b;

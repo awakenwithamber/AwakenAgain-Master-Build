@@ -23,6 +23,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { getSeasonalFeature } from '../../lib/catalog/seasonal';
+import { getAsset } from '../../lib/media/image-manifest';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bannerSource = readFileSync(join(here, 'SeasonalBanner.tsx'), 'utf8');
@@ -48,6 +49,23 @@ describe('SeasonalBanner honesty line — derived from the served entry', () => 
       'Scent-theme naming only — NEVER state or imply pecan, butter, or brown sugar is an ingredient. None is in the formula.',
     );
     expect(served.copyRule.toLowerCase()).not.toContain('pumpkin');
+  });
+
+  it('renders the served entry\u2019s registered image when its slot resolves to a real asset', () => {
+    // Source half: the image is resolved through the registry from the
+    // served entry's slot id and rendered from the registry entry —
+    // never a hard-coded path.
+    expect(bannerSource).toContain('getAsset(feature.image_slot_id)');
+    expect(bannerSource).toContain('<img src={showImage.path} alt={showImage.depicts} />');
+    // Data half: November's slot resolves to a real (non-MISSING) asset,
+    // so its banner renders the owner's photo; October and December
+    // carry no slot, so their banners stay text-only as before.
+    const november = getSeasonalFeature(11, 2026)!;
+    const asset = getAsset(november.image_slot_id!);
+    expect(asset).toBeDefined();
+    expect(asset!.provenance).toBe('REAL_PRODUCT_PHOTO');
+    expect(getSeasonalFeature(10, 2026)!.image_slot_id).toBeUndefined();
+    expect(getSeasonalFeature(12, 2026)!.image_slot_id).toBeUndefined();
   });
 
   it("October's served rule is the pumpkin rule; December's is its own line", () => {

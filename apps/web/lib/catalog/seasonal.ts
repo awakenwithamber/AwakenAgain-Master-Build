@@ -84,6 +84,16 @@ export const SEASONAL_SCENTS: readonly SeasonalFeature[] = [
      * scent. Oils and palette below are the recipe's own fields.
      */
     recipe_id: 'SCENT_RECIPE_05',
+    /**
+     * Feature image: the owner's own photograph of the actual bar
+     * (supplied 2026-11-09; confirmed by her the same day as a real
+     * photo of her soap), registered in lib/media/image-manifest.ts
+     * under this slot id as REAL_PRODUCT_PHOTO. Per the owner's
+     * standing rule, a feature uses an image we already have; a
+     * generated image is made only when nothing existing matches
+     * close enough.
+     */
+    image_slot_id: 'slot_seasonal_pecan_pie_nov_2026',
     oils: ['Jasmine (measured)', 'vanilla-mimic (warmth)'],
     palette: ['Rose / Pink', 'Amber / Gold'],
     copy: 'Soft blossoms and golden warmth — jasmine over creamy vanilla in a rich goat milk and shea bar. A cozy late-autumn theme, named for the pie on the holiday table.',

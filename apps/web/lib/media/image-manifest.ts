@@ -1116,6 +1116,24 @@ function builderSlots(): ImageAssetEntry[] {
       },
     ),
   );
+  // Pecan Pie November 2026 Soap of the Month — the owner's own
+  // photograph of the actual bar (supplied 2026-11-09; the owner
+  // confirmed the same day that it is a real photo of her soap).
+  // Registered as a REAL asset, not a missing slot: the file is
+  // deployed at the canonical seasonal path.
+  entries.push(
+    real(
+      'slot_seasonal_pecan_pie_nov_2026',
+      '/images/seasonal/pecan-pie-nov-2026.webp',
+      'Pecan Pie — November 2026 Soap of the Month: a two-layer bar, cream base with a translucent amber swirled top, on dark wood',
+      'REAL_PRODUCT_PHOTO',
+      {
+        deployed: true,
+        notes:
+          'Owner-supplied for the Pecan Pie seasonal feature, uploaded 2026-11-09 (standing owner rule: use an image we already have; generate one only when nothing existing matches close enough). The owner confirmed on 2026-11-09 that this is her own photograph of the actual product \u2014 the Pecan Pie (Sweet Serenity) two-layer bar \u2014 so it is registered as documentary product photography (REAL_PRODUCT_PHOTO) and carries NO illustrated-representation caption. Source file is a 1536x1536 JPEG (203,434 bytes, SHA-256 9efefdfd3ad0fe250582b7f7ddf06aaba30b0fc877dacf8e605309ebef75ddc7), preserved in the stage record; the deployed file is the same photograph converted to WebP at quality 90 (139,544 bytes) because the seasonal slot path convention is .webp. Copy rule (from the feature data): NEVER state or imply pecan, butter, or brown sugar is an ingredient.',
+      },
+    ),
+  );
   // DreamEase: the former MISSING_ASSET slot here claimed the owner-supplied
   // jar photo was "not yet staged". Verified 2026-10-13: it is deployed at
   // /images/products/dreamease-capsules.webp and registered above as
