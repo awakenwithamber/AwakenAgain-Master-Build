@@ -22,11 +22,34 @@
  *                      are deliberately not indexed — they are places
  *                      you arrive at, not things you look for.
  * - Journal .......... lib/content/journal (JOURNAL_ARTICLES).
+ * - Herbs ............ every individual herb page (/herbal-library/<slug>),
+ *                      via lib/search/herb-search-data.ts — a compact
+ *                      GENERATED data file (scripts/generate-herb-search-
+ *                      data.mjs) derived from the exact registries the
+ *                      herb pages render from (lib/herbal-index/cards:
+ *                      herbalRouteParams + getHerbalCard, and
+ *                      lib/content/herbs: HERB_INDEX). The full herbal
+ *                      registries are NOT imported here: this module
+ *                      runs in the browser, and the registries plus
+ *                      their references/illustration overlays would
+ *                      bloat every page's first-load bundle. The
+ *                      generated file is guarded by
+ *                      lib/search/herb-search-data.test.ts, which
+ *                      re-derives every record from the source
+ *                      registries and fails on any drift.
  *
  * Scoring mirrors the catalog search (lib/search/search.ts):
  * field-weighted substring matching over lowercase tokens, title first,
- * deterministic ordering. No network, no external service, no index
- * file to maintain — the registries ARE the index. UI lives in
+ * deterministic ordering. Two query-level boosts sit on top (owner
+ * ranking correction 2026-11-10): a result whose title IS the query
+ * wins outright, and a result whose title contains every query token
+ * is strongly preferred — so searching an herb's name ("lavender")
+ * returns that herb's own page first, ahead of products that merely
+ * contain the herb, while a generic query like "products" still leads
+ * with the shop and product results (herb records carry no such words:
+ * their searchable text is the record's own name, Latin name,
+ * categories, and recorded properties). No network, no external
+ * service — the registries ARE the index. UI lives in
  * components/ui/Search.tsx (header dropdown) and app/search/page.tsx
  * (full results page).
  */
@@ -36,14 +59,16 @@ import { isSupersededProduct } from '../catalog/status';
 import { SERVICES } from '../content/services';
 import { SERVICE_PAGES, servicePagePath } from '../content/service-pages';
 import { JOURNAL_ARTICLES } from '../content/journal';
+import { HERB_SEARCH_DATA } from './herb-search-data';
 
-export type SiteSearchKind = 'product' | 'service' | 'page' | 'article';
+export type SiteSearchKind = 'product' | 'service' | 'page' | 'article' | 'herb';
 
 export const SITE_SEARCH_KIND_LABELS: Record<SiteSearchKind, string> = {
   product: 'Product',
   service: 'Service',
   page: 'Page',
   article: 'Journal',
+  herb: 'Herb',
 };
 
 export interface SiteSearchEntry {
@@ -299,6 +324,28 @@ function buildIndex(): SiteSearchEntry[] {
     });
   }
 
+  // Herbs — every individual herb page, one entry per route the
+  // herbal library actually serves (lib/herbal-index/cards'
+  // herbalRouteParams: every catalog record plus the canonical alias
+  // routes). Fields are the record's own values via the compact
+  // generated data (see herb-search-data.ts): the title and Latin
+  // name as displayed, the category labels as keywords, and the
+  // record's recorded properties (its "Properties:" folkloric list)
+  // as search-only body text — displayed nowhere in search results.
+  for (const h of HERB_SEARCH_DATA) {
+    entries.push({
+      kind: 'herb',
+      title: h.name,
+      href: `/herbal-library/${h.slug}`,
+      blurb: h.latin
+        ? `${h.latin}${h.labels.length ? ` · ${h.labels.join(' · ')}` : ''}`
+        : h.labels.join(' · '),
+      keywords: `${h.latin} ${h.aka ?? ''} ${h.labels.join(' ')} herb herbal encyclopedia`,
+      body: h.props.join(' '),
+      price: null,
+    });
+  }
+
   // Journal articles.
   for (const a of JOURNAL_ARTICLES) {
     entries.push({
@@ -341,12 +388,22 @@ function scoreEntry(tokens: string[], e: SiteSearchEntry): number {
     if (blurb.includes(tok)) score += 3;
     if (body.includes(tok)) score += 2;
   }
+  // Query-level title boosts (owner ranking correction 2026-11-10):
+  // the page the query NAMES beats pages that merely mention it. An
+  // exact title match ("lavender" → the Lavender herb page) wins
+  // outright over products containing the word; a title covering
+  // every query token ("free consultation" → the contact page whose
+  // title carries the phrase) is strongly preferred. This is general
+  // scoring, not a per-word special case.
+  const query = tokens.join(' ');
+  if (query.length >= 2 && title === query) score += 40;
+  else if (tokens.every((tok) => title.includes(tok))) score += 12;
   return score;
 }
 
 /**
- * Ranked site-wide search across products, services, pages, and
- * journal articles. Empty/short queries (no token of 2+ characters)
+ * Ranked site-wide search across products, services, pages, journal
+ * articles, and herbs. Empty/short queries (no token of 2+ characters)
  * return []. Deterministic — ties break by title, then href.
  */
 export function searchSite(query: string, limit: number = DEFAULT_LIMIT): SiteSearchResult[] {

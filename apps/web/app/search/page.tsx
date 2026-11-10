@@ -4,7 +4,8 @@
  * The destination of the header search bar's Enter / "See all
  * results". A plain GET form (works without JavaScript) over the
  * registry-built index in lib/search/site-search.ts — products,
- * services, pages, and journal articles, grouped by kind.
+ * services, pages, journal articles, and every herb page, grouped
+ * by kind.
  *
  * Deliberately NOT registered in lib/seo/routes CANONICAL_ROUTES:
  * a results page is a utility view, not indexable content, so it
@@ -28,7 +29,7 @@ import { formatPrice, toCents } from '../../lib/pricing/pricing';
 export const metadata: Metadata = {
   title: 'Search',
   description:
-    'Search everything at Amber’s Alchemy Apothecary — products, services, pages, and journal articles.',
+    'Search everything at Amber’s Alchemy Apothecary — products, services, pages, journal articles, and every herb in the encyclopedia.',
   robots: { index: false, follow: true },
 };
 
@@ -44,6 +45,7 @@ const EXAMPLE_SEARCHES = [
 const GROUPS: { kind: SiteSearchKind; heading: string }[] = [
   { kind: 'product', heading: 'Products' },
   { kind: 'service', heading: 'Services' },
+  { kind: 'herb', heading: 'Herbs' },
   { kind: 'page', heading: 'Pages' },
   { kind: 'article', heading: 'Journal' },
 ];
@@ -95,8 +97,8 @@ export default async function SearchPage({
       </p>
       <h1>Search the Apothecary</h1>
       <p>
-        Find anything on the website — a product, a service, a page, or a
-        journal article.
+        Find anything on the website — a product, a service, an herb, a
+        page, or a journal article.
       </p>
 
       <form className="search-page-form" action="/search" method="get" role="search">
@@ -137,7 +139,8 @@ export default async function SearchPage({
           <p>
             Or browse the main sections instead:{' '}
             <Link href="/shop">Shop</Link> · <Link href="/services">Services</Link>{' '}
-            · <Link href="/grimoire">The Living Grimoire</Link> ·{' '}
+            · <Link href="/herb-index">Herb Encyclopedia</Link> ·{' '}
+            <Link href="/grimoire">The Living Grimoire</Link> ·{' '}
             <Link href="/contact">Contact Amber</Link>
           </p>
         </section>

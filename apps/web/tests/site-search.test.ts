@@ -76,9 +76,22 @@ describe('/search results page (app/search/page.tsx)', () => {
   it('renders grouped results from the same site index', () => {
     expect(searchPageSrc).toContain("from '../../lib/search/site-search'");
     expect(searchPageSrc).toContain('searchSite(query, PAGE_LIMIT)');
-    for (const heading of ['Products', 'Services', 'Pages', 'Journal']) {
+    for (const heading of ['Products', 'Services', 'Herbs', 'Pages', 'Journal']) {
       expect(searchPageSrc).toContain(`heading: '${heading}'`);
     }
+  });
+
+  it('indexes every herb page as its own kind, labelled “Herb” (owner: “add every herb”)', () => {
+    expect(siteSearchSrc).toContain("from './herb-search-data'");
+    expect(siteSearchSrc).toContain('HERB_SEARCH_DATA');
+    expect(siteSearchSrc).toContain("herb: 'Herb'");
+    expect(siteSearchSrc).toContain('`/herbal-library/${h.slug}`');
+    // The full herbal registries must NOT be imported into this
+    // browser-run module — the compact generated data stands in for
+    // them (bundle guard; the data itself is drift-guarded by
+    // lib/search/herb-search-data.test.ts).
+    expect(siteSearchSrc).not.toContain("from '../herbal-index/cards'");
+    expect(siteSearchSrc).not.toContain("from '../catalog/herbs'");
   });
 
   it('is a noindex utility page (not an indexable content page)', () => {

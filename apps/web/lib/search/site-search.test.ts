@@ -5,11 +5,37 @@ import { isSupersededProduct } from '../catalog/status';
 import { SERVICES } from '../content/services';
 import { SERVICE_PAGES, servicePagePath } from '../content/service-pages';
 import { JOURNAL_ARTICLES } from '../content/journal';
+import { HERB_SEARCH_DATA } from './herb-search-data';
+import { herbalRouteParams } from '../herbal-index/cards';
 
 describe('SITE_SEARCH_INDEX composition', () => {
-  it('indexes all four kinds: products, services, pages, articles', () => {
+  it('indexes all five kinds: products, services, pages, articles, herbs', () => {
     const kinds = new Set(SITE_SEARCH_INDEX.map((e) => e.kind));
-    expect(kinds).toEqual(new Set(['product', 'service', 'page', 'article']));
+    expect(kinds).toEqual(
+      new Set(['product', 'service', 'page', 'article', 'herb']),
+    );
+  });
+
+  it('indexes every herb page route exactly once (owner: "add every herb")', () => {
+    const routes = herbalRouteParams().map(({ herb }) => herb);
+    const herbEntries = SITE_SEARCH_INDEX.filter((e) => e.kind === 'herb');
+    expect(herbEntries.length).toBe(routes.length);
+    expect(herbEntries.length).toBe(HERB_SEARCH_DATA.length);
+    for (const slug of routes) {
+      expect(
+        herbEntries.filter((e) => e.href === `/herbal-library/${slug}`).length,
+      ).toBe(1);
+    }
+  });
+
+  it('herb entries carry the record’s own name and Latin name, never a price', () => {
+    const lavender = SITE_SEARCH_INDEX.find(
+      (e) => e.kind === 'herb' && e.href === '/herbal-library/lavender',
+    );
+    expect(lavender).toBeDefined();
+    expect(lavender!.title).toBe('Lavender');
+    expect(lavender!.blurb).toContain('Lavandula angustifolia');
+    expect(lavender!.price).toBeNull();
   });
 
   it('indexes every non-superseded, non-service catalog product', () => {
@@ -122,6 +148,57 @@ describe('searchSite ranking — the owner’s example searches', () => {
   it('“quiz” finds the Herbal Allies quiz', () => {
     const results = searchSite('quiz');
     expect(results.some((r) => r.href === '/quiz')).toBe(true);
+  });
+});
+
+describe('searchSite ranking — owner correction 2026-11-10 (herb names vs products)', () => {
+  it('“lavender” returns the Lavender herb page FIRST — products follow below', () => {
+    const results = searchSite('lavender');
+    expect(results.length).toBeGreaterThan(1);
+    expect(results[0].kind).toBe('herb');
+    expect(results[0].href).toBe('/herbal-library/lavender');
+    // Products that contain lavender still appear — never above the herb.
+    const firstProduct = results.findIndex((r) => r.kind === 'product');
+    expect(firstProduct).toBeGreaterThan(0);
+  });
+
+  it('“chamomile” returns the Chamomile herb page first', () => {
+    const results = searchSite('chamomile');
+    expect(results[0].kind).toBe('herb');
+    expect(results[0].href).toBe('/herbal-library/chamomile');
+  });
+
+  it('“peppermint” returns the Peppermint herb page first', () => {
+    const results = searchSite('peppermint');
+    expect(results[0].kind).toBe('herb');
+    expect(results[0].href).toBe('/herbal-library/peppermint');
+  });
+
+  it('“lemon balm” returns the Lemon Balm herb page first', () => {
+    const results = searchSite('lemon balm');
+    expect(results[0].kind).toBe('herb');
+    expect(results[0].href).toBe('/herbal-library/lemon-balm');
+  });
+
+  it('“willow bark” finds the willow bark herb page (canonical index name)', () => {
+    const results = searchSite('willow bark');
+    expect(results[0].kind).toBe('herb');
+    expect(results[0].href).toBe('/herbal-library/willow-bark');
+  });
+
+  it('“products” leads with the shop / product results — no herb on top', () => {
+    const results = searchSite('products');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].kind).not.toBe('herb');
+    expect(results[0].href).toBe('/shop');
+    expect(results.some((r) => r.kind === 'herb')).toBe(false);
+  });
+
+  it('“product” likewise never tops with an herb', () => {
+    const results = searchSite('product');
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].kind).not.toBe('herb');
+    expect(results[0].href).toBe('/shop');
   });
 });
 

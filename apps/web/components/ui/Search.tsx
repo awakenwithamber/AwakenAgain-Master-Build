@@ -3,8 +3,10 @@
  * menu so people can find anything on the website).
  *
  * Searches the whole site in the browser — products, services, pages,
- * and journal articles — over the registry-built index in
- * lib/search/site-search.ts. No network round trip, instant results.
+ * journal articles, and every herb page — over the registry-built
+ * index in lib/search/site-search.ts. No network round trip, instant
+ * results. Results carry their kind label (Product / Service / Page /
+ * Journal / Herb) from SITE_SEARCH_KIND_LABELS.
  * Enter (or "See all results") goes to the full /search results page.
  * Escape closes the dropdown; a click outside closes it too.
  *
