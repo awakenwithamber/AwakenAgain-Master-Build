@@ -12,7 +12,9 @@
  * "Find My Formula" accent button → /quiz · Checkout (only while the
  * cart has items) · music controls · 🛒 cart with count · search ·
  * hamburger ≤1100px opening the mobile panel (same groups,
- * expandable). Menus close on Escape, outside click, and navigation.
+ * expandable, with the same site search at its top — the desktop
+ * search is CSS-hidden on small screens). Menus close on Escape,
+ * outside click, and navigation.
  *
  * Client component: cart count, Checkout visibility, and the menu /
  * dropdown state need client state (reads the single cart store).
@@ -258,6 +260,9 @@ export default function Header() {
         aria-label="Mobile"
       >
         <ul>
+          <li className="mobile-search-row">
+            <Search />
+          </li>
           {NAV_ENTRIES.map(mobileEntry)}
           <li>
             <Link

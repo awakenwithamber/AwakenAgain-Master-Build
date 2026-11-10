@@ -899,6 +899,213 @@ html {
 }
 
 /* ------------------------------------------------------------------ */
+/* Site search (header dropdown + /search page)                        */
+/*                                                                     */
+/* The .site-search* classes date from the catalog-only search (G16)   */
+/* but never had styles anywhere — the dropdown rendered unstyled.     */
+/* These rules style it in the site theme and add the mobile-panel     */
+/* and /search-page treatments (site-wide search, 2026-11-10).         */
+/* ------------------------------------------------------------------ */
+.site-search {
+  position: relative;
+}
+
+.site-search input[type='search'] {
+  width: 13rem;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.95rem;
+}
+
+.site-search-results {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 950;
+  width: min(22rem, 88vw);
+  max-height: min(70vh, 32rem);
+  overflow-y: auto;
+  background: var(--plum-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.site-search-results ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-search-results li a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: calc(var(--radius) * 0.6);
+  color: var(--text-body);
+  text-decoration: none;
+}
+
+.site-search-results li a:hover,
+.site-search-results li a:focus-visible {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.site-search-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.site-search-title {
+  font-family: var(--font-accent);
+}
+
+.site-search-kind {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+  white-space: nowrap;
+}
+
+.site-search-price {
+  color: var(--parchment);
+  white-space: nowrap;
+}
+
+.site-search-empty {
+  margin: 0;
+  padding: 0.6rem;
+  color: var(--text-body);
+}
+
+.site-search-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.6rem 0.2rem;
+}
+
+.site-search-all,
+.site-search-close {
+  font: inherit;
+  font-size: 0.9rem;
+  background: none;
+  border: none;
+  color: var(--brass);
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.site-search-all:hover,
+.site-search-close:hover {
+  color: var(--brass-lt);
+}
+
+/* In the mobile menu the search sits at the top of the panel; its
+   results flow with the panel (which scrolls) instead of floating. */
+.mobile-search-row {
+  padding-bottom: 0.75rem;
+}
+
+.mobile-nav-panel .site-search input[type='search'] {
+  width: 100%;
+}
+
+.mobile-nav-panel .site-search-results {
+  position: static;
+  width: 100%;
+  max-height: none;
+  margin-top: 0.5rem;
+  box-shadow: none;
+}
+
+/* /search results page */
+.search-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 3.5rem;
+}
+
+.search-page-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.search-page-form input[type='search'] {
+  flex: 1 1 16rem;
+}
+
+.search-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.search-examples a {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  color: var(--brass);
+  text-decoration: none;
+}
+
+.search-examples a:hover {
+  color: var(--brass-lt);
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.search-group {
+  margin-bottom: 2rem;
+}
+
+.search-group > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-result-row a {
+  display: block;
+  padding: 0.8rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-body);
+  text-decoration: none;
+}
+
+.search-result-row a:hover .search-result-title,
+.search-result-row a:focus-visible .search-result-title {
+  color: var(--brass-lt);
+}
+
+.search-result-title {
+  font-family: var(--font-accent);
+  font-size: 1.1rem;
+  color: var(--parchment);
+}
+
+.search-result-price {
+  margin-left: 0.6rem;
+  color: var(--brass);
+}
+
+.search-result-blurb {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ */
 /* Footer (design-system restyle)                                      */
 /* ------------------------------------------------------------------ */
 .site-footer {
