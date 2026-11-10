@@ -856,18 +856,21 @@ function LockedPageView({
         <h2 className={styles.handHeading}>A Kept Page</h2>
       )}
       <p className={`${styles.handBody} ${styles.dropcap}`}>
-        This page is kept for members of the Living Grimoire.
-        Subscribers and permanent-unlock holders who have verified
-        their email see it in full; everyone else sees the first seventeen
-        pages freely.
+        Here the free pages end — but the book goes on. The first 17
+        pages are open to every seeker, free; this page is kept for
+        members of the Living Grimoire, and subscribers who have
+        verified their email see it in full.
       </p>
       <p className={styles.handBody}>
-        Unlock it once for $8.88, or subscribe for $7.77/month — and if you
-        already have access, verify your email below the book to open it.
+        Awaken your $7.77/month subscription and the entire Living
+        Grimoire opens to you: all 1,051 pages of spells, rituals, and
+        lost knowledge, yours to read for as long as your membership
+        lives. And if you already have access, verify your email below
+        the book to open it.
       </p>
       <p style={{ marginTop: '1em' }}>
         <Link href="/grimoire/subscribe" className={styles.entryLink}>
-          See the unlock &amp; subscription options →
+          Awaken your subscription →
         </Link>
       </p>
     </PageShell>
