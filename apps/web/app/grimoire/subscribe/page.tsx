@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { SubscribeForm } from '../../../components/grimoire/SubscribeForm';
-import { UnlockPurchase } from '../../../components/grimoire/UnlockPurchase';
 import { BRAND_NAME } from '../../../lib/seo/config';
 import {
   getEditionManifest,
@@ -19,7 +18,7 @@ import {
 export const metadata: Metadata = {
   title: `The Living Grimoire — 1,051 pages of preserved works — ${BRAND_NAME}`,
   description:
-    'The Living Grimoire is a preservation of the collective works of generations — spells, rituals, and lost knowledge, found book by book and digitized to hold their magic and history for generations to come. A $7.77/month membership opens the full compilation; an $8.88 activation fee is charged only once. Plus 10% off storewide, exclusive articles and rituals, and more.',
+    'The Living Grimoire is a preservation of the collective works of generations — spells, rituals, and lost knowledge, found book by book and digitized to hold their magic and history for generations to come. A $7.77/month membership opens the full compilation while it is active. Plus 10% off storewide, exclusive articles and rituals, and more.',
 };
 
 /**
@@ -79,12 +78,20 @@ const STORY_PLACEHOLDER = '[STORY]';
  * Verum) were removed from the compilation and the volume recounted
  * — 1,051 pages. They appear nowhere on this page.
  *
- * Offers: the $8.88 unlock and the $7.77/month membership are the
- * two separate offers they are, presented after the owner's own
- * membership framing. Both run on the manual payment rail — no card
- * checkout is offered or described here. Owner copy (Overview +
- * ancestor pull-quote + framing teaser) is VERBATIM from the
- * 2026-10-21 owner files.
+ * Offer: the $7.77/month membership is the only way to open the
+ * full book, presented after the owner's own membership framing. It
+ * runs on the manual payment rail — no card checkout is offered or
+ * described here. Owner copy (Overview + ancestor pull-quote +
+ * framing teaser) is VERBATIM from the 2026-10-21 owner files.
+ *
+ * PERMANENT-UNLOCK ABOLITION (owner decision 2026-11-09): the
+ * unlock purchase option was eliminated completely — the unlock
+ * panel that used to sit between the membership and subscription
+ * sections is gone, and with it the one-time activation-fee
+ * framing this page carried from 2026-11-08. Full access now
+ * comes with the subscription while it is active; if a month's
+ * payment is not made, the book locks again and the first 17
+ * pages remain free.
  */
 export default function GrimoireSubscribePage() {
   const manifest = getEditionManifest();
@@ -192,9 +199,8 @@ export default function GrimoireSubscribePage() {
           </h2>
           <p>
             Your small $7.77/month membership allows you to unlock the full
-            world of light magic. Joining carries a one-time $8.88
-            activation fee — charged once, when you first join, never
-            again. Plus more:
+            world of light magic, for as long as your membership is
+            active. Plus more:
           </p>
           <ul>
             <li>📖 The Living Grimoire</li>
@@ -204,14 +210,7 @@ export default function GrimoireSubscribePage() {
             <li>🔮 Early access to new releases</li>
             <li>💌 Personalized recommendations</li>
           </ul>
-          <p>
-            Already hold the permanent unlock from before this membership
-            model? What you bought stays yours — your access does not
-            change.
-          </p>
         </section>
-
-        <UnlockPurchase />
 
         <section aria-labelledby="grimoire-subscription-heading">
           <h2 id="grimoire-subscription-heading">
@@ -226,10 +225,9 @@ export default function GrimoireSubscribePage() {
             emailed invoice), Amber confirms your membership personally,
             and you send each month&apos;s payment to stay active — there
             is no automatic card charge. To cancel, just contact Amber;
-            access continues through the paid period. If your
-            subscription ends, subscription access ends with it — a
-            permanent unlock bought before this membership model, if you
-            hold one, is never removed by subscribing or cancelling.
+            access continues through the paid period. If a month&apos;s
+            payment is not made, the book locks again — the first 17
+            pages always remain free to read.
           </p>
           <SubscribeForm />
         </section>

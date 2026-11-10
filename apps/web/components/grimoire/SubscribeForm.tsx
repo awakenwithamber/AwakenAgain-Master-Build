@@ -144,9 +144,9 @@ export function SubscribeForm() {
             cancellation, access continues through the paid period.
           </li>
           <li>
-            The separate <strong>$8.88 permanent unlock</strong> is
-            unaffected by subscription cancellation — cancelling a
-            subscription never removes an unlock you hold.
+            Full access lasts while your subscription is active. If a
+            month&apos;s payment isn&apos;t made, the book locks
+            again — the first 17 pages always stay free to read.
           </li>
           <li>
             Amber confirms every subscription personally once your

@@ -1,9 +1,13 @@
 'use client';
 
 /**
- * Owner tool for the Grimoire permanent-unlock manual rail (Phase 2,
- * Workstream 3): grant (after verifying the $8.88 payment) or revoke
- * (refund / chargeback) via POST /api/admin/grimoire/unlock.
+ * Owner tool for the Grimoire permanent-unlock LEGACY records
+ * (Phase 2, Workstream 3; sales closed 2026-11-09): the request
+ * history stays visible for the record, and revoke (refund /
+ * chargeback on a past sale) still works via POST
+ * /api/admin/grimoire/unlock. Granting is closed — the unlock is no
+ * longer sold (owner decision 2026-11-09) and the admin route
+ * refuses grant actions.
  *
  * SECRET HYGIENE (same rules as the other owner tools): the key lives
  * only in this component's state while typed — never persisted, never
@@ -44,7 +48,6 @@ export function UnlockManager({
   const router = useRouter();
   const [requestId, setRequestId] = useState('');
   const [email, setEmail] = useState('');
-  const [reference, setReference] = useState('');
   const [reason, setReason] = useState<'refund' | 'chargeback'>('refund');
   const [ownerKey, setOwnerKey] = useState('');
   const [busy, setBusy] = useState(false);
@@ -56,7 +59,7 @@ export function UnlockManager({
   const pending = requests.filter((r) => r.status === 'requested');
   const settled = requests.filter((r) => r.status !== 'requested');
 
-  async function act(action: 'grant' | 'revoke') {
+  async function act(action: 'revoke') {
     if (busy) return;
     setBusy(true);
     setOutcome(null);
@@ -71,29 +74,19 @@ export function UnlockManager({
           action,
           ...(requestId.trim() ? { request_id: requestId.trim() } : {}),
           ...(email.trim() ? { email: email.trim() } : {}),
-          ...(action === 'grant' && reference.trim()
-            ? { reference: reference.trim() }
-            : {}),
-          ...(action === 'revoke' ? { reason } : {}),
+          reason,
         }),
       });
       const data = (await res.json().catch(() => null)) as {
         ok?: boolean;
         state?: string;
-        already_recorded?: boolean;
         errors?: string[];
       } | null;
       if (res.ok && data?.ok) {
         setOutcome({
           kind: 'success',
-          message:
-            action === 'grant'
-              ? data.already_recorded
-                ? 'That unlock was already granted for this reference — nothing new was recorded.'
-                : 'Unlock granted — the customer\u2019s permanent unlock is active and their confirmation email was sent.'
-              : 'Unlock revoked — the customer no longer has unlock access.',
+          message: 'Unlock revoked — the customer no longer has unlock access.',
         });
-        setReference('');
         router.refresh();
       } else if (res.status === 401) {
         setOwnerKey('');
@@ -127,19 +120,20 @@ export function UnlockManager({
 
   return (
     <section aria-labelledby="admin-unlocks-title" style={{ marginTop: '2.5rem' }}>
-      <h2 id="admin-unlocks-title">Permanent unlock — $8.88 (manual requests)</h2>
+      <h2 id="admin-unlocks-title">Permanent unlock — legacy requests (no longer sold)</h2>
       <p>
-        Customers request the unlock on the subscribe page and pay by
-        invoice, Venmo, or Cash App with the request ID as their
-        reference. Grant access only after you&apos;ve seen the payment;
-        a refund or chargeback revokes it.
+        The permanent unlock closed to new sales on 2026-11-09 — full
+        Grimoire access now comes with the $7.77/month subscription
+        while it is active. Requests recorded before the close are
+        listed here for the record only; this tool now just revokes an
+        unlock when a past sale is refunded or charged back.
       </p>
 
       {pending.length === 0 ? (
-        <p>No unlock requests waiting for payment.</p>
+        <p>No unlock requests on record awaiting anything.</p>
       ) : (
         <table>
-          <caption>Unlock requests awaiting your verification</caption>
+          <caption>Unlock requests recorded before sales closed</caption>
           <thead>
             <tr>
               <th scope="col">Request ID</th>
@@ -219,20 +213,6 @@ export function UnlockManager({
           />
         </div>
         <div style={{ marginBottom: '1.25rem' }}>
-          <label htmlFor="unlock-reference" style={labelStyle}>
-            Payment reference you verified (grant only)
-          </label>
-          <input
-            id="unlock-reference"
-            type="text"
-            autoComplete="off"
-            value={reference}
-            onChange={(e) => setReference(e.target.value)}
-            style={inputStyle}
-            placeholder="Venmo / Cash App / invoice reference — defaults to the request ID"
-          />
-        </div>
-        <div style={{ marginBottom: '1.25rem' }}>
           <label htmlFor="unlock-reason" style={labelStyle}>
             Revoke reason
           </label>
@@ -266,21 +246,12 @@ export function UnlockManager({
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <button
             type="button"
-            className="btn-primary"
-            disabled={busy || !ownerKey}
-            onClick={() => void act('grant')}
-            style={{ minHeight: '3.25rem', fontSize: '1rem', padding: '0 2rem' }}
-          >
-            {busy ? 'Working…' : 'Grant unlock — payment verified'}
-          </button>
-          <button
-            type="button"
             className="btn-secondary"
             disabled={busy || !ownerKey}
             onClick={() => void act('revoke')}
             style={{ minHeight: '3.25rem', fontSize: '1rem', padding: '0 2rem' }}
           >
-            Revoke unlock
+            {busy ? 'Working…' : 'Revoke unlock'}
           </button>
         </div>
       </form>
