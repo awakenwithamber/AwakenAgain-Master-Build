@@ -22,10 +22,11 @@
  *   pre-tax-total tree and must NOT be applied here or tax would be
  *   charged twice. See buildOrderHostedPaymentInput.) SCOPE LIMIT
  *   (2026-11-09): this module serves SHOP ORDERS ONLY in this build.
- *   The Grimoire subscription / $8.88 unlock Authorize.net wiring of
- *   the unified build is deliberately NOT ported (membership-model
- *   decisions are still pending with the owner); the generic client
- *   surface below is retained only where the shop flow uses it.
+ *   The Grimoire subscription / unlock Authorize.net wiring of the
+ *   unified build is deliberately NOT ported — and the $8.88 unlock
+ *   itself was abolished by owner decision later that day, so there
+ *   is no unlock wiring left to port; the generic client surface
+ *   below is retained only where the shop flow uses it.
  *   The hosted transaction carries invoiceNumber = order_id (Authorize
  *   invoice numbers cap at 20 chars; order ids are 19) so the verified
  *   webhook can resolve the order.
