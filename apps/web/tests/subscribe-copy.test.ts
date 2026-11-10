@@ -10,7 +10,9 @@
  * - the retired "being finalized" copy stays gone;
  * - pre-purchase terms are present before purchase ($7.77/month, paid
  *   manually each month, Amber confirms, cancel anytime by contacting
- *   Amber, access through the paid period, $8.88 unlock unaffected);
+ *   Amber, access through the paid period; since the $8.88 ABOLITION
+ *   of 2026-11-09: an unpaid month locks the book again and the
+ *   first 17 pages stay free — no unlock line remains);
  * - NO surface promises card auto-renewal or a customer portal, and
  *   no card-checkout affordance remains on the form;
  * - the manual Cash App / Venmo path + owner-confirm explanation stay;
@@ -48,13 +50,15 @@ describe('subscribe copy (Phase 2 manual rail)', () => {
     expect(FORM).toContain('Cancel anytime');
     expect(FORM).toContain('just contact Amber');
     expect(FORM).toContain('access continues through the paid period');
-    expect(FORM).toContain('$8.88 permanent unlock');
-    expect(FORM).toContain('unaffected by subscription cancellation');
+    expect(FORM).not.toContain('$8.88');
+    expect(FORM).toContain('the book locks');
+    expect(FORM).toContain('first 17 pages always stay free');
     expect(FORM).toContain('Amber confirms every subscription personally');
     expect(PAGE).toContain('no automatic card charge');
-    // Owner model update 2026-11-08: the page now protects pre-model
-    // permanent-unlock holders in these words instead.
-    expect(PAGE).toContain('never removed by subscribing or cancelling');
+    // Owner model update 2026-11-09 ($8.88 abolition + ruling): no
+    // holder-protection lines remain — the page states the lock rule.
+    expect(PAGE).not.toContain('$8.88');
+    expect(PAGE).toContain('the book locks again');
   });
 
   it('no surface promises card auto-renewal or a customer portal anymore', () => {

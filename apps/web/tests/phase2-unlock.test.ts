@@ -1,16 +1,27 @@
 /**
- * Phase 2, Workstream 3 — the $8.88 Grimoire unlock on the manual rail.
+ * The Grimoire unlock after the $8.88 ABOLITION (owner decision
+ * 2026-11-09) — supersedes the Phase 2 Workstream 3 full-loop pins.
  *
- * Route level, temp ledgers: request → pending (NO access) → owner
- * notification queued → admin grant behind the owner secret → access
- * opens (the gate's own entitlement resolver) + the customer's
- * unlock-active email fires exactly once → duplicate grant is a no-op
- * → refund revocation closes access again. Canon pins: the amount is
- * exactly the $8.88 canon constant; the unlock is subscription-
- * independent (no subscription record exists anywhere in this test);
- * nothing here touches a card or a processor.
+ * Laws under test now:
+ * - INTAKE IS CLOSED: POST /api/grimoire-unlock/request answers 410,
+ *   records NOTHING in the request ledger, sends NO owner
+ *   notification, and grants nothing. (The audit's §G.4 gate —
+ *   disposition pending requests before closing — was resolved by
+ *   the owner's 2026-11-09 ruling that nobody has paid the $8.88.)
+ * - ADMIN GRANT IS CLOSED: the owner route refuses 'grant' with 410
+ *   even with the correct secret and an existing recorded request;
+ *   the request stays 'requested', no entitlement appears, no
+ *   activation email fires. Auth still fails closed (401 / 404).
+ * - LEGACY RECORDS STILL RESOLVE: an unlock record written to the
+ *   preserved ledger (lib/grimoire/unlock.ts) still entitles its
+ *   holder through resolveGrimoireEntitlement (the PERMANENT_UNLOCK
+ *   arm is preserved — it carries the owner's own access), the
+ *   read-only status route still reports it, and admin REVOKE still
+ *   closes it (refund/chargeback on a past sale).
+ * - Subscribers are untouched: an Active subscription record still
+ *   entitles, exactly as before.
  */
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -27,17 +38,26 @@ import {
   type EmailJob,
   type SendResult,
 } from '../lib/jobs/email';
-import { POST as requestPost } from '../app/api/grimoire-unlock/request/route';
+import { POST as requestPost, GET as requestGet } from '../app/api/grimoire-unlock/request/route';
 import { GET as statusGet } from '../app/api/grimoire-unlock/status/route';
 import { POST as adminPost } from '../app/api/admin/grimoire/unlock/route';
-import { isGrimoireEntitled } from '../lib/grimoire/entitlement';
+import {
+  isGrimoireEntitled,
+  resolveGrimoireEntitlement,
+} from '../lib/grimoire/entitlement';
+import { grantUnlock } from '../lib/grimoire/unlock';
+import {
+  createUnlockRequest,
+  findPendingUnlockRequest,
+  findUnlockRequest,
+} from '../lib/grimoire/unlock-requests';
 import { GRIMOIRE_UNLOCK_PRICE_CENTS } from '../lib/grimoire/edition';
 
-const DIR = mkdtempSync(join(tmpdir(), 'phase2-unlock-'));
+const DIR = mkdtempSync(join(tmpdir(), 'unlock-abolition-'));
 const UNLOCKS = join(DIR, 'unlocks.jsonl');
 const REQUESTS = join(DIR, 'requests.jsonl');
 const SUBSCRIPTIONS = join(DIR, 'subscriptions.jsonl');
-const SECRET = 'phase2-unlock-owner-secret';
+const SECRET = 'unlock-abolition-owner-secret';
 const EMAIL = 'reader@example.com';
 
 const ENVS = [
@@ -102,51 +122,74 @@ afterEach(() => {
   }
 });
 
-describe('unlock request → owner verify → grant → revoke', () => {
-  it('the full loop holds the canon: $8.88, pending grants nothing, grant opens the gate, refund revokes', async () => {
+describe('intake is closed (410, nothing recorded, no email)', () => {
+  it('POST and GET both refuse, and the legacy price constant stays the historical 888', async () => {
     expect(GRIMOIRE_UNLOCK_PRICE_CENTS).toBe(888);
 
-    // 1. Request.
-    const requested = await requestPost(
+    const res = await requestPost(
       post('/api/grimoire-unlock/request', { email: EMAIL, payment_method: 'venmo' }),
     );
-    expect(requested.status).toBe(201);
-    const body = (await requested.json()) as {
-      state: string;
-      payment: {
-        request_id: string;
-        amount: string;
-        reference: string;
-        venmo: string;
-        cash_app: string;
-      };
-    };
-    const requestId = body.payment.request_id;
-    expect(body.state).toBe('pending');
-    expect(body.payment.amount).toBe('$8.88');
-    expect(body.payment.reference).toBe(requestId);
-    expect(body.payment.venmo).toBe('@AwakenwithAmber');
-    expect(body.payment.cash_app).toBe('$AmberPatten347');
+    expect(res.status).toBe(410);
+    const body = (await res.json()) as { ok: boolean; state: string; errors: string[] };
+    expect(body.ok).toBe(false);
+    expect(body.state).toBe('closed');
+    expect(body.errors[0]).toContain('no longer offered');
 
-    // 2. Pending grants NOTHING; the owner was notified.
-    expect((await status(EMAIL)).state).toBe('pending');
+    const getRes = await requestGet(
+      new Request('http://localhost/api/grimoire-unlock/request'),
+    );
+    expect(getRes.status).toBe(410);
+
+    // Nothing was recorded and nobody was notified.
+    expect(await findPendingUnlockRequest(EMAIL)).toBeNull();
+    expect((await status(EMAIL)).state).toBe('none');
     expect(await isGrimoireEntitled(EMAIL)).toBe(false);
     await flush();
-    const ownerJobs = jobs.filter((j) => j.template === 'grimoire_unlock_requested');
-    expect(ownerJobs).toHaveLength(1);
-    expect(ownerJobs[0].to).toBe('amber@awakenagain.com');
+    expect(jobs).toHaveLength(0);
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+});
 
-    // 3. A duplicate request returns the same pending request.
-    const dupe = await requestPost(
-      post('/api/grimoire-unlock/request', { email: EMAIL }),
+describe('admin grant is closed; auth still fails closed', () => {
+  it('grant is refused (410) even for a recorded request with the right secret', async () => {
+    const seeded = await createUnlockRequest({
+      email: EMAIL,
+      payment_method: 'cash_app_or_venmo',
+    });
+
+    const res = await adminPost(
+      post(
+        '/api/admin/grimoire/unlock',
+        { action: 'grant', email: EMAIL, request_id: seeded.request_id },
+        SECRET,
+      ),
     );
-    expect(dupe.status).toBe(200);
-    expect(
-      ((await dupe.json()) as { payment: { request_id: string } }).payment
-        .request_id,
-    ).toBe(requestId);
+    expect(res.status).toBe(410);
+    const body = (await res.json()) as { ok: boolean; errors: string[] };
+    expect(body.ok).toBe(false);
+    expect(body.errors[0]).toContain('no longer sold');
 
-    // 4. Admin path refuses without the secret.
+    // The request is untouched, no entitlement appeared, no email.
+    expect((await findUnlockRequest(seeded.request_id))?.status).toBe('requested');
+    expect(await isGrimoireEntitled(EMAIL)).toBe(false);
+    expect((await status(EMAIL)).state).toBe('pending');
+    await flush();
+    expect(jobs.filter((j) => j.template === 'grimoire_unlock_active')).toHaveLength(0);
+  });
+
+  it('grant by bare email is refused too', async () => {
+    const res = await adminPost(
+      post(
+        '/api/admin/grimoire/unlock',
+        { action: 'grant', email: 'walkin@example.com', reference: 'venmo-note-123' },
+        SECRET,
+      ),
+    );
+    expect(res.status).toBe(410);
+    expect(await isGrimoireEntitled('walkin@example.com')).toBe(false);
+  });
+
+  it('refuses without the secret (401) and fails closed unconfigured (404)', async () => {
     expect(
       (await adminPost(post('/api/admin/grimoire/unlock', { action: 'grant', email: EMAIL })))
         .status,
@@ -154,84 +197,72 @@ describe('unlock request → owner verify → grant → revoke', () => {
     expect(
       (
         await adminPost(
-          post('/api/admin/grimoire/unlock', { action: 'grant', email: EMAIL }, 'wrong'),
+          post('/api/admin/grimoire/unlock', { action: 'revoke', email: EMAIL }, 'wrong'),
         )
       ).status,
     ).toBe(401);
-    expect(await isGrimoireEntitled(EMAIL)).toBe(false);
 
-    // 5. Grant → entitled, request granted, activation email exactly once.
-    jobs = [];
-    const granted = await adminPost(
-      post(
-        '/api/admin/grimoire/unlock',
-        { action: 'grant', email: EMAIL, request_id: requestId },
-        SECRET,
-      ),
+    delete process.env.OWNER_ADMIN_SECRET;
+    const res = await adminPost(
+      post('/api/admin/grimoire/unlock', { action: 'revoke', email: EMAIL }, SECRET),
     );
-    expect(granted.status).toBe(200);
-    expect(await isGrimoireEntitled(EMAIL)).toBe(true);
-    expect((await status(EMAIL)).state).toBe('active');
-    await flush();
-    const activeJobs = jobs.filter((j) => j.template === 'grimoire_unlock_active');
-    expect(activeJobs).toHaveLength(1);
-    expect(activeJobs[0].to).toBe(EMAIL);
+    expect(res.status).toBe(404);
+  });
+});
 
-    // 6. Repeating the grant is a recorded no-op (no second email).
-    const again = await adminPost(
-      post(
-        '/api/admin/grimoire/unlock',
-        { action: 'grant', email: EMAIL, request_id: requestId },
-        SECRET,
-      ),
-    );
-    expect(((await again.json()) as { already_recorded: boolean }).already_recorded).toBe(true);
-    await flush();
-    expect(jobs.filter((j) => j.template === 'grimoire_unlock_active')).toHaveLength(1);
+describe('legacy records still resolve; revoke still works; subscribers unchanged', () => {
+  it('a preserved PERMANENT_UNLOCK record entitles, status reports it, admin revoke closes it', async () => {
+    // A legacy record written straight to the preserved ledger —
+    // the same write the owner's own access resolves through. (A
+    // dedicated email: the status route reports a pending request
+    // ahead of a revoked record, and the grant-closure test above
+    // seeded one for EMAIL in this shared temp ledger.)
+    const LEGACY = 'legacy@example.com';
+    await grantUnlock({
+      email: LEGACY,
+      transaction_ref: 'legacy-record-1',
+      source: 'owner_manual',
+    });
+    const resolved = await resolveGrimoireEntitlement(LEGACY);
+    expect(resolved.entitled).toBe(true);
+    expect(resolved.has_permanent_unlock).toBe(true);
+    expect((await status(LEGACY)).state).toBe('active');
 
-    // 7. A fresh request while unlocked short-circuits honestly.
-    const whileActive = await requestPost(
-      post('/api/grimoire-unlock/request', { email: EMAIL }),
-    );
-    expect(((await whileActive.json()) as { state: string }).state).toBe(
-      'already_unlocked',
-    );
-
-    // 8. Refund revocation closes the gate again.
     const revoked = await adminPost(
       post(
         '/api/admin/grimoire/unlock',
-        { action: 'revoke', email: EMAIL, reason: 'refund' },
+        { action: 'revoke', email: LEGACY, reason: 'refund' },
         SECRET,
       ),
     );
     expect(revoked.status).toBe(200);
-    expect(await isGrimoireEntitled(EMAIL)).toBe(false);
-    expect((await status(EMAIL)).state).toBe('revoked');
+    expect(await isGrimoireEntitled(LEGACY)).toBe(false);
+    expect((await status(LEGACY)).state).toBe('revoked');
   });
 
-  it('granting without a prior request still works (owner-verified offline payment) and emails the customer', async () => {
-    const granted = await adminPost(
-      post(
-        '/api/admin/grimoire/unlock',
-        { action: 'grant', email: 'walkin@example.com', reference: 'venmo-note-123' },
-        SECRET,
-      ),
+  it('an Active subscription record still entitles exactly as before', async () => {
+    writeFileSync(
+      SUBSCRIPTIONS,
+      JSON.stringify({
+        subscription_id: 'SUB-TEST-0001',
+        created_at: '2026-10-21T00:00:00.000Z',
+        computed_by: 'server',
+        plan_id: 'living-grimoire-monthly',
+        plan_name: 'Living Grimoire',
+        price_cents: 777,
+        interval: 'month',
+        status: 'active',
+        customer: { name: 'Test Member', email: 'member@example.com' },
+        confirmed_at: '2026-10-21T01:00:00.000Z',
+        confirmed_by: 'owner',
+        recurring_mechanic: 'NEEDS_VERIFICATION',
+        ledger_version: 1,
+      }) + '\n',
+      'utf8',
     );
-    expect(granted.status).toBe(200);
-    expect(await isGrimoireEntitled('walkin@example.com')).toBe(true);
-    await flush();
-    expect(
-      jobs.filter((j) => j.template === 'grimoire_unlock_active'),
-    ).toHaveLength(1);
-    expect(sendSpy).toHaveBeenCalled();
-  });
-
-  it('fails closed (404) when the owner secret is unconfigured', async () => {
-    delete process.env.OWNER_ADMIN_SECRET;
-    const res = await adminPost(
-      post('/api/admin/grimoire/unlock', { action: 'grant', email: EMAIL }, SECRET),
-    );
-    expect(res.status).toBe(404);
+    const resolved = await resolveGrimoireEntitlement('member@example.com');
+    expect(resolved.entitled).toBe(true);
+    expect(resolved.is_subscriber).toBe(true);
+    expect(resolved.has_permanent_unlock).toBe(false);
   });
 });
