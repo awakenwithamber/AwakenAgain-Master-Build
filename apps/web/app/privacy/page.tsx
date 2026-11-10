@@ -104,10 +104,11 @@ export default function PrivacyPage() {
           order.
         </li>
         <li>
-          <strong>Memberships and the Grimoire unlock:</strong> the same
-          manual process — Amber confirms each Living Grimoire
-          membership and each $8.88 permanent unlock personally once
-          payment arrives. Nothing is ever charged automatically.
+          <strong>Memberships:</strong> the same manual process — Amber
+          confirms each Living Grimoire membership personally once
+          payment arrives. Nothing is ever charged automatically. (The
+          Grimoire permanent unlock is no longer sold; full access
+          comes with the membership while it is active.)
         </li>
         <li>
           <strong>A note on the past:</strong> card payments made on

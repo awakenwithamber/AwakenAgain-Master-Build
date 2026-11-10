@@ -139,10 +139,6 @@ function SubscriptionSection({ profile }: { profile: ProfileView }) {
         <a href="mailto:Amber@awakenagain.com">Amber@awakenagain.com</a> —
         she takes care of every membership personally.
       </p>
-      <p className={styles.meta}>
-        The separate $8.88 permanent unlock, if you hold one, is never affected
-        by subscription cancellation.
-      </p>
     </section>
   );
 }

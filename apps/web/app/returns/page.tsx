@@ -69,8 +69,8 @@ export default function ReturnsPage() {
             </p>
           </section>
 
-          <section aria-label="Subscriptions and the Living Grimoire unlock">
-            <h2>Subscriptions and the Living Grimoire unlock</h2>
+          <section aria-label="Subscriptions and Living Grimoire access">
+            <h2>Subscriptions and Living Grimoire access</h2>
             <p>
               Living Grimoire subscriptions can be cancelled anytime
               from your <Link href="/account">account page</Link> or the
@@ -78,10 +78,11 @@ export default function ReturnsPage() {
               of the paid period.
             </p>
             <p>
-              The $8.88 permanent unlock is not a subscription.
-              Cancelling a subscription never affects it — the unlock
-              stays yours. If an unlock purchase itself is refunded, the
-              unlock is revoked, as stated in its purchase terms.
+              Full Living Grimoire access comes with the $7.77/month
+              subscription, while it is active. If a subscription is not
+              paid at its renewal, the book locks again — the first 17
+              pages always remain free to read. The permanent unlock is
+              no longer offered.
             </p>
           </section>
         </>
