@@ -6,8 +6,8 @@
  * SCOPE LIMIT: this processor handles shop orders placed at
  * /checkout with payment_method 'authorizenet_card_hosted' ONLY.
  * The unified build's Grimoire subscription (ARB lifecycle) and
- * $8.88 unlock handling is deliberately NOT ported — membership-model
- * decisions are still pending with the owner. A webhook event that
+ * unlock handling is deliberately NOT ported — and the $8.88 unlock
+ * itself was abolished by owner decision 2026-11-09. A webhook event that
  * does not resolve to a shop order is acknowledged without any
  * entitlement side effect (see handleAuthCapture).
  *
