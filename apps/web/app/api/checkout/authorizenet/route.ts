@@ -2,7 +2,8 @@
  * Authorize.net hosted card checkout — POST /api/checkout/authorizenet
  * (card checkout build 2026-11-09, SHOP ORDERS ONLY — ported from the
  * Oct 29 unified build's route, with its Grimoire unlock branch
- * deliberately NOT ported: membership-model decisions are pending).
+ * deliberately NOT ported — the $8.88 unlock was abolished by owner
+ * decision 2026-11-09, so no unlock branch exists to port).
  *
  * Binds an Accept Hosted payment token to an existing shop order
  * (created UNPAID by POST /api/checkout with payment_method

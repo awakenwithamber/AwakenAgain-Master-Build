@@ -3,8 +3,9 @@
  * (Stage 3, owner decision 2026-10-21 §13(3): Stripe is the
  * subscription processor).
  *
- * Parallel to the unlock checkout (lib/grimoire/unlock-checkout.ts),
- * but for the recurring $7.77/month plan: a hosted Stripe Checkout
+ * Built parallel to the unlock checkout that used to live in
+ * lib/grimoire/unlock-checkout.ts (deleted 2026-11-09 with the $8.88
+ * abolition) — this module is for the recurring $7.77/month plan: a hosted Stripe Checkout
  * Session in mode 'subscription'. The entitlement is granted ONLY by
  * the signature-verified webhook lifecycle
  * (lib/subscriptions/stripe-lifecycle.ts) — creating a session here
