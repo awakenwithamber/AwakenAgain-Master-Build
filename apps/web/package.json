@@ -2,6 +2,7 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^7.0.0",
     "@stripe/stripe-js": "^10.1.0",
+    "@vercel/speed-insights": "^2.1.0",
     "next": "^15.3.0",
     "pg": "^8.23.1",
     "posthog-js": "^1.200.0",

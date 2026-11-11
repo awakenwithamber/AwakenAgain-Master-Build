@@ -14,6 +14,7 @@ import { GaiaNudge } from '../components/chat/GaiaNudge';
 import { ContactPopup } from '../components/contact/ContactPopup';
 import { ConsentBar } from '../components/privacy/ConsentBar';
 import { MetaPixelTracker } from '../components/analytics/MetaPixelTracker';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 // CSP nonce (Aikido 845087258): pages must render per-request so Next.js
 // can stamp the middleware nonce onto its inline scripts. Static prerender
@@ -113,6 +114,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Legacy SPA anchor → route bridge (client-side; fragments never reach the server). */}
         <LegacyAnchorRedirect />
         <OrganizationJsonLd />
+        {/* Vercel Speed Insights — real-user Core Web Vitals (free tier). */}
+        <SpeedInsights />
       </body>
     </html>
   );
