@@ -56,7 +56,74 @@ import {
   type ShippingAddress,
 } from '../../../lib/checkout/shipping-address';
 import { formatPrice } from '../../../lib/pricing/pricing';
+import { orderLineDisplayTitle } from '../../../lib/wax/wax';
+import {
+  BALM_SCENT_UNSENTED,
+  getBalmPurpose,
+} from '../../../lib/custom-formula/balm';
+import {
+  getScentRecipe,
+  scentSelectionLabel,
+} from '../../../lib/catalog/scents';
+import { getHerb } from '../../../lib/catalog/herbs';
+import { getShape } from '../../../lib/catalog/shapes';
+import type { OrderLine } from '../../../lib/checkout/order';
 import Link from 'next/link';
+
+/**
+ * Production detail for one order line (directive 2026-11-13): what
+ * to make, exactly as the customer configured it — for a custom
+ * formula, the botanical count plus any purpose/scent/creation notes
+ * the customer supplied; the wax finish itself rides the display
+ * title (orderLineDisplayTitle). Before this, the list showed only a
+ * line COUNT and the maker had to read the raw ledger to produce an
+ * order.
+ */
+function productionDetail(line: OrderLine): string | null {
+  const parts: string[] = [];
+  if (line.formula) {
+    parts.push(
+      `botanicals: ${line.formula.herb_ids
+        .map((id) => getHerb(id)?.name ?? id)
+        .join(', ')}`,
+    );
+    if (line.formula.purpose_id) {
+      const purpose = getBalmPurpose(line.formula.purpose_id);
+      if (purpose) parts.push(`purpose: ${purpose.label}`);
+    }
+    if (line.formula.scent_id) {
+      parts.push(
+        line.formula.scent_id === BALM_SCENT_UNSENTED
+          ? 'scent: unscented'
+          : `scent: ${getScentRecipe(line.formula.scent_id)?.name ?? line.formula.scent_id}`,
+      );
+    }
+    if (line.formula.creation_name) {
+      parts.push(`creation: ${line.formula.creation_name}`);
+    }
+    if (line.formula.intention) {
+      parts.push(`intention: ${line.formula.intention}`);
+    }
+    if (line.formula.notes) {
+      parts.push(`notes: ${line.formula.notes}`);
+    }
+  }
+  if (line.customization) {
+    const c = line.customization;
+    parts.push(
+      [
+        getShape(c.shape)?.name ?? c.shape,
+        c.base,
+        scentSelectionLabel(c.scent),
+        c.botanical,
+        c.color,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    );
+  }
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
 
 /**
  * Ship-to lines for the customer cell (Phase 2, from the card build,
@@ -214,6 +281,21 @@ export default async function AdminOrdersPage() {
                   <td>
                     {o.items.reduce((n, l) => n + l.quantity, 0)}
                     {o.bundle ? ' + bundle(5)' : ''}
+                    <ul>
+                      {o.items.map((l, i) => (
+                        <li key={i}>
+                          <small>
+                            {orderLineDisplayTitle(l)} × {l.quantity}
+                            {productionDetail(l) ? (
+                              <>
+                                <br />
+                                {productionDetail(l)}
+                              </>
+                            ) : null}
+                          </small>
+                        </li>
+                      ))}
+                    </ul>
                   </td>
                   <td>{formatPrice(o.total_cents)}</td>
                   <td>

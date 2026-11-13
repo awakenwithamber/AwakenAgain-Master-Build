@@ -41,6 +41,8 @@ import {
   ProductDisclaimerSections,
   ProductIngredientsSections,
 } from '../../../components/shop/ProductSafetySections';
+import { WaxAwareIngredients } from '../../../components/shop/WaxAwareIngredients';
+import { productHasWaxChoice } from '../../../lib/wax/wax';
 import {
   BenefitsSection,
   BestForSection,
@@ -332,8 +334,15 @@ export default async function ProductPage({
 
         {/* Complete ingredients + allergen statement (R-18): the
             record's FULL ingredient data, and its allergen statement
-            only when the record carries a real determination. */}
-        <ProductIngredientsSections product={product} />
+            only when the record carries a real determination. Balm
+            pages render the finish-aware variant instead, so the
+            declaration follows the customer's selected wax finish
+            (directive 2026-11-13). */}
+        {productHasWaxChoice(product) ? (
+          <WaxAwareIngredients product={product} />
+        ) : (
+          <ProductIngredientsSections product={product} />
+        )}
 
         {product.directions ? (
           <section aria-label="Directions">

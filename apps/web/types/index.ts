@@ -31,6 +31,13 @@ export interface ProductVariant {
   availability?: string;
   sku?: string | null;
   name?: string;
+  /**
+   * Wax finish for the balm variants that offer one (owner ruling
+   * 2026-10-30): 'soy-wax' = standard formula, 'beeswax' = the
+   * soy-free alternative at the identical price. Absent on every
+   * wax-free product. See lib/wax/wax.ts.
+   */
+  wax_finish?: 'soy-wax' | 'beeswax';
   [key: string]: unknown;
 }
 

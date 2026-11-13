@@ -25,48 +25,56 @@ export const RECORD: Product = {
   "variants": [
     {
       "name": "1 oz pocket size — Soy Wax (standard)",
+      "wax_finish": "soy-wax",
       "size": "1 oz",
       "sku": "BALM-AGE-001-1OZ",
       "price": 11.77
     },
     {
       "name": "1 oz pocket size — Beeswax (soy-free alternative)",
+      "wax_finish": "beeswax",
       "size": "1 oz",
       "sku": null,
       "price": 11.77
     },
     {
       "name": "2 oz — Soy Wax (standard)",
+      "wax_finish": "soy-wax",
       "size": "2 oz",
       "sku": "BALM-AGE-001-2OZ",
       "price": 23.54
     },
     {
       "name": "2 oz — Beeswax (soy-free alternative)",
+      "wax_finish": "beeswax",
       "size": "2 oz",
       "sku": null,
       "price": 23.54
     },
     {
       "name": "3 oz — Soy Wax (standard)",
+      "wax_finish": "soy-wax",
       "size": "3 oz",
       "sku": "BALM-AGE-001-3OZ",
       "price": 35.31
     },
     {
       "name": "3 oz — Beeswax (soy-free alternative)",
+      "wax_finish": "beeswax",
       "size": "3 oz",
       "sku": null,
       "price": 35.31
     },
     {
       "name": "4 oz — Soy Wax (standard)",
+      "wax_finish": "soy-wax",
       "size": "4 oz",
       "sku": "BALM-AGE-001-4OZ",
       "price": 47.08
     },
     {
       "name": "4 oz — Beeswax (soy-free alternative)",
+      "wax_finish": "beeswax",
       "size": "4 oz",
       "sku": null,
       "price": 47.08

@@ -38,6 +38,7 @@ import {
 } from '../../../../lib/orders/tracking';
 import { resolveOrderPaidState } from '../../../../lib/orders/paid-state';
 import { normalizeSubscriptionEmail } from '../../../../lib/subscriptions/entitlement';
+import { orderLineDisplayTitle } from '../../../../lib/wax/wax';
 
 function fail(errors: string[], status = 422) {
   return NextResponse.json({ ok: false, errors }, { status });
@@ -108,6 +109,18 @@ export async function POST(request: Request) {
       item_count:
         order.items.reduce((n, line) => n + line.quantity, 0) +
         (order.bundle ? 5 : 0),
+      /**
+       * Item titles WITH the selected formulation (directive
+       * 2026-11-13) — a balm line names its wax finish, so the
+       * customer can confirm the finish they chose is the finish on
+       * the order. Titles only: no prices per line, no address, no
+       * notes — the same minimal-disclosure posture as the rest of
+       * this response.
+       */
+      items: order.items.map((line) => ({
+        title: orderLineDisplayTitle(line),
+        quantity: line.quantity,
+      })),
       subtotal_cents: order.subtotal_cents,
       subscriber_discount_cents: order.subscriber_discount_cents,
       coupon_code: order.coupon_code ?? null,

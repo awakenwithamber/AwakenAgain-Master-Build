@@ -58,6 +58,7 @@ import {
   type BalmBaseId,
 } from '../../lib/custom-formula/balm';
 import { SIGNATURE_SCENTS, getScentRecipe } from '../../lib/catalog/scents';
+import { WAX_SENSITIVITY_NOTE } from '../../lib/wax/wax';
 import {
   MAX_FORMULA_HERBS,
   defaultFormulaSelections,
@@ -249,6 +250,7 @@ export function BalmBuilder() {
       case 'base':
         return (
           <div>
+            <p className="verify-note">{WAX_SENSITIVITY_NOTE}</p>
             <div className="pick-grid bases">
               {BALM_BASES.map((b) => (
                 <button

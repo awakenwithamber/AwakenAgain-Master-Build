@@ -28,12 +28,13 @@ import {
   VENMO_HANDLE,
   type OrderRecord,
 } from '../checkout/order';
+import { orderLineDisplayTitle } from '../wax/wax';
 import { formatShippingAddressLines } from '../checkout/shipping-address';
 
 /** One-line human summary of what was ordered, for the email body. */
 export function orderItemSummary(record: OrderRecord): string {
   const parts = record.items.map(
-    (line) => `${line.title} × ${line.quantity}`,
+    (line) => `${orderLineDisplayTitle(line)} × ${line.quantity}`,
   );
   if (record.bundle) parts.push('The Alchemy Soap Collection (5 soaps)');
   return parts.join('; ');
@@ -84,7 +85,9 @@ export function deliveryAddressLines(record: OrderRecord): string[] {
  */
 export function buildOrderConfirmationJob(record: OrderRecord): EmailJob {
   const items = record.items.map((line) => ({
-    title: line.title,
+    // The confirmation names the selected formulation — for a balm,
+    // the wax finish the customer chose (directive 2026-11-13).
+    title: orderLineDisplayTitle(line),
     quantity: line.quantity,
     unit_price_cents: line.unit_price_cents,
   }));

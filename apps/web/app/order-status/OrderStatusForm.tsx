@@ -30,6 +30,8 @@ interface OrderSummary {
     | 'bookipi_card_invoice'
     | 'stripe_card_embedded';
   item_count: number;
+  /** Item titles with the selected formulation (e.g. a balm's wax finish). */
+  items?: { title: string; quantity: number }[];
   total_cents: number;
 }
 
@@ -252,6 +254,18 @@ export function OrderStatusForm() {
                 {order.item_count}
               </dd>
             </div>
+            {order.items && order.items.length > 0 ? (
+              <div>
+                <dt style={{ display: 'inline', fontWeight: 600 }}>
+                  What you ordered:{' '}
+                </dt>
+                <dd style={{ display: 'inline', margin: 0 }}>
+                  {order.items
+                    .map((i) => `${i.title} × ${i.quantity}`)
+                    .join('; ')}
+                </dd>
+              </div>
+            ) : null}
             <div>
               <dt style={{ display: 'inline', fontWeight: 600 }}>Total: </dt>
               <dd style={{ display: 'inline', margin: 0 }}>

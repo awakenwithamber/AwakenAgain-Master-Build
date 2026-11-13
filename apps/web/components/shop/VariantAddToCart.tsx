@@ -10,6 +10,12 @@ import { toCents } from '../../lib/pricing/pricing';
 import { PriceDisplay } from '../catalog/PriceDisplay';
 import { useCart } from '../checkout/cart-store';
 import { VARIANT_SELECTED_EVENT } from './VariantPrice';
+import {
+  WAX_SENSITIVITY_NOTE,
+  productHasWaxChoice,
+  variantWaxFinish,
+  waxVariantDisplayName,
+} from '../../lib/wax/wax';
 import type { Product } from '../../types';
 import Link from 'next/link';
 
@@ -18,7 +24,11 @@ interface Props {
 }
 
 function variantLabel(v: NonNullable<Product['variants']>[number]): string {
-  return String(v.name ?? v.size ?? v.variant_id ?? 'Option');
+  const raw = String(v.name ?? v.size ?? v.variant_id ?? 'Option');
+  // Wax variants display in the owner's option wording (directive
+  // 2026-11-13); the stored name — which is also the variant identity
+  // the server resolves — is never changed.
+  return variantWaxFinish(v) ? waxVariantDisplayName(raw) : raw;
 }
 
 /** Deterministic variant identity — mirrors the server's resolver. */
@@ -74,6 +84,9 @@ export function VariantAddToCart({ product }: Props) {
       {variants.length > 0 ? (
         <fieldset>
           <legend>Choose an option</legend>
+          {productHasWaxChoice(product) ? (
+            <p>{WAX_SENSITIVITY_NOTE}</p>
+          ) : null}
           {variants.map((v, i) => (
             <label key={variantIdentity(v) || i}>
               <input

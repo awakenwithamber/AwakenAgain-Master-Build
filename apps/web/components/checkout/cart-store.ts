@@ -23,6 +23,7 @@ import {
   toCents,
 } from '../../lib/pricing/pricing';
 import { priceFormulaCustomization } from '../../lib/cart/validation';
+import { getBalmBase } from '../../lib/custom-formula/balm';
 import { CUSTOM_BUILDER_TITLE } from '../../lib/checkout/order';
 import type {
   BundleConfiguration,
@@ -50,7 +51,17 @@ export function cartItemTitle(
     const base = product?.title ?? productHandle;
     const kind = formulaKindForHandle(productHandle);
     const size = kind ? getFormulaSize(kind, formula.size_id) : undefined;
-    return size ? `${base} — ${size.name} (your formula)` : `${base} (your formula)`;
+    // Balm formulas carry the customer's wax finish (base_id) — name
+    // it in the title so cart and checkout preview show the selected
+    // formulation, exactly as the cart page's formula sub-line does.
+    const finish =
+      kind === 'balm' && formula.base_id
+        ? (getBalmBase(formula.base_id)?.name ?? formula.base_id)
+        : undefined;
+    const head = size ? `${base} — ${size.name}` : base;
+    return finish
+      ? `${head} — ${finish} (your formula)`
+      : `${head} (your formula)`;
   }
   const product = getProductByHandle(productHandle);
   const base = product?.title ?? productHandle;

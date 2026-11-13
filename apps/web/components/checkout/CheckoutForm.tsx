@@ -607,7 +607,7 @@ export function CheckoutForm() {
               <ul>
                 {items.map((item) => (
                   <li key={item.id}>
-                    {cartItemTitle(item.product_handle, item.variant_id)} — {formatPrice(item.unit_price_cents)} ×{' '}
+                    {cartItemTitle(item.product_handle, item.variant_id, item.formula)} — {formatPrice(item.unit_price_cents)} ×{' '}
                     {item.quantity} = {formatPrice(item.unit_price_cents * item.quantity)}
                   </li>
                 ))}

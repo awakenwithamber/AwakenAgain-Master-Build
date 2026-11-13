@@ -59,7 +59,7 @@ export interface BalmBase {
 export const BALM_BASES: readonly BalmBase[] = [
   {
     id: 'soy-wax',
-    name: 'Soy Wax (standard)',
+    name: 'Soy Wax — Standard Formula',
     description:
       'The standard finish — soy wax blended in for a smooth, balanced texture.',
     allergenNote:
@@ -68,7 +68,7 @@ export const BALM_BASES: readonly BalmBase[] = [
   },
   {
     id: 'beeswax',
-    name: 'Beeswax (soy-free alternative)',
+    name: 'Beeswax — Soy-Free Wax Alternative',
     description:
       'The soy-free alternative finish — beeswax replaces the soy wax.',
     allergenNote:
