@@ -17,6 +17,7 @@ import { OrderStatusForm } from './OrderStatusForm';
 import { BRAND_NAME } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/order-status' },
   title: 'Order Status',
   description: `Check the status of your ${BRAND_NAME} order and track your shipment.`,
 };

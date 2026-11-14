@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { BRAND_EMAIL, BRAND_NAME, BRAND_PHONE_DISPLAY } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/terms' },
   title: 'Terms of Service',
   description: `Terms of service for purchasing from ${BRAND_NAME}.`,
 };

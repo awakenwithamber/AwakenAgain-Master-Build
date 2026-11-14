@@ -20,7 +20,6 @@ import {
 const LEARN_LINKS = [
   { href: '/quiz', label: 'Herbal Allies Quiz' },
   { href: '/journal', label: 'Apothecary Journal' },
-  { href: '/herbal-wisdom', label: 'Herbal Wisdom' },
   { href: '/herb-index', label: 'Herb Index' },
   { href: '/faqs', label: 'FAQs' },
 ];
@@ -100,7 +99,6 @@ const SITEMAP_GROUPS = [
       { href: '/quiz', label: 'Herbal Allies Quiz' },
       { href: '/herb-index', label: 'The Herbal Library' },
       { href: '/herb-index', label: 'Herb Index' },
-      { href: '/herbal-wisdom', label: 'Herbal Wisdom' },
       { href: '/journal', label: 'Apothecary Journal' },
       { href: '/faqs', label: 'Questions & Answers' },
       { href: '/links', label: 'Links & Friends of the Apothecary' },

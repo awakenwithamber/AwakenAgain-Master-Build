@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { BRAND_NAME } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/sitemap' },
   title: 'Site Map',
   description: `Every page of ${BRAND_NAME}, and where to connect with Awaken With Amber LLC, Amber's Alchemy Apothecary, and The Awaken Network on social media.`,
 };
@@ -42,7 +43,6 @@ const GRIMOIRE_LINKS = [
 const LEARN_LINKS = [
   { href: '/quiz', label: 'Herbal Allies Quiz' },
   { href: '/herb-index', label: 'Herb Index' },
-  { href: '/herbal-wisdom', label: 'Herbal Wisdom' },
   { href: '/journal', label: 'Apothecary Journal' },
   { href: '/faqs', label: 'FAQs' },
 ];

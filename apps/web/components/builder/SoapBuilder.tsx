@@ -94,6 +94,13 @@ import styles from './SoapBuilderModal.module.css';
 
 export interface SoapBuilderProps {
   mode: BuilderMode;
+  /**
+   * Heading level for the builder title. Default 'h1' (the standalone
+   * /soap-builder page, where this is the page's only H1). Pages that
+   * already render their own H1 — e.g. /soap-shop — must pass 'h2' so
+   * the document keeps exactly one H1 (2026-11-08 audit Fail #27).
+   */
+  titleAs?: 'h1' | 'h2';
 }
 
 /** Netlify-style emoji cards for the three bases (presentation only). */
@@ -134,7 +141,8 @@ function selectionsExist(sel: BuilderSelections): boolean {
   );
 }
 
-export function SoapBuilder({ mode }: SoapBuilderProps) {
+export function SoapBuilder({ mode, titleAs = 'h1' }: SoapBuilderProps) {
+  const TitleTag = titleAs;
   const steps = mode === 'bundle' ? BUNDLE_MODE_STEPS : SINGLE_MODE_STEPS;
   const router = useRouter();
   const { addItem } = useCart();
@@ -708,11 +716,11 @@ export function SoapBuilder({ mode }: SoapBuilderProps) {
         <div className={styles.dialogHeader}>
           <div>
             <p className={styles.eyebrow}>Amber's Alchemy Apothecary</p>
-            <h1 id="soap-builder-title" className={styles.dialogTitle}>
+            <TitleTag id="soap-builder-title" className={styles.dialogTitle}>
               {mode === 'bundle'
                 ? 'The Alchemy Soap Collection'
                 : 'Create Your Own Alchemy Soap'}
-            </h1>
+            </TitleTag>
             {mode === 'bundle' && (
               <span className={styles.modeBadge}>Collection mode</span>
             )}

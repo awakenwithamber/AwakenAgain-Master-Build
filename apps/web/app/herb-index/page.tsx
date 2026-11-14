@@ -23,6 +23,7 @@ import { InterestTracker } from '../../components/personalization/InterestTracke
 import { PageBackground } from '../../components/layout/PageBackground';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/herb-index' },
   title: 'Herbal Encyclopedia',
   description:
     "Search the botanical archive of Amber's Alchemy Apothecary by symptom or concern — herbs, roots, flowers, and mushrooms.",

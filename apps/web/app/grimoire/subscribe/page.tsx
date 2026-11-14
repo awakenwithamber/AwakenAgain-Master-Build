@@ -16,6 +16,7 @@ import {
 } from '../../../components/grimoire/grimoireContent';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/grimoire/subscribe' },
   title: `The Living Grimoire — 1,051 pages of preserved works — ${BRAND_NAME}`,
   description:
     'The Living Grimoire is a preservation of the collective works of generations — spells, rituals, and lost knowledge, found book by book and digitized to hold their magic and history for generations to come. A $7.77/month membership opens the full compilation while it is active. Plus 10% off storewide, exclusive articles and rituals, and more.',

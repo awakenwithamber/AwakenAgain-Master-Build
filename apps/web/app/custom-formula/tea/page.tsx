@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { FormulaBuilder } from '../../../components/builder/FormulaBuilder';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/custom-formula/tea' },
   title: 'Create Your Own Tea Blend',
   description:
     "Design your own custom tea blend in a four-step ritual — format, botanicals, safety & intention — at Amber's Alchemy Apothecary. Exact botanicals persisted; totals recomputed server-side.",

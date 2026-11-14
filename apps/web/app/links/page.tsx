@@ -37,18 +37,31 @@ import {
 } from '../../lib/seo/config';
 
 const PAGE_TITLE = 'Links — Handmade Herbal Soap & Botanical Goods in Salt Lake City';
-const PAGE_DESCRIPTION = `Handmade herbal soap, botanical blends, and customized products from ${BRAND_NAME} in Salt Lake City, Utah — shop the apothecary, take the free herb quiz, build a custom soap, open the Living Grimoire, and connect with Amber Lynn Patten of Awaken With Amber LLC.`;
+// Description trimmed to 155 chars (2026-11-08 audit Fail #25: was 280).
+const PAGE_DESCRIPTION = `Handmade herbal soap, botanical blends, and customized products from ${BRAND_NAME} in Salt Lake City — shop, take the quiz, open the Grimoire.`;
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/links' },
   title: PAGE_TITLE,
   description: PAGE_DESCRIPTION,
   openGraph: {
     title: `${PAGE_TITLE} — ${BRAND_NAME}`,
     description: PAGE_DESCRIPTION,
     type: 'website',
+    // Explicit og:image (2026-11-08 audit Fail #26): a page-level openGraph
+    // without images drops the layout's default share image in live HTML.
+    images: [
+      {
+        url: '/images/brand/ambers-alchemy-emblem-og.jpg',
+        width: 1200,
+        height: 1200,
+        alt: "Amber's Alchemy Apothecary circular emblem — Amber@awakenagain.com",
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['/images/brand/ambers-alchemy-emblem-og.jpg'],
     title: `${PAGE_TITLE} — ${BRAND_NAME}`,
     description: PAGE_DESCRIPTION,
   },

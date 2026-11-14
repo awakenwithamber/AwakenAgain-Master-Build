@@ -17,7 +17,8 @@ import styles from '../../components/network/network.module.css';
 
 export const metadata: Metadata = {
   title: 'The Awaken Network',
-  description: `The AWAKEN series from ${BRAND_NAME} and Awaken With Amber LLC: the apothecary, the Awaken Network community platform, Awaken Mobile, Farah Growth Studio, AWAKEN Agents, Awaken Eco-Villages, and BrandAlchemy — where each project stands, and how to get involved.`,
+  // Description trimmed to ~155 chars (2026-11-08 audit Fail #25: was 279).
+  description: `The AWAKEN series from ${BRAND_NAME} and Awaken With Amber LLC — the apothecary, Awaken Network, Awaken Mobile, Eco-Villages, and more.`,
   alternates: { canonical: '/network' },
 };
 

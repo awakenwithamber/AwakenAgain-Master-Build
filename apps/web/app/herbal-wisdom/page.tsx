@@ -10,6 +10,7 @@ import InPreparation from '../../components/content/InPreparation';
 import { BRAND_NAME } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/herbal-wisdom' },
   title: 'Herbal Wisdom',
   description: `Botanical education from ${BRAND_NAME} — wisdom articles are being prepared for this new site.`,
 };

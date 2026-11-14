@@ -13,6 +13,7 @@ import { PageBackground } from '../../components/layout/PageBackground';
 import { BRAND_PHONE_DISPLAY, BRAND_PHONE_TEL } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/about' },
   title: 'About Amber',
   description:
     "Meet Amber Lynn Patten, founder of Amber's Alchemy Apothecary — handcrafted botanical goods, made by hand in small batches, never mass-produced.",

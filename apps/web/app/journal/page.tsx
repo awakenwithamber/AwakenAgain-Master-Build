@@ -16,6 +16,7 @@ import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './journal.module.css';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/journal' },
   title: 'Apothecary Journal',
   description: `Botanical wisdom, ancient herbal rituals, and the stories behind the plants — the living journal of ${BRAND_NAME}.`,
 };

@@ -26,6 +26,7 @@ import { QuizPromo } from '../../components/custom-formula/QuizPromo';
 import { ContactPopupTrigger } from '../../components/contact/ContactPopup';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/custom-formula' },
   title: 'Choose Your Form — Free Custom Formula Consultation',
   description:
     "Not sure where to start? Compare tea, balm, tincture, serum, and capsules — five doors into the same garden at Amber's Alchemy Apothecary — and pick the form that fits your life.",

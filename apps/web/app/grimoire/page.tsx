@@ -40,6 +40,7 @@ import {
 import { resolveGrimoireEntitlement } from '../../lib/grimoire/entitlement';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/grimoire' },
   title:
     'The Living Grimoire — The Collective Works of Light Magic & Lost Knowledge — 1,051 pages of preserved works',
   description:

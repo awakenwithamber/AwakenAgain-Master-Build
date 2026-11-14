@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 import { OrganizationJsonLd } from '../components/seo/JsonLd';
 import Header from '../components/layout/Header';
@@ -32,22 +33,31 @@ export const metadata: Metadata = {
   description:
     "Amber's Alchemy Apothecary — handcrafted botanical soaps, capsules, balms, and the Living Grimoire of Light & Magic. AwakenAgain.com.",
   keywords: [...SITE_KEYWORDS],
-  alternates: {
-    canonical: '/',
-  },
+  // SEO HYGIENE (2026-11-08 audit, Critical #1): NO layout-level canonical.
+  // A canonical here is inherited by every child page that does not set
+  // its own — the previous `canonical: '/'` made /shop, /quiz, /grimoire,
+  // every herb page, etc. canonicalise to the HOMEPAGE in live HTML.
+  // Every page MUST set its own `alternates: { canonical: '<its path>' }`
+  // (the pattern /network always used); the canonical test suite enforces it.
   openGraph: {
+    type: 'website',
+    // NO openGraph.url here: it would be inherited by every page as the
+    // HOMEPAGE url (same inheritance trap as the old layout canonical).
+    // The per-page og:url is emitted by RootLayout below from the
+    // middleware-stamped x-pathname header.
+    siteName: BRAND_NAME,
     images: [
       {
-        url: '/images/brand/ambers-alchemy-emblem-og.jpg',
+        url: '/images/brand/empress-og-1200x630.jpg',
         width: 1200,
-        height: 1200,
-        alt: "Amber's Alchemy Apothecary circular emblem — Amber@awakenagain.com",
+        height: 630,
+        alt: "Amber's Alchemy Apothecary — The Empress banner: handcrafted herbal products & botanical wellness at AwakenAgain.com",
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['/images/brand/ambers-alchemy-emblem-og.jpg'],
+    images: ['/images/brand/empress-og-1200x630.jpg'],
   },
 };
 
@@ -58,7 +68,15 @@ export const viewport: Viewport = {
   themeColor: '#150b26',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Per-page og:url (SEO package 2026-11-13): emitted here from the
+  // middleware-stamped pathname rather than via metadata openGraph.url —
+  // a layout-level openGraph.url is inherited as the HOMEPAGE url by every
+  // page, and any page-level openGraph object replaces the layout's
+  // wholesale (dropping og:image/og:type). This tag is the single og:url
+  // on every page: no page sets openGraph.url in its metadata.
+  const pathname = (await headers()).get('x-pathname') ?? '/';
+  const ogUrl = pathname === '/' ? base : `${base}${pathname}`;
   return (
     // data-scroll-behavior="smooth" (Experience Package 1, 2026-11-08):
     // Next.js forces instant scroll behavior during route transitions
@@ -69,6 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // visibly opened halfway down.
     <html lang="en" data-scroll-behavior="smooth">
       <head>
+        <meta property="og:url" content={ogUrl} />
         {/* Google Fonts — spec §3: Cinzel Decorative (display), Cinzel,
             EB Garamond (body), Cormorant Garamond (accent). Single link. */}
         <link

@@ -28,6 +28,7 @@ import { listUnlockRequests } from '../../../lib/grimoire/unlock-requests';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin/subscriptions' },
   title: 'Admin — Subscriptions',
   description:
     'Living Grimoire of Light & Magic member management for Amber\'s Alchemy Apothecary (internal).',

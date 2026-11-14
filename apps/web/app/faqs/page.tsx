@@ -12,6 +12,7 @@ import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './faq.module.css';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/faqs' },
   title: 'FAQs',
   description: `Frequently asked questions about ordering, shipping, payments, and services at ${BRAND_NAME}.`,
 };

@@ -13,6 +13,7 @@ import { PageBackground } from '../../components/layout/PageBackground';
 import { BRAND_NAME } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/quiz' },
   title: 'Herbal Allies Quiz — Your Guided Wellness Quiz',
   description: `A quiet, guided conversation that listens for the pattern beneath what you are feeling — then gathers the herbal allies, gentle rituals, and one personalized formula that fits. ${BRAND_NAME}.`,
 };
@@ -21,7 +22,7 @@ export default function QuizPage() {
   return (
     <main id="main-content" className="page quiz-page">
       <PageBackground route="/quiz" />
-      <Quiz />
+      <Quiz introHeadingAs="h1" />
     </main>
   );
 }

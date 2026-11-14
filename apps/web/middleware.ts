@@ -32,6 +32,11 @@ export function middleware(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
+  // Current path for the root layout's per-page og:url (SEO package
+  // 2026-11-13): the layout reads this to emit a self-referential og:url
+  // on every page without a layout-level openGraph.url, which Next.js
+  // would inherit as the HOMEPAGE url on every page.
+  requestHeaders.set('x-pathname', request.nextUrl.pathname);
   requestHeaders.set('Content-Security-Policy', csp);
 
   const rule = findRedirect(request.nextUrl.pathname);

@@ -49,8 +49,9 @@ import { BRAND_NAME } from '../lib/seo/config';
 
 export const metadata: Metadata = {
   title: `${BRAND_NAME} — Handcrafted Botanical Apothecary`,
+  // Share/search excerpt: Amber's approved variant A (her words, 2026-11-11).
   description:
-    'Discover your personal herbal allies at Amber\u2019s Alchemy Apothecary — small-batch botanical capsules, balms, and soaps, handcrafted in Salt Lake City, Utah.',
+    'Awaken With Amber LLC operates an online botanical wellness and lifestyle business offering handcrafted herbal teas, skincare, artisan soaps, custom botanical products, educational resources, digital memberships, and wellness services. Customers purchase through our website, with physical products shipped and digital content delivered electronically.',
   alternates: { canonical: '/' },
 };
 

@@ -11,6 +11,7 @@ import { PendingBindingReviewStore } from '../../../lib/stores/operational-store
 import Link from 'next/link';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin/reviews' },
   title: 'Admin — Reviews',
   description: 'Review moderation queue for Amber\'s Alchemy Apothecary (internal).',
   robots: { index: false, follow: false },

@@ -41,10 +41,15 @@ export async function generateMetadata({
   return {
     title: page.title,
     description: page.metaDescription,
+    // SEO hygiene (2026-11-08 audit): self-canonical per service page, and
+    // an explicit og:image — a page-level openGraph without images drops
+    // the layout's default share image in the rendered HTML (Fail #26).
+    alternates: { canonical: servicePagePath(slug) },
     openGraph: {
       title: `${page.title} — Amber's Alchemy Apothecary`,
       description: page.metaDescription,
       type: 'website',
+      images: [{ url: '/images/brand/ambers-alchemy-emblem-og.jpg' }],
     },
   };
 }

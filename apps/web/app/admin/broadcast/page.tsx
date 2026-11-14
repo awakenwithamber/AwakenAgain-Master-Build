@@ -38,6 +38,7 @@ import { BroadcastComposer } from './BroadcastComposer';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin/broadcast' },
   title: 'Admin — Broadcast',
   description:
     'Promotional broadcast composer — records drafts; delivery activates when an email provider is connected (internal).',

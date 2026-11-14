@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { BRAND_EMAIL, BRAND_NAME, BRAND_PHONE_DISPLAY } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/legal' },
   title: 'Disclaimers',
   description: `Health and product disclaimers for ${BRAND_NAME}.`,
 };

@@ -22,6 +22,8 @@ export async function generateMetadata({
   const article = getArticle(slug);
   return {
     title: article ? article.title : 'Journal',
+    // SEO hygiene (2026-11-08 audit): every article self-canonicals.
+    alternates: { canonical: `/journal/${slug}` },
     description: article
       ? `${article.title} — ${article.excerpt} ${BRAND_NAME} Journal.`
       : 'Apothecary Journal.',

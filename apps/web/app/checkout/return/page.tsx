@@ -23,6 +23,7 @@ import { resolveOrderPaidState } from '../../../lib/orders/paid-state';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/checkout/return' },
   title: 'Payment Status',
   description: `Your payment status with ${BRAND_NAME}.`,
 };

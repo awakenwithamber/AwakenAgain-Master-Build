@@ -9,6 +9,7 @@ import type { Metadata } from 'next';
 import { ShopClient } from '../../components/shop/ShopClient';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/shop' },
   title: 'Shop',
   description:
     "The Apothecary Shop — ritual bundles, handcrafted botanical soaps, capsules, balms, teas, and the Living Grimoire of Light & Magic from Amber's Alchemy Apothecary.",

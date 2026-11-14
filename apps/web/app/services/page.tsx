@@ -20,6 +20,7 @@ import styles from './services.module.css';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/services' },
   title: 'Spiritual Services & Readings',
   description: `Spiritual services, consultations, and readings from ${BRAND_NAME} — book directly from the apothecary.`,
 };

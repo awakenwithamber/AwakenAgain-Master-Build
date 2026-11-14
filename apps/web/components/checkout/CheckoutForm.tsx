@@ -315,7 +315,18 @@ export function CheckoutForm() {
   const [result, setResult] = useState<OrderResponse | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  if (!loaded) return <p>Loading checkout…</p>;
+  // Server HTML renders this loading state (the cart hydrates from
+  // client storage), so it must carry the page H1 — /checkout previously
+  // shipped no H1 in server HTML (2026-11-08 audit Fail #27). The loaded
+  // and success branches render their own single H1, so exactly one H1
+  // exists in every state.
+  if (!loaded)
+    return (
+      <main>
+        <h1>Checkout</h1>
+        <p>Loading checkout…</p>
+      </main>
+    );
 
   const preview = previewCartTotals(items, bundle, isSubscriber, appliedCoupon, {
     state: ship.state,

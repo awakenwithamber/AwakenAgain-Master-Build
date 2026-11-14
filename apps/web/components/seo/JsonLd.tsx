@@ -74,8 +74,9 @@ export async function OrganizationJsonLd() {
           image: `${base}/images/brand/ambers-alchemy-emblem-og.jpg`,
           email: BRAND_EMAIL,
           telephone: BRAND_PHONE_JSONLD,
+          // Organization description: Amber's approved variant B (her words, 2026-11-11).
           description:
-            "Amber's Alchemy Apothecary — handcrafted botanical apothecary offering small-batch herbal capsules, artisan soaps, salves, balms, customized products, and the Living Grimoire of Light & Magic. Spiritual wellness, herbal education, and soul-centered living.",
+            'Awakening Potential. Inspiring Transformation. Creating Possibilities. Awaken With Amber LLC is a multifaceted consulting, holistic wellness, creative development, and technology innovation company founded by Amber Lynn Patten. Built on the belief that meaningful transformation begins with awareness, empowerment, and intentional action, the company bridges the worlds of personal development, entrepreneurship, ancient wisdom, and modern technology.',
           knowsAbout: [
             'Herbalism', 'Botanical medicine', 'Spiritual awakening',
             'Empath protection', 'Light magic', 'Ritual', 'Sustainable living',

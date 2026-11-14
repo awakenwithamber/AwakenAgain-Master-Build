@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import { FormulaBuilder } from '../../../components/builder/FormulaBuilder';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/custom-formula/capsules' },
   title: 'Create Your Own Herbal Capsules',
   description:
     "Design your own custom capsule formula in a four-step ritual — size, botanicals, safety & intention — at Amber's Alchemy Apothecary. Exact botanicals persisted; totals recomputed server-side.",

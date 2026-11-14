@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/checkout/cancel' },
   title: 'Checkout Cancelled',
   description: `Your checkout at ${BRAND_NAME} was cancelled. Your cart is still saved.`,
 };

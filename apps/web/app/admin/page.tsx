@@ -16,6 +16,7 @@ import {
 } from '../../lib/stores/operational-stores';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin' },
   title: 'Admin — Overview',
   description: 'Operations overview for Amber\'s Alchemy Apothecary (internal).',
   robots: { index: false, follow: false },

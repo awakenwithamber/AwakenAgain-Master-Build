@@ -64,6 +64,8 @@ export async function generateMetadata({
   const latin = card?.latin ?? entry?.latin;
   return {
     title: name ? `${name} — Herbal Encyclopedia` : 'Herbal Encyclopedia',
+    // SEO hygiene (2026-11-08 audit): every herb page self-canonicals.
+    alternates: { canonical: `/herbal-library/${slug}` },
     description:
       name && latin
         ? `${name} (${latin}) — botanical index card and encyclopedia entry at Amber's Alchemy Apothecary.`

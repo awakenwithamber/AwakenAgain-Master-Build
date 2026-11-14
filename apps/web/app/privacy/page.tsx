@@ -35,6 +35,7 @@ import { BRAND_EMAIL, BRAND_NAME } from '../../lib/seo/config';
 import { PrivacyChoices } from '../../components/privacy/PrivacyChoices';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/privacy' },
   title: 'Privacy Policy',
   description: `How ${BRAND_NAME} collects, uses, and protects your information.`,
 };

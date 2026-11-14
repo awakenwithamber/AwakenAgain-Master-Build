@@ -15,9 +15,11 @@ import { InterestTracker } from '../../components/personalization/InterestTracke
 import Link from 'next/link';
 
 export const metadata = {
+  alternates: { canonical: '/soap-shop' },
   title: 'The Soap Shop — Create Your Own Alchemy Soap',
+  // Description trimmed to ~160 chars (2026-11-08 audit Fail #25: was 206).
   description:
-    "Handcrafted botanical soaps from Amber's Alchemy Apothecary — design your own with the Alchemy Soap Builder, or choose from five featured signature soaps. Five shapes, thirteen scents, real botanicals.",
+    'Handcrafted botanical soaps — design your own with the Alchemy Soap Builder, or choose from five signature soaps. Five shapes, thirteen scents, real botanicals.',
   keywords: [
     'handmade soap', 'artisan soap', 'natural soap', 'botanical soap',
     'custom soap', 'soap builder', 'goat milk soap', 'glycerin soap',
@@ -80,7 +82,9 @@ export default function SoapShopPage() {
           Choose your base, shape, scent, botanical, and color — then reveal
           your personal alchemy.
         </p>
-        <SoapBuilder mode="single" />
+        {/* titleAs="h2": this page already renders its own H1 above, and a
+            document must have exactly one (2026-11-08 audit Fail #27). */}
+        <SoapBuilder mode="single" titleAs="h2" />
       </section>
 
       {/* 5 featured soaps */}

@@ -11,6 +11,7 @@ import styles from './support.module.css';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/support' },
   title: 'Support the Apothecary',
   description: `Support ${BRAND_NAME} — a founder-led small business where Amber creates every product by hand. Donations via Cash App or Venmo.`,
 };

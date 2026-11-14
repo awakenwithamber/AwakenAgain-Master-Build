@@ -22,6 +22,7 @@ import {
 } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/contact' },
   title: 'Contact',
   description:
     "Reach Amber at Amber's Alchemy Apothecary — questions about orders, custom soaps, the Living Grimoire of Light & Magic, or wholesale. Amber reads every message herself.",

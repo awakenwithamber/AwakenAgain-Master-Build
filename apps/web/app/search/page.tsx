@@ -27,6 +27,7 @@ import {
 import { formatPrice, toCents } from '../../lib/pricing/pricing';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/search' },
   title: 'Search',
   description:
     'Search everything at Amber’s Alchemy Apothecary — products, services, pages, journal articles, and every herb in the encyclopedia.',

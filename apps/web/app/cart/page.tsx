@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import { CartView } from '../../components/checkout/CartView';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/cart' },
   title: 'Your Cart',
   description: "Review your cart at Amber's Alchemy Apothecary.",
 };

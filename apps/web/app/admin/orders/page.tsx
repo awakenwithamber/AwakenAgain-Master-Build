@@ -154,6 +154,7 @@ function shipToLines(o: {
 }
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin/orders' },
   title: 'Admin — Orders',
   description: 'Read-only order ledger for Amber\'s Alchemy Apothecary (internal).',
   robots: { index: false, follow: false },

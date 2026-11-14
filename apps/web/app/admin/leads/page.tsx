@@ -10,6 +10,7 @@ import { PendingBindingQuizLeadStore } from '../../../lib/stores/operational-sto
 import Link from 'next/link';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin/leads' },
   title: 'Admin — Leads',
   description: 'Quiz lead list for Amber\'s Alchemy Apothecary (internal).',
   robots: { index: false, follow: false },

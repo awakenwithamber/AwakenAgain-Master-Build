@@ -128,7 +128,19 @@ function productTitle(handle: string): string {
   return PRODUCTS.find((p) => p.handle === handle)?.title ?? handle;
 }
 
-export default function Quiz() {
+export default function Quiz({
+  introHeadingAs = 'h2',
+}: {
+  /**
+   * Heading level for the intro title. The standalone /quiz page passes
+   * 'h1' (it is the page's primary heading and the only one in server
+   * HTML — /quiz previously shipped no H1, 2026-11-08 audit Fail #27).
+   * The homepage embed (QuizInvite) keeps the default 'h2' because the
+   * homepage already has its own H1.
+   */
+  introHeadingAs?: 'h1' | 'h2';
+} = {}) {
+  const IntroHeading = introHeadingAs;
   const [phase, setPhase] = useState<Phase>('intro');
   const [answers, setAnswers] = useState<AdvisorAnswers>(EMPTY_ADVISOR_ANSWERS);
   const [screeningAnswers, setScreeningAnswers] = useState<ScreeningAnswers>(EMPTY_SCREENING);
@@ -479,7 +491,7 @@ export default function Quiz() {
       {phase === 'intro' && (
         <div className="quiz-intro">
           <p className="quiz-eyebrow">🌿 Your Guided Wellness Quiz</p>
-          <h2>A quiet conversation — not a checklist.</h2>
+          <IntroHeading>A quiet conversation — not a checklist.</IntroHeading>
           <p>
             Share what&apos;s asking for support, and we&apos;ll listen for
             the pattern beneath it — then gather the herbal allies that

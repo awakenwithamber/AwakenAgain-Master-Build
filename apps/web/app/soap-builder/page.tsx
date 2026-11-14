@@ -10,6 +10,7 @@ import { SoapBuilder } from '../../components/builder/SoapBuilder';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/soap-builder' },
   title: 'Create Your Own Alchemy Soap',
   description:
     "Design your own hand-poured botanical soap in a six-step ritual — base, shape, scent, botanical, color — at Amber's Alchemy Apothecary.",

@@ -7,6 +7,7 @@
  * the cart store and server recompute authoritatively at checkout.
  */
 import { getProductByHandle } from '../../lib/catalog/products';
+import { getProductDisplayImage } from '../../lib/media/product-image';
 import { getHerb } from '../../lib/catalog/herbs';
 import { toCents } from '../../lib/pricing/pricing';
 import type { Product } from '../../types';
@@ -107,7 +108,14 @@ export function toCardModel(product: Product): HomeProductCardModel | null {
     priceCents: toCents(product.price),
     shortDescription: product.short_description ?? null,
     benefitLine,
-    imageSrc: `/images/products/${product.handle}.webp`,
+    // Registered primary image wins (same rule as ProductCard /
+    // RitualBundleCard). The convention path alone 404s for products
+    // whose authentic image lives elsewhere — e.g. the Alchemy Soap
+    // Collection, whose registered primary is /images/soap/soap-lineup-5.png
+    // (SEO hygiene, 2026-11-08 audit Fail #12).
+    imageSrc:
+      getProductDisplayImage(product)?.src ??
+      `/images/products/${product.handle}.webp`,
     fallbackEmoji: '🌿',
     herbChips: resolveHerbChips(product),
     whyItWorks: resolveWhyItWorks(product),

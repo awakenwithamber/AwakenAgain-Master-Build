@@ -97,10 +97,21 @@ export async function generateMetadata({
   return {
     title: seoTitle ? { absolute: seoTitle } : product.title,
     description,
+    // SEO hygiene (2026-11-08 audit): self-canonical per product, and an
+    // explicit og:image — a page-level openGraph without images drops the
+    // layout's default share image in the rendered HTML (audit Fail #26).
+    alternates: { canonical: `/shop/${slug}` },
     openGraph: {
       title: seoTitle ?? `${product.title} — Amber's Alchemy Apothecary`,
       description,
       type: 'website',
+      images: [
+        {
+          url:
+            getProductDisplayImage(product)?.src ??
+            '/images/brand/ambers-alchemy-emblem-og.jpg',
+        },
+      ],
     },
   };
 }

@@ -28,6 +28,7 @@ import type { Metadata } from 'next';
 import { ConfirmSubscriptionForm } from './ConfirmSubscriptionForm';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin/subscriptions/confirm' },
   title: 'Admin — Confirm subscription',
   description:
     'Owner tool: activate a paid Living Grimoire of Light & Magic subscription (internal).',

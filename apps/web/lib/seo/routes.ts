@@ -39,7 +39,10 @@ export const CANONICAL_ROUTES: CanonicalRoute[] = [
   { path: '/about', priority: 0.7, changeFrequency: 'monthly' },
   { path: '/quiz', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/journal', priority: 0.7, changeFrequency: 'weekly' },
-  { path: '/herbal-wisdom', priority: 0.6, changeFrequency: 'monthly' },
+  // '/herbal-wisdom' REMOVED (SEO hygiene, 2026-11-08 audit Critical #2):
+  // next.config.mjs permanently redirects it to '/herb-index', so it must
+  // never be emitted in the sitemap or linked from navigation — sitemaps
+  // may only contain 200, canonical URLs. The redirect itself stays.
   { path: '/herb-index', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/faqs', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/services', priority: 0.7, changeFrequency: 'monthly' },

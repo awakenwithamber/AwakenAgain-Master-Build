@@ -15,6 +15,7 @@ import { BRAND_EMAIL, BRAND_NAME } from '../../lib/seo/config';
 import { isPolicyApproved } from '../../lib/policies';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/returns' },
   title: 'Returns & Refunds',
   description: `Returns and refunds policy for ${BRAND_NAME}.`,
 };

@@ -14,6 +14,7 @@ import { ProfileInvite } from '../../../components/personalization/ProfileInvite
 import { BRAND_NAME } from '../../../lib/seo/config';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/checkout/success' },
   title: 'Order Confirmed',
   description: `Your order with ${BRAND_NAME} is confirmed.`,
 };

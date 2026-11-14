@@ -34,6 +34,7 @@ import {
 } from '../../../lib/admin/analytics';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/admin/analytics' },
   title: 'Admin — Analytics',
   description: 'Real-state analytics summary for Amber\'s Alchemy Apothecary (internal).',
   robots: { index: false, follow: false },
