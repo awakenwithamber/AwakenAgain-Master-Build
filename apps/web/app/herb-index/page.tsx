@@ -20,6 +20,7 @@ import {
 import { HerbExplorer } from '../../components/herbs/HerbExplorer';
 import { HerbalIndexCardView } from '../../components/herbs/HerbalIndexCard';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
+import { PageBackground } from '../../components/layout/PageBackground';
 
 export const metadata: Metadata = {
   title: 'Herbal Encyclopedia',
@@ -31,6 +32,7 @@ export default function HerbIndexPage() {
   const manifest = herbalIndexManifest();
   return (
     <main id="main-content" className="page content-page">
+      <PageBackground route="/herb-index" />
       <InterestTracker category="herbs" signalKey="herb-index" />
       <h1>🌿 Herbal Encyclopedia</h1>
       {/* Owner-supplied Herb & Ingredient Library header art (2026-10-23;

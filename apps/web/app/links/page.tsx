@@ -27,6 +27,7 @@
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PageBackground } from '../../components/layout/PageBackground';
 import styles from './links.module.css';
 import {
   BRAND_NAME,
@@ -219,6 +220,7 @@ function HubCard({ link }: { link: HubLink }) {
 export default function LinksPage() {
   return (
     <main id="main-content" className={styles.pageBg}>
+      <PageBackground route="/links" />
       <div className={styles.linksMain}>
       <img
         className={styles.headerBanner}

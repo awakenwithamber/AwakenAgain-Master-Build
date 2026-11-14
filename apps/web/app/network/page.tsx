@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { NETWORK_PROJECTS } from '../../lib/content/network';
 import { ProjectCard } from '../../components/network/ProjectCard';
 import { AffiliateInterestForm } from '../../components/network/AffiliateInterestForm';
+import { PageBackground } from '../../components/layout/PageBackground';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from '../../components/network/network.module.css';
 
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
 export default function NetworkPage() {
   return (
     <main id="main-content" className={styles.pageMain}>
+      <PageBackground route="/network" />
       <div className={styles.hero}>
         <p className="section-ornament" aria-hidden="true">
           ✦
