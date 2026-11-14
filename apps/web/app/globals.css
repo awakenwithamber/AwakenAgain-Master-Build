@@ -1837,6 +1837,49 @@ h1, h2, h3,
   opacity: 0.44;
 }
 
+/* Per-page background artwork (owner directive 2026-11-12) — see
+   components/layout/PageBackground.tsx + lib/page-backgrounds.ts.
+   Same stacking discipline as .aa-bg-layer (fixed, z-index: -1,
+   pointer-events: none); the component mounts inside <main>, later
+   in the DOM, so a page's artwork paints above the global shelf
+   layer and below every word of content. The veil gradient sits
+   above the image so parchment-on-plum contrast never drops. */
+.aa-page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.aa-page-bg-img {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.aa-page-bg-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(21, 11, 38, 0.42),
+    rgba(21, 11, 38, 0.58) 55%,
+    rgba(21, 11, 38, 0.72)
+  );
+}
+
+/* Negative-z layers paint UNDER the body's own background — and
+   both html and body carry the same opaque plum (#150b26) — so on
+   pages that mount a page background, the body background is made
+   transparent and the identical html plum shows through instead.
+   Base color is unchanged; the layer (and the site-wide shelf
+   texture beneath it) becomes visible. Browsers without :has()
+   keep today's flat plum — a graceful fallback, never a breakage. */
+body:has(.aa-page-bg) {
+  background: transparent;
+}
+
 /* Footer site map — every public page, grouped (2026-10-30). */
 .footer-sitemap-groups {
   display: grid;
