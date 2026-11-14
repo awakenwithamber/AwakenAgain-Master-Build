@@ -9,6 +9,7 @@
  */
 import type { Metadata } from 'next';
 import styles from './about.module.css';
+import { PageBackground } from '../../components/layout/PageBackground';
 import { BRAND_PHONE_DISPLAY, BRAND_PHONE_TEL } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function AboutPage() {
   return (
     <>
       <main id="main-content" className={styles.aboutMain}>
+        <PageBackground route="/about" />
         <div className={styles.portraitWrap}>
           <div className={styles.portrait}>
             {/* Owner-supplied portrait (inventory file 20); local asset, never hotlinked. */}

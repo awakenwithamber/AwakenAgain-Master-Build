@@ -24,6 +24,7 @@
  */
 import type { Metadata } from 'next';
 import { ConsultBanner } from '../components/home/ConsultBanner';
+import { PageBackground } from '../components/layout/PageBackground';
 import { Hero } from '../components/home/Hero';
 import { QuizInvite } from '../components/home/QuizInvite';
 import { WelcomeVideo } from '../components/home/WelcomeVideo';
@@ -86,6 +87,7 @@ export default function HomePage() {
     <>
       <ConsultBanner />
       <main id="main-content">
+        <PageBackground route="/" />
         <Hero />
         <QuizInvite />
         <WelcomeVideo />

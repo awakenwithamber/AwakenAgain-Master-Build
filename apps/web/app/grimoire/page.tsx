@@ -24,6 +24,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { GrimoireBook } from '../../components/grimoire/GrimoireBook';
 import { GrimoireGate } from '../../components/grimoire/GrimoireGate';
+import { PageBackground } from '../../components/layout/PageBackground';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
 import {
   buildGrimoirePages,
@@ -60,6 +61,7 @@ export default async function GrimoirePage() {
 
   return (
     <main id="main-content">
+      <PageBackground route="/grimoire" />
       {/* Accessibility fix (2026-10-30): this page rendered no h1 (pre-
           existing, identical in production). The heading below is
           visually hidden via the global .visually-hidden utility

@@ -14,6 +14,7 @@ import {
   servicePagePath,
 } from '../../lib/content/service-pages';
 import { InterestTracker } from '../../components/personalization/InterestTracker';
+import { PageBackground } from '../../components/layout/PageBackground';
 import { BRAND_NAME } from '../../lib/seo/config';
 import styles from './services.module.css';
 import Link from 'next/link';
@@ -27,6 +28,7 @@ export default function ServicesPage() {
   return (
     <>
       <main id="main-content" className={styles.servicesMain}>
+        <PageBackground route="/services" />
         <InterestTracker category="readings" signalKey="services" />
         <div className={styles.servicesHero}>
           <p className="section-ornament" aria-hidden="true">

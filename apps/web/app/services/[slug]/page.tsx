@@ -22,6 +22,7 @@ import { serviceSafetyCopy } from '../../../lib/content/service-safety';
 import { PriceDisplay } from '../../../components/catalog/PriceDisplay';
 import { VariantAddToCart } from '../../../components/shop/VariantAddToCart';
 import { InterestTracker } from '../../../components/personalization/InterestTracker';
+import { PageBackground } from '../../../components/layout/PageBackground';
 import styles from '../services.module.css';
 import Link from 'next/link';
 
@@ -72,6 +73,10 @@ export default async function ServiceLandingPage({
 
   return (
     <main id="main-content" className={styles.detailMain}>
+      {/* Per-service artwork by route: tarot → tarot trio, the
+          spiritual slugs → priestess; unconfigured slugs (business
+          setup, web development) render nothing. */}
+      <PageBackground route={`/services/${slug}`} />
       {page.interestCategory ? (
         <InterestTracker
           category={page.interestCategory}

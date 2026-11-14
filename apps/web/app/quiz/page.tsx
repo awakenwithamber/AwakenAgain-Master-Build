@@ -9,6 +9,7 @@
  */
 import type { Metadata } from 'next';
 import Quiz from '../../components/quiz/Quiz';
+import { PageBackground } from '../../components/layout/PageBackground';
 import { BRAND_NAME } from '../../lib/seo/config';
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
 export default function QuizPage() {
   return (
     <main id="main-content" className="page quiz-page">
+      <PageBackground route="/quiz" />
       <Quiz />
     </main>
   );
