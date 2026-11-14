@@ -114,7 +114,7 @@ describe('ResendEmailProvider', () => {
     expect(sent[0].text).toContain('you chose to pay by card');
     expect(sent[0].text).not.toContain('pay by card on our website');
     expect(sent[0].text).not.toContain('@AwakenwithAmber');
-    expect(sent[0].text).not.toContain('$AmberPatten347');
+    expect(sent[0].text).not.toContain('$awakenagain333');
   });
 
   it('reports transport errors as ok:false instead of throwing', async () => {

@@ -116,7 +116,7 @@ describe('payment provider purity', () => {
     const { CASH_APP_HANDLE, VENMO_HANDLE } = await import(
       '../lib/checkout/order'
     );
-    expect(CASH_APP_HANDLE).toBe('$AmberPatten347');
+    expect(CASH_APP_HANDLE).toBe('$awakenagain333');
     expect(VENMO_HANDLE).toBe('@AwakenwithAmber');
   });
 });

@@ -291,7 +291,7 @@ export type OrderStatus =
  * (Kept here — not in the route module — because Next.js route files may
  * only export handlers and route config.)
  */
-export const CASH_APP_HANDLE = '$AmberPatten347';
+export const CASH_APP_HANDLE = '$awakenagain333';
 export const VENMO_HANDLE = '@AwakenwithAmber';
 
 /**
@@ -303,7 +303,7 @@ export const VENMO_HANDLE = '@AwakenwithAmber';
  *   2026-11-01). The order is placed on the site; a Bluevine invoice
  *   for the exact order total is emailed to the customer; the customer
  *   pays it by ACH bank transfer or check per the invoice, or with
- *   Venmo @AwakenwithAmber / Cash App $AmberPatten347, using the order
+ *   Venmo @AwakenwithAmber / Cash App $awakenagain333, using the order
  *   number as the payment reference. The order is prepared once Amber
  *   confirms payment (manual mark-paid). No card payment is offered
  *   anywhere in this flow.

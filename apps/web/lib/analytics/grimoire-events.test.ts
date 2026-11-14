@@ -47,7 +47,8 @@ const SAMPLES: { [K in GrimoireAnalyticsEventName]: GrimoireAnalyticsEventProper
 const FORBIDDEN_PATTERNS = [
   /@[a-z0-9.-]+\.[a-z]{2,}/i, // email
   /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/, // phone
-  /\$AmberPatten/i, // payment handle
+  /\$AmberPatten/i, // payment handle (legacy)
+  /\$awakenagain333/i, // payment handle
   /@AwakenwithAmber/i, // payment handle
   /posthog|phc_|sk_|secret|password|token(?!_)/i,
 ];

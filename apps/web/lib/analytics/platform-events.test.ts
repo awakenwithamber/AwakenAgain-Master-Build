@@ -80,6 +80,7 @@ describe('PII / secret scan', () => {
       'cash_app',
       'venmo',
       '$AmberPatten',
+      '$awakenagain333',
       'card',
       'ssn',
       'password',

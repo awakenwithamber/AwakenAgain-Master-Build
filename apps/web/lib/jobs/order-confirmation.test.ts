@@ -65,7 +65,7 @@ describe('order confirmation trigger', () => {
     expect(job.template).toBe('purchase_confirmation');
     expect(job.to).toBe('customer@example.com');
     const data = job.data as { cash_app_handle?: string; venmo_handle?: string };
-    expect(data.cash_app_handle).toBe('$AmberPatten347');
+    expect(data.cash_app_handle).toBe('$awakenagain333');
     expect(data.venmo_handle).toBe('@AwakenwithAmber');
   });
 

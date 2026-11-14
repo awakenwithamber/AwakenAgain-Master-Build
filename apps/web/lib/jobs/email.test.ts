@@ -38,7 +38,7 @@ describe('buildEmailJob', () => {
         order_id: 'AWK-20261005-ABC123',
         total_cents: 3577,
         item_summary: 'The Alchemy Soap Collection',
-        cash_app_handle: '$AmberPatten347',
+        cash_app_handle: '$awakenagain333',
         venmo_handle: '@AwakenwithAmber',
       },
     });
@@ -58,7 +58,7 @@ describe('buildEmailJob', () => {
           order_id: 'x',
           total_cents: 1,
           item_summary: 'y',
-          cash_app_handle: '$AmberPatten347',
+          cash_app_handle: '$awakenagain333',
           venmo_handle: '@AwakenwithAmber',
         },
       }),
@@ -140,7 +140,7 @@ describe('LoggingEmailProvider', () => {
       order_id: 'AWK-20261005-ABC123',
       total_cents: 3577,
       item_summary: 'The Alchemy Soap Collection',
-      cash_app_handle: '$AmberPatten347',
+      cash_app_handle: '$awakenagain333',
       venmo_handle: '@AwakenwithAmber',
     });
     const result = await provider.send(job);

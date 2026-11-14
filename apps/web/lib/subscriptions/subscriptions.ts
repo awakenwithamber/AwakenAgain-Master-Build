@@ -12,7 +12,7 @@
  *
  * Payments: Stripe Checkout subscription (card, auto-renews monthly)
  * is the recurring processor — owner decision 2026-10-21 §13(3) — with
- * Cash App $AmberPatten347 + Venmo @AwakenwithAmber retained as the
+ * Cash App $awakenagain333 + Venmo @AwakenwithAmber retained as the
  * manual fallback (signup + owner confirmation, unchanged).
  *
  * Lifecycle: a manual signup creates a record in `pending_payment`

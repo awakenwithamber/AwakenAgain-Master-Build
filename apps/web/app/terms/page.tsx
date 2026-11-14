@@ -30,7 +30,7 @@ export default function TermsPage() {
 
       <h2>Payments</h2>
       <p>
-        We accept <strong>Cash App ($AmberPatten347)</strong> and{' '}
+        We accept <strong>Cash App ($awakenagain333)</strong> and{' '}
         <strong>Venmo (@AwakenwithAmber)</strong> only. At checkout you will
         see exact payment instructions; your order is confirmed once we
         receive your payment. Prices are shown in USD and are validated on

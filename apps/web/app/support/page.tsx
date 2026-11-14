@@ -60,13 +60,13 @@ export default function SupportPage() {
 
           <div className={styles.payMethods}>
             <a
-              href="https://cash.app/$AmberPatten347"
+              href="https://cash.app/$awakenagain333"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.payButton}
             >
               Donate via Cash App
-              <span className={styles.payHandle}>$AmberPatten347</span>
+              <span className={styles.payHandle}>$awakenagain333</span>
             </a>
             <a
               href="https://venmo.com/AwakenwithAmber"

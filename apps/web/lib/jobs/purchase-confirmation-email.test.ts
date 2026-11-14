@@ -35,7 +35,7 @@ function data(
     subscriber_discount_cents: 0,
     shipping_status: 'FLAT',
     payment_method: 'cash_app_or_venmo',
-    cash_app_handle: '$AmberPatten347',
+    cash_app_handle: '$awakenagain333',
     venmo_handle: '@AwakenwithAmber',
     ...overrides,
   };
@@ -97,7 +97,7 @@ describe('purchase confirmation renderer (Template 1)', () => {
   it('Venmo / Cash App orders show both handles', () => {
     const { text } = renderPurchaseConfirmation(data());
     expect(text).toContain('Venmo: @AwakenwithAmber');
-    expect(text).toContain('Cash App: $AmberPatten347');
+    expect(text).toContain('Cash App: $awakenagain333');
   });
 
   it('invoice (Bluevine) orders show the Bluevine block with ACH/check + both handles, no card language', () => {
@@ -107,7 +107,7 @@ describe('purchase confirmation renderer (Template 1)', () => {
     expect(text).toContain('your Bluevine invoice will be emailed to you');
     expect(text).toContain('ACH bank transfer or check per the invoice');
     expect(text).toContain('Venmo: @AwakenwithAmber');
-    expect(text).toContain('Cash App: $AmberPatten347');
+    expect(text).toContain('Cash App: $awakenagain333');
     expect(text).toContain('use your order ID as the payment reference');
     expect(text).toContain('prepared once payment is confirmed');
     expect(text).not.toContain('Bookipi');
@@ -137,7 +137,7 @@ describe('purchase confirmation renderer (Template 1)', () => {
     expect(text).toContain('your invoice will be emailed to you');
     expect(text).toContain('ACH bank transfer to our Bluevine account');
     expect(text).toContain('Venmo: @AwakenwithAmber');
-    expect(text).toContain('Cash App: $AmberPatten347');
+    expect(text).toContain('Cash App: $awakenagain333');
     expect(text).toContain('use your order ID as the payment reference');
     expect(text).toContain('prepared once payment is confirmed');
     expect(text).not.toMatch(/pay by card/i);
@@ -161,7 +161,7 @@ describe('purchase confirmation renderer (Template 1)', () => {
     expect(text).not.toContain('pay by card on our website');
     expect(text).not.toContain('checkout page');
     expect(text).not.toContain('@AwakenwithAmber');
-    expect(text).not.toContain('$AmberPatten347');
+    expect(text).not.toContain('$awakenagain333');
   });
 
   it('HTML is branded (dark purple + gold) and escapes item titles', () => {

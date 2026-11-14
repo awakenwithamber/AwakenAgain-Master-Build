@@ -115,7 +115,7 @@ describe('checkout route', () => {
     expect(json.shipping_status).toBe('FREE');
 
     const payment = json.payment as Record<string, string>;
-    expect(payment.cash_app).toBe('$AmberPatten347');
+    expect(payment.cash_app).toBe('$awakenagain333');
     expect(payment.venmo).toBe('@AwakenwithAmber');
     const paymentText = JSON.stringify(payment).toLowerCase();
     for (const banned of ['stripe', 'shopify', 'paypal', 'square']) {

@@ -12,7 +12,7 @@
  * - Payment: lib/checkout/order.ts payment-method note (owner directive
  *   2026-11-01, replacing the 2026-10-24 Bookipi flow) — Bluevine
  *   invoice emailed; paid by ACH bank transfer or check per the
- *   invoice, Venmo @AwakenwithAmber, or Cash App $AmberPatten347, order
+ *   invoice, Venmo @AwakenwithAmber, or Cash App $awakenagain333, order
  *   number as the payment reference. app/checkout/page.tsx metadata
  *   states the same flow.
  */
@@ -42,7 +42,7 @@ export function ProductFaq() {
         <p>
           We email you a Bluevine invoice — pay it by ACH bank transfer
           or check per the invoice, Venmo @AwakenwithAmber, or Cash App
-          $AmberPatten347, using your order number as the reference.
+          $awakenagain333, using your order number as the reference.
         </p>
       </details>
 

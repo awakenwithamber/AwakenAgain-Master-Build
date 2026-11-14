@@ -82,7 +82,7 @@ export const RECORD: Product = {
     "price": {
       "source_file": "Owner directive 2026-10-05 (newest source of truth; supersedes Sept 27 catalog prices)",
       "date": "2026-10-05",
-      "note": "Owner directive 2026-10-05: Living Grimoire stays $7.77/month. Payments Cash App $AmberPatten347 + Venmo @AwakenwithAmber only."
+      "note": "Owner directive 2026-10-05: Living Grimoire stays $7.77/month. Payments Cash App $awakenagain333 + Venmo @AwakenwithAmber only."
     }
   },
   "field_verification": {

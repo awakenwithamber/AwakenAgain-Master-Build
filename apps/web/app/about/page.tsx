@@ -86,7 +86,7 @@ export default function AboutPage() {
             <ul>
               <li>
                 Browse the shop, customize what you love, and check out —
-                payment is by <strong>Cash App ($AmberPatten347)</strong> or{' '}
+                payment is by <strong>Cash App ($awakenagain333)</strong> or{' '}
                 <strong>Venmo (@AwakenwithAmber)</strong>.
               </li>
               <li>

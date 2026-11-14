@@ -178,7 +178,7 @@ export default function Footer() {
           </p>
           <p className="footer-payments">
             Payments: pay by emailed invoice (ACH bank transfer, Venmo,
-            or Cash App) · Cash App <strong>$AmberPatten347</strong> ·
+            or Cash App) · Cash App <strong>$awakenagain333</strong> ·
             Venmo <strong>@AwakenwithAmber</strong>
           </p>
         </div>

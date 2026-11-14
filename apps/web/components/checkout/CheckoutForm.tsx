@@ -8,7 +8,7 @@
  * the bluevine set up", superseding the 2026-10-24 Bookipi flow):
  * the customer pays by EMAILED BLUEVINE INVOICE — the invoice is paid
  * by ACH bank transfer or check per the invoice, or Venmo
- * @AwakenwithAmber / Cash App $AmberPatten347, with the order number
+ * @AwakenwithAmber / Cash App $awakenagain333, with the order number
  * as the payment reference, and the order is prepared once payment is
  * confirmed — or sends Cash App / Venmo directly after ordering. A
  * card choice through Bluevine's hosted payment page renders ONLY

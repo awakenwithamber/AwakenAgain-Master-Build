@@ -109,7 +109,7 @@ describe('checkout payment method', () => {
     expect(json.total_cents).toBe(1977 + 595);
     const payment = json.payment as Record<string, unknown>;
     expect(payment.method).toBe('bluevine_invoice');
-    expect(payment.cash_app).toBe('$AmberPatten347');
+    expect(payment.cash_app).toBe('$awakenagain333');
     expect(payment.venmo).toBe('@AwakenwithAmber');
     expect(payment.order_id).toBe(json.order_id);
     expect(String(payment.note)).toMatch(/Bluevine invoice will be emailed/i);
@@ -252,7 +252,7 @@ describe('checkout payment method', () => {
     expect(json.payment_method).toBe('cash_app_or_venmo');
     expect(json.payment).toEqual({
       method: 'cash_app_or_venmo',
-      cash_app: '$AmberPatten347',
+      cash_app: '$awakenagain333',
       venmo: '@AwakenwithAmber',
       note:
         'Send your payment with Cash App or Venmo — whichever you prefer. ' +
